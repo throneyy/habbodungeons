@@ -237,16 +237,21 @@ What happens as a result of this choice?`,
 
     // Update battle state to trigger battle mode
     if (outcome.triggersBattle) {
-      // Get the current room's enemy
+      // CRITICAL: Progress to next room and get that room's enemy (matching AI context)
       const dungeonData = battleState.dungeons.dungeon_json;
-      const currentRoom = dungeonData.rooms[newRoomIndex];
+      const battleRoomIndex = Math.min(newRoomIndex + 1, maxRoomIndex);
+      const battleRoom = dungeonData.rooms[battleRoomIndex];
       
-      if (currentRoom && currentRoom.enemy) {
-        // Set up the enemy for battle
-        const enemy = currentRoom.enemy;
+      if (battleRoom && battleRoom.enemy) {
+        // Set up the enemy for battle from the NEXT room
+        const enemy = battleRoom.enemy;
+        
+        // Update room index to the battle room
+        newRoomIndex = battleRoomIndex;
         await supabaseClient
           .from("battle_states")
           .update({
+            current_room_index: newRoomIndex,
             current_enemy_state: {
               name: enemy.name,
               description: enemy.description,
@@ -262,10 +267,12 @@ What happens as a result of this choice?`,
           })
           .eq("id", battleState.id);
       } else {
-        // No enemy in room, but triggering battle - create a generic enemy
+        // No enemy in room, but triggering battle - create a generic enemy and advance room
+        newRoomIndex = battleRoomIndex;
         await supabaseClient
           .from("battle_states")
           .update({
+            current_room_index: newRoomIndex,
             current_enemy_state: {
               name: "Ice Shade",
               description: "A mysterious creature emerges from the shadows!",
