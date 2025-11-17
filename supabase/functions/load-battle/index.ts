@@ -158,7 +158,9 @@ serve(async (req) => {
 
     // Determine mode: check if enemy is defeated or if we're in story mode
     const enemyState = battle.current_enemy_state;
-    const mode = enemyState.mode || (enemyState.current_hp > 0 ? "battle" : "story");
+    // If enemy has no HP or is named "None"/"Unknown", force story mode
+    const hasValidEnemy = enemyState.current_hp > 0 && enemyState.name !== "None" && enemyState.name !== "Unknown";
+    const mode = hasValidEnemy ? (enemyState.mode || "battle") : "story";
 
     // Ensure battle_log is in the correct format
     let battleLog = battle.battle_log || [];
