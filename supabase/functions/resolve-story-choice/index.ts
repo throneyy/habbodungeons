@@ -173,10 +173,10 @@ What happens as a result of this choice?`,
       }
     }
 
-    // Update battle log
+    // Update battle log with user_id
     const battleLog = battleState.battle_log || [];
-    battleLog.push(`You chose: ${choiceLabel}`);
-    battleLog.push(outcome.consequenceText);
+    battleLog.push({ user_id: user.id, message: `You chose: ${choiceLabel}` });
+    battleLog.push({ user_id: user.id, message: outcome.consequenceText });
 
     // Advance room if needed
     const newRoomIndex = outcome.progressRoom
