@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Link } from "lucide-react";
+import { AppLayout } from "@/components/AppLayout";
 
 interface Profile {
   username: string;
@@ -84,7 +85,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-black text-primary">Player Dashboard</h1>
@@ -203,7 +204,7 @@ const Dashboard = () => {
         </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

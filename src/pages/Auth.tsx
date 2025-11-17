@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/AppLayout";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -79,10 +80,11 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8 flex items-center justify-center">
-      <div className="w-full max-w-md">
-        <HabboPanel title="Welcome to Habbo Dungeon">
-          <Tabs defaultValue="login" className="w-full">
+    <AppLayout>
+      <div className="flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <HabboPanel title="Welcome to Habbo Dungeon">
+            <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Log In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -179,8 +181,9 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
         </HabboPanel>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

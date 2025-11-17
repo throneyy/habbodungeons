@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/AppLayout";
 
 interface HabboProfile {
   name: string;
@@ -107,7 +108,7 @@ const LinkHabbo = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <HabboPanel title="Link Your Habbo Account">
           <div className="space-y-6">
@@ -197,7 +198,7 @@ const LinkHabbo = () => {
           </div>
         </HabboPanel>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
