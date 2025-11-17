@@ -127,11 +127,71 @@ serve(async (req) => {
       }
     }
 
-    // Update player stats
-    await supabase
-      .from('player_stats')
-      .update({ current_hp: result.playerNewHp })
-      .eq('user_id', user.id);
+    // Handle victory - award XP and check for level up
+    let xpGained = 0;
+    let leveledUp = false;
+    let newLevel = stats.level;
+    let xpMessages: string[] = [];
+
+    if (result.victory) {
+      // Calculate XP based on enemy level/difficulty
+      const enemyLevel = battle.current_enemy_state.level || 1;
+      xpGained = Math.floor(50 * enemyLevel + Math.random() * 20);
+      
+      const newXp = stats.current_xp + xpGained;
+      const xpNeeded = stats.xp_to_next_level;
+      
+      xpMessages.push(`💫 You gained ${xpGained} XP!`);
+      
+      if (newXp >= xpNeeded) {
+        // Level up!
+        leveledUp = true;
+        newLevel = stats.level + 1;
+        const remainingXp = newXp - xpNeeded;
+        const newXpNeeded = Math.floor(xpNeeded * 1.5); // 50% increase per level
+        
+        // Stat increases on level up
+        const hpIncrease = 10;
+        const mpIncrease = 5;
+        const statIncrease = 2;
+        
+        await supabase
+          .from('player_stats')
+          .update({
+            level: newLevel,
+            current_xp: remainingXp,
+            xp_to_next_level: newXpNeeded,
+            max_hp: stats.max_hp + hpIncrease,
+            current_hp: result.playerNewHp + hpIncrease, // Heal on level up
+            max_mp: stats.max_mp + mpIncrease,
+            current_mp: stats.current_mp + mpIncrease,
+            atk: stats.atk + statIncrease,
+            def: stats.def + statIncrease,
+            spd: stats.spd + statIncrease,
+          })
+          .eq('user_id', user.id);
+        
+        xpMessages.push(`🎉 LEVEL UP! You are now level ${newLevel}!`);
+        xpMessages.push(`📈 HP +${hpIncrease}, MP +${mpIncrease}, ATK/DEF/SPD +${statIncrease}`);
+      } else {
+        // Just update XP, no level up
+        await supabase
+          .from('player_stats')
+          .update({
+            current_xp: newXp,
+            current_hp: result.playerNewHp,
+          })
+          .eq('user_id', user.id);
+        
+        xpMessages.push(`📊 ${newXp}/${xpNeeded} XP to next level`);
+      }
+    } else {
+      // No victory, just update HP
+      await supabase
+        .from('player_stats')
+        .update({ current_hp: result.playerNewHp })
+        .eq('user_id', user.id);
+    }
 
     // Update battle state
     const updatedEnemy = {
@@ -142,7 +202,8 @@ serve(async (req) => {
 
     const updatedLog = [
       ...(battle.battle_log || []),
-      ...result.narration.map((msg: string) => ({ user_id: user.id, message: msg }))
+      ...result.narration.map((msg: string) => ({ user_id: user.id, message: msg })),
+      ...xpMessages.map((msg: string) => ({ user_id: user.id, message: msg }))
     ];
 
     await supabase
@@ -173,6 +234,8 @@ serve(async (req) => {
         def: updatedStats.def,
         spd: updatedStats.spd,
         status_effects: updatedStats.status_effects || [],
+        current_xp: updatedStats.current_xp || 0,
+        xp_to_next_level: updatedStats.xp_to_next_level || 100,
       },
       room_description: "Combat continues...",
       battle_log: updatedLog,

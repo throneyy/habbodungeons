@@ -38,6 +38,8 @@ interface BattleData {
     def: number;
     spd: number;
     status_effects: string[];
+    current_xp?: number;
+    xp_to_next_level?: number;
   };
   room_description: string;
   battle_log: BattleLogEntry[];
@@ -936,6 +938,24 @@ const Battle = () => {
               <div className="text-center p-2 bg-primary rounded border-4 border-habbo-dark">
                 <p className="text-sm font-bold text-primary-foreground">Level {battleData.player.level}</p>
               </div>
+              {battleData.player.current_xp !== undefined && battleData.player.xp_to_next_level !== undefined && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-bold">XP Progress</span>
+                    <span className="text-muted-foreground">
+                      {battleData.player.current_xp}/{battleData.player.xp_to_next_level}
+                    </span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full border-2 border-habbo-dark overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[#FFD700] to-[#FFA500] transition-all duration-500"
+                      style={{ 
+                        width: `${(battleData.player.current_xp / battleData.player.xp_to_next_level) * 100}%` 
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
               <StatBar
                 label="HP"
                 current={battleData.player.current_hp}

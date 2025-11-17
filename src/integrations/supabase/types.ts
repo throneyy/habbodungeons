@@ -191,6 +191,7 @@ export type Database = {
           created_at: string
           current_hp: number
           current_mp: number
+          current_xp: number
           def: number
           id: string
           level: number
@@ -200,12 +201,14 @@ export type Database = {
           status_effects: Json | null
           updated_at: string
           user_id: string
+          xp_to_next_level: number
         }
         Insert: {
           atk?: number
           created_at?: string
           current_hp?: number
           current_mp?: number
+          current_xp?: number
           def?: number
           id?: string
           level?: number
@@ -215,12 +218,14 @@ export type Database = {
           status_effects?: Json | null
           updated_at?: string
           user_id: string
+          xp_to_next_level?: number
         }
         Update: {
           atk?: number
           created_at?: string
           current_hp?: number
           current_mp?: number
+          current_xp?: number
           def?: number
           id?: string
           level?: number
@@ -230,6 +235,7 @@ export type Database = {
           status_effects?: Json | null
           updated_at?: string
           user_id?: string
+          xp_to_next_level?: number
         }
         Relationships: []
       }
