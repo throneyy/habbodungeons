@@ -474,14 +474,14 @@ const Battle = () => {
                   className="w-full text-xl py-6 font-black border-4 border-habbo-dark hover-scale"
                   size="lg"
                 >
-                  ⚔️ Embark on New Adventure
+                  Embark on New Adventure
                 </Button>
                 <Button
                   onClick={() => navigate("/dashboard")}
                   variant="outline"
                   className="w-full text-lg py-4 font-bold border-4 border-habbo-dark hover-scale"
                 >
-                  🏠 Return to Town
+                  Return to Town
                 </Button>
               </div>
             </div>
