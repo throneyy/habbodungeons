@@ -470,14 +470,14 @@ const Battle = () => {
               {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry, i) => {
                     // Handle both string entries and object entries
-                    const message = typeof entry === 'string' ? entry : (entry?.message || '');
+                    const message = typeof entry === 'string' ? entry : String(entry?.message || '');
                     const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
                     const entryType = typeof entry === 'string' ? undefined : entry?.type;
                     
                     const isCurrentUser = userId === currentUserId;
                     const userProfile = userId ? partyProfiles.get(userId) : null;
                     const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
-                    const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
+                    const isDiceRoll = entryType === 'dice_roll' || (message && message.includes('rolled'));
                     
                     return (
                       <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
@@ -749,14 +749,14 @@ const Battle = () => {
               {battleData.battle_log.length > 0 ? (
                 battleData.battle_log.map((entry, i) => {
                   // Handle both string entries and object entries
-                  const message = typeof entry === 'string' ? entry : (entry?.message || '');
+                  const message = typeof entry === 'string' ? entry : String(entry?.message || '');
                   const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
                   const entryType = typeof entry === 'string' ? undefined : entry?.type;
                   
                   const isCurrentUser = userId === currentUserId;
                   const userProfile = userId ? partyProfiles.get(userId) : null;
                   const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
-                  const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
+                  const isDiceRoll = entryType === 'dice_roll' || (message && message.includes('rolled'));
                   
                   return (
                     <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
