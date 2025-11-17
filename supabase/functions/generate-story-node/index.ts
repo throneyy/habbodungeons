@@ -26,25 +26,44 @@ serve(async (req) => {
 
     const { battleId, lastChoice } = await req.json();
 
+    console.log("Received request:", { battleId, lastChoice });
+
     // Validate battleId
-    if (!battleId || battleId === "undefined" || battleId === "null") {
-      console.error("Invalid battleId received:", battleId);
-      throw new Error("Invalid battleId provided");
+    if (!battleId || battleId === "undefined" || battleId === "null" || typeof battleId !== 'string' || battleId.length === 0) {
+      console.error("Invalid battleId received:", battleId, "type:", typeof battleId);
+      throw new Error(`Invalid battleId provided: ${battleId}`);
     }
 
-    console.log("Generating story node for battleId:", battleId);
+    // Get authenticated user first
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error("Authentication failed:", authError);
+      throw new Error("Not authenticated");
+    }
+
+    console.log("Generating story node for battleId:", battleId, "userId:", user.id);
 
     // Get battle state by dungeon_id
     const { data: battleState, error: battleError } = await supabaseClient
       .from("battle_states")
       .select("*, dungeons(*)")
       .eq("dungeon_id", battleId)
-      .eq("user_id", (await supabaseClient.auth.getUser()).data.user?.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (battleError) throw battleError;
+    if (battleError) {
+      console.error("Battle state error:", battleError);
+      throw battleError;
+    }
+    
+    if (!battleState) {
+      console.error("Battle state not found for dungeonId:", battleId);
+      throw new Error(`Battle state not found. Please start the dungeon first.`);
+    }
+
+    console.log("Battle state loaded:", battleState.id, "Room:", battleState.current_room_index);
 
     // Get party member stats
     const { data: partyStats } = await supabaseClient
