@@ -1,0 +1,13 @@
+project_id = "cswyarorrvzbunodiftf"
+
+[functions.fetch-habbo-profile]
+verify_jwt = true
+
+[functions.generate-dungeon]
+verify_jwt = true
+
+[functions.load-battle]
+verify_jwt = true
+
+[functions.resolve-turn]
+verify_jwt = true
