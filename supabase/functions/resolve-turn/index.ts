@@ -134,26 +134,32 @@ serve(async (req) => {
     let xpMessages: string[] = [];
 
     if (result.victory) {
-      // Calculate XP based on enemy level/difficulty
+      // Calculate XP based on enemy level relative to player level (traditional JRPG formula)
       const enemyLevel = battle.current_enemy_state.level || 1;
-      xpGained = Math.floor(50 * enemyLevel + Math.random() * 20);
+      const levelDiff = enemyLevel - stats.level;
+      const baseXP = Math.floor(enemyLevel * enemyLevel * 8); // Base formula: level^2 * 8
+      const diffMultiplier = Math.max(0.5, 1 + (levelDiff * 0.1)); // Bonus for higher level enemies
+      xpGained = Math.floor(baseXP * diffMultiplier);
       
       const newXp = stats.current_xp + xpGained;
       const xpNeeded = stats.xp_to_next_level;
       
-      xpMessages.push(`💫 You gained ${xpGained} XP!`);
+      xpMessages.push(`Gained ${xpGained} experience points.`);
       
       if (newXp >= xpNeeded) {
         // Level up!
         leveledUp = true;
         newLevel = stats.level + 1;
         const remainingXp = newXp - xpNeeded;
-        const newXpNeeded = Math.floor(xpNeeded * 1.5); // 50% increase per level
+        // Traditional JRPG exponential curve: level^3 * 10
+        const newXpNeeded = Math.floor(Math.pow(newLevel, 3) * 10);
         
-        // Stat increases on level up
-        const hpIncrease = 10;
-        const mpIncrease = 5;
-        const statIncrease = 2;
+        // Stat increases on level up (traditional JRPG growth)
+        const hpIncrease = Math.floor(8 + (newLevel * 0.5)); // Scales with level
+        const mpIncrease = Math.floor(4 + (newLevel * 0.3));
+        const atkIncrease = Math.floor(1 + (newLevel % 3 === 0 ? 1 : 0)); // Extra point every 3 levels
+        const defIncrease = Math.floor(1 + (newLevel % 3 === 0 ? 1 : 0));
+        const spdIncrease = Math.floor(1 + (newLevel % 4 === 0 ? 1 : 0)); // Extra point every 4 levels
         
         await supabase
           .from('player_stats')
@@ -162,17 +168,22 @@ serve(async (req) => {
             current_xp: remainingXp,
             xp_to_next_level: newXpNeeded,
             max_hp: stats.max_hp + hpIncrease,
-            current_hp: result.playerNewHp + hpIncrease, // Heal on level up
+            current_hp: stats.max_hp + hpIncrease, // Full heal on level up
             max_mp: stats.max_mp + mpIncrease,
-            current_mp: stats.current_mp + mpIncrease,
-            atk: stats.atk + statIncrease,
-            def: stats.def + statIncrease,
-            spd: stats.spd + statIncrease,
+            current_mp: stats.max_mp + mpIncrease, // Full MP restore
+            atk: stats.atk + atkIncrease,
+            def: stats.def + defIncrease,
+            spd: stats.spd + spdIncrease,
           })
           .eq('user_id', user.id);
         
-        xpMessages.push(`🎉 LEVEL UP! You are now level ${newLevel}!`);
-        xpMessages.push(`📈 HP +${hpIncrease}, MP +${mpIncrease}, ATK/DEF/SPD +${statIncrease}`);
+        xpMessages.push(`Level up! ${stats.level} -> ${newLevel}`);
+        xpMessages.push(`Max HP increased by ${hpIncrease}.`);
+        xpMessages.push(`Max MP increased by ${mpIncrease}.`);
+        if (atkIncrease > 0) xpMessages.push(`Attack increased by ${atkIncrease}.`);
+        if (defIncrease > 0) xpMessages.push(`Defense increased by ${defIncrease}.`);
+        if (spdIncrease > 0) xpMessages.push(`Speed increased by ${spdIncrease}.`);
+        xpMessages.push(`HP and MP fully restored.`);
       } else {
         // Just update XP, no level up
         await supabase
@@ -183,7 +194,7 @@ serve(async (req) => {
           })
           .eq('user_id', user.id);
         
-        xpMessages.push(`📊 ${newXp}/${xpNeeded} XP to next level`);
+        xpMessages.push(`${newXp} / ${xpNeeded} EXP to next level.`);
       }
     } else {
       // No victory, just update HP
