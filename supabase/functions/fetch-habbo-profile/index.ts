@@ -17,28 +17,28 @@ serve(async (req) => {
       throw new Error("Username is required");
     }
 
-    console.log(`Fetching Habbo profile for username: ${username}`);
+    console.log(`Fetching Habbo Origins profile for username: ${username}`);
 
-    // Fetch from Habbo API
-    const response = await fetch(`https://www.habbo.com/api/public/users?name=${encodeURIComponent(username)}`);
+    // Fetch from Habbo Origins API
+    const response = await fetch(`https://origins.habbo.com/api/public/users?name=${encodeURIComponent(username)}`);
     
     console.log(`Habbo API response status: ${response.status}`);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Habbo API error response: ${errorText}`);
+      console.error(`Habbo Origins API error response: ${errorText}`);
       
       if (response.status === 404) {
-        throw new Error("Habbo user not found");
+        throw new Error("Habbo Origins user not found");
       }
-      throw new Error(`Habbo API returned status ${response.status}`);
+      throw new Error(`Habbo Origins API returned status ${response.status}`);
     }
 
     const data = await response.json();
-    console.log(`Habbo API response data:`, data);
+    console.log(`Habbo Origins API response data:`, data);
 
     if (!data || !data.name) {
-      throw new Error("Invalid response from Habbo API");
+      throw new Error("Invalid response from Habbo Origins API");
     }
 
     return new Response(
@@ -54,7 +54,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error fetching Habbo profile:', error);
+    console.error('Error fetching Habbo Origins profile:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       {
