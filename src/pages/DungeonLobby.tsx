@@ -69,14 +69,14 @@ const DungeonLobby = () => {
 
   return (
     <AppLayout hideBanner>
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Universe Banner */}
-        <img 
-          src={frostkeepBanner} 
-          alt="The Shattered Frostkeep" 
-          className="pixel-icon border-4 border-habbo-dark rounded-lg mx-auto"
-        />
+      {/* Universe Banner */}
+      <img 
+        src={frostkeepBanner} 
+        alt="The Shattered Frostkeep" 
+        className="pixel-icon border-4 border-habbo-dark rounded-lg mx-auto mb-6"
+      />
 
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Universe Introduction */}
         <HabboPanel title="The Shattered Frostkeep">
           <div className="space-y-4">
