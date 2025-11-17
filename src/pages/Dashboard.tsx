@@ -103,7 +103,7 @@ const Dashboard = () => {
           <div className="flex flex-col md:flex-row gap-6 items-center">
             {profile?.habbo_username && profile.habbo_profile_json && (
               <img
-                src={`https://origins.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&size=l&direction=2&head_direction=3`}
+                src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=l`}
                 alt={profile.habbo_username}
                 className="w-32 h-32 border-4 border-habbo-dark rounded-lg pixel-icon"
               />
