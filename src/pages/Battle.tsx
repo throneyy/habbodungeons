@@ -825,43 +825,41 @@ const Battle = () => {
           <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
             showCombatPanels ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
           }`}>
-          {/* Enemy Panel - Only show in battle mode */}
-          {battleData.mode === "battle" && battleData.enemy.name !== "None" && battleData.enemy.max_hp > 0 && (
-            <HabboPanel title="Enemy" className="md:col-span-1">
-              <div className="space-y-4">
-                <h3 className="text-2xl font-black text-destructive">{battleData.enemy.name}</h3>
-                <p className="text-sm text-muted-foreground">{battleData.enemy.description}</p>
-                <StatBar
-                  label="HP"
-                  current={battleData.enemy.current_hp}
-                  max={battleData.enemy.max_hp}
-                  color="hp"
-                />
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
-                    <p className="text-xs font-bold">ATK</p>
-                    <p className="font-bold">{battleData.enemy.atk}</p>
-                  </div>
-                  <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
-                    <p className="text-xs font-bold">DEF</p>
-                    <p className="font-bold">{battleData.enemy.def}</p>
-                  </div>
-                  <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
-                    <p className="text-xs font-bold">SPD</p>
-                    <p className="font-bold">{battleData.enemy.spd}</p>
-                  </div>
+          {/* Enemy Panel */}
+          <HabboPanel title="Enemy" className="md:col-span-1">
+            <div className="space-y-4">
+              <h3 className="text-2xl font-black text-destructive">{battleData.enemy.name}</h3>
+              <p className="text-sm text-muted-foreground">{battleData.enemy.description}</p>
+              <StatBar
+                label="HP"
+                current={battleData.enemy.current_hp}
+                max={battleData.enemy.max_hp}
+                color="hp"
+              />
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
+                  <p className="text-xs font-bold">ATK</p>
+                  <p className="font-bold">{battleData.enemy.atk}</p>
                 </div>
-                {battleData.enemy.status_effects.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold">Status Effects:</p>
-                    {battleData.enemy.status_effects.map((effect, i) => (
-                      <p key={i} className="text-sm text-accent">{effect}</p>
-                    ))}
-                  </div>
-                )}
+                <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
+                  <p className="text-xs font-bold">DEF</p>
+                  <p className="font-bold">{battleData.enemy.def}</p>
+                </div>
+                <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
+                  <p className="text-xs font-bold">SPD</p>
+                  <p className="font-bold">{battleData.enemy.spd}</p>
+                </div>
               </div>
-            </HabboPanel>
-          )}
+              {battleData.enemy.status_effects.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-xs font-bold">Status Effects:</p>
+                  {battleData.enemy.status_effects.map((effect, i) => (
+                    <p key={i} className="text-sm text-accent">{effect}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          </HabboPanel>
 
           {/* Action Panel */}
           <HabboPanel title="Current Turn" className="md:col-span-1">
