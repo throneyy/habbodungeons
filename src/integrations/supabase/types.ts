@@ -271,6 +271,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_view_party_members: {
+        Args: { _party_id: string; _user_id: string }
+        Returns: boolean
+      }
       generate_invite_code: { Args: never; Returns: string }
       is_party_leader: {
         Args: { _party_id: string; _user_id: string }
