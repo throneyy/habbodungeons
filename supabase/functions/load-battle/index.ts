@@ -24,6 +24,7 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
+    console.log('=== LOAD BATTLE DEBUG ===');
     console.log('Loading battle for user:', user.id, 'dungeonId:', battleId);
 
     // Check if user is in a party for this dungeon
@@ -35,7 +36,7 @@ serve(async (req) => {
       .maybeSingle();
 
     const partyId = partyMember?.party_id || null;
-    console.log('User party status:', { partyId, hasParty: !!partyId });
+    console.log('User party status:', { partyId, hasParty: !!partyId, partyMember });
 
     // Get battle state - filter by party if in party, otherwise by user
     let battleQuery = supabase
@@ -45,8 +46,10 @@ serve(async (req) => {
       .eq('is_active', true);
 
     if (partyId) {
+      console.log('Querying for PARTY battle with party_id:', partyId);
       battleQuery = battleQuery.eq('party_id', partyId);
     } else {
+      console.log('Querying for SOLO battle');
       battleQuery = battleQuery.eq('user_id', user.id).is('party_id', null);
     }
 
@@ -55,7 +58,13 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    console.log('Battle query result:', { battle, battleError, battleId, userId: user.id, partyId });
+    console.log('Battle query result:', { 
+      found: !!battle, 
+      battleId: battle?.id,
+      battlePartyId: battle?.party_id,
+      battleUserId: battle?.user_id,
+      battleError 
+    });
 
     if (!battle) {
       throw new Error(`Battle not found for dungeon ${battleId}. Make sure to select a difficulty first.`);
