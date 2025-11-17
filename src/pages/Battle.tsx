@@ -366,7 +366,9 @@ const Battle = () => {
             title: "Victory!",
             description: "You have conquered the dungeon! Returning to dashboard...",
           });
+          // Don't reload battle, just redirect after showing final state
           setTimeout(() => navigate("/dashboard"), 3000);
+          return; // Exit early to prevent reload
         } else {
           toast({
             title: data.outcome.triggersBattle ? "Battle!" : "The path unfolds",
@@ -375,7 +377,7 @@ const Battle = () => {
         }
       }
 
-      // Reload battle to get updated state
+      // Reload battle to get updated state (only if not complete)
       await loadBattle();
     } catch (error: any) {
       toast({

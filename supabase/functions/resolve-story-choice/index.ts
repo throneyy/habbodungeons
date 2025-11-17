@@ -193,12 +193,12 @@ What happens as a result of this choice?`,
           message: "You have reached the end of this dungeon! Congratulations on surviving The Shattered Frostkeep!" 
         });
         
-        // Mark battle as complete
+        // Update battle log but keep battle active so frontend can load final state
         await supabaseClient
           .from("battle_states")
           .update({
             battle_log: battleLog,
-            is_active: false,
+            current_room_index: newRoomIndex,
           })
           .eq("id", battleState.id);
           
