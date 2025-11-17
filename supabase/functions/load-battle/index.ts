@@ -24,13 +24,12 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    // Get battle state (works for both solo and party battles)
+    // Get battle state (RLS policy handles both solo and party access)
     const { data: battle, error: battleError } = await supabase
       .from('battle_states')
       .select('*, dungeons(*)')
       .eq('dungeon_id', battleId)
       .eq('is_active', true)
-      .or(`user_id.eq.${user.id},party_id.in.(select party_id from party_members where user_id = '${user.id}')`)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
