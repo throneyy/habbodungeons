@@ -50,6 +50,17 @@ serve(async (req) => {
 
     console.log("Resolving choice:", choiceLabel);
 
+    // Get the current and next room enemy info
+    const dungeon = battleState.dungeons.dungeon_json as any;
+    const currentRoomIndex = battleState.current_room_index;
+    const nextRoomIndex = currentRoomIndex + 1;
+    
+    let enemyContext = "";
+    if (nextRoomIndex < dungeon.rooms.length) {
+      const nextRoom = dungeon.rooms[nextRoomIndex];
+      enemyContext = `\n\nIMPORTANT: If you trigger a battle, the enemy will be: "${nextRoom.enemy.name}" (${nextRoom.enemy.description}). You MUST mention this exact enemy name in your narrative if triggersBattle is true.`;
+    }
+
     // Call Lovable AI to determine outcome
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -66,6 +77,7 @@ serve(async (req) => {
 
 CRITICAL RULES:
 - Narrate the outcome dramatically but concisely (2-3 sentences)
+- If you trigger a battle, you MUST mention the exact enemy name provided in the user context
 - Choices that seem aggressive should often trigger battles
 - Choices that seem cautious should be safer but might still have risks
 - Mix rewards and penalties to keep things interesting
@@ -98,7 +110,7 @@ Player chose: "${choiceLabel}"
 Dungeon: ${battleState.dungeons.name} (${battleState.dungeons.difficulty})
 Current room: ${battleState.current_room_index}
 Party HP: ${partyStats.current_hp}/${partyStats.max_hp}
-Party MP: ${partyStats.current_mp}/${partyStats.max_mp}
+Party MP: ${partyStats.current_mp}/${partyStats.max_mp}${enemyContext}
 
 What happens as a result of this choice?`,
           },
