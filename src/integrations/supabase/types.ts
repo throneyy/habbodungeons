@@ -23,6 +23,7 @@ export type Database = {
           dungeon_id: string
           id: string
           is_active: boolean
+          party_id: string | null
           updated_at: string
           user_id: string
         }
@@ -34,6 +35,7 @@ export type Database = {
           dungeon_id: string
           id?: string
           is_active?: boolean
+          party_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -45,6 +47,7 @@ export type Database = {
           dungeon_id?: string
           id?: string
           is_active?: boolean
+          party_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -54,6 +57,13 @@ export type Database = {
             columns: ["dungeon_id"]
             isOneToOne: false
             referencedRelation: "dungeons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_states_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
             referencedColumns: ["id"]
           },
         ]
