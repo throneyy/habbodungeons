@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { dungeonName, difficulty, theme, encounters } = await req.json();
+    const { difficulty, theme, encounters } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
     
     const supabase = createClient(
@@ -54,17 +54,19 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
+            content: `You are a JRPG dungeon generator for The Shattered Frostkeep universe in Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
             
 CRITICAL: The first room MUST be story/exploration focused, NOT immediate combat. Players should encounter choices, exploration, or story elements before fighting.
 
-Output ONLY valid JSON (no markdown formatting) with: dungeonName, introText (engaging quest hook), rooms array with [{roomIndex, description (vivid and immersive), enemy: {name, description, hp, atk, def, spd}}]. 
+Generate a UNIQUE and compelling quest name that drives the story forward. The quest name should be epic and specific (e.g., "The Frozen Crown Heist", "Curse of the Ice Wraith", "Rescue in the Glacial Depths").
+
+Output ONLY valid JSON (no markdown formatting) with: dungeonName (unique quest name), introText (engaging quest hook), rooms array with [{roomIndex, description (vivid and immersive), enemy: {name, description, hp, atk, def, spd}}]. 
 
 Scale enemy stats based on difficulty and player level. Make the first room's description focus on atmosphere and discovery, not combat.`
           },
           {
             role: 'user',
-            content: `Generate dungeon: ${dungeonName}`
+            content: `Generate a unique quest for The Shattered Frostkeep`
           }
         ],
       }),
@@ -80,7 +82,7 @@ Scale enemy stats based on difficulty and player level. Make the first room's de
       .from('dungeons')
       .insert({
         owner_user_id: user.id,
-        name: dungeonName,
+        name: dungeonJson.dungeonName,
         theme,
         difficulty,
         dungeon_json: dungeonJson,

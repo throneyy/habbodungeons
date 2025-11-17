@@ -79,10 +79,10 @@ const Dashboard = () => {
   const handleStartDungeon = async () => {
     setLoading(true);
     try {
+      const difficulty = Math.random() > 0.5 ? "Normal" : "Hardcore";
       const { data, error } = await supabase.functions.invoke("generate-dungeon", {
         body: {
-          dungeonName: "Into the Frostkeep",
-          difficulty: "Normal",
+          difficulty,
           theme: "Ice",
           encounters: 3,
         },
