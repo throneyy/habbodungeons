@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
-import { Swords, Users, Skull, Shield } from "lucide-react";
+import { Swords, Users } from "lucide-react";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 
 interface DungeonInfo {
@@ -20,23 +20,13 @@ const DungeonLobby = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [dungeon, setDungeon] = useState<DungeonInfo | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<"Normal" | "Hardcore">("Normal");
-  const [generating, setGenerating] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id && id !== "new") {
-      loadDungeon();
-    }
-    
-    // Ensure any dashboard music is stopped
-    return () => {
-      // Cleanup on unmount
-    };
+    loadDungeon();
   }, [id]);
 
   const loadDungeon = async () => {
-    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -52,9 +42,6 @@ const DungeonLobby = () => {
 
       if (error) throw error;
       setDungeon(data);
-      if (data.difficulty === "Normal" || data.difficulty === "Hardcore") {
-        setSelectedDifficulty(data.difficulty);
-      }
     } catch (error: any) {
       toast({
         title: "Failed to load dungeon",
@@ -66,60 +53,30 @@ const DungeonLobby = () => {
     setLoading(false);
   };
 
-  const handleStartBattle = async () => {
-    if (id === "new") {
-      // Generate new dungeon
-      setGenerating(true);
-      try {
-        const { data, error } = await supabase.functions.invoke("generate-dungeon", {
-          body: {
-            difficulty: selectedDifficulty,
-            theme: "Ice",
-            encounters: 3,
-          },
-        });
-
-        if (error) throw error;
-
-        toast({ title: "Quest generated!" });
-        navigate(`/battle/${data.dungeonId}`);
-      } catch (error: any) {
-        toast({
-          title: "Failed to generate quest",
-          description: error.message,
-          variant: "destructive",
-        });
-        setGenerating(false);
-      }
-    } else {
-      navigate(`/battle/${id}`);
-    }
+  const handleStartBattle = () => {
+    navigate(`/battle/${id}`);
   };
 
-  if (loading || generating) {
+  if (loading) {
     return (
       <AppLayout hideBanner>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-2xl font-bold">{generating ? "Generating quest..." : "Loading..."}</p>
+          <p className="text-2xl font-bold">Loading dungeon...</p>
         </div>
       </AppLayout>
     );
   }
 
-  const isNewDungeon = id === "new";
-
   return (
     <AppLayout hideBanner>
-      {/* Universe Banner */}
-      <div className="w-full flex justify-center mb-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Universe Banner */}
         <img 
           src={frostkeepBanner} 
           alt="The Shattered Frostkeep" 
-          className="pixel-icon"
+          className="pixel-icon border-4 border-habbo-dark rounded-lg mx-auto"
         />
-      </div>
 
-      <div className="max-w-4xl mx-auto space-y-6">
         {/* Universe Introduction */}
         <HabboPanel title="The Shattered Frostkeep">
           <div className="space-y-4">
@@ -135,41 +92,21 @@ const DungeonLobby = () => {
               </p>
             </div>
 
-            <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
-              <h3 className="text-xl font-black mb-2">Your Quest: Into the Frostkeep</h3>
-              <p className="text-lg mb-4 text-foreground font-semibold">
-                Venture deep into the frozen dungeon and survive its trials.
-              </p>
-              {isNewDungeon ? (
-                <>
-                  <p className="text-sm text-muted-foreground mb-3">Choose your difficulty:</p>
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={() => setSelectedDifficulty("Normal")}
-                      variant={selectedDifficulty === "Normal" ? "default" : "outline"}
-                      className="font-bold border-2 border-habbo-dark"
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Normal
-                    </Button>
-                    <Button
-                      onClick={() => setSelectedDifficulty("Hardcore")}
-                      variant={selectedDifficulty === "Hardcore" ? "destructive" : "outline"}
-                      className="font-bold border-2 border-habbo-dark"
-                    >
-                      <Skull className="w-4 h-4 mr-2" />
-                      Hardcore
-                    </Button>
-                  </div>
-                </>
-              ) : dungeon ? (
+            {dungeon && (
+              <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
+                <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
+                {dungeon.dungeon_json?.questObjective && (
+                  <p className="text-lg mb-4 text-foreground font-semibold">
+                    {dungeon.dungeon_json.questObjective}
+                  </p>
+                )}
                 <div className="flex gap-4 text-sm">
                   <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
                     {dungeon.difficulty}
                   </span>
                 </div>
-              ) : null}
-            </div>
+              </div>
+            )}
           </div>
         </HabboPanel>
 

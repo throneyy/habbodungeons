@@ -54,31 +54,17 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a master JRPG quest designer for The Shattered Frostkeep universe in Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
+            content: `You are a JRPG dungeon generator for The Shattered Frostkeep universe in Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
             
-CRITICAL REQUIREMENTS:
-1. The first room MUST be story/exploration focused, NOT immediate combat. Players should encounter atmospheric descriptions, environmental storytelling, or narrative choices before fighting.
+CRITICAL: The first room MUST be story/exploration focused, NOT immediate combat. Players should encounter choices, exploration, or story elements before fighting.
 
-2. Generate an EPIC and IMMERSIVE quest name that hints at the adventure (e.g., "The Frozen Crown Heist", "Curse of the Wraithbound Blade", "Rescue from the Crystal Tomb").
+Generate a UNIQUE and compelling quest name that drives the story forward. The quest name should be epic and specific (e.g., "The Frozen Crown Heist", "Curse of the Ice Wraith", "Rescue in the Glacial Depths").
 
-3. Create a SPECIFIC and COMPELLING quest objective that tells players exactly what they must accomplish:
-   - RESCUE missions: "Save the frost mage trapped in the ice prison before hypothermia claims them"
-   - RETRIEVAL missions: "Recover the legendary Frostblade hidden in the vault beneath the frozen throne"
-   - BOSS HUNT missions: "Slay the Ice Wraith that devours travelers in the glacial halls"
-   - TREASURE missions: "Find and return the stolen Winter Gem from the frost dragon's hoard"
-   - EXPLORATION missions: "Discover the source of the unnatural cold spreading through the keep"
-   
-4. Make the introText VIVID and ATMOSPHERIC - set the scene with sensory details about the ice, cold, danger, and what awaits.
+Generate a clear QUEST OBJECTIVE that tells players exactly what they need to do. Examples: "Rescue the trapped merchant from the ice prison", "Retrieve the legendary Frostblade from the vault", "Defeat the Ice Wraith that haunts the frozen halls", "Find and return the stolen Winter Gem".
 
-5. Each room description should be IMMERSIVE with specific details about ice formations, frozen corpses, treasure glints, eerie sounds, and environmental hazards.
+Output ONLY valid JSON (no markdown formatting) with: dungeonName (unique quest name), questObjective (clear goal to complete), introText (engaging quest hook), rooms array with [{roomIndex, description (vivid and immersive), enemy: {name, description, hp, atk, def, spd}}]. 
 
-Output ONLY valid JSON (no markdown) with: 
-- dungeonName (epic quest name)
-- questObjective (specific compelling goal)
-- introText (atmospheric hook with danger and promise)
-- rooms array: [{roomIndex, description (vivid immersive scene), enemy: {name, description, hp, atk, def, spd}}]
-
-Scale enemy stats based on difficulty (Hardcore = +50% HP, +25% damage) and player level. First room enemy can be null for story mode.`
+Scale enemy stats based on difficulty and player level. Make the first room's description focus on atmosphere and discovery, not combat.`
           },
           {
             role: 'user',
@@ -109,35 +95,19 @@ Scale enemy stats based on difficulty (Hardcore = +50% HP, +25% damage) and play
     if (error) throw error;
 
     // Create initial battle state in story mode
-    const firstRoom = dungeonJson.rooms[0];
-    const firstEnemy = firstRoom.enemy;
-    
-    // Create placeholder enemy state for story mode if no enemy exists
-    const enemyState = firstEnemy ? {
-      ...firstEnemy,
-      current_hp: firstEnemy.hp,
-      max_hp: firstEnemy.hp,
-      status_effects: [],
-      mode: "story",
-    } : {
-      name: "Story Mode",
-      description: "Exploring the dungeon",
-      hp: 1,
-      current_hp: 1,
-      max_hp: 1,
-      atk: 0,
-      def: 0,
-      spd: 0,
-      status_effects: [],
-      mode: "story",
-    };
-
+    const firstEnemy = dungeonJson.rooms[0].enemy;
     await supabase.from('battle_states').insert({
       user_id: user.id,
       dungeon_id: dungeon.id,
       current_room_index: 0,
-      current_enemy_state: enemyState,
-      battle_log: [dungeonJson.introText, firstRoom.description],
+      current_enemy_state: {
+        ...firstEnemy,
+        current_hp: firstEnemy.hp,
+        max_hp: firstEnemy.hp,
+        status_effects: [],
+        mode: "story",
+      },
+      battle_log: [dungeonJson.introText, dungeonJson.rooms[0].description],
     });
 
     return new Response(
