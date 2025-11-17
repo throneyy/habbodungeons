@@ -9,7 +9,7 @@ import { Copy, Users, UserPlus } from "lucide-react";
 interface PartyInviteProps {
   dungeonId?: string;
   onPartyCreated?: (partyId: string, inviteCode: string) => void;
-  onPartyJoined?: (partyId: string) => void;
+  onPartyJoined?: (partyId: string, dungeonId: string) => void;
 }
 
 export const PartyInvite = ({ dungeonId, onPartyCreated, onPartyJoined }: PartyInviteProps) => {
@@ -69,7 +69,7 @@ export const PartyInvite = ({ dungeonId, onPartyCreated, onPartyJoined }: PartyI
       });
 
       setJoinCode("");
-      onPartyJoined?.(data.party.id);
+      onPartyJoined?.(data.party.id, data.dungeonId);
     } catch (error: any) {
       toast({
         title: "Failed to join party",

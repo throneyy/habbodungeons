@@ -227,9 +227,18 @@ const DungeonLobby = () => {
               setPartyId(id);
               setIsPartyLeader(true);
             }}
-            onPartyJoined={(id) => {
-              setPartyId(id);
-              setIsPartyLeader(false);
+            onPartyJoined={(partyId, dungeonId) => {
+              // If the party is for a different dungeon, navigate to it
+              if (dungeonId && dungeonId !== id) {
+                toast({
+                  title: "Redirecting to party dungeon...",
+                  description: "Taking you to your party's dungeon lobby",
+                });
+                setTimeout(() => navigate(`/dungeon-lobby/${dungeonId}`), 1000);
+              } else {
+                setPartyId(partyId);
+                setIsPartyLeader(false);
+              }
             }}
           />
           

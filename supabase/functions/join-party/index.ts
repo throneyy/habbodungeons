@@ -64,9 +64,17 @@ serve(async (req) => {
 
     console.log("User joined party successfully");
 
+    // Reload party with dungeon_id
+    const { data: updatedParty } = await supabase
+      .from('parties')
+      .select('*, party_members(*)')
+      .eq('id', party.id)
+      .single();
+
     return new Response(
       JSON.stringify({ 
-        party,
+        party: updatedParty,
+        dungeonId: updatedParty?.dungeon_id,
         message: "Successfully joined party!" 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
