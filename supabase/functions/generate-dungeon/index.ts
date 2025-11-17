@@ -41,7 +41,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    // Call AI to generate dungeon
+    // Call AI to generate dungeon using structured output
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -54,67 +54,82 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for The Shattered Frostkeep universe in Habbo roleplay. Generate a ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
-            
-CRITICAL: The first room MUST be story/exploration focused, NOT immediate combat. Players should encounter choices, exploration, or story elements before fighting.
-
-Generate a UNIQUE and compelling quest name that drives the story forward. The quest name should be epic and specific (e.g., "The Frozen Crown Heist", "Curse of the Ice Wraith", "Rescue in the Glacial Depths").
-
-Generate a clear QUEST OBJECTIVE that tells players exactly what they need to do. Examples: "Rescue the trapped merchant from the ice prison", "Retrieve the legendary Frostblade from the vault", "Defeat the Ice Wraith that haunts the frozen halls", "Find and return the stolen Winter Gem".
-
-IMPORTANT JSON RULES:
-- Output ONLY valid JSON (no markdown, no code blocks, no extra text)
-- Keep all text descriptions concise (under 80 words each)
-- Replace any line breaks in descriptions with spaces
-- Use simple, straightforward text without special formatting
-
-Required format:
-{
-  "dungeonName": "quest name here",
-  "questObjective": "clear objective here",
-  "introText": "brief hook text",
-  "rooms": [
-    {
-      "roomIndex": 0,
-      "description": "room description",
-      "enemy": {
-        "name": "enemy name",
-        "description": "brief description",
-        "hp": 50,
-        "atk": 12,
-        "def": 8,
-        "spd": 10
-      }
-    }
-  ]
-}
-
-Generate balanced base stats for enemies appropriate for player level ${stats?.level || 1}.`
+            content: `You are a JRPG dungeon generator for The Shattered Frostkeep. Generate unique ice-themed dungeon quests. Keep all descriptions brief and atmospheric.`
           },
           {
             role: 'user',
-            content: `Generate a unique quest for The Shattered Frostkeep`
+            content: `Generate a ${theme} dungeon with ${encounters} rooms for level ${stats?.level || 1} player. First room should be exploration/story, not combat.`
           }
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "create_dungeon",
+              description: "Create a new dungeon quest with rooms and enemies",
+              parameters: {
+                type: "object",
+                properties: {
+                  dungeonName: {
+                    type: "string",
+                    description: "Epic quest name (e.g. The Frozen Crown Heist)"
+                  },
+                  questObjective: {
+                    type: "string",
+                    description: "Clear goal for the player"
+                  },
+                  introText: {
+                    type: "string",
+                    description: "Brief quest hook (2-3 sentences max)"
+                  },
+                  rooms: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        roomIndex: { type: "number" },
+                        description: {
+                          type: "string",
+                          description: "Brief room description (2 sentences max)"
+                        },
+                        enemy: {
+                          type: "object",
+                          properties: {
+                            name: { type: "string" },
+                            description: { type: "string" },
+                            hp: { type: "number" },
+                            atk: { type: "number" },
+                            def: { type: "number" },
+                            spd: { type: "number" }
+                          },
+                          required: ["name", "description", "hp", "atk", "def", "spd"]
+                        }
+                      },
+                      required: ["roomIndex", "description"]
+                    }
+                  }
+                },
+                required: ["dungeonName", "questObjective", "introText", "rooms"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "create_dungeon" } }
       }),
     });
 
     const aiData = await aiResponse.json();
-    const rawContent = aiData.choices[0].message.content;
-    console.log("Raw AI response (first 200 chars):", rawContent.substring(0, 200));
-    console.log("Raw AI response (last 200 chars):", rawContent.substring(Math.max(0, rawContent.length - 200)));
+    console.log("AI response:", JSON.stringify(aiData).substring(0, 300));
     
-    const cleanedContent = extractJSON(rawContent);
-    console.log("Extracted JSON length:", cleanedContent.length);
-    
-    let dungeonJson;
-    try {
-      dungeonJson = JSON.parse(cleanedContent);
-    } catch (parseError: any) {
-      console.error("JSON parse error:", parseError.message);
-      console.error("Content around error position:", cleanedContent.substring(Math.max(0, parseError.position - 100), parseError.position + 100));
-      throw new Error(`Failed to parse AI response: ${parseError.message}`);
+    // Extract structured output from tool call
+    const toolCall = aiData.choices[0].message.tool_calls?.[0];
+    if (!toolCall || !toolCall.function || !toolCall.function.arguments) {
+      console.error("No tool call in response:", aiData);
+      throw new Error("AI did not return structured dungeon data");
     }
+    
+    const dungeonJson = JSON.parse(toolCall.function.arguments);
+    console.log("Parsed dungeon:", dungeonJson.dungeonName);
 
     // Save dungeon with base stats (no difficulty applied yet)
     const { data: dungeon, error } = await supabase
