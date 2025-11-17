@@ -404,7 +404,7 @@ const Battle = () => {
                           <div className="flex justify-center">
                             <div className="border-2 border-habbo-dark rounded overflow-hidden bg-card">
                               <img
-                                src={member.habboAvatar}
+                                src={member.habboAvatar.replace('size=s', 'size=m')}
                                 alt={member.username}
                                 className="pixel-icon"
                                 style={{ width: "auto", height: "auto", maxWidth: "80px" }}
