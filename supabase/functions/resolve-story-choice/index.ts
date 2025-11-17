@@ -227,18 +227,15 @@ What happens as a result of this choice?`,
       }
     }
 
-    await supabaseClient
-      .from("battle_states")
-      .update({
-        battle_log: battleLog,
-        current_room_index: newRoomIndex,
-      })
-      .eq("id", battleState.id);
+    // Prepare update object
+    const updateData: any = {
+      battle_log: battleLog,
+      current_room_index: newRoomIndex,
+    };
 
-    // Update battle state to trigger battle mode
+    // Set up enemy if battle is triggered
     if (outcome.triggersBattle) {
       // CRITICAL: Progress to next room and get that room's enemy (matching AI context)
-      const dungeonData = battleState.dungeons.dungeon_json;
       const battleRoomIndex = Math.min(newRoomIndex + 1, maxRoomIndex);
       const battleRoom = dungeonData.rooms[battleRoomIndex];
       
@@ -247,48 +244,42 @@ What happens as a result of this choice?`,
         const enemy = battleRoom.enemy;
         
         // Update room index to the battle room
-        newRoomIndex = battleRoomIndex;
-        await supabaseClient
-          .from("battle_states")
-          .update({
-            current_room_index: newRoomIndex,
-            current_enemy_state: {
-              name: enemy.name,
-              description: enemy.description,
-              hp: enemy.hp,
-              current_hp: enemy.hp,
-              max_hp: enemy.hp,
-              atk: enemy.atk,
-              def: enemy.def,
-              spd: enemy.spd,
-              status_effects: [],
-              mode: "battle",
-            },
-          })
-          .eq("id", battleState.id);
+        updateData.current_room_index = battleRoomIndex;
+        updateData.current_enemy_state = {
+          name: enemy.name,
+          description: enemy.description,
+          hp: enemy.hp,
+          current_hp: enemy.hp,
+          max_hp: enemy.hp,
+          atk: enemy.atk,
+          def: enemy.def,
+          spd: enemy.spd,
+          status_effects: [],
+          mode: "battle",
+        };
       } else {
         // No enemy in room, but triggering battle - create a generic enemy and advance room
-        newRoomIndex = battleRoomIndex;
-        await supabaseClient
-          .from("battle_states")
-          .update({
-            current_room_index: newRoomIndex,
-            current_enemy_state: {
-              name: "Ice Shade",
-              description: "A mysterious creature emerges from the shadows!",
-              hp: 30,
-              current_hp: 30,
-              max_hp: 30,
-              atk: 8,
-              def: 5,
-              spd: 12,
-              status_effects: [],
-              mode: "battle",
-            },
-          })
-          .eq("id", battleState.id);
+        updateData.current_room_index = battleRoomIndex;
+        updateData.current_enemy_state = {
+          name: "Ice Shade",
+          description: "A mysterious creature emerges from the shadows!",
+          hp: 30,
+          current_hp: 30,
+          max_hp: 30,
+          atk: 8,
+          def: 5,
+          spd: 12,
+          status_effects: [],
+          mode: "battle",
+        };
       }
     }
+
+    // Single atomic update
+    await supabaseClient
+      .from("battle_states")
+      .update(updateData)
+      .eq("id", battleState.id);
 
     return new Response(
       JSON.stringify({
