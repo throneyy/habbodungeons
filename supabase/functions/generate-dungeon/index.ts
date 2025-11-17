@@ -54,7 +54,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for The Shattered Frostkeep universe in Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
+            content: `You are a JRPG dungeon generator for The Shattered Frostkeep universe in Habbo roleplay. Generate a ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
             
 CRITICAL: The first room MUST be story/exploration focused, NOT immediate combat. Players should encounter choices, exploration, or story elements before fighting.
 
@@ -64,7 +64,7 @@ Generate a clear QUEST OBJECTIVE that tells players exactly what they need to do
 
 Output ONLY valid JSON (no markdown formatting) with: dungeonName (unique quest name), questObjective (clear goal to complete), introText (engaging quest hook), rooms array with [{roomIndex, description (vivid and immersive), enemy: {name, description, hp, atk, def, spd}}]. 
 
-Scale enemy stats based on difficulty and player level. Make the first room's description focus on atmosphere and discovery, not combat.`
+IMPORTANT: The quest story, name, and objective should be the SAME regardless of difficulty. Enemy base stats should be balanced for player level ${stats?.level || 1}. The difficulty level (${difficulty}) will be applied as a multiplier AFTER generation.`
           },
           {
             role: 'user',
@@ -78,6 +78,23 @@ Scale enemy stats based on difficulty and player level. Make the first room's de
     const rawContent = aiData.choices[0].message.content;
     const cleanedContent = extractJSON(rawContent);
     const dungeonJson = JSON.parse(cleanedContent);
+
+    // Apply difficulty multiplier to enemy stats
+    const difficultyMultiplier = difficulty === "Hardcore" ? 1.5 : 1.0;
+    dungeonJson.rooms = dungeonJson.rooms.map((room: any) => {
+      if (room.enemy) {
+        return {
+          ...room,
+          enemy: {
+            ...room.enemy,
+            hp: Math.floor(room.enemy.hp * difficultyMultiplier),
+            atk: Math.floor(room.enemy.atk * difficultyMultiplier),
+            def: Math.floor(room.enemy.def * difficultyMultiplier),
+          }
+        };
+      }
+      return room;
+    });
 
     // Save dungeon
     const { data: dungeon, error } = await supabase

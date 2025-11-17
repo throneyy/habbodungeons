@@ -76,10 +76,9 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const handleStartDungeon = async () => {
+  const handleStartDungeon = async (difficulty: "Normal" | "Hardcore") => {
     setLoading(true);
     try {
-      const difficulty = Math.random() > 0.5 ? "Normal" : "Hardcore";
       const { data, error } = await supabase.functions.invoke("generate-dungeon", {
         body: {
           difficulty,
@@ -219,16 +218,26 @@ const Dashboard = () => {
 
         {/* Actions */}
         {profile?.habbo_username && (
-        <div className="flex gap-4">
-          <Button
-            size="lg"
-            onClick={handleStartDungeon}
-            disabled={loading}
-            className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6"
-          >
-            {loading ? "Generating Quest..." : "Start Dungeon"}
-          </Button>
-        </div>
+        <HabboPanel title="Start Quest">
+          <div className="flex gap-4">
+            <Button
+              size="lg"
+              onClick={() => handleStartDungeon("Normal")}
+              disabled={loading}
+              className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6 bg-primary hover:bg-primary/90"
+            >
+              {loading ? "Generating..." : "Normal"}
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => handleStartDungeon("Hardcore")}
+              disabled={loading}
+              className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6 bg-destructive hover:bg-destructive/90"
+            >
+              {loading ? "Generating..." : "Hardcore"}
+            </Button>
+          </div>
+        </HabboPanel>
         )}
       </div>
     </AppLayout>
