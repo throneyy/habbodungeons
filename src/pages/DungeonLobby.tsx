@@ -1,0 +1,154 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { HabboPanel } from "@/components/HabboPanel";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/AppLayout";
+import { Swords, Users } from "lucide-react";
+import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
+
+interface DungeonInfo {
+  name: string;
+  difficulty: string;
+  theme: string;
+  dungeon_json: any;
+}
+
+const DungeonLobby = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [dungeon, setDungeon] = useState<DungeonInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDungeon();
+  }, [id]);
+
+  const loadDungeon = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("dungeons")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      setDungeon(data);
+    } catch (error: any) {
+      toast({
+        title: "Failed to load dungeon",
+        description: error.message,
+        variant: "destructive",
+      });
+      navigate("/dashboard");
+    }
+    setLoading(false);
+  };
+
+  const handleStartBattle = () => {
+    navigate(`/battle/${id}`);
+  };
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="text-2xl font-bold">Loading dungeon...</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Universe Banner */}
+        <div className="flex justify-center">
+          <img 
+            src={frostkeepBanner} 
+            alt="The Shattered Frostkeep" 
+            className="pixel-icon border-4 border-habbo-dark rounded-lg"
+            style={{ width: 'auto', height: 'auto', maxWidth: '100%' }}
+          />
+        </div>
+
+        {/* Universe Introduction */}
+        <HabboPanel title="The Shattered Frostkeep">
+          <div className="space-y-4">
+            <div className="text-lg leading-relaxed">
+              <p className="mb-4">
+                Beneath the frozen hotel lies the <span className="font-bold text-primary">Shattered Frostkeep</span>—an ancient dungeon of ice, forgotten loot, and monsters drawn to the cold.
+              </p>
+              <p className="mb-4">
+                Endless glacial corridors twist through abandoned Habbo-style fortresses made of solid ice. The walls glisten with frost, and the air itself seems to bite at your skin.
+              </p>
+              <p className="text-muted-foreground italic">
+                This season's universe: A winter event where only the bravest dare to venture into the depths.
+              </p>
+            </div>
+
+            {dungeon && (
+              <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
+                <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
+                <div className="flex gap-4 text-sm">
+                  <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
+                    {dungeon.difficulty}
+                  </span>
+                  <span className="px-3 py-1 bg-secondary/20 border-2 border-secondary rounded font-bold">
+                    {dungeon.theme}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </HabboPanel>
+
+        {/* Party & Actions Panel */}
+        <HabboPanel title="Dungeon Lobby">
+          <div className="space-y-6">
+            {/* Party System - Coming Soon */}
+            <div className="p-4 bg-muted/50 border-2 border-dashed border-habbo-dark rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-5 h-5" />
+                <h4 className="font-bold">Party System</h4>
+                <span className="ml-auto text-sm text-muted-foreground italic">Coming Soon</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Team up with friends using invite codes before entering the dungeon!
+              </p>
+            </div>
+
+            {/* Start Battle */}
+            <div className="flex flex-col gap-4">
+              <Button
+                onClick={handleStartBattle}
+                className="w-full font-bold text-lg py-6 border-4 border-habbo-dark"
+                size="lg"
+              >
+                <Swords className="w-6 h-6 mr-2" />
+                Enter the Dungeon
+              </Button>
+              <Button
+                onClick={() => navigate("/dashboard")}
+                variant="outline"
+                className="w-full font-bold border-2 border-habbo-dark"
+              >
+                Return to Dashboard
+              </Button>
+            </div>
+          </div>
+        </HabboPanel>
+      </div>
+    </AppLayout>
+  );
+};
+
+export default DungeonLobby;
