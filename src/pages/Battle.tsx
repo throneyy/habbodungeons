@@ -418,7 +418,15 @@ const Battle = () => {
             loadBattle();
           }, 2000);
         } else if (data.defeat) {
-          toast({ title: "Defeat", description: "You were defeated...", variant: "destructive" });
+          toast({ 
+            title: "Defeated!", 
+            description: "You retreat to town with 50% HP/MP restored...",
+            variant: "destructive" 
+          });
+          // Redirect to dashboard after defeat
+          setTimeout(() => {
+            navigate("/dashboard");
+          }, 3000);
         }
       }
     } catch (error: any) {
