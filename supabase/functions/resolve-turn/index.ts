@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { battleId, action, dice } = await req.json();
+    const { battleId, action, dice, itemName } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
     
     const supabase = createClient(
@@ -33,6 +33,8 @@ serve(async (req) => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
+
+    console.log(`Resolving turn for user: ${user.id}, action: ${action}, itemName: ${itemName || 'none'}`);
 
     // Get battle and player stats
     const [battleRes, statsRes] = await Promise.all([
@@ -94,6 +96,36 @@ serve(async (req) => {
     const rawContent = aiData.choices[0].message.content;
     const cleanedContent = extractJSON(rawContent);
     const result = JSON.parse(cleanedContent);
+
+    // If action was using an item, decrement it from inventory
+    if (action === 'item' && itemName) {
+      const { data: inventoryItem, error: inventoryError } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('item_name', itemName)
+        .maybeSingle();
+
+      if (inventoryItem) {
+        if (inventoryItem.quantity > 1) {
+          // Decrement quantity
+          await supabase
+            .from('inventory')
+            .update({ quantity: inventoryItem.quantity - 1 })
+            .eq('id', inventoryItem.id);
+          console.log(`Decremented ${itemName} quantity to ${inventoryItem.quantity - 1}`);
+        } else {
+          // Remove item if quantity is 1
+          await supabase
+            .from('inventory')
+            .delete()
+            .eq('id', inventoryItem.id);
+          console.log(`Removed ${itemName} from inventory`);
+        }
+      } else {
+        console.warn(`Item ${itemName} not found in user's inventory`);
+      }
+    }
 
     // Update player stats
     await supabase

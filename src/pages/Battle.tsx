@@ -67,6 +67,8 @@ const Battle = () => {
   const [partyId, setPartyId] = useState<string | null>(null);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string>("");
+  const [selectedItem, setSelectedItem] = useState<string | null>(null);
+  const [inventory, setInventory] = useState<any[]>([]);
   const [dice, setDice] = useState<number[]>([1, 1, 1, 1, 1]);
   const [loading, setLoading] = useState(false);
   const [showCombatPanels, setShowCombatPanels] = useState(false);
@@ -85,6 +87,7 @@ const Battle = () => {
     loadProfile();
     loadCurrentUser();
     checkExistingParty();
+    loadInventory();
   }, [id]);
 
   // Set up Realtime subscription for battle state changes
@@ -145,6 +148,21 @@ const Battle = () => {
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const loadInventory = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("inventory")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("item_name");
+
+    if (data) {
+      setInventory(data);
     }
   };
 
@@ -796,7 +814,10 @@ const Battle = () => {
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant={selectedAction === "attack" ? "default" : "outline"}
-                  onClick={() => setSelectedAction("attack")}
+                  onClick={() => {
+                    setSelectedAction("attack");
+                    setSelectedItem(null);
+                  }}
                   className="font-bold border-4 border-habbo-dark"
                 >
                   <Swords className="w-4 h-4 mr-2" />
@@ -804,7 +825,10 @@ const Battle = () => {
                 </Button>
                 <Button
                   variant={selectedAction === "skill" ? "default" : "outline"}
-                  onClick={() => setSelectedAction("skill")}
+                  onClick={() => {
+                    setSelectedAction("skill");
+                    setSelectedItem(null);
+                  }}
                   className="font-bold border-4 border-habbo-dark"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
@@ -812,7 +836,10 @@ const Battle = () => {
                 </Button>
                 <Button
                   variant={selectedAction === "defend" ? "default" : "outline"}
-                  onClick={() => setSelectedAction("defend")}
+                  onClick={() => {
+                    setSelectedAction("defend");
+                    setSelectedItem(null);
+                  }}
                   className="font-bold border-4 border-habbo-dark"
                 >
                   <Shield className="w-4 h-4 mr-2" />
@@ -827,6 +854,31 @@ const Battle = () => {
                   Item
                 </Button>
               </div>
+
+              {/* Item Selection */}
+              {selectedAction === "item" && (
+                <div className="space-y-2 p-3 bg-muted rounded border-2 border-habbo-dark">
+                  <p className="text-xs font-bold mb-2">Select Item:</p>
+                  {inventory.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      {inventory.map((item) => (
+                        <Button
+                          key={item.id}
+                          variant={selectedItem === item.item_name ? "default" : "outline"}
+                          onClick={() => setSelectedItem(item.item_name)}
+                          className="font-bold text-xs h-auto py-2"
+                        >
+                          {item.item_name} ({item.quantity})
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center py-2">
+                      No items in inventory
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <p className="font-bold text-sm">Enter your Holodice results from Habbo:</p>
