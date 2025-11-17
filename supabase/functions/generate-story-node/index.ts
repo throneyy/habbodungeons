@@ -18,10 +18,18 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
+    const authHeader = req.headers.get("Authorization");
+    console.log("Auth header present:", !!authHeader);
+    
+    if (!authHeader) {
+      console.error("No Authorization header provided");
+      throw new Error("Not authenticated - no authorization header");
+    }
+    
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
+      { global: { headers: { Authorization: authHeader } } }
     );
 
     const { battleId, lastChoice } = await req.json();
@@ -36,9 +44,11 @@ serve(async (req) => {
 
     // Get authenticated user first
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    console.log("Auth check:", { hasUser: !!user, authError: authError?.message });
+    
     if (authError || !user) {
-      console.error("Authentication failed:", authError);
-      throw new Error("Not authenticated");
+      console.error("Authentication failed - authError:", authError, "user:", user);
+      throw new Error(`Not authenticated: ${authError?.message || 'User not found'}`);
     }
 
     console.log("Generating story node for battleId:", battleId, "userId:", user.id);
