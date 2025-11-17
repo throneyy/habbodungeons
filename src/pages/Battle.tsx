@@ -75,6 +75,7 @@ const Battle = () => {
   const [dice, setDice] = useState<number[]>([1, 1, 1, 1, 1]);
   const [loading, setLoading] = useState(false);
   const [showCombatPanels, setShowCombatPanels] = useState(false);
+  const [questComplete, setQuestComplete] = useState(false);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -362,13 +363,12 @@ const Battle = () => {
       // Show consequence toast
       if (data.outcome) {
         if (data.outcome.dungeonComplete) {
+          setQuestComplete(true);
           toast({
-            title: "Victory!",
-            description: "You have conquered the dungeon! Returning to dashboard...",
+            title: "Quest Complete!",
+            description: "You have conquered this challenge. What will you do next?",
           });
-          // Don't reload battle, just redirect after showing final state
-          setTimeout(() => navigate("/dashboard"), 3000);
-          return; // Exit early to prevent reload
+          return;
         } else {
           toast({
             title: data.outcome.triggersBattle ? "Battle!" : "The path unfolds",
@@ -435,6 +435,58 @@ const Battle = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-2xl font-bold">Loading...</p>
+      </div>
+    );
+  }
+
+  // Quest Completion Modal
+  if (questComplete) {
+    return (
+      <div className="min-h-screen bg-background relative flex items-center justify-center">
+        <div 
+          className="fixed inset-0 opacity-20 bg-center bg-cover"
+          style={{ backgroundImage: `url(${dungeonBg})` }}
+        />
+        
+        <div className="relative z-10 p-8 max-w-2xl w-full">
+          <HabboPanel title="Quest Complete!">
+            <div className="space-y-6 p-6 text-center">
+              <div className="text-6xl">🏆</div>
+              <h2 className="text-3xl font-black">Victory!</h2>
+              <p className="text-lg">
+                You have conquered this challenge and emerged victorious. The realm needs heroes like you.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4 py-4">
+                <div className="p-4 bg-muted rounded border-2 border-habbo-dark">
+                  <p className="text-sm font-bold">Current HP</p>
+                  <p className="text-2xl font-bold text-green-500">{battleData.player.current_hp}/{battleData.player.max_hp}</p>
+                </div>
+                <div className="p-4 bg-muted rounded border-2 border-habbo-dark">
+                  <p className="text-sm font-bold">Current MP</p>
+                  <p className="text-2xl font-bold text-blue-500">{battleData.player.current_mp}/{battleData.player.max_mp}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-4">
+                <Button
+                  onClick={() => navigate("/create-dungeon")}
+                  className="w-full text-xl py-6 font-black border-4 border-habbo-dark hover-scale"
+                  size="lg"
+                >
+                  ⚔️ Embark on New Adventure
+                </Button>
+                <Button
+                  onClick={() => navigate("/dashboard")}
+                  variant="outline"
+                  className="w-full text-lg py-4 font-bold border-4 border-habbo-dark hover-scale"
+                >
+                  🏠 Return to Town
+                </Button>
+              </div>
+            </div>
+          </HabboPanel>
+        </div>
       </div>
     );
   }
@@ -592,6 +644,17 @@ const Battle = () => {
                               {choice.label}
                             </Button>
                           ))}
+                        </div>
+                        
+                        {/* End Quest Button */}
+                        <div className="pt-4 border-t-2 border-habbo-dark/30">
+                          <Button
+                            onClick={() => navigate("/dashboard")}
+                            variant="ghost"
+                            className="w-full text-sm font-bold text-muted-foreground hover:text-foreground"
+                          >
+                            🏠 End Quest Here
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -1006,6 +1069,17 @@ const Battle = () => {
               >
                 {loading ? "Resolving..." : "Resolve Turn"}
               </Button>
+              
+              {/* End Quest Button */}
+              <div className="pt-4 border-t-2 border-habbo-dark/30">
+                <Button
+                  onClick={() => navigate("/dashboard")}
+                  variant="ghost"
+                  className="w-full text-sm font-bold text-muted-foreground hover:text-foreground"
+                >
+                  🏠 End Quest Here
+                </Button>
+              </div>
             </div>
           </HabboPanel>
 
