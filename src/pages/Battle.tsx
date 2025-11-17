@@ -470,25 +470,9 @@ const Battle = () => {
               {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry, i) => {
                     // Handle both string entries and object entries
-                    let message = '';
-                    let userId = null;
-                    let entryType = undefined;
-                    
-                    if (typeof entry === 'string') {
-                      message = entry;
-                    } else if (entry && typeof entry === 'object') {
-                      // Extract message from object
-                      if (typeof entry.message === 'string') {
-                        message = entry.message;
-                      } else if (entry.message && typeof entry.message === 'object') {
-                        // If message is an object, try to stringify it nicely
-                        message = JSON.stringify(entry.message);
-                      } else {
-                        message = String(entry.message || '');
-                      }
-                      userId = entry.user_id || null;
-                      entryType = entry.type;
-                    }
+                    const message = typeof entry === 'string' ? entry : (entry?.message || '');
+                    const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
+                    const entryType = typeof entry === 'string' ? undefined : entry?.type;
                     
                     const isCurrentUser = userId === currentUserId;
                     const userProfile = userId ? partyProfiles.get(userId) : null;
@@ -765,25 +749,9 @@ const Battle = () => {
               {battleData.battle_log.length > 0 ? (
                 battleData.battle_log.map((entry, i) => {
                   // Handle both string entries and object entries
-                  let message = '';
-                  let userId = null;
-                  let entryType = undefined;
-                  
-                  if (typeof entry === 'string') {
-                    message = entry;
-                  } else if (entry && typeof entry === 'object') {
-                    // Extract message from object
-                    if (typeof entry.message === 'string') {
-                      message = entry.message;
-                    } else if (entry.message && typeof entry.message === 'object') {
-                      // If message is an object, try to stringify it nicely
-                      message = JSON.stringify(entry.message);
-                    } else {
-                      message = String(entry.message || '');
-                    }
-                    userId = entry.user_id || null;
-                    entryType = entry.type;
-                  }
+                  const message = typeof entry === 'string' ? entry : (entry?.message || '');
+                  const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
+                  const entryType = typeof entry === 'string' ? undefined : entry?.type;
                   
                   const isCurrentUser = userId === currentUserId;
                   const userProfile = userId ? partyProfiles.get(userId) : null;
