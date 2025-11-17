@@ -31,9 +31,10 @@ serve(async (req) => {
       .from('parties')
       .select('*, party_members(user_id)')
       .eq('id', partyId)
-      .single();
+      .maybeSingle();
 
     if (partyError) throw partyError;
+    if (!party) throw new Error("Party not found or access denied");
 
     // Get all member profiles with stats
     const userIds = party.party_members.map((m: any) => m.user_id);
