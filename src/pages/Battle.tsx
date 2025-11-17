@@ -15,6 +15,7 @@ import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 interface BattleLogEntry {
   user_id: string;
   message: string;
+  type?: string;
 }
 
 interface BattleData {
@@ -466,24 +467,25 @@ const Battle = () => {
             {/* Battle Log - Main Focus */}
             <HabboPanel title="Chronicle of Events">
               <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
-                {battleData.battle_log.length > 0 ? (
+              {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry, i) => {
                     const isCurrentUser = entry.user_id === currentUserId;
                     const userProfile = partyProfiles.get(entry.user_id);
                     const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
+                    const isDiceRoll = entry.type === 'dice_roll' || entry.message.includes('rolled');
                     
                     return (
-                      <p key={i} className="text-sm animate-fade-in">
+                      <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
                         <span className="text-primary font-bold">›</span>{" "}
                         {isCurrentUser ? (
                           entry.message
                         ) : (
                           <>
-                            <span className="text-[#FFD700] font-bold">{username}</span>
+                            {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
                             {entry.message.includes("chose:") ? (
                               <> {entry.message.replace("You ", "")}</>
                             ) : (
-                              <> {entry.message}</>
+                              <> {isDiceRoll ? entry.message : entry.message}</>
                             )}
                           </>
                         )}
@@ -744,18 +746,19 @@ const Battle = () => {
                   const isCurrentUser = entry.user_id === currentUserId;
                   const userProfile = partyProfiles.get(entry.user_id);
                   const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
+                  const isDiceRoll = entry.type === 'dice_roll' || entry.message.includes('rolled');
                   
                   return (
-                    <p key={i} className="text-sm animate-fade-in">
+                    <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
                       {isCurrentUser ? (
                         entry.message
                       ) : (
                         <>
-                          <span className="text-[#FFD700] font-bold">{username}</span>
+                          {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
                           {entry.message.includes("chose:") ? (
                             <> {entry.message.replace("You ", "")}</>
                           ) : (
-                            <> {entry.message}</>
+                            <> {isDiceRoll ? entry.message : entry.message}</>
                           )}
                         </>
                       )}
