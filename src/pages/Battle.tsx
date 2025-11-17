@@ -468,31 +468,33 @@ const Battle = () => {
             <HabboPanel title="Chronicle of Events">
               <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log.length > 0 ? (
-                  battleData.battle_log.map((entry, i) => {
-                    // Parse entry if it's a JSON string
-                    let parsedEntry: any = entry;
-                    const entryStr = typeof entry === 'string' ? entry : null;
-                    if (entryStr && (entryStr.startsWith('{') || entryStr.startsWith('['))) {
-                      try {
-                        parsedEntry = JSON.parse(entryStr);
-                      } catch (e) {
-                        // If parsing fails, treat as plain string
-                        parsedEntry = entry;
-                      }
-                    }
-                    
-                    // Extract message from parsed entry
+                  battleData.battle_log.map((entry: any, i) => {
+                    // Handle entry - can be string, object, or JSON string
                     let message = '';
-                    if (typeof parsedEntry === 'string') {
-                      message = parsedEntry;
-                    } else if (parsedEntry && typeof parsedEntry.message === 'string') {
-                      message = parsedEntry.message;
-                    } else if (parsedEntry && parsedEntry.message) {
-                      message = JSON.stringify(parsedEntry.message);
-                    }
+                    let userId = null;
+                    let entryType = undefined;
                     
-                    const userId = typeof parsedEntry === 'string' ? null : (parsedEntry?.user_id || null);
-                    const entryType = typeof parsedEntry === 'string' ? undefined : parsedEntry?.type;
+                    if (typeof entry === 'string') {
+                      // Try to parse if it looks like JSON
+                      const trimmedEntry = entry.trim();
+                      if (trimmedEntry.startsWith('{')) {
+                        try {
+                          const parsed = JSON.parse(trimmedEntry);
+                          message = parsed.message || entry;
+                          userId = parsed.user_id || null;
+                          entryType = parsed.type;
+                        } catch (e) {
+                          message = entry;
+                        }
+                      } else {
+                        message = entry;
+                      }
+                    } else if (entry && typeof entry === 'object') {
+                      // It's already an object
+                      message = entry.message || JSON.stringify(entry);
+                      userId = entry.user_id || null;
+                      entryType = entry.type;
+                    }
                     
                     const isCurrentUser = userId === currentUserId;
                     const userProfile = userId ? partyProfiles.get(userId) : null;
@@ -767,31 +769,33 @@ const Battle = () => {
           <HabboPanel title="Battle Log">
             <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log.length > 0 ? (
-                battleData.battle_log.map((entry, i) => {
-                  // Parse entry if it's a JSON string
-                  let parsedEntry: any = entry;
-                  const entryStr = typeof entry === 'string' ? entry : null;
-                  if (entryStr && (entryStr.startsWith('{') || entryStr.startsWith('['))) {
-                    try {
-                      parsedEntry = JSON.parse(entryStr);
-                    } catch (e) {
-                      // If parsing fails, treat as plain string
-                      parsedEntry = entry;
-                    }
-                  }
-                  
-                  // Extract message from parsed entry
+                battleData.battle_log.map((entry: any, i) => {
+                  // Handle entry - can be string, object, or JSON string
                   let message = '';
-                  if (typeof parsedEntry === 'string') {
-                    message = parsedEntry;
-                  } else if (parsedEntry && typeof parsedEntry.message === 'string') {
-                    message = parsedEntry.message;
-                  } else if (parsedEntry && parsedEntry.message) {
-                    message = JSON.stringify(parsedEntry.message);
-                  }
+                  let userId = null;
+                  let entryType = undefined;
                   
-                  const userId = typeof parsedEntry === 'string' ? null : (parsedEntry?.user_id || null);
-                  const entryType = typeof parsedEntry === 'string' ? undefined : parsedEntry?.type;
+                  if (typeof entry === 'string') {
+                    // Try to parse if it looks like JSON
+                    const trimmedEntry = entry.trim();
+                    if (trimmedEntry.startsWith('{')) {
+                      try {
+                        const parsed = JSON.parse(trimmedEntry);
+                        message = parsed.message || entry;
+                        userId = parsed.user_id || null;
+                        entryType = parsed.type;
+                      } catch (e) {
+                        message = entry;
+                      }
+                    } else {
+                      message = entry;
+                    }
+                  } else if (entry && typeof entry === 'object') {
+                    // It's already an object
+                    message = entry.message || JSON.stringify(entry);
+                    userId = entry.user_id || null;
+                    entryType = entry.type;
+                  }
                   
                   const isCurrentUser = userId === currentUserId;
                   const userProfile = userId ? partyProfiles.get(userId) : null;
