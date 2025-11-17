@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
@@ -39,9 +39,26 @@ const Dashboard = () => {
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     loadData();
+    
+    // Start lobby music
+    if (audioRef.current) {
+      audioRef.current.volume = 0.3;
+      audioRef.current.play().catch(error => {
+        console.log("Audio autoplay prevented:", error);
+      });
+    }
+
+    // Stop music on unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    };
   }, []);
 
   const loadData = async () => {
@@ -77,6 +94,11 @@ const Dashboard = () => {
   };
 
   const handleStartDungeon = () => {
+    // Stop lobby music before navigating
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
     navigate("/dungeon-lobby/new");
   };
 
@@ -90,6 +112,11 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
+      {/* Hidden audio element for lobby music */}
+      <audio ref={audioRef} loop>
+        <source src="/audio/lobby-music.mp3" type="audio/mpeg" />
+      </audio>
+      
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-black text-primary">Player Dashboard</h1>
