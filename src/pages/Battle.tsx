@@ -70,7 +70,14 @@ const Battle = () => {
   }, [id]);
 
   const loadBattle = async () => {
+    if (!id) {
+      console.error("Cannot load battle: battleId is undefined");
+      navigate("/dashboard");
+      return;
+    }
+    
     try {
+      console.log("Loading battle for battleId:", id);
       const { data, error } = await supabase.functions.invoke("load-battle", {
         body: { battleId: id },
       });
@@ -115,8 +122,14 @@ const Battle = () => {
   };
 
   const loadStoryNode = async () => {
+    if (!id) {
+      console.error("Cannot load story node: battleId is undefined");
+      return;
+    }
+    
     setStoryLoading(true);
     try {
+      console.log("Loading story node for battleId:", id);
       const { data, error } = await supabase.functions.invoke("generate-story-node", {
         body: { battleId: id },
       });
