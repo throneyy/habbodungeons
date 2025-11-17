@@ -365,6 +365,34 @@ const Battle = () => {
               {/* Party Panel */}
               <div className="md:col-span-1">
                 <HabboPanel title="Your Party">
+                  {/* Party Avatars Row */}
+                  <div className="flex gap-2 mb-4 pb-4 border-b-2 border-habbo-dark">
+                    {partyMembers.slice(0, 4).map((member) => (
+                      <div
+                        key={`avatar-${member.userId}`}
+                        className="border-2 border-habbo-dark rounded overflow-hidden bg-card"
+                        title={member.username}
+                      >
+                        {member.habboAvatar && (
+                          <img
+                            src={member.habboAvatar.replace('size=l', 'size=s')}
+                            alt={member.username}
+                            className="pixel-icon"
+                            style={{ width: 'auto', height: 'auto' }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                    {partyMembers.length < 4 && Array.from({ length: 4 - partyMembers.length }).map((_, i) => (
+                      <div
+                        key={`empty-${i}`}
+                        className="w-12 h-12 border-2 border-dashed border-muted rounded bg-muted/20 flex items-center justify-center"
+                      >
+                        <span className="text-muted-foreground text-xs">+</span>
+                      </div>
+                    ))}
+                  </div>
+                  
                   <div className="space-y-4">
                     {partyMembers.map((member) => (
                       <div
