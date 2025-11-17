@@ -151,9 +151,13 @@ serve(async (req) => {
       throw new Error('Invalid dungeon structure - missing rooms data');
     }
     
-    const currentRoom = dungeonData.rooms[battle.current_room_index];
+    // Cap room index to available rooms
+    const maxRoomIndex = dungeonData.rooms.length - 1;
+    const actualRoomIndex = Math.min(battle.current_room_index, maxRoomIndex);
+    
+    const currentRoom = dungeonData.rooms[actualRoomIndex];
     if (!currentRoom) {
-      throw new Error(`Room ${battle.current_room_index} not found in dungeon`);
+      throw new Error(`Room ${actualRoomIndex} not found in dungeon with ${dungeonData.rooms.length} rooms`);
     }
 
     // Determine mode: check if enemy is defeated or if we're in story mode

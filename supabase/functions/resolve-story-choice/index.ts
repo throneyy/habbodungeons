@@ -178,10 +178,42 @@ What happens as a result of this choice?`,
     battleLog.push({ user_id: user.id, message: `You chose: ${choiceLabel}` });
     battleLog.push({ user_id: user.id, message: outcome.consequenceText });
 
-    // Advance room if needed
-    const newRoomIndex = outcome.progressRoom
-      ? battleState.current_room_index + 1
-      : battleState.current_room_index;
+    // Advance room if needed, but check bounds
+    const dungeonData = battleState.dungeons.dungeon_json;
+    const maxRoomIndex = dungeonData.rooms.length - 1;
+    let newRoomIndex = battleState.current_room_index;
+    
+    if (outcome.progressRoom) {
+      newRoomIndex = Math.min(battleState.current_room_index + 1, maxRoomIndex);
+      
+      // If we've reached the end of the dungeon
+      if (newRoomIndex >= maxRoomIndex && battleState.current_room_index === maxRoomIndex) {
+        battleLog.push({ 
+          user_id: user.id, 
+          message: "You have reached the end of this dungeon! Congratulations on surviving The Shattered Frostkeep!" 
+        });
+        
+        // Mark battle as complete
+        await supabaseClient
+          .from("battle_states")
+          .update({
+            battle_log: battleLog,
+            is_active: false,
+          })
+          .eq("id", battleState.id);
+          
+        return new Response(
+          JSON.stringify({
+            outcome: { ...outcome, dungeonComplete: true },
+            newHp,
+            newMp,
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
 
     await supabaseClient
       .from("battle_states")
