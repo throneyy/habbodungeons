@@ -130,6 +130,20 @@ const Battle = () => {
     setStoryLoading(true);
     try {
       console.log("Loading story node for battleId:", id);
+      
+      // Ensure we have a valid session before making the call
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No active session");
+        toast({
+          title: "Session expired",
+          description: "Please log in again",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+      
       const { data, error } = await supabase.functions.invoke("generate-story-node", {
         body: { battleId: id },
       });
@@ -139,6 +153,7 @@ const Battle = () => {
         setStoryNode(data.storyNode);
       }
     } catch (error: any) {
+      console.error("Story node error:", error);
       toast({
         title: "Failed to load story",
         description: error.message,
