@@ -8,6 +8,7 @@ import Auth from "./pages/Auth";
 import LinkHabbo from "./pages/LinkHabbo";
 import Dashboard from "./pages/Dashboard";
 import CreateDungeon from "./pages/CreateDungeon";
+import DungeonLobby from "./pages/DungeonLobby";
 import Battle from "./pages/Battle";
 import NotFound from "./pages/NotFound";
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/link-habbo" element={<LinkHabbo />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-dungeon" element={<CreateDungeon />} />
+          <Route path="/dungeon-lobby/:id" element={<DungeonLobby />} />
           <Route path="/battle/:id" element={<Battle />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
