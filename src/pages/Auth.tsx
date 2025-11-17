@@ -83,7 +83,7 @@ const Auth = () => {
     <AppLayout>
       <div className="flex items-center justify-center">
         <div className="w-full max-w-md">
-          <HabboPanel title="Welcome to Habbo Dungeon">
+          <HabboPanel title="Welcome to Habbo Dungeons">
             <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Log In</TabsTrigger>

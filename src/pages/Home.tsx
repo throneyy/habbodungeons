@@ -4,7 +4,7 @@ import { HabboPanel } from "@/components/HabboPanel";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import dungeonBg from "@/assets/dungeon-bg.png";
-import habboDungeonBanner from "@/assets/habbo-dungeon-banner.gif";
+import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
 import pixelDice from "@/assets/pixel-dice.png";
 import pixelStar from "@/assets/pixel-star.png";
 import pixelSword from "@/assets/pixel-sword.png";
@@ -37,17 +37,19 @@ const Home = () => {
         {/* Hero Header */}
         <HabboPanel className="text-center">
           <div className="space-y-4">
-            <img 
-              src={habboDungeonBanner} 
-              alt="Habbo Dungeon" 
-              className="mx-auto w-auto pixel-icon"
-              style={{ height: "auto", maxWidth: "500px" }}
-            />
+            <div className="flex justify-center">
+              <img 
+                src={habboDungeonsBanner} 
+                alt="Habbo Dungeons" 
+                className="w-auto pixel-icon"
+                style={{ height: "auto", maxWidth: "500px" }}
+              />
+            </div>
             <p className="text-2xl font-bold text-foreground">
               AI-powered JRPG battles for Habbo roleplayers
             </p>
             <p className="text-lg text-muted-foreground">
-              Roll dice in Habbo. Fight monsters on Habbo Dungeon.
+              Roll dice in Habbo. Fight monsters on Habbo Dungeons.
             </p>
           </div>
         </HabboPanel>
@@ -68,7 +70,7 @@ const Home = () => {
                 <img src={pixelStar} alt="Star" className="w-full h-full object-contain pixel-icon" />
               </div>
               <h3 className="font-bold text-lg">2. Input Your Dice</h3>
-              <p className="text-muted-foreground">Enter your dice results into Habbo Dungeon</p>
+              <p className="text-muted-foreground">Enter your dice results into Habbo Dungeons</p>
             </div>
             
             <div className="text-center space-y-3">
@@ -106,7 +108,7 @@ const Home = () => {
 
         {/* Footer */}
         <p className="text-center text-sm text-muted-foreground">
-          Habbo Dungeon is a fan-made project and is not affiliated with Habbo or Sulake Corporation.
+          Habbo Dungeons is a fan-made project and is not affiliated with Habbo or Sulake Corporation.
         </p>
       </div>
     </div>

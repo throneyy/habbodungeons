@@ -114,7 +114,7 @@ const Dashboard = () => {
             )}
             <div className="space-y-2 flex-1">
               <div>
-                <p className="text-sm text-muted-foreground">Habbo Dungeon Username</p>
+                <p className="text-sm text-muted-foreground">Habbo Dungeons Username</p>
                 <p className="text-xl font-bold">{profile?.username}</p>
               </div>
               {profile?.habbo_username ? (

@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import SnowFall from "./SnowFall";
 import dungeonBg from "@/assets/dungeon-bg.png";
-import habboDungeonBanner from "@/assets/habbo-dungeon-banner.gif";
+import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -20,10 +20,10 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       />
       
       <div className="relative z-10">
-        <div className="p-4">
+        <div className="p-4 flex justify-center">
           <img 
-            src={habboDungeonBanner} 
-            alt="Habbo Dungeon" 
+            src={habboDungeonsBanner} 
+            alt="Habbo Dungeons" 
             className="cursor-pointer pixel-icon"
             onClick={() => navigate("/dashboard")}
             style={{ height: 'auto', width: 'auto', maxHeight: '48px' }}
