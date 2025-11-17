@@ -469,19 +469,30 @@ const Battle = () => {
               <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry, i) => {
-                    // Handle both string entries and object entries
-                    let message = '';
-                    if (typeof entry === 'string') {
-                      message = entry;
-                    } else if (entry && typeof entry.message === 'string') {
-                      message = entry.message;
-                    } else if (entry && entry.message) {
-                      // If message is an object (shouldn't happen), stringify it
-                      message = JSON.stringify(entry.message);
+                    // Parse entry if it's a JSON string
+                    let parsedEntry: any = entry;
+                    const entryStr = typeof entry === 'string' ? entry : null;
+                    if (entryStr && (entryStr.startsWith('{') || entryStr.startsWith('['))) {
+                      try {
+                        parsedEntry = JSON.parse(entryStr);
+                      } catch (e) {
+                        // If parsing fails, treat as plain string
+                        parsedEntry = entry;
+                      }
                     }
                     
-                    const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
-                    const entryType = typeof entry === 'string' ? undefined : entry?.type;
+                    // Extract message from parsed entry
+                    let message = '';
+                    if (typeof parsedEntry === 'string') {
+                      message = parsedEntry;
+                    } else if (parsedEntry && typeof parsedEntry.message === 'string') {
+                      message = parsedEntry.message;
+                    } else if (parsedEntry && parsedEntry.message) {
+                      message = JSON.stringify(parsedEntry.message);
+                    }
+                    
+                    const userId = typeof parsedEntry === 'string' ? null : (parsedEntry?.user_id || null);
+                    const entryType = typeof parsedEntry === 'string' ? undefined : parsedEntry?.type;
                     
                     const isCurrentUser = userId === currentUserId;
                     const userProfile = userId ? partyProfiles.get(userId) : null;
@@ -757,19 +768,30 @@ const Battle = () => {
             <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log.length > 0 ? (
                 battleData.battle_log.map((entry, i) => {
-                  // Handle both string entries and object entries
-                  let message = '';
-                  if (typeof entry === 'string') {
-                    message = entry;
-                  } else if (entry && typeof entry.message === 'string') {
-                    message = entry.message;
-                  } else if (entry && entry.message) {
-                    // If message is an object (shouldn't happen), stringify it
-                    message = JSON.stringify(entry.message);
+                  // Parse entry if it's a JSON string
+                  let parsedEntry: any = entry;
+                  const entryStr = typeof entry === 'string' ? entry : null;
+                  if (entryStr && (entryStr.startsWith('{') || entryStr.startsWith('['))) {
+                    try {
+                      parsedEntry = JSON.parse(entryStr);
+                    } catch (e) {
+                      // If parsing fails, treat as plain string
+                      parsedEntry = entry;
+                    }
                   }
                   
-                  const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
-                  const entryType = typeof entry === 'string' ? undefined : entry?.type;
+                  // Extract message from parsed entry
+                  let message = '';
+                  if (typeof parsedEntry === 'string') {
+                    message = parsedEntry;
+                  } else if (parsedEntry && typeof parsedEntry.message === 'string') {
+                    message = parsedEntry.message;
+                  } else if (parsedEntry && parsedEntry.message) {
+                    message = JSON.stringify(parsedEntry.message);
+                  }
+                  
+                  const userId = typeof parsedEntry === 'string' ? null : (parsedEntry?.user_id || null);
+                  const entryType = typeof parsedEntry === 'string' ? undefined : parsedEntry?.type;
                   
                   const isCurrentUser = userId === currentUserId;
                   const userProfile = userId ? partyProfiles.get(userId) : null;
