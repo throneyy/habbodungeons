@@ -110,7 +110,7 @@ const Dashboard = () => {
             )}
             <div className="space-y-2 flex-1">
               <div>
-                <p className="text-sm text-muted-foreground">Habbodungeon Username</p>
+                <p className="text-sm text-muted-foreground">Habbo Dungeon Username</p>
                 <p className="text-xl font-bold">{profile?.username}</p>
               </div>
               {profile?.habbo_username ? (
@@ -140,7 +140,7 @@ const Dashboard = () => {
         </HabboPanel>
 
         {/* Player Stats */}
-        {stats && (
+        {profile?.habbo_username && stats && (
           <HabboPanel title="Player Stats">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
@@ -170,6 +170,7 @@ const Dashboard = () => {
         )}
 
         {/* Inventory */}
+        {profile?.habbo_username && (
         <HabboPanel title="Inventory">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {inventory.map((item) => (
@@ -184,8 +185,10 @@ const Dashboard = () => {
             ))}
           </div>
         </HabboPanel>
+        )}
 
         {/* Actions */}
+        {profile?.habbo_username && (
         <div className="flex gap-4">
           <Button
             size="lg"
@@ -195,6 +198,7 @@ const Dashboard = () => {
             Create a Dungeon
           </Button>
         </div>
+        )}
       </div>
     </div>
   );

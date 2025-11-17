@@ -81,7 +81,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background p-8 flex items-center justify-center">
       <div className="w-full max-w-md">
-        <HabboPanel title="Welcome to Habbodungeon">
+        <HabboPanel title="Welcome to Habbo Dungeon">
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Log In</TabsTrigger>
