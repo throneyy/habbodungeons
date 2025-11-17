@@ -110,8 +110,8 @@ const DungeonLobby = () => {
 
   return (
     <AppLayout hideBanner>
-      {/* Universe Banner - Full width, no container */}
-      <div className="w-full flex justify-center mb-6 -mt-8">
+      {/* Universe Banner */}
+      <div className="w-full flex justify-center mb-6">
         <img 
           src={frostkeepBanner} 
           alt="The Shattered Frostkeep" 
