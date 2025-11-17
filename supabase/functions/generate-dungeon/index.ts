@@ -16,6 +16,21 @@ function extractJSON(text: string): string {
   return text.trim();
 }
 
+// Helper function to clean control characters from JSON string
+function cleanJsonString(jsonString: string): string {
+  // Replace control characters (newlines, tabs, etc.) within string values
+  return jsonString
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (char) => {
+      // Convert control characters to their escaped equivalents
+      switch (char) {
+        case '\n': return '\\n';
+        case '\r': return '\\r';
+        case '\t': return '\\t';
+        default: return ''; // Remove other control characters
+      }
+    });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -76,8 +91,21 @@ Generate balanced base stats for enemies appropriate for player level ${stats?.l
 
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices[0].message.content;
-    const cleanedContent = extractJSON(rawContent);
-    const dungeonJson = JSON.parse(cleanedContent);
+    console.log("Raw AI response length:", rawContent.length);
+    
+    const extractedContent = extractJSON(rawContent);
+    const cleanedContent = cleanJsonString(extractedContent);
+    
+    console.log("Cleaned content length:", cleanedContent.length);
+    
+    let dungeonJson;
+    try {
+      dungeonJson = JSON.parse(cleanedContent);
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      console.error("Cleaned content:", cleanedContent.substring(0, 500));
+      throw new Error("Failed to parse AI response as JSON");
+    }
 
     // Save dungeon with base stats (no difficulty applied yet)
     const { data: dungeon, error } = await supabase
