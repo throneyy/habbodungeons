@@ -6,6 +6,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to strip markdown code blocks from JSON
+function extractJSON(text: string): string {
+  // Remove markdown code blocks if present
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    return codeBlockMatch[1].trim();
+  }
+  return text.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -44,7 +54,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. Output JSON with: dungeonName, introText, rooms array with [{roomIndex, description, enemy: {name, description, hp, atk, def, spd}}]. Scale enemy stats based on difficulty and player level.`
+            content: `You are a JRPG dungeon generator for Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. Output ONLY valid JSON (no markdown formatting) with: dungeonName, introText, rooms array with [{roomIndex, description, enemy: {name, description, hp, atk, def, spd}}]. Scale enemy stats based on difficulty and player level.`
           },
           {
             role: 'user',
@@ -55,7 +65,9 @@ serve(async (req) => {
     });
 
     const aiData = await aiResponse.json();
-    const dungeonJson = JSON.parse(aiData.choices[0].message.content);
+    const rawContent = aiData.choices[0].message.content;
+    const cleanedContent = extractJSON(rawContent);
+    const dungeonJson = JSON.parse(cleanedContent);
 
     // Save dungeon
     const { data: dungeon, error } = await supabase
