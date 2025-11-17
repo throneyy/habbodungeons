@@ -46,8 +46,12 @@ serve(async (req) => {
     const dungeonData = battle.dungeons.dungeon_json;
     const currentRoom = dungeonData.rooms[battle.current_room_index];
 
+    // Determine mode: check if enemy is defeated or if we're in story mode
+    const enemyState = battle.current_enemy_state;
+    const mode = enemyState.mode || (enemyState.current_hp > 0 ? "battle" : "story");
+
     const battleData = {
-      enemy: battle.current_enemy_state,
+      enemy: enemyState,
       player: {
         level: stats.level,
         current_hp: stats.current_hp,
@@ -61,6 +65,7 @@ serve(async (req) => {
       },
       room_description: currentRoom.description,
       battle_log: battle.battle_log || [],
+      mode: mode,
     };
 
     return new Response(
