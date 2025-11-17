@@ -24,17 +24,38 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    // Get battle state (RLS policy handles both solo and party access)
-    const { data: battle, error: battleError } = await supabase
+    console.log('Loading battle for user:', user.id, 'dungeonId:', battleId);
+
+    // Check if user is in a party for this dungeon
+    const { data: partyMember } = await supabase
+      .from('party_members')
+      .select('party_id, parties!inner(dungeon_id)')
+      .eq('user_id', user.id)
+      .eq('parties.dungeon_id', battleId)
+      .maybeSingle();
+
+    const partyId = partyMember?.party_id || null;
+    console.log('User party status:', { partyId, hasParty: !!partyId });
+
+    // Get battle state - filter by party if in party, otherwise by user
+    let battleQuery = supabase
       .from('battle_states')
       .select('*, dungeons(*)')
       .eq('dungeon_id', battleId)
-      .eq('is_active', true)
+      .eq('is_active', true);
+
+    if (partyId) {
+      battleQuery = battleQuery.eq('party_id', partyId);
+    } else {
+      battleQuery = battleQuery.eq('user_id', user.id).is('party_id', null);
+    }
+
+    const { data: battle, error: battleError } = await battleQuery
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    console.log('Battle query result:', { battle, battleError, battleId, userId: user.id });
+    console.log('Battle query result:', { battle, battleError, battleId, userId: user.id, partyId });
 
     if (!battle) {
       throw new Error(`Battle not found for dungeon ${battleId}. Make sure to select a difficulty first.`);
