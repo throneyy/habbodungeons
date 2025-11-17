@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users } from "lucide-react";
-import { StoryExploration } from "@/components/StoryExploration";
+import dungeonBg from "@/assets/dungeon-bg.png";
+import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 
 interface BattleData {
   enemy: {
@@ -242,38 +243,208 @@ const Battle = () => {
     ];
 
     return (
-      <StoryExploration
-        storyNode={storyNode}
-        partyMembers={partyMembers}
-        storyLog={battleData.battle_log}
-        isLeader={true}
-        loading={storyLoading}
-        onChoiceSelect={handleStoryChoice}
-      />
+      <div className="min-h-screen bg-background relative">
+        <div 
+          className="fixed inset-0 opacity-20 bg-center bg-cover"
+          style={{ backgroundImage: `url(${dungeonBg})` }}
+        />
+        
+        <div className="relative z-10 p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            {/* Frostkeep Banner */}
+            <div className="flex justify-center mb-6">
+              <img 
+                src={frostkeepBanner} 
+                alt="The Shattered Frostkeep" 
+                className="pixel-icon border-4 border-habbo-dark rounded-lg"
+                style={{ width: "auto", height: "auto", maxWidth: "600px" }}
+              />
+            </div>
+
+            {/* Battle Log - Main Focus */}
+            <HabboPanel title="Chronicle of Events">
+              <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
+                {battleData.battle_log.length > 0 ? (
+                  battleData.battle_log.map((log, i) => (
+                    <p key={i} className="text-sm animate-fade-in">
+                      <span className="text-primary font-bold">›</span> {log}
+                    </p>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    Your journey begins...
+                  </p>
+                )}
+              </div>
+            </HabboPanel>
+
+            {/* Story Panel Below Log */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <HabboPanel title="The Story Unfolds">
+                  <div className="space-y-6">
+                    {/* Story Text */}
+                    <div className="p-6 bg-muted/50 border-2 border-habbo-dark rounded-lg min-h-[200px]">
+                      {storyLoading && !storyNode ? (
+                        <div className="flex items-center justify-center h-40">
+                          <p className="text-lg italic animate-pulse">
+                            The dungeon master consults the ancient tomes...
+                          </p>
+                        </div>
+                      ) : storyNode ? (
+                        <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                          {storyNode.storyText}
+                        </p>
+                      ) : (
+                        <p className="text-lg italic text-muted-foreground">
+                          Awaiting your next decision...
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Choices */}
+                    {storyNode && storyNode.choices.length > 0 && (
+                      <div className="space-y-3">
+                        <h3 className="text-xl font-black mb-4">What will you do?</h3>
+                        <div className="space-y-3">
+                          {storyNode.choices.map((choice) => (
+                            <Button
+                              key={choice.id}
+                              onClick={() => handleStoryChoice(choice.id)}
+                              disabled={storyLoading}
+                              variant="outline"
+                              className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark text-base hover-scale"
+                            >
+                              <span className="mr-3 text-2xl">›</span>
+                              {choice.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {storyLoading && (
+                      <div className="text-center py-4">
+                        <p className="text-lg font-bold animate-pulse">
+                          Resolving your choice...
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </HabboPanel>
+              </div>
+
+              {/* Party Panel */}
+              <div className="md:col-span-1">
+                <HabboPanel title="Your Party">
+                  <div className="space-y-4">
+                    {partyMembers.map((member) => (
+                      <div
+                        key={member.userId}
+                        className="p-4 bg-muted rounded-lg border-2 border-habbo-dark space-y-3"
+                      >
+                        {/* Avatar */}
+                        {member.habboAvatar && (
+                          <div className="flex justify-center">
+                            <div className="border-2 border-habbo-dark rounded overflow-hidden bg-card">
+                              <img
+                                src={member.habboAvatar}
+                                alt={member.username}
+                                className="pixel-icon"
+                                style={{ width: "auto", height: "auto", maxWidth: "80px" }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Name & Level */}
+                        <div className="text-center">
+                          <p className="font-bold">{member.username}</p>
+                          <p className="text-xs text-muted-foreground">Level {member.level}</p>
+                        </div>
+
+                        {/* Stats */}
+                        <StatBar
+                          label="HP"
+                          current={member.currentHp}
+                          max={member.maxHp}
+                          color="hp"
+                        />
+                        <StatBar
+                          label="MP"
+                          current={member.currentMp}
+                          max={member.maxMp}
+                          color="mp"
+                        />
+
+                        {/* Status Effects */}
+                        {member.statusEffects.length > 0 && (
+                          <div className="text-xs space-y-1">
+                            <p className="font-bold">Effects:</p>
+                            {member.statusEffects.map((effect, i) => (
+                              <p key={i} className="text-accent">
+                                {effect}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </HabboPanel>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => navigate("/dashboard")}
+              variant="outline"
+              className="font-bold border-4 border-habbo-dark"
+            >
+              Return to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   // Render battle mode
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Battle Log - Main Focus */}
-        <HabboPanel title="Battle Log">
-          <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
-            {battleData.battle_log.length > 0 ? (
-              battleData.battle_log.map((log, i) => (
-                <p key={i} className="text-sm animate-fade-in">{log}</p>
-              ))
-            ) : (
-              <p className="text-sm text-muted-foreground italic">Battle begins...</p>
-            )}
+    <div className="min-h-screen bg-background relative">
+      <div 
+        className="fixed inset-0 opacity-20 bg-center bg-cover"
+        style={{ backgroundImage: `url(${dungeonBg})` }}
+      />
+      
+      <div className="relative z-10 p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Frostkeep Banner */}
+          <div className="flex justify-center mb-6">
+            <img 
+              src={frostkeepBanner} 
+              alt="The Shattered Frostkeep" 
+              className="pixel-icon border-4 border-habbo-dark rounded-lg"
+              style={{ width: "auto", height: "auto", maxWidth: "600px" }}
+            />
           </div>
-        </HabboPanel>
 
-        {/* Combat Panels - Slide in from top */}
-        <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
-          showCombatPanels ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'
-        }`}>
+          {/* Battle Log - Main Focus */}
+          <HabboPanel title="Battle Log">
+            <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
+              {battleData.battle_log.length > 0 ? (
+                battleData.battle_log.map((log, i) => (
+                  <p key={i} className="text-sm animate-fade-in">{log}</p>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Battle begins...</p>
+              )}
+            </div>
+          </HabboPanel>
+
+          {/* Combat Panels - Slide in from top */}
+          <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
+            showCombatPanels ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
+          }`}>
           {/* Enemy Panel */}
           <HabboPanel title="Enemy" className="md:col-span-1">
             <div className="space-y-4">
@@ -463,6 +634,7 @@ const Battle = () => {
         >
           Return to Dashboard
         </Button>
+        </div>
       </div>
     </div>
   );
