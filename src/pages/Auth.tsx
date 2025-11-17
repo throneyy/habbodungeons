@@ -14,10 +14,9 @@ const Auth = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const [loginEmail, setLoginEmail] = useState("");
+  const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  const [signupEmail, setSignupEmail] = useState("");
   const [signupUsername, setSignupUsername] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirm, setSignupConfirm] = useState("");
@@ -26,8 +25,11 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Convert username to email format for Supabase Auth
+    const email = `${loginUsername.toLowerCase()}@habbo-dungeons.local`;
+
     const { error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
+      email,
       password: loginPassword,
     });
 
@@ -57,8 +59,11 @@ const Auth = () => {
 
     setLoading(true);
 
+    // Convert username to email format for Supabase Auth
+    const email = `${signupUsername.toLowerCase()}@habbo-dungeons.local`;
+
     const { error } = await supabase.auth.signUp({
-      email: signupEmail,
+      email,
       password: signupPassword,
       options: {
         data: { username: signupUsername },
@@ -93,12 +98,12 @@ const Auth = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-username">Username</Label>
                   <Input
-                    id="login-email"
-                    type="email"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    id="login-username"
+                    type="text"
+                    value={loginUsername}
+                    onChange={(e) => setLoginUsername(e.target.value)}
                     required
                     className="border-2 border-habbo-dark"
                   />
@@ -126,17 +131,6 @@ const Auth = () => {
 
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
-                    required
-                    className="border-2 border-habbo-dark"
-                  />
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-username">Username</Label>
                   <Input
