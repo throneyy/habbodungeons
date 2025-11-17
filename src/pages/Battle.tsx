@@ -251,15 +251,15 @@ const Battle = () => {
         
         <div className="relative z-10 p-8">
           <div className="max-w-7xl mx-auto space-y-6">
-            {/* Frostkeep Banner */}
-            <div className="flex justify-center mb-6">
-              <img 
-                src={frostkeepBanner} 
-                alt="The Shattered Frostkeep" 
-                className="pixel-icon border-4 border-habbo-dark rounded-lg"
-                style={{ width: "auto", height: "auto", maxWidth: "600px" }}
-              />
-            </div>
+          {/* Frostkeep Banner */}
+          <div className="flex justify-center mb-6">
+            <img 
+              src={frostkeepBanner} 
+              alt="The Shattered Frostkeep" 
+              className="pixel-icon"
+              style={{ width: "auto", height: "auto" }}
+            />
+          </div>
 
             {/* Battle Log - Main Focus */}
             <HabboPanel title="Chronicle of Events">
@@ -423,8 +423,8 @@ const Battle = () => {
             <img 
               src={frostkeepBanner} 
               alt="The Shattered Frostkeep" 
-              className="pixel-icon border-4 border-habbo-dark rounded-lg"
-              style={{ width: "auto", height: "auto", maxWidth: "600px" }}
+              className="pixel-icon"
+              style={{ width: "auto", height: "auto" }}
             />
           </div>
 
