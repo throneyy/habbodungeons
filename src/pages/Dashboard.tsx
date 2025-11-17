@@ -76,30 +76,8 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const handleStartDungeon = async () => {
-    setLoading(true);
-    try {
-      const difficulty = Math.random() > 0.5 ? "Normal" : "Hardcore";
-      const { data, error } = await supabase.functions.invoke("generate-dungeon", {
-        body: {
-          difficulty,
-          theme: "Ice",
-          encounters: 3,
-        },
-      });
-
-      if (error) throw error;
-
-      toast({ title: "Quest generated!" });
-      navigate(`/dungeon-lobby/${data.dungeonId}`);
-    } catch (error: any) {
-      toast({
-        title: "Failed to generate quest",
-        description: error.message,
-        variant: "destructive",
-      });
-      setLoading(false);
-    }
+  const handleStartDungeon = () => {
+    navigate("/dungeon-lobby/new");
   };
 
   if (loading) {
