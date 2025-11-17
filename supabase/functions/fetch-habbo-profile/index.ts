@@ -17,17 +17,28 @@ serve(async (req) => {
       throw new Error("Username is required");
     }
 
+    console.log(`Fetching Habbo profile for username: ${username}`);
+
     // Fetch from Habbo API
     const response = await fetch(`https://www.habbo.com/api/public/users?name=${encodeURIComponent(username)}`);
     
+    console.log(`Habbo API response status: ${response.status}`);
+    
     if (!response.ok) {
-      throw new Error("Failed to fetch Habbo profile");
+      const errorText = await response.text();
+      console.error(`Habbo API error response: ${errorText}`);
+      
+      if (response.status === 404) {
+        throw new Error("Habbo user not found");
+      }
+      throw new Error(`Habbo API returned status ${response.status}`);
     }
 
     const data = await response.json();
+    console.log(`Habbo API response data:`, data);
 
     if (!data || !data.name) {
-      throw new Error("Habbo user not found");
+      throw new Error("Invalid response from Habbo API");
     }
 
     return new Response(
