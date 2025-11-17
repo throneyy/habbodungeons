@@ -126,19 +126,15 @@ const DungeonLobby = () => {
                     <Button
                       onClick={() => handleStartBattle("Normal")}
                       disabled={loading}
-                      className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6 bg-primary hover:bg-primary/90"
-                      size="lg"
+                      className="font-bold border-2 border-primary bg-primary/20 hover:bg-primary/30"
                     >
-                      <Swords className="w-5 h-5 mr-2" />
                       Normal
                     </Button>
                     <Button
                       onClick={() => handleStartBattle("Hardcore")}
                       disabled={loading}
-                      className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6 bg-destructive hover:bg-destructive/90"
-                      size="lg"
+                      className="font-bold border-2 border-destructive bg-destructive/20 hover:bg-destructive/30"
                     >
-                      <Swords className="w-5 h-5 mr-2" />
                       Hardcore
                     </Button>
                   </div>
