@@ -64,7 +64,7 @@ serve(async (req) => {
       .update({ difficulty })
       .eq('id', dungeonId);
 
-    // Create or update battle state
+    // Create initial enemy state - use placeholder if first room has no enemy
     const firstEnemy = modifiedRooms[0].enemy;
     const initialEnemyState = firstEnemy ? {
       ...firstEnemy,
@@ -72,7 +72,20 @@ serve(async (req) => {
       max_hp: firstEnemy.hp,
       status_effects: [],
       mode: "story",
-    } : null;
+    } : {
+      name: "Unknown",
+      description: "Exploring the dungeon...",
+      hp: 1,
+      current_hp: 1,
+      max_hp: 1,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      status_effects: [],
+      mode: "story",
+    };
+
+    console.log('Initial enemy state:', initialEnemyState);
 
     // Check if battle state exists
     const { data: existingBattle, error: checkError } = await supabase
