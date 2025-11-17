@@ -825,8 +825,9 @@ const Battle = () => {
           <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
             showCombatPanels ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
           }`}>
-          {/* Enemy Panel */}
-          <HabboPanel title="Enemy" className="md:col-span-1">
+          {/* Enemy Panel - Only show when in battle mode with valid enemy */}
+          {battleData.mode === "battle" && battleData.enemy.current_hp > 0 && (
+            <HabboPanel title="Enemy" className="md:col-span-1">
             <div className="space-y-4">
               <h3 className="text-2xl font-black text-destructive">{battleData.enemy.name}</h3>
               <p className="text-sm text-muted-foreground">{battleData.enemy.description}</p>
@@ -859,7 +860,8 @@ const Battle = () => {
                 </div>
               )}
             </div>
-          </HabboPanel>
+            </HabboPanel>
+          )}
 
           {/* Action Panel */}
           <HabboPanel title="Current Turn" className="md:col-span-1">
