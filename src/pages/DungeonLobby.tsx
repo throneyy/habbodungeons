@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
-import { Swords, Users } from "lucide-react";
+import { Swords, Users, Skull, Shield } from "lucide-react";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 
 interface DungeonInfo {
@@ -20,13 +20,18 @@ const DungeonLobby = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [dungeon, setDungeon] = useState<DungeonInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<"Normal" | "Hardcore">("Normal");
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    loadDungeon();
+    if (id && id !== "new") {
+      loadDungeon();
+    }
   }, [id]);
 
   const loadDungeon = async () => {
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -42,6 +47,9 @@ const DungeonLobby = () => {
 
       if (error) throw error;
       setDungeon(data);
+      if (data.difficulty === "Normal" || data.difficulty === "Hardcore") {
+        setSelectedDifficulty(data.difficulty);
+      }
     } catch (error: any) {
       toast({
         title: "Failed to load dungeon",
@@ -53,28 +61,58 @@ const DungeonLobby = () => {
     setLoading(false);
   };
 
-  const handleStartBattle = () => {
-    navigate(`/battle/${id}`);
+  const handleStartBattle = async () => {
+    if (id === "new") {
+      // Generate new dungeon
+      setGenerating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-dungeon", {
+          body: {
+            difficulty: selectedDifficulty,
+            theme: "Ice",
+            encounters: 3,
+          },
+        });
+
+        if (error) throw error;
+
+        toast({ title: "Quest generated!" });
+        navigate(`/battle/${data.dungeonId}`);
+      } catch (error: any) {
+        toast({
+          title: "Failed to generate quest",
+          description: error.message,
+          variant: "destructive",
+        });
+        setGenerating(false);
+      }
+    } else {
+      navigate(`/battle/${id}`);
+    }
   };
 
-  if (loading) {
+  if (loading || generating) {
     return (
       <AppLayout hideBanner>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-2xl font-bold">Loading dungeon...</p>
+          <p className="text-2xl font-bold">{generating ? "Generating quest..." : "Loading..."}</p>
         </div>
       </AppLayout>
     );
   }
 
+  const isNewDungeon = id === "new";
+
   return (
     <AppLayout hideBanner>
-      {/* Universe Banner */}
-      <img 
-        src={frostkeepBanner} 
-        alt="The Shattered Frostkeep" 
-        className="pixel-icon border-4 border-habbo-dark rounded-lg mx-auto mb-6"
-      />
+      {/* Universe Banner - Full width, no container */}
+      <div className="w-full flex justify-center mb-6 -mt-8">
+        <img 
+          src={frostkeepBanner} 
+          alt="The Shattered Frostkeep" 
+          className="pixel-icon"
+        />
+      </div>
 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Universe Introduction */}
@@ -92,7 +130,7 @@ const DungeonLobby = () => {
               </p>
             </div>
 
-            {dungeon && (
+            {!isNewDungeon && dungeon && (
               <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
                 <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
                 {dungeon.dungeon_json?.questObjective && (
@@ -109,6 +147,47 @@ const DungeonLobby = () => {
             )}
           </div>
         </HabboPanel>
+
+        {/* Difficulty Selection for New Dungeons */}
+        {isNewDungeon && (
+          <HabboPanel title="Choose Your Challenge">
+            <div className="grid md:grid-cols-2 gap-4">
+              <button
+                onClick={() => setSelectedDifficulty("Normal")}
+                className={`p-6 rounded-lg border-4 transition-all ${
+                  selectedDifficulty === "Normal"
+                    ? "border-primary bg-primary/20"
+                    : "border-habbo-dark bg-muted/50 hover:bg-muted"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <Shield className="w-8 h-8 text-primary" />
+                  <h3 className="text-2xl font-black">Normal</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Balanced difficulty for adventurers. Enemies have standard stats and fair rewards.
+                </p>
+              </button>
+
+              <button
+                onClick={() => setSelectedDifficulty("Hardcore")}
+                className={`p-6 rounded-lg border-4 transition-all ${
+                  selectedDifficulty === "Hardcore"
+                    ? "border-destructive bg-destructive/20"
+                    : "border-habbo-dark bg-muted/50 hover:bg-muted"
+                }`}
+              >
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <Skull className="w-8 h-8 text-destructive" />
+                  <h3 className="text-2xl font-black">Hardcore</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Brutal challenge for veterans. Stronger enemies with greater rewards.
+                </p>
+              </button>
+            </div>
+          </HabboPanel>
+        )}
 
         {/* Party & Actions Panel */}
         <HabboPanel title="Prepare Your Party">
