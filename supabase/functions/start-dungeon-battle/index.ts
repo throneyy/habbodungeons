@@ -26,6 +26,17 @@ serve(async (req) => {
 
     console.log('Starting battle for dungeon:', dungeonId, 'with difficulty:', difficulty);
 
+    // Check if user is in a party for this dungeon
+    const { data: partyMember } = await supabase
+      .from('party_members')
+      .select('party_id, parties!inner(dungeon_id)')
+      .eq('user_id', user.id)
+      .eq('parties.dungeon_id', dungeonId)
+      .maybeSingle();
+
+    const partyId = partyMember?.party_id || null;
+    console.log('User party status:', { partyId, hasParty: !!partyId });
+
     // Get dungeon data
     const { data: dungeon, error: dungeonError } = await supabase
       .from('dungeons')
@@ -87,15 +98,22 @@ serve(async (req) => {
 
     console.log('Initial enemy state:', initialEnemyState);
 
-    // Check if battle state exists
-    const { data: existingBattle, error: checkError } = await supabase
+    // Check if battle state exists (for party or solo)
+    let existingBattleQuery = supabase
       .from('battle_states')
       .select('id')
-      .eq('user_id', user.id)
-      .eq('dungeon_id', dungeonId)
-      .maybeSingle();
+      .eq('dungeon_id', dungeonId);
+    
+    // If in a party, check for party battle; otherwise check for solo battle
+    if (partyId) {
+      existingBattleQuery = existingBattleQuery.eq('party_id', partyId);
+    } else {
+      existingBattleQuery = existingBattleQuery.eq('user_id', user.id).is('party_id', null);
+    }
+    
+    const { data: existingBattle, error: checkError } = await existingBattleQuery.maybeSingle();
 
-    console.log('Existing battle check:', { existingBattle, checkError });
+    console.log('Existing battle check:', { existingBattle, checkError, partyId });
 
     if (existingBattle) {
       console.log('Updating existing battle state:', existingBattle.id);
@@ -115,14 +133,16 @@ serve(async (req) => {
         throw updateError;
       }
     } else {
-      console.log('Creating new battle state');
+      console.log('Creating new battle state with partyId:', partyId);
       // Create new battle state
       const { error: insertError } = await supabase.from('battle_states').insert({
         user_id: user.id,
         dungeon_id: dungeonId,
+        party_id: partyId,
         current_room_index: 0,
         current_enemy_state: initialEnemyState,
         battle_log: [dungeonJson.introText, modifiedRooms[0].description],
+        is_active: true,
       });
       
       if (insertError) {
