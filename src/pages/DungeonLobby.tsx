@@ -76,7 +76,6 @@ const DungeonLobby = () => {
             src={frostkeepBanner} 
             alt="The Shattered Frostkeep" 
             className="pixel-icon border-4 border-habbo-dark rounded-lg"
-            style={{ width: 'auto', height: 'auto', maxWidth: '100%' }}
           />
         </div>
 
@@ -85,7 +84,7 @@ const DungeonLobby = () => {
           <div className="space-y-4">
             <div className="text-lg leading-relaxed">
               <p className="mb-4">
-                Beneath the frozen hotel lies the <span className="font-bold text-primary">Shattered Frostkeep</span>—an ancient dungeon of ice, forgotten loot, and monsters drawn to the cold.
+                Beneath the frozen hotel lies the <span className="font-bold text-primary">Shattered Frostkeep</span>, an ancient dungeon of ice, forgotten loot, and monsters drawn to the cold.
               </p>
               <p className="mb-4">
                 Endless glacial corridors twist through abandoned fortresses carved from solid ice. The walls glisten with crystalline frost, and the air itself cuts like a blade against exposed skin.
@@ -101,9 +100,6 @@ const DungeonLobby = () => {
                 <div className="flex gap-4 text-sm">
                   <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
                     {dungeon.difficulty}
-                  </span>
-                  <span className="px-3 py-1 bg-secondary/20 border-2 border-secondary rounded font-bold">
-                    {dungeon.theme}
                   </span>
                 </div>
               </div>
