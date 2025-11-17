@@ -480,7 +480,7 @@ const Battle = () => {
                       if (trimmedEntry.startsWith('{')) {
                         try {
                           const parsed = JSON.parse(trimmedEntry);
-                          message = parsed.message || entry;
+                          message = String(parsed.message || entry);
                           userId = parsed.user_id || null;
                           entryType = parsed.type;
                         } catch (e) {
@@ -491,15 +491,24 @@ const Battle = () => {
                       }
                     } else if (entry && typeof entry === 'object') {
                       // It's already an object
-                      message = entry.message || JSON.stringify(entry);
+                      if (typeof entry.message === 'string') {
+                        message = entry.message;
+                      } else if (entry.message) {
+                        message = JSON.stringify(entry.message);
+                      } else {
+                        message = JSON.stringify(entry);
+                      }
                       userId = entry.user_id || null;
                       entryType = entry.type;
                     }
                     
+                    // Ensure message is always a string
+                    message = String(message || '');
+                    
                     const isCurrentUser = userId === currentUserId;
                     const userProfile = userId ? partyProfiles.get(userId) : null;
                     const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
-                    const isDiceRoll = entryType === 'dice_roll' || (message && message.includes('rolled'));
+                    const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                     
                     return (
                       <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
@@ -781,7 +790,7 @@ const Battle = () => {
                     if (trimmedEntry.startsWith('{')) {
                       try {
                         const parsed = JSON.parse(trimmedEntry);
-                        message = parsed.message || entry;
+                        message = String(parsed.message || entry);
                         userId = parsed.user_id || null;
                         entryType = parsed.type;
                       } catch (e) {
@@ -792,15 +801,24 @@ const Battle = () => {
                     }
                   } else if (entry && typeof entry === 'object') {
                     // It's already an object
-                    message = entry.message || JSON.stringify(entry);
+                    if (typeof entry.message === 'string') {
+                      message = entry.message;
+                    } else if (entry.message) {
+                      message = JSON.stringify(entry.message);
+                    } else {
+                      message = JSON.stringify(entry);
+                    }
                     userId = entry.user_id || null;
                     entryType = entry.type;
                   }
                   
+                  // Ensure message is always a string
+                  message = String(message || '');
+                  
                   const isCurrentUser = userId === currentUserId;
                   const userProfile = userId ? partyProfiles.get(userId) : null;
                   const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
-                  const isDiceRoll = entryType === 'dice_roll' || (message && message.includes('rolled'));
+                  const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                   
                   return (
                     <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
