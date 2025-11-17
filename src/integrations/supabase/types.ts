@@ -266,6 +266,14 @@ export type Database = {
     }
     Functions: {
       generate_invite_code: { Args: never; Returns: string }
+      is_party_leader: {
+        Args: { _party_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_party_member: {
+        Args: { _party_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
