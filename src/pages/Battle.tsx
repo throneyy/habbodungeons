@@ -259,7 +259,7 @@ const Battle = () => {
         userId: "player",
         username: profile?.habbo_username || profile?.username.split("@")[0] || "Player",
         habboAvatar: profile?.habbo_username && profile.habbo_profile_json
-          ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=m`
+          ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=s`
           : undefined,
         level: battleData.player.level,
         currentHp: battleData.player.current_hp,
@@ -375,7 +375,7 @@ const Battle = () => {
                       >
                         {member.habboAvatar && (
                           <img
-                            src={member.habboAvatar.replace('size=l', 'size=s')}
+                            src={member.habboAvatar}
                             alt={member.username}
                             className="pixel-icon"
                             style={{ width: 'auto', height: 'auto' }}
