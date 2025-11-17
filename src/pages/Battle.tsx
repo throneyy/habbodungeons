@@ -470,7 +470,16 @@ const Battle = () => {
               {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry, i) => {
                     // Handle both string entries and object entries
-                    const message = typeof entry === 'string' ? entry : String(entry?.message || '');
+                    let message = '';
+                    if (typeof entry === 'string') {
+                      message = entry;
+                    } else if (entry && typeof entry.message === 'string') {
+                      message = entry.message;
+                    } else if (entry && entry.message) {
+                      // If message is an object (shouldn't happen), stringify it
+                      message = JSON.stringify(entry.message);
+                    }
+                    
                     const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
                     const entryType = typeof entry === 'string' ? undefined : entry?.type;
                     
@@ -749,7 +758,16 @@ const Battle = () => {
               {battleData.battle_log.length > 0 ? (
                 battleData.battle_log.map((entry, i) => {
                   // Handle both string entries and object entries
-                  const message = typeof entry === 'string' ? entry : String(entry?.message || '');
+                  let message = '';
+                  if (typeof entry === 'string') {
+                    message = entry;
+                  } else if (entry && typeof entry.message === 'string') {
+                    message = entry.message;
+                  } else if (entry && entry.message) {
+                    // If message is an object (shouldn't happen), stringify it
+                    message = JSON.stringify(entry.message);
+                  }
+                  
                   const userId = typeof entry === 'string' ? null : (entry?.user_id || null);
                   const entryType = typeof entry === 'string' ? undefined : entry?.type;
                   
@@ -785,41 +803,43 @@ const Battle = () => {
           <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
             showCombatPanels ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
           }`}>
-          {/* Enemy Panel */}
-          <HabboPanel title="Enemy" className="md:col-span-1">
-            <div className="space-y-4">
-              <h3 className="text-2xl font-black text-destructive">{battleData.enemy.name}</h3>
-              <p className="text-sm text-muted-foreground">{battleData.enemy.description}</p>
-              <StatBar
-                label="HP"
-                current={battleData.enemy.current_hp}
-                max={battleData.enemy.max_hp}
-                color="hp"
-              />
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
-                  <p className="text-xs font-bold">ATK</p>
-                  <p className="font-bold">{battleData.enemy.atk}</p>
+          {/* Enemy Panel - Only show in battle mode */}
+          {battleData.mode === "battle" && battleData.enemy.name !== "None" && battleData.enemy.max_hp > 0 && (
+            <HabboPanel title="Enemy" className="md:col-span-1">
+              <div className="space-y-4">
+                <h3 className="text-2xl font-black text-destructive">{battleData.enemy.name}</h3>
+                <p className="text-sm text-muted-foreground">{battleData.enemy.description}</p>
+                <StatBar
+                  label="HP"
+                  current={battleData.enemy.current_hp}
+                  max={battleData.enemy.max_hp}
+                  color="hp"
+                />
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
+                    <p className="text-xs font-bold">ATK</p>
+                    <p className="font-bold">{battleData.enemy.atk}</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
+                    <p className="text-xs font-bold">DEF</p>
+                    <p className="font-bold">{battleData.enemy.def}</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
+                    <p className="text-xs font-bold">SPD</p>
+                    <p className="font-bold">{battleData.enemy.spd}</p>
+                  </div>
                 </div>
-                <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
-                  <p className="text-xs font-bold">DEF</p>
-                  <p className="font-bold">{battleData.enemy.def}</p>
-                </div>
-                <div className="p-2 bg-muted rounded border-2 border-habbo-dark">
-                  <p className="text-xs font-bold">SPD</p>
-                  <p className="font-bold">{battleData.enemy.spd}</p>
-                </div>
+                {battleData.enemy.status_effects.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold">Status Effects:</p>
+                    {battleData.enemy.status_effects.map((effect, i) => (
+                      <p key={i} className="text-sm text-accent">{effect}</p>
+                    ))}
+                  </div>
+                )}
               </div>
-              {battleData.enemy.status_effects.length > 0 && (
-                <div className="space-y-1">
-                  <p className="text-xs font-bold">Status Effects:</p>
-                  {battleData.enemy.status_effects.map((effect, i) => (
-                    <p key={i} className="text-sm text-accent">{effect}</p>
-                  ))}
-                </div>
-              )}
-            </div>
-          </HabboPanel>
+            </HabboPanel>
+          )}
 
           {/* Action Panel */}
           <HabboPanel title="Current Turn" className="md:col-span-1">
