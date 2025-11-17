@@ -361,10 +361,18 @@ const Battle = () => {
 
       // Show consequence toast
       if (data.outcome) {
-        toast({
-          title: data.outcome.triggersBattle ? "Battle!" : "The path unfolds",
-          description: data.outcome.consequenceText,
-        });
+        if (data.outcome.dungeonComplete) {
+          toast({
+            title: "Victory!",
+            description: "You have conquered the dungeon! Returning to dashboard...",
+          });
+          setTimeout(() => navigate("/dashboard"), 3000);
+        } else {
+          toast({
+            title: data.outcome.triggersBattle ? "Battle!" : "The path unfolds",
+            description: data.outcome.consequenceText,
+          });
+        }
       }
 
       // Reload battle to get updated state
