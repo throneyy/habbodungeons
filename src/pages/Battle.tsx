@@ -139,9 +139,11 @@ const Battle = () => {
         
         // If in story mode, load story node
         if (data.battleData.mode === "story") {
+          setShowCombatPanels(false);
           loadStoryNode();
         } else {
-          // Trigger combat panel animation for battle mode
+          // Clear story node and trigger combat panel animation for battle mode
+          setStoryNode(null);
           setTimeout(() => setShowCombatPanels(true), 100);
         }
       }

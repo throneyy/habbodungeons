@@ -193,15 +193,50 @@ What happens as a result of this choice?`,
 
     // Update battle state to trigger battle mode
     if (outcome.triggersBattle) {
-      await supabaseClient
-        .from("battle_states")
-        .update({
-          current_enemy_state: {
-            ...battleState.current_enemy_state,
-            mode: "battle",
-          },
-        })
-        .eq("id", battleState.id);
+      // Get the current room's enemy
+      const dungeonData = battleState.dungeons.dungeon_json;
+      const currentRoom = dungeonData.rooms[newRoomIndex];
+      
+      if (currentRoom && currentRoom.enemy) {
+        // Set up the enemy for battle
+        const enemy = currentRoom.enemy;
+        await supabaseClient
+          .from("battle_states")
+          .update({
+            current_enemy_state: {
+              name: enemy.name,
+              description: enemy.description,
+              hp: enemy.hp,
+              current_hp: enemy.hp,
+              max_hp: enemy.hp,
+              atk: enemy.atk,
+              def: enemy.def,
+              spd: enemy.spd,
+              status_effects: [],
+              mode: "battle",
+            },
+          })
+          .eq("id", battleState.id);
+      } else {
+        // No enemy in room, but triggering battle - create a generic enemy
+        await supabaseClient
+          .from("battle_states")
+          .update({
+            current_enemy_state: {
+              name: "Ice Shade",
+              description: "A mysterious creature emerges from the shadows!",
+              hp: 30,
+              current_hp: 30,
+              max_hp: 30,
+              atk: 8,
+              def: 5,
+              spd: 12,
+              status_effects: [],
+              mode: "battle",
+            },
+          })
+          .eq("id", battleState.id);
+      }
     }
 
     return new Response(
