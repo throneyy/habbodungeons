@@ -141,8 +141,20 @@ serve(async (req) => {
       }];
     }
 
+    // Validate dungeon data structure
+    if (!battle.dungeons) {
+      throw new Error('Dungeon data not found for battle');
+    }
+    
     const dungeonData = battle.dungeons.dungeon_json;
+    if (!dungeonData || !dungeonData.rooms) {
+      throw new Error('Invalid dungeon structure - missing rooms data');
+    }
+    
     const currentRoom = dungeonData.rooms[battle.current_room_index];
+    if (!currentRoom) {
+      throw new Error(`Room ${battle.current_room_index} not found in dungeon`);
+    }
 
     // Determine mode: check if enemy is defeated or if we're in story mode
     const enemyState = battle.current_enemy_state;
@@ -159,7 +171,7 @@ serve(async (req) => {
       enemy: enemyState,
       players: players, // Array of all players (party or solo)
       player: players[0], // Keep for backwards compatibility
-      room_description: currentRoom.description,
+      room_description: currentRoom.description || '',
       battle_log: battleLog,
       mode: mode,
       isPartyBattle: !!battle.party_id,
