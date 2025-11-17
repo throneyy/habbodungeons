@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/AppLayout";
 
 const CreateDungeon = () => {
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ const CreateDungeon = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <HabboPanel title="Create a Dungeon">
           <div className="space-y-6">
@@ -136,7 +137,7 @@ const CreateDungeon = () => {
           </div>
         </HabboPanel>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

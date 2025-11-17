@@ -26,9 +26,9 @@ All colors MUST be HSL.
     --popover: 220 25% 15%;
     --popover-foreground: 0 0% 90%;
 
-    /* Crimson/Red primary from glowing archway */
-    --primary: 0 75% 45%;
-    --primary-foreground: 0 0% 98%;
+    /* Icy blue primary for winter theme */
+    --primary: 200 70% 55%;
+    --primary-foreground: 220 30% 10%;
 
     /* Stone grey secondary */
     --secondary: 220 15% 35%;
@@ -46,20 +46,20 @@ All colors MUST be HSL.
 
     --border: 220 20% 25%;
     --input: 220 20% 25%;
-    --ring: 0 75% 45%;
+    --ring: 200 70% 55%;
 
     --radius: 0.75rem;
 
     /* Dungeon-specific colors */
     --habbo-gold: 35 90% 55%;
     --habbo-orange: 20 85% 50%;
-    --habbo-blue: 220 40% 40%;
+    --habbo-blue: 200 70% 55%;
     --habbo-dark: 220 30% 8%;
     --habbo-light: 220 20% 25%;
     
     /* HP/MP bar colors */
     --hp-bar: 0 75% 45%;
-    --mp-bar: 220 70% 55%;
+    --mp-bar: 200 70% 55%;
   }
 
   .dark {
@@ -72,8 +72,8 @@ All colors MUST be HSL.
     --popover: 220 25% 12%;
     --popover-foreground: 0 0% 92%;
 
-    --primary: 0 75% 50%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 200 70% 60%;
+    --primary-foreground: 220 30% 10%;
 
     --secondary: 220 15% 30%;
     --secondary-foreground: 0 0% 98%;
@@ -89,7 +89,7 @@ All colors MUST be HSL.
 
     --border: 220 20% 22%;
     --input: 220 20% 22%;
-    --ring: 0 75% 50%;
+    --ring: 200 70% 60%;
   }
 }
 
