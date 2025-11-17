@@ -26,22 +26,25 @@ serve(async (req) => {
 
     console.log("Creating party for user:", user.id, "dungeon:", dungeonId);
 
-    // Check if user already has an active party
-    const { data: existingParty } = await supabase
+    // Delete any existing parties where user is leader (always create fresh party)
+    const { data: oldParties } = await supabase
       .from('parties')
-      .select('*, party_members(*)')
-      .eq('leader_id', user.id)
-      .maybeSingle();
-
-    if (existingParty) {
-      console.log("User already has a party:", existingParty.id);
-      return new Response(
-        JSON.stringify({ 
-          party: existingParty,
-          inviteCode: existingParty.invite_code 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      .select('id')
+      .eq('leader_id', user.id);
+    
+    if (oldParties && oldParties.length > 0) {
+      console.log("Deleting old parties for user:", user.id);
+      // Delete old party members first
+      await supabase
+        .from('party_members')
+        .delete()
+        .in('party_id', oldParties.map(p => p.id));
+      
+      // Delete old parties
+      await supabase
+        .from('parties')
+        .delete()
+        .eq('leader_id', user.id);
     }
 
     // Generate invite code using database function
