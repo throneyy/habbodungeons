@@ -29,6 +29,13 @@ const DungeonLobby = () => {
 
   useEffect(() => {
     loadDungeon();
+  }, [id]);
+
+  // Separate useEffect for Realtime subscription after party status is known
+  useEffect(() => {
+    if (!currentUserId) return; // Wait until we have user ID
+
+    console.log('Setting up realtime subscription', { partyId, isPartyLeader, currentUserId });
 
     // Subscribe to battle state changes for this dungeon
     const channel = supabase
@@ -42,20 +49,26 @@ const DungeonLobby = () => {
           filter: `dungeon_id=eq.${id}`
         },
         (payload) => {
-          console.log('Battle started!', payload);
-          // If we're in a party and battle started, navigate to it
+          console.log('Battle started! Payload:', payload);
+          console.log('Current state:', { partyId, isPartyLeader });
+          
+          // If we're in a party and not the leader, follow the leader to battle
           if (partyId && !isPartyLeader) {
+            console.log('Non-leader detected, navigating to battle');
             toast({ title: "Party leader started the battle!" });
             setTimeout(() => navigate(`/battle/${id}`), 1000);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [id, partyId, isPartyLeader]);
+  }, [id, partyId, isPartyLeader, currentUserId]);
 
   const loadDungeon = async () => {
     try {
