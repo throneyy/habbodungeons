@@ -661,7 +661,7 @@ const Battle = () => {
                             variant="ghost"
                             className="w-full text-sm font-bold text-muted-foreground hover:text-foreground"
                           >
-                            🏠 End Quest Here
+                            End Quest Here
                           </Button>
                         </div>
                       </div>
@@ -1088,7 +1088,7 @@ const Battle = () => {
                   variant="ghost"
                   className="w-full text-sm font-bold text-muted-foreground hover:text-foreground"
                 >
-                  🏠 End Quest Here
+                  End Quest Here
                 </Button>
               </div>
             </div>
