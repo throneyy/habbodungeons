@@ -137,11 +137,14 @@ const LinkHabbo = () => {
                 <HabboPanel title="Verify Your Account" className="bg-muted">
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
-                      <img
-                        src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboProfile?.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=l`}
-                        alt={habboProfile?.name}
-                        className="w-24 h-24 border-4 border-habbo-dark rounded-lg pixel-icon"
-                      />
+                      <div className="border-4 border-habbo-dark rounded-lg overflow-hidden bg-card">
+                        <img
+                          src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboProfile?.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=l`}
+                          alt={habboProfile?.name}
+                          className="pixel-icon"
+                          style={{ width: 'auto', height: 'auto', maxWidth: '120px' }}
+                        />
+                      </div>
                       <div className="space-y-1">
                         <p className="font-bold text-lg">{habboProfile?.name}</p>
                         <p className="text-muted-foreground italic">{habboProfile?.motto}</p>
