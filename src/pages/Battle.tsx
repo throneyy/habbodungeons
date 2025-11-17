@@ -74,6 +74,11 @@ const Battle = () => {
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
+  
+  // Party states
+  const [partyMembers, setPartyMembers] = useState<any[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   useEffect(() => {
     loadBattle();
@@ -168,6 +173,7 @@ const Battle = () => {
       if (memberData) {
         setPartyId(memberData.party_id);
         setInviteCode((memberData.parties as any)?.invite_code || null);
+        loadPartyMembers(memberData.party_id);
       }
     } catch (error: any) {
       console.error("Failed to check existing party:", error);
@@ -184,6 +190,8 @@ const Battle = () => {
 
       setPartyId(data.party.id);
       setInviteCode(data.inviteCode);
+      setShowInviteDialog(true);
+      loadPartyMembers(data.party.id);
       
       toast({
         title: "Party Created!",
@@ -195,6 +203,19 @@ const Battle = () => {
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const loadPartyMembers = async (pId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("get-party-members", {
+        body: { partyId: pId },
+      });
+
+      if (error) throw error;
+      setPartyMembers(data.members || []);
+    } catch (error: any) {
+      console.error("Failed to load party members:", error);
     }
   };
 
@@ -517,12 +538,13 @@ const Battle = () => {
               <div className="md:col-span-1">
                 <HabboPanel title="Your Party">
                   {/* Party Avatars Row */}
-                  <div className="flex gap-2 mb-4 pb-4 border-b-2 border-habbo-dark">
+                  <div className="flex gap-2 mb-4 pb-4 border-habbo-dark">
                     {partyMembers.slice(0, 4).map((member) => (
-                      <div
+                      <button
                         key={`avatar-${member.userId}`}
-                        className="border-2 border-habbo-dark rounded overflow-hidden bg-card"
-                        title={member.username}
+                        onClick={() => setSelectedMemberId(member.userId)}
+                        className="border-2 border-habbo-dark rounded overflow-hidden bg-card hover:border-primary transition-colors cursor-pointer"
+                        title={`Click to view ${member.username}'s stats`}
                       >
                         {member.habboAvatar && (
                           <img
@@ -532,20 +554,25 @@ const Battle = () => {
                             style={{ width: 'auto', height: 'auto' }}
                           />
                         )}
-                      </div>
+                      </button>
                     ))}
                     {partyMembers.length < 4 && Array.from({ length: 4 - partyMembers.length }).map((_, i) => (
-                      <div
+                      <button
                         key={`empty-${i}`}
-                        className="w-12 h-12 border-2 border-dashed border-muted rounded bg-muted/20 flex items-center justify-center"
+                        onClick={() => partyId ? setShowInviteDialog(true) : createParty()}
+                        className="w-12 h-12 border-2 border-dashed border-muted rounded bg-muted/20 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        title="Invite player"
                       >
-                        <span className="text-muted-foreground text-xs">+</span>
-                      </div>
+                        <Plus className="text-muted-foreground w-4 h-4" />
+                      </button>
                     ))}
                   </div>
                   
                   <div className="space-y-4">
-                    {partyMembers.map((member) => (
+                    {selectedMemberId && partyMembers.find(m => m.userId === selectedMemberId) ? (
+                      (() => {
+                        const member = partyMembers.find(m => m.userId === selectedMemberId)!;
+                        return (
                       <div
                         key={member.userId}
                         className="p-4 bg-muted rounded-lg border-2 border-habbo-dark space-y-3"
@@ -585,19 +612,73 @@ const Battle = () => {
                         />
 
                         {/* Status Effects */}
-                        {member.statusEffects.length > 0 && (
+                        {member.statusEffects && member.statusEffects.length > 0 && (
                           <div className="text-xs space-y-1">
                             <p className="font-bold">Effects:</p>
-                            {member.statusEffects.map((effect, i) => (
+                            {member.statusEffects.map((effect: string, i: number) => (
                               <p key={i} className="text-accent">
                                 {effect}
                               </p>
                             ))}
                           </div>
                         )}
+                        
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setSelectedMemberId(null)}
+                          className="w-full"
+                        >
+                          Back to Party
+                        </Button>
                       </div>
-                    ))}
+                        );
+                      })()
+                    ) : (
+                      partyMembers.map((member) => (
+                        <div
+                          key={member.userId}
+                          className="p-3 bg-muted rounded border border-habbo-dark flex items-center gap-3"
+                        >
+                          {member.habboAvatar && (
+                            <img
+                              src={member.habboAvatar}
+                              alt={member.username}
+                              className="pixel-icon w-8 h-8"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <p className="font-bold text-sm">{member.username}</p>
+                            <p className="text-xs text-muted-foreground">Level {member.level}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
+                  
+                  {/* Invite Dialog */}
+                  <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Invite Friends to Party</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                          Share this code with your friends so they can join your party from the dungeon lobby:
+                        </p>
+                        <div className="flex gap-2">
+                          <Input
+                            value={inviteCode || ""}
+                            readOnly
+                            className="font-mono text-lg font-bold text-center"
+                          />
+                          <Button size="icon" variant="outline" onClick={copyInviteCode}>
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </HabboPanel>
               </div>
             </div>
