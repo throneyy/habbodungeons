@@ -26,11 +26,14 @@ serve(async (req) => {
 
     const { battleId, choiceId, choiceLabel, storyText } = await req.json();
 
-    // Get battle state
+    // Get battle state by dungeon_id
     const { data: battleState, error: battleError } = await supabaseClient
       .from("battle_states")
       .select("*, dungeons(*)")
-      .eq("id", battleId)
+      .eq("dungeon_id", battleId)
+      .eq("user_id", (await supabaseClient.auth.getUser()).data.user?.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .single();
 
     if (battleError) throw battleError;
@@ -183,7 +186,7 @@ What happens as a result of this choice?`,
         battle_log: battleLog,
         current_room_index: newRoomIndex,
       })
-      .eq("id", battleId);
+      .eq("id", battleState.id);
 
     // Update battle state to trigger battle mode
     if (outcome.triggersBattle) {
@@ -195,7 +198,7 @@ What happens as a result of this choice?`,
             mode: "battle",
           },
         })
-        .eq("id", battleId);
+        .eq("id", battleState.id);
     }
 
     return new Response(
