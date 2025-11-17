@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { difficulty, theme, encounters } = await req.json();
+    const { theme, encounters } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
     
     const supabase = createClient(
@@ -64,7 +64,7 @@ Generate a clear QUEST OBJECTIVE that tells players exactly what they need to do
 
 Output ONLY valid JSON (no markdown formatting) with: dungeonName (unique quest name), questObjective (clear goal to complete), introText (engaging quest hook), rooms array with [{roomIndex, description (vivid and immersive), enemy: {name, description, hp, atk, def, spd}}]. 
 
-IMPORTANT: The quest story, name, and objective should be the SAME regardless of difficulty. Enemy base stats should be balanced for player level ${stats?.level || 1}. The difficulty level (${difficulty}) will be applied as a multiplier AFTER generation.`
+Generate balanced base stats for enemies appropriate for player level ${stats?.level || 1}. These are BASE stats that will be modified by difficulty selection later.`
           },
           {
             role: 'user',
@@ -79,31 +79,14 @@ IMPORTANT: The quest story, name, and objective should be the SAME regardless of
     const cleanedContent = extractJSON(rawContent);
     const dungeonJson = JSON.parse(cleanedContent);
 
-    // Apply difficulty multiplier to enemy stats
-    const difficultyMultiplier = difficulty === "Hardcore" ? 1.5 : 1.0;
-    dungeonJson.rooms = dungeonJson.rooms.map((room: any) => {
-      if (room.enemy) {
-        return {
-          ...room,
-          enemy: {
-            ...room.enemy,
-            hp: Math.floor(room.enemy.hp * difficultyMultiplier),
-            atk: Math.floor(room.enemy.atk * difficultyMultiplier),
-            def: Math.floor(room.enemy.def * difficultyMultiplier),
-          }
-        };
-      }
-      return room;
-    });
-
-    // Save dungeon
+    // Save dungeon with base stats (no difficulty applied yet)
     const { data: dungeon, error } = await supabase
       .from('dungeons')
       .insert({
         owner_user_id: user.id,
         name: dungeonJson.dungeonName,
         theme,
-        difficulty,
+        difficulty: 'Normal', // Default, will be applied when starting
         dungeon_json: dungeonJson,
       })
       .select()
@@ -111,24 +94,7 @@ IMPORTANT: The quest story, name, and objective should be the SAME regardless of
 
     if (error) throw error;
 
-    // Create initial battle state in story mode
-    const firstEnemy = dungeonJson.rooms[0].enemy;
-    const initialEnemyState = firstEnemy ? {
-      ...firstEnemy,
-      current_hp: firstEnemy.hp,
-      max_hp: firstEnemy.hp,
-      status_effects: [],
-      mode: "story",
-    } : null;
-
-    await supabase.from('battle_states').insert({
-      user_id: user.id,
-      dungeon_id: dungeon.id,
-      current_room_index: 0,
-      current_enemy_state: initialEnemyState,
-      battle_log: [dungeonJson.introText, dungeonJson.rooms[0].description],
-    });
-
+    // Don't create battle state yet - wait for difficulty selection
     return new Response(
       JSON.stringify({ dungeonId: dungeon.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

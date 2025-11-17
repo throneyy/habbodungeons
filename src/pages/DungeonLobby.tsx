@@ -53,8 +53,28 @@ const DungeonLobby = () => {
     setLoading(false);
   };
 
-  const handleStartBattle = () => {
-    navigate(`/battle/${id}`);
+  const handleStartBattle = async (difficulty: "Normal" | "Hardcore") => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("start-dungeon-battle", {
+        body: {
+          dungeonId: id,
+          difficulty,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({ title: `${difficulty} mode started!` });
+      navigate(`/battle/${id}`);
+    } catch (error: any) {
+      toast({
+        title: "Failed to start battle",
+        description: error.message,
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -100,10 +120,28 @@ const DungeonLobby = () => {
                     {dungeon.dungeon_json.questObjective}
                   </p>
                 )}
-                <div className="flex gap-4 text-sm">
-                  <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
-                    {dungeon.difficulty}
-                  </span>
+                <div className="mt-6 space-y-4">
+                  <p className="font-bold text-sm text-muted-foreground">Choose Your Difficulty:</p>
+                  <div className="flex gap-4">
+                    <Button
+                      onClick={() => handleStartBattle("Normal")}
+                      disabled={loading}
+                      className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6 bg-primary hover:bg-primary/90"
+                      size="lg"
+                    >
+                      <Swords className="w-5 h-5 mr-2" />
+                      Normal
+                    </Button>
+                    <Button
+                      onClick={() => handleStartBattle("Hardcore")}
+                      disabled={loading}
+                      className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6 bg-destructive hover:bg-destructive/90"
+                      size="lg"
+                    >
+                      <Swords className="w-5 h-5 mr-2" />
+                      Hardcore
+                    </Button>
+                  </div>
                 </div>
               </div>
             )}
@@ -137,14 +175,6 @@ const DungeonLobby = () => {
 
             {/* Start Battle */}
             <div className="flex flex-col gap-4">
-              <Button
-                onClick={handleStartBattle}
-                className="w-full font-bold text-lg py-6 border-4 border-habbo-dark"
-                size="lg"
-              >
-                <Swords className="w-6 h-6 mr-2" />
-                Enter the Dungeon
-              </Button>
               <Button
                 onClick={() => navigate("/dashboard")}
                 variant="outline"
