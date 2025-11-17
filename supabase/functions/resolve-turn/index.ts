@@ -211,8 +211,19 @@ serve(async (req) => {
       mode: result.victory ? "story" : "battle", // Switch to story mode after victory
     };
 
+    // Get user profile for dice roll log
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('habbo_username, username')
+      .eq('id', user.id)
+      .single();
+
+    const diceSum = dice.reduce((sum: number, d: number) => sum + d, 0);
+    const diceRollMessage = `${profile?.habbo_username || profile?.username || 'You'} rolled ${dice.join(' + ')} = ${diceSum} for ${action}!`;
+
     const updatedLog = [
       ...(battle.battle_log || []),
+      { user_id: user.id, message: diceRollMessage, type: 'dice_roll' },
       ...result.narration.map((msg: string) => ({ user_id: user.id, message: msg })),
       ...xpMessages.map((msg: string) => ({ user_id: user.id, message: msg }))
     ];
