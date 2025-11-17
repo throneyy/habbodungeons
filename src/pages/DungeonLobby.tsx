@@ -24,10 +24,38 @@ const DungeonLobby = () => {
   const [dungeon, setDungeon] = useState<DungeonInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [partyId, setPartyId] = useState<string | null>(null);
+  const [isPartyLeader, setIsPartyLeader] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadDungeon();
-  }, [id]);
+
+    // Subscribe to battle state changes for this dungeon
+    const channel = supabase
+      .channel(`dungeon-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'battle_states',
+          filter: `dungeon_id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Battle started!', payload);
+          // If we're in a party and battle started, navigate to it
+          if (partyId && !isPartyLeader) {
+            toast({ title: "Party leader started the battle!" });
+            setTimeout(() => navigate(`/battle/${id}`), 1000);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, partyId, isPartyLeader]);
 
   const loadDungeon = async () => {
     try {
@@ -36,6 +64,7 @@ const DungeonLobby = () => {
         navigate("/auth");
         return;
       }
+      setCurrentUserId(user.id);
 
       const { data, error } = await supabase
         .from("dungeons")
@@ -45,6 +74,19 @@ const DungeonLobby = () => {
 
       if (error) throw error;
       setDungeon(data);
+
+      // Check if user is in a party for this dungeon
+      const { data: partyData } = await supabase
+        .from("party_members")
+        .select("party_id, parties!inner(leader_id, dungeon_id)")
+        .eq("user_id", user.id)
+        .eq("parties.dungeon_id", id)
+        .maybeSingle();
+
+      if (partyData) {
+        setPartyId(partyData.party_id);
+        setIsPartyLeader(partyData.parties.leader_id === user.id);
+      }
     } catch (error: any) {
       toast({
         title: "Failed to load dungeon",
@@ -127,23 +169,37 @@ const DungeonLobby = () => {
                   </p>
                 )}
                 <div className="mt-6 space-y-4">
-                  <p className="font-bold text-sm text-muted-foreground">Choose Your Difficulty:</p>
-                  <div className="flex gap-4">
-                    <Button
-                      onClick={() => handleStartBattle("Normal")}
-                      disabled={loading}
-                      className="font-bold border-2 border-primary bg-primary/20 hover:bg-primary/30"
-                    >
-                      Normal
-                    </Button>
-                    <Button
-                      onClick={() => handleStartBattle("Hardcore")}
-                      disabled={loading}
-                      className="font-bold border-2 border-destructive bg-destructive/20 hover:bg-destructive/30"
-                    >
-                      Hardcore
-                    </Button>
-                  </div>
+                  {partyId && !isPartyLeader ? (
+                    <div className="p-4 bg-muted rounded-lg border-2 border-habbo-dark text-center">
+                      <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="font-bold">Waiting for party leader to start...</p>
+                      <p className="text-sm text-muted-foreground mt-1">Only the party leader can choose the difficulty</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="font-bold text-sm text-muted-foreground">
+                        {partyId ? "Choose Difficulty for Your Party:" : "Choose Your Difficulty:"}
+                      </p>
+                      <div className="flex gap-4">
+                        <Button
+                          onClick={() => handleStartBattle("Normal")}
+                          disabled={loading}
+                          className="font-bold border-2 border-primary bg-primary/20 hover:bg-primary/30"
+                        >
+                          <Swords className="w-4 h-4 mr-2" />
+                          Normal
+                        </Button>
+                        <Button
+                          onClick={() => handleStartBattle("Hardcore")}
+                          disabled={loading}
+                          className="font-bold border-2 border-destructive bg-destructive/20 hover:bg-destructive/30"
+                        >
+                          <Swords className="w-4 h-4 mr-2" />
+                          Hardcore
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -154,8 +210,14 @@ const DungeonLobby = () => {
         <div className="grid md:grid-cols-2 gap-6">
           <PartyInvite 
             dungeonId={id}
-            onPartyCreated={(id) => setPartyId(id)}
-            onPartyJoined={(id) => setPartyId(id)}
+            onPartyCreated={(id) => {
+              setPartyId(id);
+              setIsPartyLeader(true);
+            }}
+            onPartyJoined={(id) => {
+              setPartyId(id);
+              setIsPartyLeader(false);
+            }}
           />
           
           {partyId && <PartyMembers partyId={partyId} />}

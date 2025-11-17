@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
+import { JoinPartyQuick } from "@/components/JoinPartyQuick";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -217,16 +218,26 @@ const Dashboard = () => {
 
         {/* Actions */}
         {profile?.habbo_username && (
-        <div className="flex gap-4">
-          <Button
-            size="lg"
-            onClick={handleStartDungeon}
-            disabled={loading}
-            className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6"
-          >
-            {loading ? "Generating Quest..." : "Create Quest"}
-          </Button>
-        </div>
+        <>
+          <div className="grid md:grid-cols-2 gap-6">
+            <HabboPanel title="Create Quest">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Start a new adventure in the Shattered Frostkeep. You can invite friends to join your party in the lobby.
+                </p>
+                <Button
+                  size="lg"
+                  onClick={handleStartDungeon}
+                  disabled={loading}
+                  className="w-full font-bold border-4 border-habbo-dark text-lg py-6"
+                >
+                  {loading ? "Generating Quest..." : "Create Quest"}
+                </Button>
+              </div>
+            </HabboPanel>
+            <JoinPartyQuick />
+          </div>
+        </>
         )}
       </div>
     </AppLayout>
