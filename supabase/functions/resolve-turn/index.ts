@@ -6,6 +6,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to strip markdown code blocks from JSON
+function extractJSON(text: string): string {
+  // Remove markdown code blocks if present
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    return codeBlockMatch[1].trim();
+  }
+  return text.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -59,7 +69,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG combat engine. Calculate turn outcomes based on stats and dice rolls. Output JSON with: {playerDamageDealt, playerDamageTaken, enemyAction, playerNewHp, enemyNewHp, narration: string[], victory: boolean, defeat: boolean}. Use dice sum for attack variance. Keep narration exciting but brief (2-3 lines).`
+            content: `You are a JRPG combat engine. Calculate turn outcomes based on stats and dice rolls. Output ONLY valid JSON (no markdown formatting) with: {playerDamageDealt, playerDamageTaken, enemyAction, playerNewHp, enemyNewHp, narration: string[], victory: boolean, defeat: boolean}. Use dice sum for attack variance. Keep narration exciting but brief (2-3 lines).`
           },
           {
             role: 'user',
@@ -81,7 +91,9 @@ serve(async (req) => {
     });
 
     const aiData = await aiResponse.json();
-    const result = JSON.parse(aiData.choices[0].message.content);
+    const rawContent = aiData.choices[0].message.content;
+    const cleanedContent = extractJSON(rawContent);
+    const result = JSON.parse(cleanedContent);
 
     // Update player stats
     await supabase
