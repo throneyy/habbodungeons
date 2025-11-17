@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,13 +18,8 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
-    const authHeader = req.headers.get("Authorization");
-    console.log("Auth header present:", !!authHeader);
-    
-    if (!authHeader) {
-      console.error("No Authorization header provided");
-      throw new Error("Not authenticated - no authorization header");
-    }
+    const { battleId, lastChoice } = await req.json();
+    const authHeader = req.headers.get("Authorization")!;
     
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -32,23 +27,13 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { battleId, lastChoice } = await req.json();
-
-    console.log("Received request:", { battleId, lastChoice });
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
 
     // Validate battleId
     if (!battleId || battleId === "undefined" || battleId === "null" || typeof battleId !== 'string' || battleId.length === 0) {
-      console.error("Invalid battleId received:", battleId, "type:", typeof battleId);
+      console.error("Invalid battleId received:", battleId);
       throw new Error(`Invalid battleId provided: ${battleId}`);
-    }
-
-    // Get authenticated user first
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    console.log("Auth check:", { hasUser: !!user, authError: authError?.message });
-    
-    if (authError || !user) {
-      console.error("Authentication failed - authError:", authError, "user:", user);
-      throw new Error(`Not authenticated: ${authError?.message || 'User not found'}`);
     }
 
     console.log("Generating story node for battleId:", battleId, "userId:", user.id);
