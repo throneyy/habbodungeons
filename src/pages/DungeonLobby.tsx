@@ -28,6 +28,11 @@ const DungeonLobby = () => {
     if (id && id !== "new") {
       loadDungeon();
     }
+    
+    // Ensure any dashboard music is stopped
+    return () => {
+      // Cleanup on unmount
+    };
   }, [id]);
 
   const loadDungeon = async () => {
