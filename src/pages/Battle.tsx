@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Swords, Shield, Sparkles, Package } from "lucide-react";
+import { Swords, Shield, Sparkles, Package, Users } from "lucide-react";
 
 interface BattleData {
   enemy: {
@@ -34,18 +34,27 @@ interface BattleData {
   battle_log: string[];
 }
 
+interface Profile {
+  username: string;
+  habbo_username: string | null;
+  habbo_profile_json: any;
+}
+
 const Battle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [battleData, setBattleData] = useState<BattleData | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [selectedAction, setSelectedAction] = useState<string>("");
   const [dice, setDice] = useState<number[]>([1, 1, 1, 1, 1]);
   const [loading, setLoading] = useState(false);
+  const [showCombatPanels, setShowCombatPanels] = useState(false);
 
   useEffect(() => {
     loadBattle();
+    loadProfile();
   }, [id]);
 
   const loadBattle = async () => {
@@ -55,13 +64,35 @@ const Battle = () => {
       });
 
       if (error) throw error;
-      if (data.battleData) setBattleData(data.battleData);
+      if (data.battleData) {
+        setBattleData(data.battleData);
+        // Trigger animation after a brief delay
+        setTimeout(() => setShowCombatPanels(true), 100);
+      }
     } catch (error: any) {
       toast({
         title: "Failed to load battle",
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const loadProfile = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error: any) {
+      console.error("Failed to load profile:", error);
     }
   };
 
@@ -114,7 +145,23 @@ const Battle = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="grid md:grid-cols-3 gap-6">
+        {/* Battle Log - Main Focus */}
+        <HabboPanel title="Battle Log">
+          <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
+            {battleData.battle_log.length > 0 ? (
+              battleData.battle_log.map((log, i) => (
+                <p key={i} className="text-sm animate-fade-in">{log}</p>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground italic">Battle begins...</p>
+            )}
+          </div>
+        </HabboPanel>
+
+        {/* Combat Panels - Slide in from top */}
+        <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
+          showCombatPanels ? 'translate-y-0 opacity-100' : '-translate-y-8 opacity-0'
+        }`}>
           {/* Enemy Panel */}
           <HabboPanel title="Enemy" className="md:col-span-1">
             <div className="space-y-4">
@@ -226,6 +273,24 @@ const Battle = () => {
           {/* Player Panel */}
           <HabboPanel title="You" className="md:col-span-1">
             <div className="space-y-4">
+              {/* Player Habbo Avatar */}
+              {profile?.habbo_username && profile.habbo_profile_json && (
+                <div className="flex justify-center">
+                  <div className="border-4 border-habbo-dark rounded-lg overflow-hidden bg-card">
+                    <img
+                      src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=m`}
+                      alt={profile.habbo_username}
+                      className="pixel-icon"
+                      style={{ width: 'auto', height: 'auto', maxWidth: '100px' }}
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="text-center">
+                <p className="text-xs text-muted-foreground">
+                  {profile?.habbo_username || profile?.username.split('@')[0] || "Player"}
+                </p>
+              </div>
               <div className="text-center p-2 bg-primary rounded border-4 border-habbo-dark">
                 <p className="text-sm font-bold text-primary-foreground">Level {battleData.player.level}</p>
               </div>
@@ -267,12 +332,15 @@ const Battle = () => {
           </HabboPanel>
         </div>
 
-        {/* Battle Log */}
-        <HabboPanel title="Battle Log">
-          <div className="h-64 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
-            {battleData.battle_log.map((log, i) => (
-              <p key={i} className="text-sm">{log}</p>
-            ))}
+        {/* Party Members Section */}
+        <HabboPanel title="Party Members">
+          <div className="flex items-center justify-center p-8">
+            <div className="text-center space-y-2">
+              <Users className="w-12 h-12 mx-auto text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Solo adventurer - Party system coming soon!
+              </p>
+            </div>
           </div>
         </HabboPanel>
 
