@@ -26,6 +26,14 @@ serve(async (req) => {
 
     const { battleId, lastChoice } = await req.json();
 
+    // Validate battleId
+    if (!battleId || battleId === "undefined" || battleId === "null") {
+      console.error("Invalid battleId received:", battleId);
+      throw new Error("Invalid battleId provided");
+    }
+
+    console.log("Generating story node for battleId:", battleId);
+
     // Get battle state by dungeon_id
     const { data: battleState, error: battleError } = await supabaseClient
       .from("battle_states")
