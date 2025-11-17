@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
+import { PartyMembers } from "@/components/PartyMembers";
 import { StatBar } from "@/components/StatBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Swords, Shield, Sparkles, Package, Users } from "lucide-react";
+import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 
@@ -62,6 +64,8 @@ const Battle = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [partyProfiles, setPartyProfiles] = useState<Map<string, Profile>>(new Map());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [partyId, setPartyId] = useState<string | null>(null);
+  const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string>("");
   const [dice, setDice] = useState<number[]>([1, 1, 1, 1, 1]);
   const [loading, setLoading] = useState(false);
@@ -75,6 +79,7 @@ const Battle = () => {
     loadBattle();
     loadProfile();
     loadCurrentUser();
+    checkExistingParty();
   }, [id]);
 
   // Set up Realtime subscription for battle state changes
@@ -146,6 +151,60 @@ const Battle = () => {
       }
     } catch (error: any) {
       console.error("Failed to load current user:", error);
+    }
+  };
+
+  const checkExistingParty = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: memberData } = await supabase
+        .from("party_members")
+        .select("party_id, parties(invite_code)")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (memberData) {
+        setPartyId(memberData.party_id);
+        setInviteCode((memberData.parties as any)?.invite_code || null);
+      }
+    } catch (error: any) {
+      console.error("Failed to check existing party:", error);
+    }
+  };
+
+  const createParty = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("create-party", {
+        body: { dungeonId: id },
+      });
+
+      if (error) throw error;
+
+      setPartyId(data.party.id);
+      setInviteCode(data.inviteCode);
+      
+      toast({
+        title: "Party Created!",
+        description: `Share code: ${data.inviteCode}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to create party",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const copyInviteCode = () => {
+    if (inviteCode) {
+      navigator.clipboard.writeText(inviteCode);
+      toast({
+        title: "Copied!",
+        description: "Invite code copied to clipboard",
+      });
     }
   };
 
@@ -783,17 +842,45 @@ const Battle = () => {
         </div>
 
         {/* Party Members Section */}
-        <HabboPanel title="Party Members">
-          <div className="flex items-center justify-center p-8">
-            <div className="text-center space-y-2">
-              <Users className="w-12 h-12 mx-auto text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Solo adventurer - Party system coming soon!
-              </p>
-            </div>
-          </div>
-        </HabboPanel>
+        <div className="grid md:grid-cols-2 gap-6">
+          <HabboPanel title="Party Members">
+            {partyId ? (
+              <PartyMembers partyId={partyId} />
+            ) : (
+              <div className="text-center space-y-4 p-4">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  No active party
+                </p>
+                <Button onClick={createParty} className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Party
+                </Button>
+              </div>
+            )}
+          </HabboPanel>
 
+          {partyId && inviteCode && (
+            <HabboPanel title="Invite Friends">
+              <div className="space-y-4">
+                <p className="text-sm">Share this code with your friends:</p>
+                <div className="flex gap-2">
+                  <Input
+                    value={inviteCode}
+                    readOnly
+                    className="font-mono text-lg font-bold text-center"
+                  />
+                  <Button size="icon" variant="outline" onClick={copyInviteCode}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Friends can join using this code from the dungeon lobby
+                </p>
+              </div>
+            </HabboPanel>
+          )}
+        </div>
         <Button
           variant="outline"
           onClick={() => navigate("/dashboard")}

@@ -1,0 +1,81 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const authHeader = req.headers.get('Authorization')!;
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
+
+    const { inviteCode } = await req.json();
+
+    console.log("User attempting to join party:", user.id, "code:", inviteCode);
+
+    // Find party by invite code
+    const { data: party, error: partyError } = await supabase
+      .from('parties')
+      .select('*, party_members(*)')
+      .eq('invite_code', inviteCode.toUpperCase())
+      .single();
+
+    if (partyError || !party) {
+      throw new Error("Party not found. Check your invite code.");
+    }
+
+    // Check if already a member
+    const isMember = party.party_members.some((m: any) => m.user_id === user.id);
+    if (isMember) {
+      console.log("User already in party");
+      return new Response(
+        JSON.stringify({ party, message: "You're already in this party!" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if party is full
+    if (party.party_members.length >= party.max_members) {
+      throw new Error("Party is full!");
+    }
+
+    // Add user to party
+    const { error: joinError } = await supabase
+      .from('party_members')
+      .insert({
+        party_id: party.id,
+        user_id: user.id,
+      });
+
+    if (joinError) throw joinError;
+
+    console.log("User joined party successfully");
+
+    return new Response(
+      JSON.stringify({ 
+        party,
+        message: "Successfully joined party!" 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error joining party:', error);
+    return new Response(
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
+      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
