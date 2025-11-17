@@ -197,11 +197,29 @@ serve(async (req) => {
         xpMessages.push(`${newXp} / ${xpNeeded} EXP to next level.`);
       }
     } else {
-      // No victory, just update HP
-      await supabase
-        .from('player_stats')
-        .update({ current_hp: result.playerNewHp })
-        .eq('user_id', user.id);
+      // No victory - check for defeat and handle respawn
+      if (result.defeat) {
+        // Soft defeat: Restore 50% HP and MP, player respawns at town
+        const respawnHp = Math.floor(stats.max_hp * 0.5);
+        const respawnMp = Math.floor(stats.max_mp * 0.5);
+        
+        await supabase
+          .from('player_stats')
+          .update({ 
+            current_hp: respawnHp,
+            current_mp: respawnMp 
+          })
+          .eq('user_id', user.id);
+        
+        xpMessages.push(`You were defeated and retreated to town...`);
+        xpMessages.push(`HP and MP restored to 50%.`);
+      } else {
+        // Just update HP if not defeated
+        await supabase
+          .from('player_stats')
+          .update({ current_hp: result.playerNewHp })
+          .eq('user_id', user.id);
+      }
     }
 
     // Update battle state
