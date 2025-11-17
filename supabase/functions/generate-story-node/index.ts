@@ -26,11 +26,14 @@ serve(async (req) => {
 
     const { battleId, lastChoice } = await req.json();
 
-    // Get battle state
+    // Get battle state by dungeon_id
     const { data: battleState, error: battleError } = await supabaseClient
       .from("battle_states")
       .select("*, dungeons(*)")
-      .eq("id", battleId)
+      .eq("dungeon_id", battleId)
+      .eq("user_id", (await supabaseClient.auth.getUser()).data.user?.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
       .single();
 
     if (battleError) throw battleError;
