@@ -29,13 +29,20 @@ serve(async (req) => {
     // Check if user is in a party for this dungeon
     const { data: partyMember } = await supabase
       .from('party_members')
-      .select('party_id, parties!inner(dungeon_id)')
+      .select('party_id, parties!inner(dungeon_id, leader_id)')
       .eq('user_id', user.id)
       .eq('parties.dungeon_id', dungeonId)
       .maybeSingle();
 
     const partyId = partyMember?.party_id || null;
-    console.log('User party status:', { partyId, hasParty: !!partyId });
+    const isLeader = (partyMember?.parties as any)?.leader_id === user.id;
+    console.log('User party status:', { partyId, hasParty: !!partyId, isLeader });
+
+    // If in a party but not the leader, reject the request
+    if (partyId && !isLeader) {
+      console.error('User is not party leader');
+      throw new Error("Only the party leader can start the battle");
+    }
 
     // Get dungeon data
     const { data: dungeon, error: dungeonError } = await supabase
