@@ -16,21 +16,6 @@ function extractJSON(text: string): string {
   return text.trim();
 }
 
-// Helper function to clean control characters from JSON string
-function cleanJsonString(jsonString: string): string {
-  // Replace control characters (newlines, tabs, etc.) within string values
-  return jsonString
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, (char) => {
-      // Convert control characters to their escaped equivalents
-      switch (char) {
-        case '\n': return '\\n';
-        case '\r': return '\\r';
-        case '\t': return '\\t';
-        default: return ''; // Remove other control characters
-      }
-    });
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -77,9 +62,34 @@ Generate a UNIQUE and compelling quest name that drives the story forward. The q
 
 Generate a clear QUEST OBJECTIVE that tells players exactly what they need to do. Examples: "Rescue the trapped merchant from the ice prison", "Retrieve the legendary Frostblade from the vault", "Defeat the Ice Wraith that haunts the frozen halls", "Find and return the stolen Winter Gem".
 
-Output ONLY valid JSON (no markdown formatting) with: dungeonName (unique quest name), questObjective (clear goal to complete), introText (engaging quest hook), rooms array with [{roomIndex, description (vivid and immersive), enemy: {name, description, hp, atk, def, spd}}]. 
+IMPORTANT JSON RULES:
+- Output ONLY valid JSON (no markdown, no code blocks, no extra text)
+- Keep all text descriptions concise (under 80 words each)
+- Replace any line breaks in descriptions with spaces
+- Use simple, straightforward text without special formatting
 
-Generate balanced base stats for enemies appropriate for player level ${stats?.level || 1}. These are BASE stats that will be modified by difficulty selection later.`
+Required format:
+{
+  "dungeonName": "quest name here",
+  "questObjective": "clear objective here",
+  "introText": "brief hook text",
+  "rooms": [
+    {
+      "roomIndex": 0,
+      "description": "room description",
+      "enemy": {
+        "name": "enemy name",
+        "description": "brief description",
+        "hp": 50,
+        "atk": 12,
+        "def": 8,
+        "spd": 10
+      }
+    }
+  ]
+}
+
+Generate balanced base stats for enemies appropriate for player level ${stats?.level || 1}.`
           },
           {
             role: 'user',
@@ -91,20 +101,19 @@ Generate balanced base stats for enemies appropriate for player level ${stats?.l
 
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices[0].message.content;
-    console.log("Raw AI response length:", rawContent.length);
+    console.log("Raw AI response (first 200 chars):", rawContent.substring(0, 200));
+    console.log("Raw AI response (last 200 chars):", rawContent.substring(Math.max(0, rawContent.length - 200)));
     
-    const extractedContent = extractJSON(rawContent);
-    const cleanedContent = cleanJsonString(extractedContent);
-    
-    console.log("Cleaned content length:", cleanedContent.length);
+    const cleanedContent = extractJSON(rawContent);
+    console.log("Extracted JSON length:", cleanedContent.length);
     
     let dungeonJson;
     try {
       dungeonJson = JSON.parse(cleanedContent);
-    } catch (parseError) {
-      console.error("JSON parse error:", parseError);
-      console.error("Cleaned content:", cleanedContent.substring(0, 500));
-      throw new Error("Failed to parse AI response as JSON");
+    } catch (parseError: any) {
+      console.error("JSON parse error:", parseError.message);
+      console.error("Content around error position:", cleanedContent.substring(Math.max(0, parseError.position - 100), parseError.position + 100));
+      throw new Error(`Failed to parse AI response: ${parseError.message}`);
     }
 
     // Save dungeon with base stats (no difficulty applied yet)
