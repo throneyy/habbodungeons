@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.generate-dungeon]
 verify_jwt = true
 
+[functions.generate-story-node]
+verify_jwt = true
+
 [functions.load-battle]
 verify_jwt = true
 
