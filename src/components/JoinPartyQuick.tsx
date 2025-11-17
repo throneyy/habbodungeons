@@ -32,9 +32,15 @@ export const JoinPartyQuick = () => {
 
       toast({ title: "Joined party!" });
       
-      // Navigate to the dungeon lobby
-      if (data.party?.dungeon_id) {
-        navigate(`/dungeon-lobby/${data.party.dungeon_id}`);
+      // Navigate to the dungeon lobby using the dungeonId returned from the edge function
+      if (data.dungeonId) {
+        navigate(`/dungeon-lobby/${data.dungeonId}`);
+      } else {
+        toast({
+          title: "Party joined",
+          description: "But couldn't find the dungeon. Please check your parties.",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       toast({
