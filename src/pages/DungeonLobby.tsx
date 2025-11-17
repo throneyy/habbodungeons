@@ -131,12 +131,13 @@ const DungeonLobby = () => {
             </div>
 
             <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
+              <h3 className="text-xl font-black mb-2">Your Quest: Into the Frostkeep</h3>
+              <p className="text-lg mb-4 text-foreground font-semibold">
+                Venture deep into the frozen dungeon and survive its trials.
+              </p>
               {isNewDungeon ? (
                 <>
-                  <h3 className="text-xl font-black mb-2">Your Quest: Awaiting Generation</h3>
-                  <p className="text-lg mb-4 text-muted-foreground">
-                    Choose your difficulty and embark on a unique adventure into the frozen depths.
-                  </p>
+                  <p className="text-sm text-muted-foreground mb-3">Choose your difficulty:</p>
                   <div className="flex gap-3">
                     <Button
                       onClick={() => setSelectedDifficulty("Normal")}
@@ -157,19 +158,11 @@ const DungeonLobby = () => {
                   </div>
                 </>
               ) : dungeon ? (
-                <>
-                  <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
-                  {dungeon.dungeon_json?.questObjective && (
-                    <p className="text-lg mb-4 text-foreground font-semibold">
-                      {dungeon.dungeon_json.questObjective}
-                    </p>
-                  )}
-                  <div className="flex gap-4 text-sm">
-                    <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
-                      {dungeon.difficulty}
-                    </span>
-                  </div>
-                </>
+                <div className="flex gap-4 text-sm">
+                  <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
+                    {dungeon.difficulty}
+                  </span>
+                </div>
               ) : null}
             </div>
           </div>
