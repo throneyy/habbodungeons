@@ -10,6 +10,11 @@ import { Swords, Shield, Sparkles, Package, Users } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 
+interface BattleLogEntry {
+  user_id: string;
+  message: string;
+}
+
 interface BattleData {
   enemy: {
     name: string;
@@ -33,7 +38,7 @@ interface BattleData {
     status_effects: string[];
   };
   room_description: string;
-  battle_log: string[];
+  battle_log: BattleLogEntry[];
   mode?: "story" | "battle";
 }
 
@@ -55,6 +60,8 @@ const Battle = () => {
   
   const [battleData, setBattleData] = useState<BattleData | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [partyProfiles, setPartyProfiles] = useState<Map<string, Profile>>(new Map());
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string>("");
   const [dice, setDice] = useState<number[]>([1, 1, 1, 1, 1]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +74,34 @@ const Battle = () => {
   useEffect(() => {
     loadBattle();
     loadProfile();
+    loadCurrentUser();
+  }, [id]);
+
+  // Set up Realtime subscription for battle state changes
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel('battle-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'battle_states',
+          filter: `dungeon_id=eq.${id}`
+        },
+        (payload) => {
+          console.log('Battle state updated:', payload);
+          // Reload battle data when it changes
+          loadBattle();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [id]);
 
   const loadBattle = async () => {
@@ -103,6 +138,17 @@ const Battle = () => {
     }
   };
 
+  const loadCurrentUser = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    } catch (error: any) {
+      console.error("Failed to load current user:", error);
+    }
+  };
+
   const loadProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -116,8 +162,36 @@ const Battle = () => {
 
       if (error) throw error;
       setProfile(data);
+      
+      // Load all party members' profiles for battle log display
+      await loadPartyProfiles();
     } catch (error: any) {
       console.error("Failed to load profile:", error);
+    }
+  };
+
+  const loadPartyProfiles = async () => {
+    try {
+      // Get all unique user IDs from battle log entries
+      if (!battleData?.battle_log) return;
+      
+      const userIds = [...new Set(battleData.battle_log.map(entry => entry.user_id))];
+      
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", userIds);
+
+      if (error) throw error;
+      
+      const profileMap = new Map<string, Profile>();
+      data?.forEach(profile => {
+        profileMap.set(profile.id, profile);
+      });
+      
+      setPartyProfiles(profileMap);
+    } catch (error: any) {
+      console.error("Failed to load party profiles:", error);
     }
   };
 
@@ -293,11 +367,29 @@ const Battle = () => {
             <HabboPanel title="Chronicle of Events">
               <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
                 {battleData.battle_log.length > 0 ? (
-                  battleData.battle_log.map((log, i) => (
-                    <p key={i} className="text-sm animate-fade-in">
-                      <span className="text-primary font-bold">›</span> {log}
-                    </p>
-                  ))
+                  battleData.battle_log.map((entry, i) => {
+                    const isCurrentUser = entry.user_id === currentUserId;
+                    const userProfile = partyProfiles.get(entry.user_id);
+                    const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
+                    
+                    return (
+                      <p key={i} className="text-sm animate-fade-in">
+                        <span className="text-primary font-bold">›</span>{" "}
+                        {isCurrentUser ? (
+                          entry.message
+                        ) : (
+                          <>
+                            <span className="text-[#FFD700] font-bold">{username}</span>
+                            {entry.message.includes("chose:") ? (
+                              <> {entry.message.replace("You ", "")}</>
+                            ) : (
+                              <> {entry.message}</>
+                            )}
+                          </>
+                        )}
+                      </p>
+                    );
+                  })
                 ) : (
                   <p className="text-sm text-muted-foreground italic">
                     Your journey begins...
@@ -488,9 +580,28 @@ const Battle = () => {
           <HabboPanel title="Battle Log">
             <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log.length > 0 ? (
-                battleData.battle_log.map((log, i) => (
-                  <p key={i} className="text-sm animate-fade-in">{log}</p>
-                ))
+                battleData.battle_log.map((entry, i) => {
+                  const isCurrentUser = entry.user_id === currentUserId;
+                  const userProfile = partyProfiles.get(entry.user_id);
+                  const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
+                  
+                  return (
+                    <p key={i} className="text-sm animate-fade-in">
+                      {isCurrentUser ? (
+                        entry.message
+                      ) : (
+                        <>
+                          <span className="text-[#FFD700] font-bold">{username}</span>
+                          {entry.message.includes("chose:") ? (
+                            <> {entry.message.replace("You ", "")}</>
+                          ) : (
+                            <> {entry.message}</>
+                          )}
+                        </>
+                      )}
+                    </p>
+                  );
+                })
               ) : (
                 <p className="text-sm text-muted-foreground italic">Battle begins...</p>
               )}

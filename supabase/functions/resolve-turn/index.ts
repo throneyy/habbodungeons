@@ -108,7 +108,10 @@ serve(async (req) => {
       mode: result.victory ? "story" : "battle", // Switch to story mode after victory
     };
 
-    const updatedLog = [...(battle.battle_log || []), ...result.narration];
+    const updatedLog = [
+      ...(battle.battle_log || []),
+      ...result.narration.map((msg: string) => ({ user_id: user.id, message: msg }))
+    ];
 
     await supabase
       .from('battle_states')

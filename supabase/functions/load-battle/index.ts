@@ -55,6 +55,13 @@ serve(async (req) => {
     const enemyState = battle.current_enemy_state;
     const mode = enemyState.mode || (enemyState.current_hp > 0 ? "battle" : "story");
 
+    // Ensure battle_log is in the correct format
+    let battleLog = battle.battle_log || [];
+    // Convert old string format to new object format if needed
+    if (battleLog.length > 0 && typeof battleLog[0] === 'string') {
+      battleLog = battleLog.map((msg: any) => ({ user_id: user.id, message: msg }));
+    }
+
     const battleData = {
       enemy: enemyState,
       player: {
@@ -69,7 +76,7 @@ serve(async (req) => {
         status_effects: stats.status_effects || [],
       },
       room_description: currentRoom.description,
-      battle_log: battle.battle_log || [],
+      battle_log: battleLog,
       mode: mode,
     };
 
