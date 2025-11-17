@@ -138,7 +138,7 @@ const LinkHabbo = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-4">
                       <img
-                        src={`https://origins.habbo.com/habbo-imaging/avatarimage?figure=${habboProfile?.figureString}&size=l&direction=2&head_direction=3`}
+                        src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboProfile?.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=l`}
                         alt={habboProfile?.name}
                         className="w-24 h-24 border-4 border-habbo-dark rounded-lg pixel-icon"
                       />
