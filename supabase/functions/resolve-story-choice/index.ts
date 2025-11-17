@@ -1,6 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +24,9 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     );
 
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
+
     const { battleId, choiceId, choiceLabel, storyText } = await req.json();
 
     // Get battle state by dungeon_id
@@ -31,7 +34,7 @@ serve(async (req) => {
       .from("battle_states")
       .select("*, dungeons(*)")
       .eq("dungeon_id", battleId)
-      .eq("user_id", (await supabaseClient.auth.getUser()).data.user?.id)
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
