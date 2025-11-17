@@ -95,19 +95,35 @@ Scale enemy stats based on difficulty and player level. Make the first room's de
     if (error) throw error;
 
     // Create initial battle state in story mode
-    const firstEnemy = dungeonJson.rooms[0].enemy;
+    const firstRoom = dungeonJson.rooms[0];
+    const firstEnemy = firstRoom.enemy;
+    
+    // Create placeholder enemy state for story mode if no enemy exists
+    const enemyState = firstEnemy ? {
+      ...firstEnemy,
+      current_hp: firstEnemy.hp,
+      max_hp: firstEnemy.hp,
+      status_effects: [],
+      mode: "story",
+    } : {
+      name: "Story Mode",
+      description: "Exploring the dungeon",
+      hp: 1,
+      current_hp: 1,
+      max_hp: 1,
+      atk: 0,
+      def: 0,
+      spd: 0,
+      status_effects: [],
+      mode: "story",
+    };
+
     await supabase.from('battle_states').insert({
       user_id: user.id,
       dungeon_id: dungeon.id,
       current_room_index: 0,
-      current_enemy_state: {
-        ...firstEnemy,
-        current_hp: firstEnemy.hp,
-        max_hp: firstEnemy.hp,
-        status_effects: [],
-        mode: "story",
-      },
-      battle_log: [dungeonJson.introText, dungeonJson.rooms[0].description],
+      current_enemy_state: enemyState,
+      battle_log: [dungeonJson.introText, firstRoom.description],
     });
 
     return new Response(
