@@ -59,7 +59,7 @@ const DungeonLobby = () => {
 
   if (loading) {
     return (
-      <AppLayout>
+      <AppLayout hideBanner>
         <div className="flex items-center justify-center min-h-[60vh]">
           <p className="text-2xl font-bold">Loading dungeon...</p>
         </div>
@@ -68,7 +68,7 @@ const DungeonLobby = () => {
   }
 
   return (
-    <AppLayout>
+    <AppLayout hideBanner>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Universe Banner */}
         <div className="flex justify-center">
@@ -88,10 +88,10 @@ const DungeonLobby = () => {
                 Beneath the frozen hotel lies the <span className="font-bold text-primary">Shattered Frostkeep</span>—an ancient dungeon of ice, forgotten loot, and monsters drawn to the cold.
               </p>
               <p className="mb-4">
-                Endless glacial corridors twist through abandoned Habbo-style fortresses made of solid ice. The walls glisten with frost, and the air itself seems to bite at your skin.
+                Endless glacial corridors twist through abandoned fortresses carved from solid ice. The walls glisten with crystalline frost, and the air itself cuts like a blade against exposed skin.
               </p>
               <p className="text-muted-foreground italic">
-                This season's universe: A winter event where only the bravest dare to venture into the depths.
+                Winter&apos;s grip has claimed this realm. Only the bravest dare venture into these frozen depths.
               </p>
             </div>
 
