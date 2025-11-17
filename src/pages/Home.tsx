@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import habboDungeonBanner from "@/assets/habbo-dungeon-banner.gif";
+import pixelDice from "@/assets/pixel-dice.png";
+import pixelStar from "@/assets/pixel-star.png";
+import pixelSword from "@/assets/pixel-sword.png";
 import SnowFall from "@/components/SnowFall";
 
 const Home = () => {
@@ -53,24 +56,24 @@ const Home = () => {
         <HabboPanel title="How It Works">
           <div className="grid md:grid-cols-3 gap-6">
             <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-primary rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark text-4xl">
-                🎲
+              <div className="w-16 h-16 bg-primary rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark p-2">
+                <img src={pixelDice} alt="Dice" className="w-full h-full object-contain pixel-icon" />
               </div>
               <h3 className="font-bold text-lg">1. Roll the Dice</h3>
               <p className="text-muted-foreground">Roll 5 holodice in a Habbo room</p>
             </div>
             
             <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-secondary rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark text-4xl">
-                ✨
+              <div className="w-16 h-16 bg-secondary rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark p-2">
+                <img src={pixelStar} alt="Star" className="w-full h-full object-contain pixel-icon" />
               </div>
               <h3 className="font-bold text-lg">2. Input Your Dice</h3>
               <p className="text-muted-foreground">Enter your dice results into Habbo Dungeon</p>
             </div>
             
             <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-accent rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark text-4xl">
-                ⚔️
+              <div className="w-16 h-16 bg-accent rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark p-2">
+                <img src={pixelSword} alt="Sword" className="w-full h-full object-contain pixel-icon" />
               </div>
               <h3 className="font-bold text-lg">3. Watch the Battle</h3>
               <p className="text-muted-foreground">See your JRPG battle unfold with AI narration</p>
