@@ -474,13 +474,22 @@ const Battle = () => {
                     let userId = null;
                     let entryType = undefined;
                     
+                    // Helper function to extract message recursively
+                    const extractMessage = (obj: any): string => {
+                      if (typeof obj === 'string') return obj;
+                      if (obj && typeof obj === 'object' && obj.message) {
+                        return extractMessage(obj.message);
+                      }
+                      return JSON.stringify(obj);
+                    };
+                    
                     if (typeof entry === 'string') {
                       // Try to parse if it looks like JSON
                       const trimmedEntry = entry.trim();
                       if (trimmedEntry.startsWith('{')) {
                         try {
                           const parsed = JSON.parse(trimmedEntry);
-                          message = String(parsed.message || entry);
+                          message = extractMessage(parsed.message || parsed);
                           userId = parsed.user_id || null;
                           entryType = parsed.type;
                         } catch (e) {
@@ -491,13 +500,7 @@ const Battle = () => {
                       }
                     } else if (entry && typeof entry === 'object') {
                       // It's already an object
-                      if (typeof entry.message === 'string') {
-                        message = entry.message;
-                      } else if (entry.message) {
-                        message = JSON.stringify(entry.message);
-                      } else {
-                        message = JSON.stringify(entry);
-                      }
+                      message = extractMessage(entry.message || entry);
                       userId = entry.user_id || null;
                       entryType = entry.type;
                     }
@@ -784,13 +787,22 @@ const Battle = () => {
                   let userId = null;
                   let entryType = undefined;
                   
+                  // Helper function to extract message recursively
+                  const extractMessage = (obj: any): string => {
+                    if (typeof obj === 'string') return obj;
+                    if (obj && typeof obj === 'object' && obj.message) {
+                      return extractMessage(obj.message);
+                    }
+                    return JSON.stringify(obj);
+                  };
+                  
                   if (typeof entry === 'string') {
                     // Try to parse if it looks like JSON
                     const trimmedEntry = entry.trim();
                     if (trimmedEntry.startsWith('{')) {
                       try {
                         const parsed = JSON.parse(trimmedEntry);
-                        message = String(parsed.message || entry);
+                        message = extractMessage(parsed.message || parsed);
                         userId = parsed.user_id || null;
                         entryType = parsed.type;
                       } catch (e) {
@@ -801,13 +813,7 @@ const Battle = () => {
                     }
                   } else if (entry && typeof entry === 'object') {
                     // It's already an object
-                    if (typeof entry.message === 'string') {
-                      message = entry.message;
-                    } else if (entry.message) {
-                      message = JSON.stringify(entry.message);
-                    } else {
-                      message = JSON.stringify(entry);
-                    }
+                    message = extractMessage(entry.message || entry);
                     userId = entry.user_id || null;
                     entryType = entry.type;
                   }
