@@ -76,6 +76,32 @@ const Dashboard = () => {
     navigate("/");
   };
 
+  const handleStartDungeon = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-dungeon", {
+        body: {
+          dungeonName: "Into the Frostkeep",
+          difficulty: "Normal",
+          theme: "Ice",
+          encounters: 3,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Quest generated!" });
+      navigate(`/dungeon-lobby/${data.dungeonId}`);
+    } catch (error: any) {
+      toast({
+        title: "Failed to generate quest",
+        description: error.message,
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -196,10 +222,11 @@ const Dashboard = () => {
         <div className="flex gap-4">
           <Button
             size="lg"
-            onClick={() => navigate("/create-dungeon")}
+            onClick={handleStartDungeon}
+            disabled={loading}
             className="flex-1 font-bold border-4 border-habbo-dark text-lg py-6"
           >
-            Create a Dungeon
+            {loading ? "Generating Quest..." : "Start Dungeon"}
           </Button>
         </div>
         )}

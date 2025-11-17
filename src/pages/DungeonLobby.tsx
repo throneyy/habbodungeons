@@ -112,17 +112,27 @@ const DungeonLobby = () => {
         </HabboPanel>
 
         {/* Party & Actions Panel */}
-        <HabboPanel title="Dungeon Lobby">
+        <HabboPanel title="Prepare Your Party">
           <div className="space-y-6">
-            {/* Party System - Coming Soon */}
-            <div className="p-4 bg-muted/50 border-2 border-dashed border-habbo-dark rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
+            {/* Party System */}
+            <div className="p-6 bg-muted/50 border-2 border-habbo-dark rounded-lg">
+              <div className="flex items-center gap-2 mb-4">
                 <Users className="w-5 h-5" />
-                <h4 className="font-bold">Party System</h4>
-                <span className="ml-auto text-sm text-muted-foreground italic">Coming Soon</span>
+                <h4 className="font-bold text-lg">Party Members</h4>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Team up with friends using invite codes before entering the dungeon!
+              <div className="space-y-3 mb-4">
+                <div className="flex items-center gap-3 p-3 bg-background border-2 border-habbo-dark rounded">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-bold text-primary-foreground">
+                    1
+                  </div>
+                  <div>
+                    <p className="font-bold">You (Party Leader)</p>
+                    <p className="text-sm text-muted-foreground">Ready</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground italic">
+                Multiplayer party invites coming soon! For now, venture forth solo.
               </p>
             </div>
 

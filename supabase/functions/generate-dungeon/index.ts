@@ -54,7 +54,13 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. Output ONLY valid JSON (no markdown formatting) with: dungeonName, introText, rooms array with [{roomIndex, description, enemy: {name, description, hp, atk, def, spd}}]. Scale enemy stats based on difficulty and player level.`
+            content: `You are a JRPG dungeon generator for Habbo roleplay. Generate a ${difficulty} difficulty, ${theme} themed dungeon with ${encounters} encounters. Player level: ${stats?.level || 1}. 
+            
+CRITICAL: The first room MUST be story/exploration focused, NOT immediate combat. Players should encounter choices, exploration, or story elements before fighting.
+
+Output ONLY valid JSON (no markdown formatting) with: dungeonName, introText (engaging quest hook), rooms array with [{roomIndex, description (vivid and immersive), enemy: {name, description, hp, atk, def, spd}}]. 
+
+Scale enemy stats based on difficulty and player level. Make the first room's description focus on atmosphere and discovery, not combat.`
           },
           {
             role: 'user',
@@ -84,7 +90,7 @@ serve(async (req) => {
 
     if (error) throw error;
 
-    // Create initial battle state
+    // Create initial battle state in story mode
     const firstEnemy = dungeonJson.rooms[0].enemy;
     await supabase.from('battle_states').insert({
       user_id: user.id,
@@ -95,6 +101,7 @@ serve(async (req) => {
         current_hp: firstEnemy.hp,
         max_hp: firstEnemy.hp,
         status_effects: [],
+        mode: "story",
       },
       battle_log: [dungeonJson.introText, dungeonJson.rooms[0].description],
     });
