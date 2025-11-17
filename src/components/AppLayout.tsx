@@ -24,9 +24,9 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
           <img 
             src={habboDungeonBanner} 
             alt="Habbo Dungeon" 
-            className="h-12 w-auto cursor-pointer pixel-icon"
+            className="cursor-pointer pixel-icon"
             onClick={() => navigate("/dashboard")}
-            style={{ maxWidth: '250px' }}
+            style={{ height: 'auto', width: 'auto', maxHeight: '48px' }}
           />
         </div>
         
