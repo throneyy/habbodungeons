@@ -6,9 +6,10 @@ import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
 
 interface AppLayoutProps {
   children: ReactNode;
+  hideBanner?: boolean;
 }
 
-export const AppLayout = ({ children }: AppLayoutProps) => {
+export const AppLayout = ({ children, hideBanner = false }: AppLayoutProps) => {
   const navigate = useNavigate();
 
   return (
@@ -20,15 +21,17 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       />
       
       <div className="relative z-10">
-        <div className="p-4 flex justify-center">
-          <img 
-            src={habboDungeonsBanner} 
-            alt="Habbo Dungeons" 
-            className="cursor-pointer pixel-icon"
-            onClick={() => navigate("/dashboard")}
-            style={{ height: 'auto', width: 'auto', maxHeight: '48px' }}
-          />
-        </div>
+        {!hideBanner && (
+          <div className="p-4 flex justify-center">
+            <img 
+              src={habboDungeonsBanner} 
+              alt="Habbo Dungeons" 
+              className="cursor-pointer pixel-icon"
+              onClick={() => navigate("/dashboard")}
+              style={{ height: 'auto', width: 'auto', maxHeight: '48px' }}
+            />
+          </div>
+        )}
         
         <div className="p-8 pt-4">
           {children}
