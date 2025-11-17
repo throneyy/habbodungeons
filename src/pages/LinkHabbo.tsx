@@ -18,11 +18,20 @@ const LinkHabbo = () => {
   const { toast } = useToast();
   const [habboUsername, setHabboUsername] = useState("");
   const [habboProfile, setHabboProfile] = useState<HabboProfile | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [showVerification, setShowVerification] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const generateCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
 
   const fetchHabboProfile = async () => {
     setLoading(true);
     try {
+      const code = generateCode();
+      setVerificationCode(code);
+
       const { data, error } = await supabase.functions.invoke("fetch-habbo-profile", {
         body: { username: habboUsername },
       });
@@ -31,7 +40,11 @@ const LinkHabbo = () => {
 
       if (data.profile) {
         setHabboProfile(data.profile);
-        toast({ title: "Habbo profile found!" });
+        setShowVerification(true);
+        toast({ 
+          title: "Profile found!", 
+          description: `Please add the code ${code} to your Habbo motto and click Verify.` 
+        });
       }
     } catch (error: any) {
       toast({
@@ -43,29 +56,44 @@ const LinkHabbo = () => {
     setLoading(false);
   };
 
-  const confirmLink = async () => {
-    if (!habboProfile) return;
+  const verifyAndLink = async () => {
+    if (!habboProfile || !verificationCode) return;
 
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
-
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          habbo_username: habboProfile.name,
-          habbo_profile_json: habboProfile as any,
-        })
-        .eq("id", user.id);
+      // Fetch the profile again to check motto
+      const { data, error } = await supabase.functions.invoke("fetch-habbo-profile", {
+        body: { 
+          username: habboUsername,
+          verificationCode: verificationCode 
+        },
+      });
 
       if (error) throw error;
 
-      toast({ title: "Habbo account linked successfully!" });
+      if (!data.profile || !data.profile.motto.includes(verificationCode)) {
+        throw new Error("Verification code not found in Habbo motto. Please add the code to your motto and try again.");
+      }
+
+      // Link the account
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          habbo_username: habboProfile.name,
+          habbo_profile_json: data.profile as any,
+        })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
+
+      toast({ title: "Habbo account verified and linked successfully!" });
       navigate("/dashboard");
     } catch (error: any) {
       toast({
-        title: "Failed to link account",
+        title: "Verification failed",
         description: error.message,
         variant: "destructive",
       });
@@ -78,51 +106,76 @@ const LinkHabbo = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <HabboPanel title="Link Your Habbo Account">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="habbo-username">Habbo Username</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="habbo-username"
-                  type="text"
-                  value={habboUsername}
-                  onChange={(e) => setHabboUsername(e.target.value)}
-                  placeholder="Enter your Habbo username"
-                  className="border-2 border-habbo-dark"
-                />
-                <Button
-                  onClick={fetchHabboProfile}
-                  disabled={loading || !habboUsername}
-                  className="font-bold border-4 border-habbo-dark"
-                >
-                  {loading ? "Loading..." : "Fetch Profile"}
-                </Button>
+            {!showVerification ? (
+              <div className="space-y-2">
+                <Label htmlFor="habbo-username">Habbo Origins Username</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="habbo-username"
+                    type="text"
+                    value={habboUsername}
+                    onChange={(e) => setHabboUsername(e.target.value)}
+                    placeholder="Enter your Habbo Origins username"
+                    className="border-2 border-habbo-dark"
+                  />
+                  <Button
+                    onClick={fetchHabboProfile}
+                    disabled={loading || !habboUsername}
+                    className="font-bold border-4 border-habbo-dark"
+                  >
+                    {loading ? "Loading..." : "Next"}
+                  </Button>
+                </div>
               </div>
-            </div>
-
-            {habboProfile && (
+            ) : (
               <div className="space-y-4">
-                <HabboPanel title="Confirm Habbo Profile" className="bg-muted">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboProfile.figureString}&size=l`}
-                      alt={habboProfile.name}
-                      className="w-24 h-24 border-4 border-habbo-dark rounded-lg"
-                    />
-                    <div className="space-y-1">
-                      <p className="font-bold text-lg">{habboProfile.name}</p>
-                      <p className="text-muted-foreground italic">{habboProfile.motto}</p>
+                <HabboPanel title="Verify Your Account" className="bg-muted">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={`https://origins.habbo.com/habbo-imaging/avatarimage?figure=${habboProfile?.figureString}&size=l`}
+                        alt={habboProfile?.name}
+                        className="w-24 h-24 border-4 border-habbo-dark rounded-lg"
+                      />
+                      <div className="space-y-1">
+                        <p className="font-bold text-lg">{habboProfile?.name}</p>
+                        <p className="text-muted-foreground italic">{habboProfile?.motto}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-background p-4 rounded-lg border-4 border-habbo-dark">
+                      <p className="font-bold mb-2">Verification Steps:</p>
+                      <ol className="list-decimal list-inside space-y-2 text-sm">
+                        <li>Copy this code: <span className="font-mono bg-primary text-primary-foreground px-2 py-1 rounded">{verificationCode}</span></li>
+                        <li>Go to Habbo Origins and add it to your motto (bio)</li>
+                        <li>Come back and click "Verify & Link"</li>
+                      </ol>
                     </div>
                   </div>
                 </HabboPanel>
 
-                <Button
-                  onClick={confirmLink}
-                  disabled={loading}
-                  className="w-full font-bold border-4 border-habbo-dark"
-                  size="lg"
-                >
-                  {loading ? "Linking..." : "Confirm & Link"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={verifyAndLink}
+                    disabled={loading}
+                    className="flex-1 font-bold border-4 border-habbo-dark"
+                    size="lg"
+                  >
+                    {loading ? "Verifying..." : "Verify & Link"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowVerification(false);
+                      setHabboProfile(null);
+                      setVerificationCode("");
+                    }}
+                    disabled={loading}
+                    className="font-bold border-4 border-habbo-dark"
+                  >
+                    Back
+                  </Button>
+                </div>
               </div>
             )}
 

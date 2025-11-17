@@ -102,3 +102,34 @@ All colors MUST be HSL.
     @apply bg-background text-foreground font-volter;
   }
 }
+
+@layer utilities {
+  /* Snow animation */
+  @keyframes snowfall {
+    0% {
+      transform: translateY(-10vh) translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) translateX(100px);
+      opacity: 0.3;
+    }
+  }
+
+  .snowflake {
+    position: fixed;
+    top: -10vh;
+    color: hsl(var(--foreground) / 0.8);
+    font-size: 1em;
+    pointer-events: none;
+    z-index: 9999;
+    animation: snowfall linear infinite;
+  }
+
+  /* Pixel art styling */
+  .pixel-icon {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+}

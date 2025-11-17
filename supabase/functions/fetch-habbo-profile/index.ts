@@ -11,13 +11,16 @@ serve(async (req) => {
   }
 
   try {
-    const { username } = await req.json();
+    const { username, verificationCode } = await req.json();
 
     if (!username) {
       throw new Error("Username is required");
     }
 
     console.log(`Fetching Habbo Origins profile for username: ${username}`);
+    if (verificationCode) {
+      console.log(`Verification code provided: ${verificationCode}`);
+    }
 
     // Fetch from Habbo Origins API
     const response = await fetch(`https://origins.habbo.com/api/public/users?name=${encodeURIComponent(username)}`);
