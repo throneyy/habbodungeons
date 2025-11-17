@@ -118,6 +118,73 @@ export type Database = {
         }
         Relationships: []
       }
+      parties: {
+        Row: {
+          created_at: string
+          dungeon_id: string | null
+          id: string
+          invite_code: string
+          leader_id: string
+          max_members: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dungeon_id?: string | null
+          id?: string
+          invite_code: string
+          leader_id: string
+          max_members?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dungeon_id?: string | null
+          id?: string
+          invite_code?: string
+          leader_id?: string
+          max_members?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parties_dungeon_id_fkey"
+            columns: ["dungeon_id"]
+            isOneToOne: false
+            referencedRelation: "dungeons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      party_members: {
+        Row: {
+          id: string
+          joined_at: string
+          party_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          party_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          party_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_members_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_stats: {
         Row: {
           atk: number
@@ -198,7 +265,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invite_code: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
