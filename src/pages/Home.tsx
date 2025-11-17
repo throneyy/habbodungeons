@@ -4,6 +4,7 @@ import { HabboPanel } from "@/components/HabboPanel";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Swords, Dices, Sparkles } from "lucide-react";
+import dungeonBg from "@/assets/dungeon-bg.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -22,8 +23,12 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background p-8 relative">
+      <div 
+        className="absolute inset-0 opacity-20 bg-center bg-cover"
+        style={{ backgroundImage: `url(${dungeonBg})` }}
+      />
+      <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         {/* Hero Header */}
         <HabboPanel className="text-center">
           <div className="space-y-4">

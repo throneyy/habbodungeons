@@ -8,79 +8,80 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Habbo color palette */
-    --background: 210 40% 92%;
-    --foreground: 0 0% 16%;
+    /* Dungeon color palette - dark atmospheric theme */
+    --background: 220 30% 10%;
+    --foreground: 0 0% 90%;
 
-    --card: 0 0% 95%;
-    --card-foreground: 0 0% 16%;
+    --card: 220 25% 15%;
+    --card-foreground: 0 0% 90%;
 
-    --popover: 0 0% 95%;
-    --popover-foreground: 0 0% 16%;
+    --popover: 220 25% 15%;
+    --popover-foreground: 0 0% 90%;
 
-    /* Habbo Gold/Yellow primary */
-    --primary: 39 93% 59%;
-    --primary-foreground: 0 0% 16%;
+    /* Crimson/Red primary from glowing archway */
+    --primary: 0 75% 45%;
+    --primary-foreground: 0 0% 98%;
 
-    /* Habbo Blue secondary */
-    --secondary: 211 39% 70%;
-    --secondary-foreground: 0 0% 16%;
+    /* Stone grey secondary */
+    --secondary: 220 15% 35%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 210 20% 88%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 220 20% 20%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 28 100% 59%;
-    --accent-foreground: 0 0% 16%;
+    /* Amber torch light accent */
+    --accent: 35 90% 55%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 80%;
-    --input: 0 0% 80%;
-    --ring: 39 93% 59%;
+    --border: 220 20% 25%;
+    --input: 220 20% 25%;
+    --ring: 0 75% 45%;
 
     --radius: 0.75rem;
 
-    /* Habbo-specific colors */
-    --habbo-gold: 39 93% 59%;
-    --habbo-orange: 28 100% 59%;
-    --habbo-blue: 211 39% 70%;
-    --habbo-dark: 0 0% 16%;
-    --habbo-light: 0 0% 95%;
+    /* Dungeon-specific colors */
+    --habbo-gold: 35 90% 55%;
+    --habbo-orange: 20 85% 50%;
+    --habbo-blue: 220 40% 40%;
+    --habbo-dark: 220 30% 8%;
+    --habbo-light: 220 20% 25%;
     
     /* HP/MP bar colors */
-    --hp-bar: 142 76% 36%;
-    --mp-bar: 217 91% 60%;
+    --hp-bar: 0 75% 45%;
+    --mp-bar: 220 70% 55%;
   }
 
   .dark {
-    --background: 0 0% 16%;
-    --foreground: 0 0% 95%;
+    --background: 220 30% 8%;
+    --foreground: 0 0% 92%;
 
-    --card: 0 0% 20%;
-    --card-foreground: 0 0% 95%;
+    --card: 220 25% 12%;
+    --card-foreground: 0 0% 92%;
 
-    --popover: 0 0% 20%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 220 25% 12%;
+    --popover-foreground: 0 0% 92%;
 
-    --primary: 39 93% 59%;
-    --primary-foreground: 0 0% 16%;
+    --primary: 0 75% 50%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 211 39% 50%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 220 15% 30%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 25%;
+    --muted: 220 20% 18%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 28 100% 59%;
-    --accent-foreground: 0 0% 16%;
+    --accent: 35 90% 60%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 62% 50%;
+    --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 30%;
-    --input: 0 0% 30%;
-    --ring: 39 93% 59%;
+    --border: 220 20% 22%;
+    --input: 220 20% 22%;
+    --ring: 0 75% 50%;
   }
 }
 
