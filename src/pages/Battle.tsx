@@ -469,23 +469,28 @@ const Battle = () => {
               <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry, i) => {
-                    const isCurrentUser = entry.user_id === currentUserId;
-                    const userProfile = partyProfiles.get(entry.user_id);
+                    // Handle both string entries and object entries
+                    const message = typeof entry === 'string' ? entry : entry.message;
+                    const userId = typeof entry === 'string' ? null : entry.user_id;
+                    const entryType = typeof entry === 'string' ? undefined : entry.type;
+                    
+                    const isCurrentUser = userId === currentUserId;
+                    const userProfile = userId ? partyProfiles.get(userId) : null;
                     const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
-                    const isDiceRoll = entry.type === 'dice_roll' || entry.message.includes('rolled');
+                    const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                     
                     return (
                       <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
                         <span className="text-primary font-bold">›</span>{" "}
-                        {isCurrentUser ? (
-                          entry.message
+                        {isCurrentUser || !userId ? (
+                          message
                         ) : (
                           <>
                             {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
-                            {entry.message.includes("chose:") ? (
-                              <> {entry.message.replace("You ", "")}</>
+                            {message.includes("chose:") ? (
+                              <> {message.replace("You ", "")}</>
                             ) : (
-                              <> {isDiceRoll ? entry.message : entry.message}</>
+                              <> {isDiceRoll ? message : message}</>
                             )}
                           </>
                         )}
@@ -743,22 +748,27 @@ const Battle = () => {
             <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log.length > 0 ? (
                 battleData.battle_log.map((entry, i) => {
-                  const isCurrentUser = entry.user_id === currentUserId;
-                  const userProfile = partyProfiles.get(entry.user_id);
+                  // Handle both string entries and object entries
+                  const message = typeof entry === 'string' ? entry : entry.message;
+                  const userId = typeof entry === 'string' ? null : entry.user_id;
+                  const entryType = typeof entry === 'string' ? undefined : entry.type;
+                  
+                  const isCurrentUser = userId === currentUserId;
+                  const userProfile = userId ? partyProfiles.get(userId) : null;
                   const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
-                  const isDiceRoll = entry.type === 'dice_roll' || entry.message.includes('rolled');
+                  const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                   
                   return (
                     <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
-                      {isCurrentUser ? (
-                        entry.message
+                      {isCurrentUser || !userId ? (
+                        message
                       ) : (
                         <>
                           {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
-                          {entry.message.includes("chose:") ? (
-                            <> {entry.message.replace("You ", "")}</>
+                          {message.includes("chose:") ? (
+                            <> {message.replace("You ", "")}</>
                           ) : (
-                            <> {isDiceRoll ? entry.message : entry.message}</>
+                            <> {isDiceRoll ? message : message}</>
                           )}
                         </>
                       )}
