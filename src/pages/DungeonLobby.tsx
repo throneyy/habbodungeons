@@ -130,64 +130,50 @@ const DungeonLobby = () => {
               </p>
             </div>
 
-            {!isNewDungeon && dungeon && (
-              <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
-                <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
-                {dungeon.dungeon_json?.questObjective && (
-                  <p className="text-lg mb-4 text-foreground font-semibold">
-                    {dungeon.dungeon_json.questObjective}
+            <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
+              {isNewDungeon ? (
+                <>
+                  <h3 className="text-xl font-black mb-2">Your Quest: Awaiting Generation</h3>
+                  <p className="text-lg mb-4 text-muted-foreground">
+                    Choose your difficulty and embark on a unique adventure into the frozen depths.
                   </p>
-                )}
-                <div className="flex gap-4 text-sm">
-                  <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
-                    {dungeon.difficulty}
-                  </span>
-                </div>
-              </div>
-            )}
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => setSelectedDifficulty("Normal")}
+                      variant={selectedDifficulty === "Normal" ? "default" : "outline"}
+                      className="font-bold border-2 border-habbo-dark"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Normal
+                    </Button>
+                    <Button
+                      onClick={() => setSelectedDifficulty("Hardcore")}
+                      variant={selectedDifficulty === "Hardcore" ? "destructive" : "outline"}
+                      className="font-bold border-2 border-habbo-dark"
+                    >
+                      <Skull className="w-4 h-4 mr-2" />
+                      Hardcore
+                    </Button>
+                  </div>
+                </>
+              ) : dungeon ? (
+                <>
+                  <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
+                  {dungeon.dungeon_json?.questObjective && (
+                    <p className="text-lg mb-4 text-foreground font-semibold">
+                      {dungeon.dungeon_json.questObjective}
+                    </p>
+                  )}
+                  <div className="flex gap-4 text-sm">
+                    <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
+                      {dungeon.difficulty}
+                    </span>
+                  </div>
+                </>
+              ) : null}
+            </div>
           </div>
         </HabboPanel>
-
-        {/* Difficulty Selection for New Dungeons */}
-        {isNewDungeon && (
-          <HabboPanel title="Choose Your Challenge">
-            <div className="grid md:grid-cols-2 gap-4">
-              <button
-                onClick={() => setSelectedDifficulty("Normal")}
-                className={`p-6 rounded-lg border-4 transition-all ${
-                  selectedDifficulty === "Normal"
-                    ? "border-primary bg-primary/20"
-                    : "border-habbo-dark bg-muted/50 hover:bg-muted"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <Shield className="w-8 h-8 text-primary" />
-                  <h3 className="text-2xl font-black">Normal</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Balanced difficulty for adventurers. Enemies have standard stats and fair rewards.
-                </p>
-              </button>
-
-              <button
-                onClick={() => setSelectedDifficulty("Hardcore")}
-                className={`p-6 rounded-lg border-4 transition-all ${
-                  selectedDifficulty === "Hardcore"
-                    ? "border-destructive bg-destructive/20"
-                    : "border-habbo-dark bg-muted/50 hover:bg-muted"
-                }`}
-              >
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <Skull className="w-8 h-8 text-destructive" />
-                  <h3 className="text-2xl font-black">Hardcore</h3>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Brutal challenge for veterans. Stronger enemies with greater rewards.
-                </p>
-              </button>
-            </div>
-          </HabboPanel>
-        )}
 
         {/* Party & Actions Panel */}
         <HabboPanel title="Prepare Your Party">
