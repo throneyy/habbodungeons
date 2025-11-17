@@ -97,6 +97,11 @@ const DungeonLobby = () => {
             {dungeon && (
               <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
                 <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
+                {dungeon.dungeon_json?.questObjective && (
+                  <p className="text-lg mb-4 text-foreground font-semibold">
+                    {dungeon.dungeon_json.questObjective}
+                  </p>
+                )}
                 <div className="flex gap-4 text-sm">
                   <span className="px-3 py-1 bg-primary/20 border-2 border-primary rounded font-bold">
                     {dungeon.difficulty}
