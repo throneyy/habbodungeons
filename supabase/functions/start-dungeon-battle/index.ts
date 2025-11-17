@@ -24,6 +24,8 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
+    console.log('Starting battle for dungeon:', dungeonId, 'with difficulty:', difficulty);
+
     // Get dungeon data
     const { data: dungeon, error: dungeonError } = await supabase
       .from('dungeons')
@@ -31,7 +33,12 @@ serve(async (req) => {
       .eq('id', dungeonId)
       .single();
 
-    if (dungeonError) throw dungeonError;
+    if (dungeonError) {
+      console.error('Dungeon error:', dungeonError);
+      throw dungeonError;
+    }
+
+    console.log('Dungeon loaded:', dungeon.id, dungeon.name);
 
     // Apply difficulty multiplier to enemy stats
     const difficultyMultiplier = difficulty === "Hardcore" ? 1.5 : 1.0;
@@ -68,16 +75,19 @@ serve(async (req) => {
     } : null;
 
     // Check if battle state exists
-    const { data: existingBattle } = await supabase
+    const { data: existingBattle, error: checkError } = await supabase
       .from('battle_states')
       .select('id')
       .eq('user_id', user.id)
       .eq('dungeon_id', dungeonId)
-      .single();
+      .maybeSingle();
+
+    console.log('Existing battle check:', { existingBattle, checkError });
 
     if (existingBattle) {
+      console.log('Updating existing battle state:', existingBattle.id);
       // Update existing battle state
-      await supabase
+      const { error: updateError } = await supabase
         .from('battle_states')
         .update({
           current_room_index: 0,
@@ -86,23 +96,44 @@ serve(async (req) => {
           is_active: true,
         })
         .eq('id', existingBattle.id);
+      
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw updateError;
+      }
     } else {
+      console.log('Creating new battle state');
       // Create new battle state
-      await supabase.from('battle_states').insert({
+      const { error: insertError } = await supabase.from('battle_states').insert({
         user_id: user.id,
         dungeon_id: dungeonId,
         current_room_index: 0,
         current_enemy_state: initialEnemyState,
         battle_log: [dungeonJson.introText, modifiedRooms[0].description],
       });
+      
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
     }
 
-    // Store modified dungeon JSON temporarily in battle state for this session
+    // Store modified dungeon JSON with difficulty-adjusted stats
     const modifiedDungeonJson = { ...dungeonJson, rooms: modifiedRooms };
-    await supabase
+    const { error: updateDungeonError } = await supabase
       .from('dungeons')
-      .update({ dungeon_json: modifiedDungeonJson })
+      .update({ 
+        dungeon_json: modifiedDungeonJson,
+        difficulty: difficulty 
+      })
       .eq('id', dungeonId);
+
+    if (updateDungeonError) {
+      console.error('Dungeon update error:', updateDungeonError);
+      throw updateDungeonError;
+    }
+
+    console.log('Battle started successfully');
 
     return new Response(
       JSON.stringify({ success: true }),

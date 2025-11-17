@@ -65,6 +65,9 @@ const DungeonLobby = () => {
 
       if (error) throw error;
 
+      // Wait a moment for the battle state to be created
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       toast({ title: `${difficulty} mode started!` });
       navigate(`/battle/${id}`);
     } catch (error: any) {

@@ -25,16 +25,21 @@ serve(async (req) => {
     if (!user) throw new Error("Not authenticated");
 
     // Get battle state
-    const { data: battle } = await supabase
+    const { data: battle, error: battleError } = await supabase
       .from('battle_states')
       .select('*, dungeons(*)')
       .eq('dungeon_id', battleId)
       .eq('user_id', user.id)
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (!battle) throw new Error("Battle not found");
+    console.log('Battle query result:', { battle, battleError, battleId, userId: user.id });
+
+    if (!battle) {
+      throw new Error(`Battle not found for dungeon ${battleId}. Make sure to select a difficulty first.`);
+    }
 
     // Get player stats
     const { data: stats } = await supabase
