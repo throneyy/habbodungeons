@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users } from "lucide-react";
+import { StoryExploration } from "@/components/StoryExploration";
 
 interface BattleData {
   enemy: {
@@ -32,12 +33,18 @@ interface BattleData {
   };
   room_description: string;
   battle_log: string[];
+  mode?: "story" | "battle";
 }
 
 interface Profile {
   username: string;
   habbo_username: string | null;
   habbo_profile_json: any;
+}
+
+interface StoryNode {
+  storyText: string;
+  choices: Array<{ id: string; label: string }>;
 }
 
 const Battle = () => {
@@ -51,6 +58,10 @@ const Battle = () => {
   const [dice, setDice] = useState<number[]>([1, 1, 1, 1, 1]);
   const [loading, setLoading] = useState(false);
   const [showCombatPanels, setShowCombatPanels] = useState(false);
+  
+  // Story mode states
+  const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
+  const [storyLoading, setStoryLoading] = useState(false);
 
   useEffect(() => {
     loadBattle();
@@ -66,8 +77,14 @@ const Battle = () => {
       if (error) throw error;
       if (data.battleData) {
         setBattleData(data.battleData);
-        // Trigger animation after a brief delay
-        setTimeout(() => setShowCombatPanels(true), 100);
+        
+        // If in story mode, load story node
+        if (data.battleData.mode === "story") {
+          loadStoryNode();
+        } else {
+          // Trigger combat panel animation for battle mode
+          setTimeout(() => setShowCombatPanels(true), 100);
+        }
       }
     } catch (error: any) {
       toast({
@@ -96,6 +113,66 @@ const Battle = () => {
     }
   };
 
+  const loadStoryNode = async () => {
+    setStoryLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-story-node", {
+        body: { battleId: id },
+      });
+
+      if (error) throw error;
+      if (data.storyNode) {
+        setStoryNode(data.storyNode);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to load story",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setStoryLoading(false);
+  };
+
+  const handleStoryChoice = async (choiceId: string) => {
+    if (!storyNode) return;
+
+    const choice = storyNode.choices.find((c) => c.id === choiceId);
+    if (!choice) return;
+
+    setStoryLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("resolve-story-choice", {
+        body: {
+          battleId: id,
+          choiceId: choice.id,
+          choiceLabel: choice.label,
+          storyText: storyNode.storyText,
+        },
+      });
+
+      if (error) throw error;
+
+      // Show consequence toast
+      if (data.outcome) {
+        toast({
+          title: data.outcome.triggersBattle ? "Battle!" : "The path unfolds",
+          description: data.outcome.consequenceText,
+        });
+      }
+
+      // Reload battle to get updated state
+      await loadBattle();
+    } catch (error: any) {
+      toast({
+        title: "Failed to resolve choice",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setStoryLoading(false);
+  };
+
   const handleResolveTurn = async () => {
     if (!selectedAction) {
       toast({ title: "Please select an action", variant: "destructive" });
@@ -120,6 +197,10 @@ const Battle = () => {
         
         if (data.victory) {
           toast({ title: "Victory!", description: "You defeated the enemy!" });
+          // After victory, reload to switch to story mode
+          setTimeout(() => {
+            loadBattle();
+          }, 2000);
         } else if (data.defeat) {
           toast({ title: "Defeat", description: "You were defeated...", variant: "destructive" });
         }
@@ -137,11 +218,42 @@ const Battle = () => {
   if (!battleData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-2xl font-bold">Loading battle...</p>
+        <p className="text-2xl font-bold">Loading...</p>
       </div>
     );
   }
 
+  // Render story mode
+  if (battleData.mode === "story") {
+    const partyMembers = [
+      {
+        userId: "player",
+        username: profile?.habbo_username || profile?.username.split("@")[0] || "Player",
+        habboAvatar: profile?.habbo_username && profile.habbo_profile_json
+          ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=m`
+          : undefined,
+        level: battleData.player.level,
+        currentHp: battleData.player.current_hp,
+        maxHp: battleData.player.max_hp,
+        currentMp: battleData.player.current_mp,
+        maxMp: battleData.player.max_mp,
+        statusEffects: battleData.player.status_effects,
+      },
+    ];
+
+    return (
+      <StoryExploration
+        storyNode={storyNode}
+        partyMembers={partyMembers}
+        storyLog={battleData.battle_log}
+        isLeader={true}
+        loading={storyLoading}
+        onChoiceSelect={handleStoryChoice}
+      />
+    );
+  }
+
+  // Render battle mode
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">

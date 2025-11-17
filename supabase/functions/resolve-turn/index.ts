@@ -105,6 +105,7 @@ serve(async (req) => {
     const updatedEnemy = {
       ...battle.current_enemy_state,
       current_hp: result.enemyNewHp,
+      mode: result.victory ? "story" : "battle", // Switch to story mode after victory
     };
 
     const updatedLog = [...(battle.battle_log || []), ...result.narration];
@@ -140,6 +141,7 @@ serve(async (req) => {
       },
       room_description: "Combat continues...",
       battle_log: updatedLog,
+      mode: updatedEnemy.mode || "battle",
     };
 
     return new Response(
