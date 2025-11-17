@@ -74,6 +74,8 @@ serve(async (req) => {
         def: stats.def,
         spd: stats.spd,
         status_effects: stats.status_effects || [],
+        current_xp: stats.current_xp || 0,
+        xp_to_next_level: stats.xp_to_next_level || 100,
       },
       room_description: currentRoom.description,
       battle_log: battleLog,
