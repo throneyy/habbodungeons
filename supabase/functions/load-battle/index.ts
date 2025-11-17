@@ -151,9 +151,21 @@ serve(async (req) => {
       throw new Error('Invalid dungeon structure - missing rooms data');
     }
     
-    // Cap room index to available rooms
+    // Cap room index to available rooms and auto-correct if needed
     const maxRoomIndex = dungeonData.rooms.length - 1;
-    const actualRoomIndex = Math.min(battle.current_room_index, maxRoomIndex);
+    const requestedRoomIndex = battle.current_room_index;
+    const actualRoomIndex = Math.min(requestedRoomIndex, maxRoomIndex);
+    
+    console.log(`Room index check: requested=${requestedRoomIndex}, max=${maxRoomIndex}, actual=${actualRoomIndex}, total rooms=${dungeonData.rooms.length}`);
+    
+    // If room index was out of bounds, correct it in database
+    if (requestedRoomIndex > maxRoomIndex) {
+      console.log(`Correcting out-of-bounds room index from ${requestedRoomIndex} to ${actualRoomIndex}`);
+      await supabase
+        .from('battle_states')
+        .update({ current_room_index: actualRoomIndex })
+        .eq('id', battle.id);
+    }
     
     const currentRoom = dungeonData.rooms[actualRoomIndex];
     if (!currentRoom) {
