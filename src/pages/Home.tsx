@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Swords, Dices, Sparkles } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
+import habboDungeonBanner from "@/assets/habbo-dungeon-banner.gif";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -32,9 +33,11 @@ const Home = () => {
         {/* Hero Header */}
         <HabboPanel className="text-center">
           <div className="space-y-4">
-            <h1 className="text-6xl font-black text-primary tracking-tight">
-              HABBODUNGEON
-            </h1>
+            <img 
+              src={habboDungeonBanner} 
+              alt="Habbodungeon" 
+              className="mx-auto h-20 w-auto"
+            />
             <p className="text-2xl font-bold text-foreground">
               AI-powered JRPG battles for Habbo roleplayers
             </p>
