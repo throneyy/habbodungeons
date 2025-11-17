@@ -58,7 +58,7 @@ serve(async (req) => {
     let enemyContext = "";
     if (nextRoomIndex < dungeon.rooms.length) {
       const nextRoom = dungeon.rooms[nextRoomIndex];
-      enemyContext = `\n\nIMPORTANT: If you trigger a battle, the enemy will be: "${nextRoom.enemy.name}" (${nextRoom.enemy.description}). You MUST mention this exact enemy name in your narrative if triggersBattle is true.`;
+      enemyContext = `\n\n🔥 CRITICAL: If triggersBattle=true, you MUST write: "the ${nextRoom.enemy.name}" or "a ${nextRoom.enemy.name}" or "${nextRoom.enemy.name}" in your consequenceText. The enemy name is: "${nextRoom.enemy.name}" (${nextRoom.enemy.description}). DO NOT write vague phrases like "drawing attention" or "something emerges" - USE THE EXACT ENEMY NAME!`;
     }
 
     // Call Lovable AI to determine outcome
@@ -77,7 +77,7 @@ serve(async (req) => {
 
 CRITICAL RULES:
 - Narrate the outcome dramatically but concisely (2-3 sentences)
-- If you trigger a battle, you MUST mention the exact enemy name provided in the user context
+- **MANDATORY**: When triggersBattle is true, your consequenceText MUST include the exact enemy name provided in the context. Never write "drawing unwanted attention" or "something emerges" - always name the specific enemy!
 - Choices that seem aggressive should often trigger battles
 - Choices that seem cautious should be safer but might still have risks
 - Mix rewards and penalties to keep things interesting
@@ -86,7 +86,7 @@ CRITICAL RULES:
 
 Output format:
 {
-  "consequenceText": "Brief narration of what happens (30-60 words)",
+  "consequenceText": "Brief narration of what happens. If triggersBattle=true, MUST mention the enemy name! Example: 'An Ice Elemental materializes before you!'",
   "hpChange": -10 to +20 (negative for damage, positive for healing, 0 for none),
   "mpChange": -5 to +10,
   "itemsGained": [{"name": "item name", "quantity": 1}] or [],
