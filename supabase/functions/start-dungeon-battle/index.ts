@@ -98,12 +98,6 @@ serve(async (req) => {
 
     console.log('User server status:', { serverId, hasServer: !!serverId, isHost });
 
-    // If in a server but not the host, reject the request
-    if (serverId && !isHost) {
-      console.error('User is not server host');
-      throw new Error("Only the server host can start the battle");
-    }
-
     // Get dungeon data
     const { data: dungeon, error: dungeonError } = await supabase
       .from('dungeons')
