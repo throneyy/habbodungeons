@@ -38,32 +38,66 @@ serve(async (req) => {
     const partyId = partyMember?.party_id || null;
     console.log('User party status:', { partyId, hasParty: !!partyId, partyMember });
 
-    // Get battle state - filter by party if in party, otherwise by user
-    let battleQuery = supabase
-      .from('battle_states')
-      .select('*, dungeons(*)')
-      .eq('dungeon_id', battleId)
-      .eq('is_active', true);
-
+    // Get battle state - with smart party/solo handling
+    let battle = null;
+    
     if (partyId) {
-      console.log('Querying for PARTY battle with party_id:', partyId);
-      battleQuery = battleQuery.eq('party_id', partyId);
+      console.log('User is in party:', partyId, '- checking for battles');
+      
+      // First try to find a party battle
+      const { data: partyBattle } = await supabase
+        .from('battle_states')
+        .select('*, dungeons(*)')
+        .eq('dungeon_id', battleId)
+        .eq('party_id', partyId)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      if (partyBattle) {
+        console.log('Found existing party battle:', partyBattle.id);
+        battle = partyBattle;
+      } else {
+        // Check if there's a solo battle we can convert to party
+        const { data: soloBattle } = await supabase
+          .from('battle_states')
+          .select('*, dungeons(*)')
+          .eq('dungeon_id', battleId)
+          .eq('user_id', user.id)
+          .is('party_id', null)
+          .eq('is_active', true)
+          .maybeSingle();
+        
+        if (soloBattle) {
+          console.log('Converting solo battle to party battle:', soloBattle.id);
+          // Update the battle to be a party battle
+          await supabase
+            .from('battle_states')
+            .update({ party_id: partyId })
+            .eq('id', soloBattle.id);
+          
+          battle = { ...soloBattle, party_id: partyId };
+        }
+      }
     } else {
-      console.log('Querying for SOLO battle');
-      battleQuery = battleQuery.eq('user_id', user.id).is('party_id', null);
+      console.log('Solo player - looking for solo battle');
+      // Solo player - just get their battle
+      const { data: soloBattle } = await supabase
+        .from('battle_states')
+        .select('*, dungeons(*)')
+        .eq('dungeon_id', battleId)
+        .eq('user_id', user.id)
+        .is('party_id', null)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      battle = soloBattle;
     }
-
-    const { data: battle, error: battleError } = await battleQuery
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
 
     console.log('Battle query result:', { 
       found: !!battle, 
       battleId: battle?.id,
       battlePartyId: battle?.party_id,
-      battleUserId: battle?.user_id,
-      battleError 
+      battleUserId: battle?.user_id
     });
 
     if (!battle) {
