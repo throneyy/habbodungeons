@@ -100,8 +100,8 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
   const createServer = async () => {
     if (!serverName.trim()) {
       toast({
-        title: "Server name required",
-        description: "Please enter a name for your server",
+        title: "Run name required",
+        description: "Please enter a name for your run",
         variant: "destructive",
       });
       return;
@@ -116,15 +116,15 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
       if (error) throw error;
 
       toast({
-        title: "Server Created!",
-        description: "Your server is now visible to other players",
+        title: "Dungeon Run Started!",
+        description: "Your run is now visible to other players",
       });
 
       setServerName("");
       onServerJoined(data.serverId);
     } catch (error: any) {
       toast({
-        title: "Failed to create server",
+        title: "Failed to start run",
         description: error.message,
         variant: "destructive",
       });
@@ -142,13 +142,13 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
       if (error) throw error;
 
       toast({
-        title: "Joined Server!",
+        title: "Joined Run!",
       });
 
       onServerJoined(serverId);
     } catch (error: any) {
       toast({
-        title: "Failed to join server",
+        title: "Failed to join run",
         description: error.message,
         variant: "destructive",
       });
@@ -156,14 +156,14 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
   };
 
   return (
-    <HabboPanel title="Server List">
+    <HabboPanel title="Dungeon Runs">
       <div className="space-y-4">
-        {/* Create Server Section */}
+        {/* Create Run Section */}
         <div className="space-y-2">
-          <h3 className="font-bold text-sm">Create a Server</h3>
+          <h3 className="font-bold text-sm">Start a Run</h3>
           <div className="flex gap-2">
             <Input
-              placeholder="Server name..."
+              placeholder="Run name..."
               value={serverName}
               onChange={(e) => setServerName(e.target.value)}
               maxLength={30}
@@ -173,14 +173,14 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
               onClick={createServer}
               disabled={creating || !serverName.trim()}
             >
-              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
+              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Start"}
             </Button>
           </div>
         </div>
 
-        {/* Available Servers */}
+        {/* Available Runs */}
         <div className="space-y-2">
-          <h3 className="font-bold text-sm">Available Servers</h3>
+          <h3 className="font-bold text-sm">Available Runs</h3>
           
           {loading ? (
             <div className="flex items-center justify-center py-8">
@@ -189,8 +189,8 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
           ) : servers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No servers available</p>
-              <p className="text-xs">Create one to get started!</p>
+              <p className="text-sm">No runs available</p>
+              <p className="text-xs">Start a run to get going!</p>
             </div>
           ) : (
             <div className="space-y-2">
