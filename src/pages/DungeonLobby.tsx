@@ -83,9 +83,20 @@ const DungeonLobby = () => {
         .from("dungeons")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      
+      if (!data) {
+        toast({
+          title: "Dungeon Not Found",
+          description: "This dungeon no longer exists. It may have been deleted.",
+          variant: "destructive",
+        });
+        navigate("/dashboard");
+        return;
+      }
+      
       setDungeon(data);
 
       // Check if user is in a party for this dungeon
