@@ -286,7 +286,7 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
       .update({
         current_enemy_state: updatedEnemy,
         battle_log: updatedLog,
-        is_active: !result.victory && !result.defeat,
+        is_active: !result.defeat, // Only end on defeat, not victory
       })
       .eq('id', battle.id);
 
