@@ -58,6 +58,17 @@ serve(async (req) => {
 
     if (!battle || !stats) throw new Error("Battle or stats not found");
 
+    // For party/server battles, check if it's the player's turn
+    const isPartyBattle = !!battle.party_id || !!battle.server_id;
+    if (isPartyBattle) {
+      if (battle.current_turn_user_id !== user.id) {
+        return new Response(
+          JSON.stringify({ error: "Not your turn" }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+    }
+
     // Fetch equipped weapon
     const { data: equippedWeapon } = await supabase
       .from('inventory')

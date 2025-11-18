@@ -84,6 +84,8 @@ interface BattleData {
   battle_log: BattleLogEntry[];
   mode?: "story" | "battle";
   isPartyBattle?: boolean;
+  currentTurnUserId?: string;
+  turnOrder?: string[];
 }
 
 interface Profile {
@@ -131,6 +133,10 @@ const Battle = () => {
   const [showEndQuestDialog, setShowEndQuestDialog] = useState(false);
   const [playerHit, setPlayerHit] = useState(false);
   const [enemyHit, setEnemyHit] = useState(false);
+  
+  // Turn-based combat state
+  const isMyTurn = !battleData?.isPartyBattle || battleData?.currentTurnUserId === currentUserId;
+  const currentTurnPlayer = battleData?.players?.find(p => p.userId === battleData?.currentTurnUserId);
 
   // Helper function to render text with weapon names highlighted in purple
   const renderTextWithWeapons = (text: string) => {
@@ -1440,11 +1446,11 @@ const Battle = () => {
 
               <Button
                 onClick={handleResolveTurn}
-                disabled={loading || !selectedAction}
+                disabled={loading || !selectedAction || !isMyTurn}
                 size="lg"
                 className="w-full font-bold border-4 border-habbo-dark text-lg py-6"
               >
-                {loading ? "Resolving..." : "Resolve Turn"}
+                {loading ? "Resolving..." : isMyTurn ? "Resolve Turn" : "Waiting for turn..."}
               </Button>
               
               {/* End Quest Button */}
