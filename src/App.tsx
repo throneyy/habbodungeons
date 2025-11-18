@@ -9,6 +9,7 @@ import LinkHabbo from "./pages/LinkHabbo";
 import Dashboard from "./pages/Dashboard";
 import CreateDungeon from "./pages/CreateDungeon";
 import DungeonList from "./pages/DungeonList";
+import ServerLobby from "./pages/ServerLobby";
 import DungeonLobby from "./pages/DungeonLobby";
 import Battle from "./pages/Battle";
 import Inventory from "./pages/Inventory";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/inventory" element={<Inventory />} />
           <Route path="/create-dungeon" element={<CreateDungeon />} />
           <Route path="/dungeon-list" element={<DungeonList />} />
+          <Route path="/server-lobby/:serverId" element={<ServerLobby />} />
           <Route path="/dungeon-lobby/:id" element={<DungeonLobby />} />
           <Route path="/battle/:id" element={<Battle />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

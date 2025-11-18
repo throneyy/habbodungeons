@@ -101,8 +101,8 @@ const DungeonList = () => {
         description: "Waiting for adventure to begin...",
       });
 
-      // Navigate to a waiting room or back to dashboard
-      navigate("/dashboard");
+      // Navigate to server lobby
+      navigate(`/server-lobby/${serverId}`);
     } catch (error: any) {
       toast({
         title: "Failed to join server",
