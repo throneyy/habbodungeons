@@ -6,9 +6,116 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Static enemy pool with sprites
+const ENEMY_POOL = [
+  {
+    name: "Skeleton Warrior",
+    description: "An undead warrior wielding a rusted blade",
+    sprite: "skeleton.png",
+    baseHp: 40,
+    baseAtk: 8,
+    baseDef: 5,
+    baseSpd: 6
+  },
+  {
+    name: "Ice Tiger",
+    description: "A fierce feline predator with frost-covered fangs",
+    sprite: "ice-tiger.gif",
+    baseHp: 45,
+    baseAtk: 10,
+    baseDef: 6,
+    baseSpd: 9
+  },
+  {
+    name: "Ice Elemental",
+    description: "A crystalline being of pure frozen magic",
+    sprite: "ice-elemental.png",
+    baseHp: 35,
+    baseAtk: 12,
+    baseDef: 4,
+    baseSpd: 7
+  },
+  {
+    name: "Ice Guardian",
+    description: "A heavily armored sentinel of the frozen halls",
+    sprite: "ice-guardian.png",
+    baseHp: 60,
+    baseAtk: 9,
+    baseDef: 12,
+    baseSpd: 4
+  },
+  {
+    name: "Frost Wolf",
+    description: "A savage wolf corrupted by dark ice magic",
+    sprite: "frost-wolf.png",
+    baseHp: 42,
+    baseAtk: 11,
+    baseDef: 5,
+    baseSpd: 10
+  },
+  {
+    name: "Glacial Imp",
+    description: "A mischievous creature made of ice and malice",
+    sprite: "glacial-imp.png",
+    baseHp: 30,
+    baseAtk: 9,
+    baseDef: 4,
+    baseSpd: 8
+  },
+  {
+    name: "Frozen Goblin",
+    description: "A goblin trapped in eternal frost, still hungry for battle",
+    sprite: "frozen-goblin.png",
+    baseHp: 38,
+    baseAtk: 7,
+    baseDef: 6,
+    baseSpd: 7
+  },
+  {
+    name: "Frost Mutant",
+    description: "A grotesque amalgamation of frozen flesh and ice",
+    sprite: "frost-mutant.png",
+    baseHp: 50,
+    baseAtk: 10,
+    baseDef: 8,
+    baseSpd: 5
+  }
+];
+
+const BOSS_ENEMY = {
+  name: "Frost Wraith",
+  description: "The ancient guardian of the Frostkeep, a powerful spirit of eternal winter",
+  sprite: "frost-wraith.png",
+  baseHp: 100,
+  baseAtk: 15,
+  baseDef: 10,
+  baseSpd: 8
+};
+
+// Helper function to get random enemy
+function getRandomEnemy(playerLevel: number, isBoss: boolean = false) {
+  if (isBoss) {
+    return {
+      ...BOSS_ENEMY,
+      hp: BOSS_ENEMY.baseHp + (playerLevel * 5),
+      atk: BOSS_ENEMY.baseAtk + Math.floor(playerLevel * 1.5),
+      def: BOSS_ENEMY.baseDef + Math.floor(playerLevel * 1.2),
+      spd: BOSS_ENEMY.baseSpd + Math.floor(playerLevel * 0.8)
+    };
+  }
+  
+  const enemy = ENEMY_POOL[Math.floor(Math.random() * ENEMY_POOL.length)];
+  return {
+    ...enemy,
+    hp: enemy.baseHp + (playerLevel * 3),
+    atk: enemy.baseAtk + Math.floor(playerLevel * 1.2),
+    def: enemy.baseDef + playerLevel,
+    spd: enemy.baseSpd + Math.floor(playerLevel * 0.5)
+  };
+}
+
 // Helper function to strip markdown code blocks from JSON
 function extractJSON(text: string): string {
-  // Remove markdown code blocks if present
   const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
   if (codeBlockMatch) {
     return codeBlockMatch[1].trim();
@@ -41,7 +148,9 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .single();
 
-    // Call AI to generate dungeon using structured output
+    const playerLevel = stats?.level || 1;
+
+    // Call AI to generate dungeon story and structure (but not enemies)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -54,11 +163,19 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for The Shattered Frostkeep. Generate unique ice-themed dungeon quests. Keep all descriptions brief and atmospheric.`
+            content: `You are a JRPG dungeon generator for The Shattered Frostkeep. Generate unique ice-themed dungeon quests with compelling narratives. Keep all descriptions brief and atmospheric.`
           },
           {
             role: 'user',
-            content: `Generate a ${theme} dungeon with ${encounters} rooms for level ${stats?.level || 1} player. First room should be exploration/story, not combat.`
+            content: `Generate a ${theme} dungeon story with ${encounters} rooms for level ${playerLevel} player. 
+            
+            Create:
+            - An epic dungeon name
+            - A clear quest objective
+            - A brief intro (2-3 sentences)
+            - Brief descriptions for ${encounters} rooms (2 sentences each)
+            
+            First room should be exploration/story. Last room is the BOSS room. Make it dramatic.`
           }
         ],
         tools: [
@@ -91,18 +208,6 @@ serve(async (req) => {
                         description: {
                           type: "string",
                           description: "Brief room description (2 sentences max)"
-                        },
-                        enemy: {
-                          type: "object",
-                          properties: {
-                            name: { type: "string" },
-                            description: { type: "string" },
-                            hp: { type: "number" },
-                            atk: { type: "number" },
-                            def: { type: "number" },
-                            spd: { type: "number" }
-                          },
-                          required: ["name", "description", "hp", "atk", "def", "spd"]
                         }
                       },
                       required: ["roomIndex", "description"]
@@ -128,8 +233,33 @@ serve(async (req) => {
       throw new Error("AI did not return structured dungeon data");
     }
     
-    const dungeonJson = JSON.parse(toolCall.function.arguments);
-    console.log("Parsed dungeon:", dungeonJson.dungeonName);
+    const dungeonStructure = JSON.parse(toolCall.function.arguments);
+    console.log("Parsed dungeon:", dungeonStructure.dungeonName);
+
+    // Add enemies from static pool
+    const rooms = dungeonStructure.rooms.map((room: any, index: number) => {
+      // First room has no enemy (exploration)
+      if (index === 0) {
+        return {
+          ...room,
+          enemy: null
+        };
+      }
+      
+      // Last room gets the boss
+      const isBoss = index === dungeonStructure.rooms.length - 1;
+      const enemy = getRandomEnemy(playerLevel, isBoss);
+      
+      return {
+        ...room,
+        enemy
+      };
+    });
+
+    const dungeonJson = {
+      ...dungeonStructure,
+      rooms
+    };
 
     // Save dungeon with base stats (no difficulty applied yet)
     const { data: dungeon, error } = await supabase
