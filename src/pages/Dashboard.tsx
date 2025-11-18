@@ -233,7 +233,7 @@ const Dashboard = () => {
 
         {/* Actions */}
         {profile?.habbo_username && (
-          <div className="text-center">
+          <div className="flex gap-4 justify-center">
             <Button
               size="lg"
               onClick={handleStartDungeon}
@@ -241,6 +241,14 @@ const Dashboard = () => {
               className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
             >
               {loading ? "Generating Quest..." : "Start a Dungeon"}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate("/dungeon-list")}
+              className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
+            >
+              View Dungeon List
             </Button>
           </div>
         )}
