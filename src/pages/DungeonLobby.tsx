@@ -55,10 +55,10 @@ const DungeonLobby = () => {
           console.log('Current state:', { serverId, isServerHost });
           
           // All players navigate to battle when battle_state is created
-          console.log('Battle detected, navigating all players to battle');
+          console.log('Battle detected, navigating all players to exploration');
           toast({ 
-            title: "Battle ready!",
-            description: "Entering combat now..."
+            title: "Adventure begins!",
+            description: "Starting your exploration..."
           });
           setTimeout(() => navigate(`/battle/${id}`), 500);
         }
@@ -72,6 +72,19 @@ const DungeonLobby = () => {
       supabase.removeChannel(channel);
     };
   }, [id, serverId, isServerHost, currentUserId]);
+
+  // Auto-start exploration for server host after brief intro display
+  useEffect(() => {
+    if (!dungeon || !serverId || !isServerHost || loading || starting) return;
+
+    console.log('Host ready, auto-starting exploration in 3 seconds...');
+    
+    const autoStartTimer = setTimeout(() => {
+      handleStartBattle(serverDifficulty);
+    }, 3000); // 3 second delay to show intro
+
+    return () => clearTimeout(autoStartTimer);
+  }, [dungeon, serverId, isServerHost, loading]);
 
   const loadDungeon = async () => {
     try {
@@ -282,31 +295,19 @@ const DungeonLobby = () => {
                   </div>
                 ) : (
                   <div className="mt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-sm text-muted-foreground">
-                          Server Difficulty: <span className={serverDifficulty === "Hardcore" ? "text-destructive" : "text-primary"}>{serverDifficulty}</span>
+                    <div className="flex flex-col items-center text-center gap-2">
+                      <p className="font-bold text-sm text-muted-foreground">
+                        Server Difficulty: <span className={serverDifficulty === "Hardcore" ? "text-destructive" : "text-primary"}>{serverDifficulty}</span>
+                      </p>
+                      {isServerHost ? (
+                        <p className="text-sm text-primary animate-pulse">
+                          <Swords className="w-4 h-4 inline mr-1" />
+                          Starting exploration automatically...
                         </p>
-                        {!isServerHost && (
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Waiting for host to start...
-                          </p>
-                        )}
-                      </div>
-                      {isServerHost && (
-                        <Button
-                          onClick={() => handleStartBattle(serverDifficulty)}
-                          disabled={starting}
-                          size="lg"
-                          className={`font-bold border-2 ${
-                            serverDifficulty === "Hardcore"
-                              ? "border-destructive bg-destructive/20 hover:bg-destructive/30"
-                              : "border-primary bg-primary/20 hover:bg-primary/30"
-                          }`}
-                        >
-                          <Swords className="w-5 h-5 mr-2" />
-                          {starting ? "Starting..." : "Start Dungeon"}
-                        </Button>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Waiting for adventure to begin...
+                        </p>
                       )}
                     </div>
                   </div>
