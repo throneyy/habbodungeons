@@ -7,6 +7,57 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Enemy sprite mapping based on name patterns
+const ENEMY_SPRITE_MAP: Record<string, string> = {
+  "skeleton": "skeleton.png",
+  "ice tiger": "ice-tiger.gif",
+  "tiger": "ice-tiger.gif",
+  "ice elemental": "ice-elemental.png",
+  "elemental": "ice-elemental.png",
+  "ice guardian": "ice-guardian.png",
+  "guardian": "ice-guardian.png",
+  "frost wolf": "frost-wolf.png",
+  "wolf": "frost-wolf.png",
+  "glacial imp": "glacial-imp.png",
+  "imp": "glacial-imp.png",
+  "frozen goblin": "frozen-goblin.png",
+  "goblin": "frozen-goblin.png",
+  "frost mutant": "frost-mutant.png",
+  "mutant": "frost-mutant.png",
+  "frost wraith": "frost-wraith.png",
+  "wraith": "frost-wraith.png",
+  "frost undead": "frost-undead.gif",
+  "undead": "frost-undead.gif",
+  "frostbite spider": "frostbite-spider.webp",
+  "spider": "frostbite-spider.webp",
+  "ghoul": "frost-undead.gif",
+  "ancient": "skeleton.png",
+  "warrior": "skeleton.png",
+  "shade": "frost-wraith.png",
+};
+
+// Function to find matching sprite based on enemy name
+function findEnemySprite(enemyName: string): string {
+  if (!enemyName) return "skeleton.png";
+  
+  const nameLower = enemyName.toLowerCase();
+  
+  // Try exact match first
+  if (ENEMY_SPRITE_MAP[nameLower]) {
+    return ENEMY_SPRITE_MAP[nameLower];
+  }
+  
+  // Try partial matches
+  for (const [key, sprite] of Object.entries(ENEMY_SPRITE_MAP)) {
+    if (nameLower.includes(key) || key.includes(nameLower)) {
+      return sprite;
+    }
+  }
+  
+  // Default fallback
+  return "skeleton.png";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
