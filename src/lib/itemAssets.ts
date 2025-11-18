@@ -17,6 +17,9 @@ import frothyPint from "@/assets/frothy-pint.png";
 import sweetcakes from "@/assets/sweetcakes.png";
 import bowAndArrow from "@/assets/bow-and-arrow.png";
 import herb from "@/assets/herb.png";
+import scroll from "@/assets/scroll.png";
+import scrollStack from "@/assets/scroll-stack.png";
+import scrollOpen from "@/assets/scroll-open.png";
 
 export const ITEM_ASSETS: Record<string, string> = {
   "Rusty Sword": rustySword,
@@ -40,6 +43,9 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Sweetcakes": sweetcakes,
   "Bow & Arrow": bowAndArrow,
   "Herb": herb,
+  "Scroll": scroll,
+  "Ancient Scroll": scrollStack,
+  "Tome": scrollOpen,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {
