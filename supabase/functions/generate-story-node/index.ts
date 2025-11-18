@@ -92,6 +92,14 @@ serve(async (req) => {
 
     console.log("Battle state loaded:", battleState.id, "Room:", battleState.current_room_index);
 
+    // Check if there's already a story node for this room (for multiplayer sync)
+    if (battleState.current_story_node && serverId) {
+      console.log("Returning existing story node for room", battleState.current_room_index);
+      return new Response(JSON.stringify({ storyNode: battleState.current_story_node }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Get party member stats - if server battle, get all members; otherwise just current user
     let partyStats = [];
     
@@ -216,6 +224,21 @@ Generate an atmospheric scene and 3-4 meaningful choices.`,
     // Validate structure
     if (!storyNode.storyText || !Array.isArray(storyNode.choices)) {
       throw new Error("Invalid story node structure");
+    }
+
+    // Store the story node in battle_states for multiplayer sync
+    if (serverId) {
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+
+      await supabaseAdmin
+        .from("battle_states")
+        .update({ current_story_node: storyNode })
+        .eq("id", battleState.id);
+      
+      console.log("Stored story node for multiplayer sync");
     }
 
     return new Response(JSON.stringify({ storyNode }), {

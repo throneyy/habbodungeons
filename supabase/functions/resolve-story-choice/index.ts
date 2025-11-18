@@ -80,23 +80,54 @@ serve(async (req) => {
 
     const { battleId, choiceId, choiceLabel, storyText } = await req.json();
 
-    // Get battle state by dungeon_id
-    const { data: battleState, error: battleError } = await supabaseClient
-      .from("battle_states")
-      .select("*, dungeons(*)")
-      .eq("dungeon_id", battleId)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    // Check if user is in a server for this dungeon
+    const { data: serverMember } = await supabaseClient
+      .from('server_players')
+      .select('server_id, servers!inner(dungeon_id)')
+      .eq('user_id', user.id)
+      .eq('servers.dungeon_id', battleId)
+      .maybeSingle();
 
-    if (battleError) throw battleError;
+    const serverId = serverMember?.server_id || null;
+    console.log('User server status:', { serverId, hasServer: !!serverId });
+
+    // Get battle state - check server first, then user
+    let battleState = null;
+    
+    if (serverId) {
+      console.log('Looking for server battle:', serverId);
+      const { data, error } = await supabaseClient
+        .from("battle_states")
+        .select("*, dungeons(*)")
+        .eq("dungeon_id", battleId)
+        .eq("server_id", serverId)
+        .eq("is_active", true)
+        .maybeSingle();
+      
+      if (error) throw error;
+      battleState = data;
+    } else {
+      console.log('Looking for solo battle');
+      const { data, error } = await supabaseClient
+        .from("battle_states")
+        .select("*, dungeons(*)")
+        .eq("dungeon_id", battleId)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      battleState = data;
+    }
+
+    if (!battleState) throw new Error("Battle state not found");
 
     // Get party stats
     const { data: partyStats } = await supabaseClient
       .from("player_stats")
       .select("*")
-      .eq("user_id", battleState.user_id)
+      .eq("user_id", user.id)
       .single();
 
     console.log("Resolving choice:", choiceLabel);
@@ -284,6 +315,12 @@ What happens as a result of this choice?`,
       current_room_index: newRoomIndex,
     };
 
+    // Clear story node if advancing to a new room (for multiplayer sync)
+    if (outcome.progressRoom) {
+      updateData.current_story_node = null;
+      console.log("Clearing story node for new room");
+    }
+
     // Set up enemy if battle is triggered
     if (outcome.triggersBattle) {
       // Battle the enemy from the current room (the one AI was told about)
@@ -324,11 +361,23 @@ What happens as a result of this choice?`,
       }
     }
 
-    // Single atomic update
-    await supabaseClient
-      .from("battle_states")
-      .update(updateData)
-      .eq("id", battleState.id);
+    // Single atomic update - use admin client for server battles to bypass RLS
+    if (serverId) {
+      const supabaseAdmin = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
+      await supabaseAdmin
+        .from("battle_states")
+        .update(updateData)
+        .eq("id", battleState.id);
+      console.log("Updated battle state with admin client");
+    } else {
+      await supabaseClient
+        .from("battle_states")
+        .update(updateData)
+        .eq("id", battleState.id);
+    }
 
     return new Response(
       JSON.stringify({
