@@ -266,8 +266,19 @@ const DungeonLobby = () => {
               // Reload to check for active battles
               await loadDungeon();
             }}
-            onPartyJoined={async (partyId, dungeonId) => {
-              console.log('Party joined:', { partyId, dungeonId, currentDungeon: id });
+            onPartyJoined={async (partyId, dungeonId, activeBattle) => {
+              console.log('Party joined:', { partyId, dungeonId, currentDungeon: id, activeBattle });
+              
+              // If there's an active battle, join it immediately
+              if (activeBattle) {
+                toast({
+                  title: "Joining battle in progress!",
+                  description: "Your party is already fighting...",
+                });
+                setTimeout(() => navigate(`/battle/${dungeonId || id}`), 1000);
+                return;
+              }
+              
               // If the party is for a different dungeon, navigate to it
               if (dungeonId && dungeonId !== id) {
                 toast({
