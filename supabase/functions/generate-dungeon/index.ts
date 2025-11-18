@@ -39,7 +39,7 @@ const ENEMY_POOL = [
     name: "Ice Guardian",
     description: "A heavily armored sentinel of the frozen halls",
     sprite: "ice-guardian.png",
-    baseHp: 60,
+    baseHp: 100,
     baseAtk: 9,
     baseDef: 12,
     baseSpd: 4
