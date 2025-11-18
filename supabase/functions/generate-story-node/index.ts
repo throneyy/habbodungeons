@@ -38,19 +38,51 @@ serve(async (req) => {
 
     console.log("Generating story node for battleId:", battleId, "userId:", user.id);
 
-    // Get battle state by dungeon_id
-    const { data: battleState, error: battleError } = await supabaseClient
-      .from("battle_states")
-      .select("*, dungeons(*)")
-      .eq("dungeon_id", battleId)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
+    // Check if user is in a server for this dungeon
+    const { data: serverMember } = await supabaseClient
+      .from('server_players')
+      .select('server_id, servers!inner(dungeon_id)')
+      .eq('user_id', user.id)
+      .eq('servers.dungeon_id', battleId)
       .maybeSingle();
 
-    if (battleError) {
-      console.error("Battle state error:", battleError);
-      throw battleError;
+    const serverId = serverMember?.server_id || null;
+    console.log('User server status:', { serverId, hasServer: !!serverId });
+
+    // Get battle state - check server first, then user
+    let battleState = null;
+    
+    if (serverId) {
+      console.log('Looking for server battle:', serverId);
+      const { data, error } = await supabaseClient
+        .from("battle_states")
+        .select("*, dungeons(*)")
+        .eq("dungeon_id", battleId)
+        .eq("server_id", serverId)
+        .eq("is_active", true)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Battle state error:", error);
+        throw error;
+      }
+      battleState = data;
+    } else {
+      console.log('Looking for solo battle');
+      const { data, error } = await supabaseClient
+        .from("battle_states")
+        .select("*, dungeons(*)")
+        .eq("dungeon_id", battleId)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Battle state error:", error);
+        throw error;
+      }
+      battleState = data;
     }
     
     if (!battleState) {
@@ -60,11 +92,32 @@ serve(async (req) => {
 
     console.log("Battle state loaded:", battleState.id, "Room:", battleState.current_room_index);
 
-    // Get party member stats
-    const { data: partyStats } = await supabaseClient
-      .from("player_stats")
-      .select("*")
-      .eq("user_id", battleState.user_id);
+    // Get party member stats - if server battle, get all members; otherwise just current user
+    let partyStats = [];
+    
+    if (battleState.server_id) {
+      // Get all server members' stats
+      const { data: serverPlayers } = await supabaseClient
+        .from('server_players')
+        .select('user_id')
+        .eq('server_id', battleState.server_id);
+      
+      if (serverPlayers && serverPlayers.length > 0) {
+        const userIds = serverPlayers.map(p => p.user_id);
+        const { data } = await supabaseClient
+          .from("player_stats")
+          .select("*")
+          .in("user_id", userIds);
+        partyStats = data || [];
+      }
+    } else {
+      // Solo battle - just get current user's stats
+      const { data } = await supabaseClient
+        .from("player_stats")
+        .select("*")
+        .eq("user_id", user.id);
+      partyStats = data || [];
+    }
 
     const context = {
       dungeon: {
