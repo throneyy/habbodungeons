@@ -20,10 +20,10 @@ const DungeonList = () => {
   const { toast } = useToast();
   const [servers, setServers] = useState<Server[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(false);
 
   useEffect(() => {
-    // Clean up abandoned servers first, then load
-    cleanupServers();
+    initializeGlobalServers();
 
     // Subscribe to changes
     const channel = supabase
@@ -49,16 +49,60 @@ const DungeonList = () => {
     };
   }, []);
 
-  const cleanupServers = async () => {
+  const initializeGlobalServers = async () => {
+    setInitializing(true);
     try {
+      // Clean up abandoned servers first
       console.log('🧹 Cleaning up abandoned servers...');
       await supabase.functions.invoke("cleanup-completed-servers");
-      console.log('✅ Cleanup complete, loading servers...');
-      loadServers();
+      
+      // Check for existing global servers (no dungeon assigned)
+      const { data: existingServers } = await supabase
+        .from('servers')
+        .select('id, difficulty, server_name')
+        .is('dungeon_id', null)
+        .eq('is_active', true);
+
+      console.log('📊 Found', existingServers?.length || 0, 'available global servers');
+
+      const normalServers = existingServers?.filter(s => s.difficulty === 'Normal').length || 0;
+      const hardcoreServers = existingServers?.filter(s => s.difficulty === 'Hardcore').length || 0;
+
+      // Only create missing servers
+      if (normalServers < 10) {
+        const needed = 10 - normalServers;
+        console.log(`Creating ${needed} Normal servers...`);
+        for (let i = 0; i < needed; i++) {
+          await supabase.functions.invoke("create-server", {
+            body: { 
+              serverName: `Server ${normalServers + i + 1}`,
+              maxPlayers: 6,
+              difficulty: 'Normal'
+            },
+          });
+        }
+      }
+
+      if (hardcoreServers < 4) {
+        const needed = 4 - hardcoreServers;
+        console.log(`Creating ${needed} Hardcore servers...`);
+        for (let i = 0; i < needed; i++) {
+          await supabase.functions.invoke("create-server", {
+            body: { 
+              serverName: `Hardcore ${hardcoreServers + i + 1}`,
+              maxPlayers: 6,
+              difficulty: 'Hardcore'
+            },
+          });
+        }
+      }
+
+      await loadServers();
     } catch (error) {
-      console.error('Cleanup failed:', error);
-      // Still load servers even if cleanup fails
-      loadServers();
+      console.error('Failed to initialize servers:', error);
+      loadServers(); // Still try to load
+    } finally {
+      setInitializing(false);
     }
   };
 

@@ -24,21 +24,23 @@ serve(async (req) => {
 
     const { dungeonId, serverName, maxPlayers = 6, difficulty = 'Normal', isSystemServer = false } = await req.json();
 
-    console.log("Creating server for user:", user.id, "dungeon:", dungeonId);
+    console.log("Creating server for user:", user.id, "dungeon:", dungeonId || "global pool");
 
-    // Verify dungeon exists
-    const { data: dungeon, error: dungeonError } = await supabase
-      .from('dungeons')
-      .select('id')
-      .eq('id', dungeonId)
-      .maybeSingle();
+    // Only verify dungeon if dungeonId is provided
+    if (dungeonId) {
+      const { data: dungeon, error: dungeonError } = await supabase
+        .from('dungeons')
+        .select('id')
+        .eq('id', dungeonId)
+        .maybeSingle();
 
-    if (!dungeon) {
-      throw new Error("Dungeon not found");
+      if (!dungeon) {
+        throw new Error("Dungeon not found");
+      }
     }
 
     // Only delete existing servers if this is not a system server
-    if (!isSystemServer) {
+    if (!isSystemServer && dungeonId) {
       const { data: oldServers } = await supabase
         .from('servers')
         .select('id')
@@ -54,13 +56,13 @@ serve(async (req) => {
       }
     }
 
-    // Create new server
+    // Create new server (dungeon_id can be null for global pool)
     const { data: server, error: serverError } = await supabase
       .from('servers')
       .insert({
         host_user_id: user.id,
         server_name: serverName,
-        dungeon_id: dungeonId,
+        dungeon_id: dungeonId || null,
         max_players: maxPlayers,
         difficulty: difficulty,
         is_active: true,
