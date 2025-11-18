@@ -47,6 +47,8 @@ const ServerLobby = () => {
 
     loadServerData();
 
+    console.log('Setting up server_players subscription for server:', serverId);
+
     // Subscribe to server changes
     const channel = supabase
       .channel(`server-lobby-${serverId}`)
@@ -55,7 +57,8 @@ const ServerLobby = () => {
         schema: 'public',
         table: 'server_players',
         filter: `server_id=eq.${serverId}`
-      }, () => {
+      }, (payload) => {
+        console.log('🔥 SERVER_PLAYERS CHANGE DETECTED:', payload);
         loadServerData();
       })
       .on('postgres_changes', {
@@ -63,12 +66,16 @@ const ServerLobby = () => {
         schema: 'public',
         table: 'servers',
         filter: `id=eq.${serverId}`
-      }, () => {
+      }, (payload) => {
+        console.log('🔥 SERVER CHANGE DETECTED:', payload);
         checkForDungeon();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up server subscription');
       supabase.removeChannel(channel);
     };
   }, [serverId]);
@@ -102,6 +109,8 @@ const ServerLobby = () => {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
 
+      console.log('Loading server data for server:', serverId);
+
       // Get server info
       const { data: serverData, error: serverError } = await supabase
         .from('servers')
@@ -125,7 +134,12 @@ const ServerLobby = () => {
         .select('user_id')
         .eq('server_id', serverId);
 
-      if (playersError) throw playersError;
+      console.log('📋 Server players query result:', serverPlayers);
+
+      if (playersError) {
+        console.error('Error loading players:', playersError);
+        throw playersError;
+      }
 
       if (serverPlayers && serverPlayers.length > 0) {
         const userIds = serverPlayers.map(sp => sp.user_id);
@@ -134,12 +148,15 @@ const ServerLobby = () => {
           .select('id, username, habbo_username')
           .in('id', userIds);
 
+        console.log('👥 Player profiles:', profiles);
+
         setPlayers(profiles?.map(p => ({
           id: p.id,
           username: p.username,
           habbo_username: p.habbo_username
         })) || []);
       } else {
+        console.log('No players found in server');
         setPlayers([]);
       }
     } catch (error: any) {
