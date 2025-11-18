@@ -81,16 +81,16 @@ const ServerLobby = () => {
       .from('servers')
       .select('dungeon_id')
       .eq('id', serverId)
-      .single();
+      .maybeSingle();
 
     if (serverData?.dungeon_id) {
-      // Show notification for non-host players
+      // Show notification for ALL players (host and non-host)
       toast({ 
-        title: "Adventure starting!",
-        description: "The host has started the adventure. Loading..."
+        title: "Adventure ready!",
+        description: "Entering dungeon now..."
       });
       
-      // Navigate to dungeon lobby
+      // Navigate to dungeon lobby - this happens for everyone simultaneously
       navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
     }
   };
@@ -107,7 +107,7 @@ const ServerLobby = () => {
         .from('servers')
         .select('id, server_name, difficulty, max_players, dungeon_id')
         .eq('id', serverId)
-        .single();
+        .maybeSingle();
 
       if (serverError) throw serverError;
       
@@ -163,10 +163,13 @@ const ServerLobby = () => {
 
       if (error) throw error;
 
-      toast({ title: "Adventure starting!" });
+      toast({ 
+        title: "Adventure starting!",
+        description: "Loading dungeon for all players..."
+      });
       
-      // Host navigates immediately with the dungeon ID from response
-      navigate(`/dungeon-lobby/${data.dungeonId}`);
+      // Don't navigate immediately - let realtime subscription handle it
+      // This ensures both host and non-host navigate at the exact same time
     } catch (error: any) {
       toast({
         title: "Failed to start adventure",
