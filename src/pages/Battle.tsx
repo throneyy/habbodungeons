@@ -21,6 +21,7 @@ import glacialImp from "@/assets/glacial-imp.png";
 import frozenGoblin from "@/assets/frozen-goblin.png";
 import frostMutant from "@/assets/frost-mutant.png";
 import frostWraith from "@/assets/frost-wraith.png";
+import frostUndead from "@/assets/frost-undead.gif";
 
 // Enemy sprite mapping
 const ENEMY_SPRITES: Record<string, string> = {
@@ -33,6 +34,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frozen-goblin.png": frozenGoblin,
   "frost-mutant.png": frostMutant,
   "frost-wraith.png": frostWraith,
+  "frost-undead.gif": frostUndead,
 };
 
 interface BattleLogEntry {

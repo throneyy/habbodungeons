@@ -79,6 +79,15 @@ const ENEMY_POOL = [
     baseAtk: 10,
     baseDef: 8,
     baseSpd: 5
+  },
+  {
+    name: "Frost Undead",
+    description: "A cursed spirit trapped in eternal frost, seeking warmth from the living",
+    sprite: "frost-undead.gif",
+    baseHp: 44,
+    baseAtk: 9,
+    baseDef: 6,
+    baseSpd: 6
   }
 ];
 
