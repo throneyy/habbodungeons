@@ -230,12 +230,13 @@ const Battle = () => {
       if (isBattleNotFound) {
         toast({
           title: "Battle Not Found",
-          description: "This battle doesn't exist or has been completed. Redirecting to dashboard...",
+          description: "This battle doesn't exist or has been completed. Redirecting...",
           variant: "destructive",
         });
+        // Immediate redirect for completed battles
         setTimeout(() => {
-          navigate("/dashboard");
-        }, 2500);
+          navigate("/dashboard", { replace: true });
+        }, 1000);
       } else {
         toast({
           title: "Failed to load battle",
@@ -590,16 +591,15 @@ const Battle = () => {
           </h1>
           <p className="text-muted-foreground">
             {isBattleNotFound 
-              ? "This battle doesn't exist or has already been completed. You'll be redirected to the dashboard to start a new adventure."
+              ? "This battle has already been completed or doesn't exist. Redirecting you to the dashboard..."
               : battleLoadError
             }
           </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground animate-pulse">
-            <span>Redirecting to dashboard</span>
-            <span className="inline-block animate-bounce">...</span>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <span className="animate-pulse">Redirecting in 1 second...</span>
           </div>
           <Button 
-            onClick={() => navigate("/dashboard")} 
+            onClick={() => navigate("/dashboard", { replace: true })} 
             variant="outline"
             className="mt-4"
           >
