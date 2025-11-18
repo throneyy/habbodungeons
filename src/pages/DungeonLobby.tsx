@@ -24,7 +24,6 @@ const DungeonLobby = () => {
   const [dungeon, setDungeon] = useState<DungeonInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [serverId, setServerId] = useState<string | null>(null);
-  const [isServerHost, setIsServerHost] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [serverDifficulty, setServerDifficulty] = useState<"Normal" | "Hardcore">("Normal");
   const [starting, setStarting] = useState(false);
@@ -37,7 +36,7 @@ const DungeonLobby = () => {
   useEffect(() => {
     if (!currentUserId) return; // Wait until we have user ID
 
-    console.log('Setting up realtime subscription', { serverId, isServerHost, currentUserId });
+    console.log('Setting up realtime subscription', { serverId, currentUserId });
 
     // Subscribe to battle state changes for this dungeon
     const channel = supabase
@@ -52,7 +51,6 @@ const DungeonLobby = () => {
         },
         (payload) => {
           console.log('Battle started! Payload:', payload);
-          console.log('Current state:', { serverId, isServerHost });
           
           // All players navigate to battle when battle_state is created
           console.log('Battle detected, navigating all players to exploration');
@@ -71,35 +69,7 @@ const DungeonLobby = () => {
       console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [id, serverId, isServerHost, currentUserId]);
-
-  // Auto-start exploration for server host after brief intro display
-  useEffect(() => {
-    console.log('🎮 Auto-start check:', { 
-      hasDungeon: !!dungeon, 
-      hasServerId: !!serverId, 
-      isHost: isServerHost, 
-      isLoading: loading, 
-      isStarting: starting 
-    });
-
-    if (!dungeon || !serverId || !isServerHost || loading || starting) {
-      console.log('⏸️ Not auto-starting - conditions not met');
-      return;
-    }
-
-    console.log('🚀 Host ready, auto-starting exploration in 3 seconds...');
-    
-    const autoStartTimer = setTimeout(() => {
-      console.log('⏰ Timer fired, calling handleStartBattle');
-      handleStartBattle(serverDifficulty);
-    }, 3000); // 3 second delay to show intro
-
-    return () => {
-      console.log('🧹 Clearing auto-start timer');
-      clearTimeout(autoStartTimer);
-    };
-  }, [dungeon, serverId, isServerHost, loading, starting, serverDifficulty]);
+  }, [id, serverId, currentUserId]);
 
   const loadDungeon = async () => {
     try {
@@ -147,7 +117,6 @@ const DungeonLobby = () => {
 
       if (serverData) {
         setServerId(serverData.server_id);
-        setIsServerHost(serverData.servers.host_user_id === user.id);
         
         // Fetch server difficulty
         const { data: serverInfo } = await supabase
@@ -208,7 +177,7 @@ const DungeonLobby = () => {
     setStarting(true);
     try {
       // Log current server state for debugging
-      console.log('Starting battle with state:', { serverId, isServerHost, dungeonId: id });
+      console.log('Starting battle with state:', { serverId, dungeonId: id });
       
       const { data, error } = await supabase.functions.invoke("start-dungeon-battle", {
         body: {
@@ -310,20 +279,23 @@ const DungeonLobby = () => {
                   </div>
                 ) : (
                   <div className="mt-6 space-y-4">
-                    <div className="flex flex-col items-center text-center gap-2">
+                    <div className="flex flex-col items-center gap-4">
                       <p className="font-bold text-sm text-muted-foreground">
                         Server Difficulty: <span className={serverDifficulty === "Hardcore" ? "text-destructive" : "text-primary"}>{serverDifficulty}</span>
                       </p>
-                      {isServerHost ? (
-                        <p className="text-sm text-primary animate-pulse">
-                          <Swords className="w-4 h-4 inline mr-1" />
-                          Starting exploration automatically...
-                        </p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">
-                          Waiting for adventure to begin...
-                        </p>
-                      )}
+                      <Button
+                        onClick={() => handleStartBattle(serverDifficulty)}
+                        disabled={starting}
+                        size="lg"
+                        className={`font-bold border-2 ${
+                          serverDifficulty === "Hardcore"
+                            ? "border-destructive bg-destructive/20 hover:bg-destructive/30"
+                            : "border-primary bg-primary/20 hover:bg-primary/30"
+                        }`}
+                      >
+                        <Swords className="w-5 h-5 mr-2" />
+                        {starting ? "Starting..." : "Start Exploration"}
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -340,21 +312,6 @@ const DungeonLobby = () => {
               onServerJoined={async (newServerId) => {
                 console.log('Server joined/created:', newServerId);
                 setServerId(newServerId);
-                
-                // Check if user is the host
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                  const { data: server } = await supabase
-                    .from('servers')
-                    .select('host_user_id')
-                    .eq('id', newServerId)
-                    .single();
-                  
-                  if (server) {
-                    setIsServerHost(server.host_user_id === user.id);
-                  }
-                }
-                
                 await loadDungeon(); // Reload to update server status
               }}
             />
