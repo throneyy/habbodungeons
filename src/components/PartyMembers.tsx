@@ -17,44 +17,55 @@ interface PartyMember {
 }
 
 interface PartyMembersProps {
-  partyId: string;
+  partyId?: string;
+  serverId?: string;
 }
 
-export const PartyMembers = ({ partyId }: PartyMembersProps) => {
+export const PartyMembers = ({ partyId, serverId }: PartyMembersProps) => {
   const [members, setMembers] = useState<PartyMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const isServerMode = !!serverId;
+  const id = serverId || partyId;
 
   const loadMembers = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("get-party-members", {
-        body: { partyId },
+      const functionName = isServerMode ? "get-server-players" : "get-party-members";
+      const bodyKey = isServerMode ? "serverId" : "partyId";
+      
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body: { [bodyKey]: id },
       });
 
       if (error) throw error;
       setMembers(data.members);
     } catch (error) {
-      console.error("Failed to load party members:", error);
+      console.error(`Failed to load ${isServerMode ? 'server' : 'party'} members:`, error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    if (!id) return;
+    
     loadMembers();
 
-    // Subscribe to party member changes
+    // Subscribe to member changes
+    const table = isServerMode ? 'server_players' : 'party_members';
+    const filterKey = isServerMode ? 'server_id' : 'party_id';
+    
     const channel = supabase
-      .channel('party-member-changes')
+      .channel(`${table}-changes`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'party_members',
-          filter: `party_id=eq.${partyId}`
+          table,
+          filter: `${filterKey}=eq.${id}`
         },
         () => {
-          console.log('Party members changed, reloading...');
+          console.log(`${table} changed, reloading...`);
           loadMembers();
         }
       )
@@ -63,25 +74,25 @@ export const PartyMembers = ({ partyId }: PartyMembersProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [partyId]);
+  }, [id, isServerMode]);
 
   if (loading) {
     return (
-      <HabboPanel title="Party Members">
+      <HabboPanel title={isServerMode ? "Server Players" : "Party Members"}>
         <div className="text-center py-4 text-muted-foreground">
-          Loading party members...
+          Loading {isServerMode ? 'server players' : 'party members'}...
         </div>
       </HabboPanel>
     );
   }
 
   return (
-    <HabboPanel title={`Party Members (${members.length})`}>
+    <HabboPanel title={`${isServerMode ? 'Server Players' : 'Party Members'} (${members.length})`}>
       <div className="space-y-3">
         {members.length === 0 ? (
           <div className="text-center py-4 text-muted-foreground">
             <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No party members yet</p>
+            <p>No {isServerMode ? 'players' : 'party members'} yet</p>
           </div>
         ) : (
           members.map((member) => (
