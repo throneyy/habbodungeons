@@ -734,15 +734,15 @@ const Battle = () => {
                       <button
                         key={`avatar-${member.userId}`}
                         onClick={() => setSelectedMemberId(member.userId)}
-                        className="border-2 border-habbo-dark rounded overflow-hidden bg-card hover:border-primary transition-colors cursor-pointer"
+                        className="w-12 h-12 border-2 border-habbo-dark rounded overflow-hidden bg-card hover:border-primary transition-colors cursor-pointer flex items-center justify-center"
                         title={`Click to view ${member.username}'s stats`}
                       >
                         {member.habboAvatar && (
                           <img
                             src={member.habboAvatar}
                             alt={member.username}
-                            className="pixel-icon"
-                            style={{ width: 'auto', height: 'auto' }}
+                            className="pixel-icon object-contain"
+                            style={{ width: '100%', height: '100%' }}
                           />
                         )}
                       </button>
