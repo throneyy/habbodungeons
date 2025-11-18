@@ -198,12 +198,22 @@ const Battle = () => {
       }
     } catch (error: any) {
       console.error("Battle load error:", error);
+      console.error("Error details:", { 
+        message: error.message, 
+        error: error.error,
+        fullError: JSON.stringify(error) 
+      });
       
-      // If battle not found, redirect to dashboard
-      if (error.message?.includes("Battle not found") || error.message?.includes("Make sure to select a difficulty")) {
+      // Check multiple error formats from edge functions
+      const errorMessage = error.message || error.error || JSON.stringify(error);
+      const isBattleNotFound = errorMessage.includes("Battle not found") || 
+                               errorMessage.includes("Make sure to select a difficulty") ||
+                               errorMessage.includes("not found for dungeon");
+      
+      if (isBattleNotFound) {
         toast({
           title: "Battle Not Found",
-          description: "This battle doesn't exist or hasn't been started yet. Create a new dungeon from the dashboard.",
+          description: "This battle doesn't exist or has been completed. Start a new dungeon from the dashboard.",
           variant: "destructive",
         });
         setTimeout(() => {
@@ -212,7 +222,7 @@ const Battle = () => {
       } else {
         toast({
           title: "Failed to load battle",
-          description: error.message,
+          description: typeof error === 'string' ? error : (error.message || "Unknown error"),
           variant: "destructive",
         });
       }
@@ -551,7 +561,10 @@ const Battle = () => {
   if (!battleData) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-2xl font-bold">Loading...</p>
+        <div className="text-center space-y-4">
+          <p className="text-2xl font-bold animate-pulse">Loading battle...</p>
+          <p className="text-muted-foreground">Preparing your adventure</p>
+        </div>
       </div>
     );
   }
