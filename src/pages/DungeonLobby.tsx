@@ -89,12 +89,18 @@ const DungeonLobby = () => {
       setDungeon(data);
 
       // Check if user is in a party for this dungeon
-      const { data: partyData } = await supabase
+      const { data: partyData, error: partyError } = await supabase
         .from("party_members")
         .select("party_id, parties!inner(leader_id, dungeon_id)")
         .eq("user_id", user.id)
         .eq("parties.dungeon_id", id)
+        .order("joined_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
+
+      if (partyError) {
+        console.error("Party lookup error:", partyError);
+      }
 
       if (partyData) {
         setPartyId(partyData.party_id);
