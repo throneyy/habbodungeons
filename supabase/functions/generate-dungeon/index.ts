@@ -181,7 +181,9 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for The Shattered Frostkeep. Generate unique ice-themed dungeon quests with compelling narratives. Keep all descriptions brief and atmospheric.`
+            content: `You are a JRPG dungeon generator for The Shattered Frostkeep. Generate unique ice-themed dungeon quests with compelling narratives. Keep all descriptions brief and atmospheric.
+
+CRITICAL: You MUST write EVERYTHING in English only. Do not use Arabic, Chinese, Japanese, or any other language. All dungeon names, descriptions, and text must be in English.`
           },
           {
             role: 'user',
