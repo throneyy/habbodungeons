@@ -483,11 +483,14 @@ const Battle = () => {
         loadInventory();
         
         // Trigger hit animations based on damage dealt
+        console.log("Damage dealt - Player:", data.playerDamageDealt, "Enemy:", data.enemyDamageDealt);
         if (data.playerDamageDealt > 0) {
+          console.log("Triggering enemy hit animation");
           setEnemyHit(true);
           setTimeout(() => setEnemyHit(false), 600);
         }
         if (data.enemyDamageDealt > 0) {
+          console.log("Triggering player hit animation");
           setPlayerHit(true);
           setTimeout(() => setPlayerHit(false), 600);
         }
