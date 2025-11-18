@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           current_enemy_state: Json
           current_room_index: number
+          current_story_node: Json | null
           dungeon_id: string
           id: string
           is_active: boolean
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string
           current_enemy_state: Json
           current_room_index?: number
+          current_story_node?: Json | null
           dungeon_id: string
           id?: string
           is_active?: boolean
@@ -46,6 +48,7 @@ export type Database = {
           created_at?: string
           current_enemy_state?: Json
           current_room_index?: number
+          current_story_node?: Json | null
           dungeon_id?: string
           id?: string
           is_active?: boolean
