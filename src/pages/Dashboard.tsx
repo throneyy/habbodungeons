@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
+import { getItemImage } from "@/lib/itemAssets";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,8 +189,16 @@ const Dashboard = () => {
               {inventory.slice(0, 8).map((item) => (
                 <div
                   key={item.id}
-                  className="p-4 bg-muted rounded-lg border-4 border-habbo-dark text-center"
+                  className="p-4 bg-muted rounded-lg border-4 border-habbo-dark text-center space-y-2"
                 >
+                  {getItemImage(item.item_name) && (
+                    <img 
+                      src={getItemImage(item.item_name)} 
+                      alt={item.item_name} 
+                      className="h-12 pixelated mx-auto" 
+                      style={{ width: 'auto' }}
+                    />
+                  )}
                   <p className="font-bold">{item.item_name}</p>
                   <p className="text-sm text-muted-foreground">x{item.quantity}</p>
                   <p className="text-xs text-muted-foreground capitalize">{item.item_type}</p>
