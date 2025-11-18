@@ -206,12 +206,12 @@ const Dashboard = () => {
         )}
 
 
-        {/* Dungeon Browser */}
+        {/* Server Browser */}
         {profile?.habbo_username && (
-          <HabboPanel title="Find a Dungeon">
+          <HabboPanel title="Join Adventure">
             <div className="space-y-4">
               <p className="text-center text-muted-foreground">
-                Browse active dungeon runs and join other players on their adventures
+                Browse available servers and team up with other players for epic dungeon runs
               </p>
               <div className="flex justify-center">
                 <Button
@@ -219,7 +219,7 @@ const Dashboard = () => {
                   onClick={() => navigate("/dungeon-list")}
                   className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
                 >
-                  Browse Active Dungeons
+                  Browse Servers
                 </Button>
               </div>
             </div>
