@@ -741,8 +741,7 @@ const Battle = () => {
                           <img
                             src={member.habboAvatar}
                             alt={member.username}
-                            className="pixel-icon object-contain"
-                            style={{ width: '100%', height: '100%' }}
+                            className="pixel-icon object-contain max-w-full max-h-full"
                           />
                         )}
                       </button>
