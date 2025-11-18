@@ -6,6 +6,7 @@ import { StatBar } from "@/components/StatBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
@@ -85,6 +86,7 @@ const Battle = () => {
   const [partyMembers, setPartyMembers] = useState<any[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [showEndQuestDialog, setShowEndQuestDialog] = useState(false);
 
   useEffect(() => {
     loadBattle();
@@ -675,7 +677,7 @@ const Battle = () => {
                         {/* End Quest Button */}
                         <div className="pt-4 border-t-2 border-habbo-dark/30">
                           <Button
-                            onClick={() => navigate("/dashboard")}
+                            onClick={() => setShowEndQuestDialog(true)}
                             variant="ghost"
                             className="w-full text-sm font-bold text-muted-foreground hover:text-foreground"
                           >
@@ -1102,7 +1104,7 @@ const Battle = () => {
               {/* End Quest Button */}
               <div className="pt-4 border-t-2 border-habbo-dark/30">
                 <Button
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => setShowEndQuestDialog(true)}
                   variant="ghost"
                   className="w-full text-sm font-bold text-muted-foreground hover:text-foreground"
                 >
@@ -1241,6 +1243,24 @@ const Battle = () => {
         </Button>
         </div>
       </div>
+
+      {/* End Quest Confirmation Dialog */}
+      <AlertDialog open={showEndQuestDialog} onOpenChange={setShowEndQuestDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>End Quest?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to end this quest? Your progress will be saved, but you'll return to the dashboard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => navigate("/dashboard")}>
+              End Quest
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
