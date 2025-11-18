@@ -9,6 +9,10 @@ import metalIngot from "@/assets/metal-ingot.png";
 import potion from "@/assets/potion.png";
 import elixer from "@/assets/elixer.png";
 import everydaySupplyChest from "@/assets/everyday-supply-chest.png";
+import fightersSword from "@/assets/fighters-sword.png";
+import warriorsSword from "@/assets/warriors-sword.png";
+import mageStaff from "@/assets/mage-staff.png";
+import powerfulMageStaff from "@/assets/powerful-mage-staff.png";
 
 export const ITEM_ASSETS: Record<string, string> = {
   "Rusty Sword": rustySword,
@@ -22,6 +26,10 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Ether": elixer,
   "Elixer": elixer,
   "Everyday Supply Chest": everydaySupplyChest,
+  "Fighters Sword": fightersSword,
+  "Warriors Sword": warriorsSword,
+  "Mage Staff": mageStaff,
+  "Powerful Mage Staff": powerfulMageStaff,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {
