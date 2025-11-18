@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
+import explosionHit from "@/assets/explosion-hit.gif";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import skeleton from "@/assets/skeleton.png";
 import iceTiger from "@/assets/ice-tiger.gif";
@@ -114,6 +115,8 @@ const Battle = () => {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showEndQuestDialog, setShowEndQuestDialog] = useState(false);
+  const [playerHit, setPlayerHit] = useState(false);
+  const [enemyHit, setEnemyHit] = useState(false);
 
   // Helper function to render text with weapon names highlighted in purple
   const renderTextWithWeapons = (text: string) => {
@@ -478,6 +481,16 @@ const Battle = () => {
         
         // Reload inventory in case items were consumed
         loadInventory();
+        
+        // Trigger hit animations based on damage dealt
+        if (data.playerDamageDealt > 0) {
+          setEnemyHit(true);
+          setTimeout(() => setEnemyHit(false), 600);
+        }
+        if (data.enemyDamageDealt > 0) {
+          setPlayerHit(true);
+          setTimeout(() => setPlayerHit(false), 600);
+        }
         
         if (data.victory) {
           toast({ title: "Victory!", description: "You defeated the enemy!" });
@@ -1011,13 +1024,21 @@ const Battle = () => {
               {/* Enemy Sprite */}
               {battleData.enemy.sprite && ENEMY_SPRITES[battleData.enemy.sprite] && (
                 <div className="flex justify-center">
-                  <div className="rounded-lg overflow-hidden bg-card/50 p-2">
+                  <div className="relative rounded-lg overflow-hidden bg-card/50 p-2">
                     <img
                       src={ENEMY_SPRITES[battleData.enemy.sprite]}
                       alt={battleData.enemy.name}
-                      className="pixel-icon"
+                      className={`pixel-icon transition-transform duration-300 ${enemyHit ? 'animate-bump-right' : ''}`}
                       style={{ width: 'auto', height: 'auto', maxWidth: '120px' }}
                     />
+                    {enemyHit && (
+                      <img
+                        src={explosionHit}
+                        alt="Hit"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                        style={{ width: '80px', height: '80px' }}
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -1181,13 +1202,21 @@ const Battle = () => {
               {/* Player Habbo Avatar */}
               {profile?.habbo_username && profile.habbo_profile_json && (
                 <div className="flex justify-center">
-                  <div className="rounded-lg overflow-hidden bg-card">
+                  <div className="relative rounded-lg overflow-hidden bg-card">
                     <img
                       src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=m&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`}
                       alt={profile.habbo_username}
-                      className="pixel-icon"
+                      className={`pixel-icon transition-transform duration-300 ${playerHit ? 'animate-bump-left' : ''}`}
                       style={{ width: 'auto', height: 'auto', maxWidth: '100px' }}
                     />
+                    {playerHit && (
+                      <img
+                        src={explosionHit}
+                        alt="Hit"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                        style={{ width: '80px', height: '80px' }}
+                      />
+                    )}
                   </div>
                 </div>
               )}

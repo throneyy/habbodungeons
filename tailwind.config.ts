@@ -83,10 +83,22 @@ export default {
             height: "0",
           },
         },
+        "bump-left": {
+          "0%": { transform: "translateX(0)" },
+          "50%": { transform: "translateX(-12px)" },
+          "100%": { transform: "translateX(0)" }
+        },
+        "bump-right": {
+          "0%": { transform: "translateX(0)" },
+          "50%": { transform: "translateX(12px)" },
+          "100%": { transform: "translateX(0)" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "bump-left": "bump-left 0.3s ease-out",
+        "bump-right": "bump-right 0.3s ease-out",
       },
     },
   },
