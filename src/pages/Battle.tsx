@@ -48,6 +48,22 @@ interface BattleLogEntry {
   type?: string;
 }
 
+interface PlayerStats {
+  userId: string;
+  username: string;
+  level: number;
+  current_hp: number;
+  max_hp: number;
+  current_mp: number;
+  max_mp: number;
+  atk: number;
+  def: number;
+  spd: number;
+  status_effects: string[];
+  current_xp?: number;
+  xp_to_next_level?: number;
+}
+
 interface BattleData {
   enemy: {
     name: string;
@@ -60,22 +76,14 @@ interface BattleData {
     spd: number;
     status_effects: string[];
   };
-  player: {
-    level: number;
-    current_hp: number;
-    max_hp: number;
-    current_mp: number;
-    max_mp: number;
-    atk: number;
-    def: number;
-    spd: number;
-    status_effects: string[];
-    current_xp?: number;
-    xp_to_next_level?: number;
-  };
+  // Convenience reference for the current player
+  player: PlayerStats;
+  // All participants in the battle (solo, party, or server-wide)
+  players?: PlayerStats[];
   room_description: string;
   battle_log: BattleLogEntry[];
   mode?: "story" | "battle";
+  isPartyBattle?: boolean;
 }
 
 interface Profile {
@@ -745,21 +753,48 @@ const Battle = () => {
 
   // Render story mode
   if (battleData.mode === "story") {
-    const partyMembers = [
-      {
-        userId: "player",
-        username: profile?.habbo_username || profile?.username.split("@")[0] || "Player",
-        habboAvatar: profile?.habbo_username && profile.habbo_profile_json
-          ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`
-          : undefined,
-        level: battleData.player.level,
-        currentHp: battleData.player.current_hp,
-        maxHp: battleData.player.max_hp,
-        currentMp: battleData.player.current_mp,
-        maxMp: battleData.player.max_mp,
-        statusEffects: battleData.player.status_effects,
-      },
-    ];
+    // Build party list from battle participants when available (server/party battle)
+    const storyPlayers = (battleData.players && battleData.players.length > 0)
+      ? battleData.players
+      : [
+          {
+            userId: currentUserId || "player",
+            username: (profile?.habbo_username || profile?.username?.split("@")[0] || "Player") as string,
+            level: battleData.player.level,
+            current_hp: battleData.player.current_hp,
+            max_hp: battleData.player.max_hp,
+            current_mp: battleData.player.current_mp,
+            max_mp: battleData.player.max_mp,
+            atk: battleData.player.atk,
+            def: battleData.player.def,
+            spd: battleData.player.spd,
+            status_effects: battleData.player.status_effects,
+            current_xp: battleData.player.current_xp,
+            xp_to_next_level: battleData.player.xp_to_next_level,
+          },
+        ];
+
+    const partyMembers = storyPlayers.map((p) => {
+      const playerUsername = (p as any).username || profile?.habbo_username || profile?.username?.split("@")[0] || "Player";
+      const isCurrentUser = (p as any).userId === currentUserId || (!battleData.players && (p as any).userId === "player");
+
+      // Only current user has a guaranteed avatar; others will still render nicely without one
+      const habboAvatar = isCurrentUser && profile?.habbo_username && profile.habbo_profile_json
+        ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`
+        : undefined;
+
+      return {
+        userId: (p as any).userId,
+        username: playerUsername,
+        habboAvatar,
+        level: (p as any).level,
+        currentHp: (p as any).current_hp,
+        maxHp: (p as any).max_hp,
+        currentMp: (p as any).current_mp,
+        maxMp: (p as any).max_mp,
+        statusEffects: (p as any).status_effects || [],
+      };
+    });
 
     return (
       <div className="min-h-screen bg-background relative">
