@@ -237,6 +237,63 @@ serve(async (req) => {
       throw updateDungeonError;
     }
 
+    // If this is a server battle, create battle states for all server members
+    if (serverId) {
+      console.log('Creating battle states for all server members');
+      
+      // Get all server members
+      const { data: serverPlayers, error: playersError } = await supabase
+        .from('server_players')
+        .select('user_id')
+        .eq('server_id', serverId);
+
+      if (playersError) {
+        console.error('Error fetching server players:', playersError);
+      } else if (serverPlayers && serverPlayers.length > 0) {
+        console.log('Found server players:', serverPlayers.length);
+        
+        // Create or update battle states for each player
+        for (const player of serverPlayers) {
+          if (player.user_id === user.id) continue; // Skip the host, already created
+          
+          // Check if battle state exists for this player
+          const { data: existingPlayerBattle } = await supabase
+            .from('battle_states')
+            .select('id')
+            .eq('dungeon_id', dungeonId)
+            .eq('server_id', serverId)
+            .eq('user_id', player.user_id)
+            .maybeSingle();
+
+          if (existingPlayerBattle) {
+            // Update existing battle
+            await supabase
+              .from('battle_states')
+              .update({
+                current_room_index: 0,
+                current_enemy_state: initialEnemyState,
+                battle_log: [dungeonJson.introText, modifiedRooms[0].description],
+                is_active: true,
+              })
+              .eq('id', existingPlayerBattle.id);
+            console.log('Updated battle state for player:', player.user_id);
+          } else {
+            // Create new battle state
+            await supabase.from('battle_states').insert({
+              user_id: player.user_id,
+              dungeon_id: dungeonId,
+              server_id: serverId,
+              current_room_index: 0,
+              current_enemy_state: initialEnemyState,
+              battle_log: [dungeonJson.introText, modifiedRooms[0].description],
+              is_active: true,
+            });
+            console.log('Created battle state for player:', player.user_id);
+          }
+        }
+      }
+    }
+
     console.log('Battle started successfully');
 
     return new Response(
