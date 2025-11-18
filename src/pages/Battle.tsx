@@ -990,7 +990,7 @@ const Battle = () => {
               {/* Enemy Sprite */}
               {battleData.enemy.sprite && ENEMY_SPRITES[battleData.enemy.sprite] && (
                 <div className="flex justify-center">
-                  <div className="border-4 border-destructive rounded-lg overflow-hidden bg-card/50 p-2">
+                  <div className="rounded-lg overflow-hidden bg-card/50 p-2">
                     <img
                       src={ENEMY_SPRITES[battleData.enemy.sprite]}
                       alt={battleData.enemy.name}
@@ -1160,7 +1160,7 @@ const Battle = () => {
               {/* Player Habbo Avatar */}
               {profile?.habbo_username && profile.habbo_profile_json && (
                 <div className="flex justify-center">
-                  <div className="border-4 border-habbo-dark rounded-lg overflow-hidden bg-card">
+                  <div className="rounded-lg overflow-hidden bg-card">
                     <img
                       src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=m`}
                       alt={profile.habbo_username}
