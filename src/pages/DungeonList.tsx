@@ -27,7 +27,6 @@ const DungeonList = () => {
   const { toast } = useToast();
   const [dungeons, setDungeons] = useState<ActiveDungeon[]>([]);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     loadActiveDungeons();
@@ -170,54 +169,19 @@ const DungeonList = () => {
     navigate(`/dungeon-lobby/${dungeonId}`);
   };
 
-  const handleStartNewDungeon = async () => {
-    setGenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-dungeon", {
-        body: {
-          theme: "Classic",
-          encounters: 3,
-          difficulty: "Normal",
-        },
-      });
-
-      if (error) throw error;
-
-      toast({ title: "Quest generated!" });
-      navigate(`/dungeon-lobby/${data.dungeonId}`);
-    } catch (error: any) {
-      toast({
-        title: "Failed to generate quest",
-        description: error.message,
-        variant: "destructive",
-      });
-      setGenerating(false);
-    }
-  };
-
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-4xl font-black text-primary">Active Dungeons</h1>
-          <div className="flex gap-3">
-            <Button
-              onClick={handleStartNewDungeon}
-              disabled={generating}
-              className="font-bold border-4 border-habbo-dark"
-            >
-              {generating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {generating ? "Generating..." : "Start New Dungeon"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/dashboard")}
-              className="font-bold border-4 border-habbo-dark"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/dashboard")}
+            className="font-bold border-4 border-habbo-dark"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
         </div>
 
         <HabboPanel title="Active Dungeon Runs">
