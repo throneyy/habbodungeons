@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
-import { PartyInvite } from "@/components/PartyInvite";
+import { ServerList } from "@/components/ServerList";
 import { PartyMembers } from "@/components/PartyMembers";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,19 +23,19 @@ const DungeonLobby = () => {
   const { toast } = useToast();
   const [dungeon, setDungeon] = useState<DungeonInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [partyId, setPartyId] = useState<string | null>(null);
-  const [isPartyLeader, setIsPartyLeader] = useState(false);
+  const [serverId, setServerId] = useState<string | null>(null);
+  const [isServerHost, setIsServerHost] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadDungeon();
   }, [id]);
 
-  // Separate useEffect for Realtime subscription after party status is known
+  // Separate useEffect for Realtime subscription after server status is known
   useEffect(() => {
     if (!currentUserId) return; // Wait until we have user ID
 
-    console.log('Setting up realtime subscription', { partyId, isPartyLeader, currentUserId });
+    console.log('Setting up realtime subscription', { serverId, isServerHost, currentUserId });
 
     // Subscribe to battle state changes for this dungeon
     const channel = supabase
@@ -50,12 +50,12 @@ const DungeonLobby = () => {
         },
         (payload) => {
           console.log('Battle started! Payload:', payload);
-          console.log('Current state:', { partyId, isPartyLeader });
+          console.log('Current state:', { serverId, isServerHost });
           
-          // If we're in a party and not the leader, follow the leader to battle
-          if (partyId && !isPartyLeader) {
-            console.log('Non-leader detected, navigating to battle');
-            toast({ title: "Party leader started the battle!" });
+          // If we're in a server and not the host, follow the host to battle
+          if (serverId && !isServerHost) {
+            console.log('Non-host detected, navigating to battle');
+            toast({ title: "Server host started the battle!" });
             setTimeout(() => navigate(`/battle/${id}`), 1000);
           }
         }
@@ -68,7 +68,7 @@ const DungeonLobby = () => {
       console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [id, partyId, isPartyLeader, currentUserId]);
+  }, [id, serverId, isServerHost, currentUserId]);
 
   const loadDungeon = async () => {
     try {
@@ -99,35 +99,36 @@ const DungeonLobby = () => {
       
       setDungeon(data);
 
-      // Check if user is in a party for this dungeon
-      const { data: partyData, error: partyError } = await supabase
-        .from("party_members")
-        .select("party_id, parties!inner(leader_id, dungeon_id)")
+      // Check if user is in a server for this dungeon
+      const { data: serverData, error: serverError } = await supabase
+        .from("server_players")
+        .select("server_id, servers!inner(host_user_id, dungeon_id)")
         .eq("user_id", user.id)
-        .eq("parties.dungeon_id", id)
+        .eq("servers.dungeon_id", id)
+        .eq("servers.is_active", true)
         .order("joined_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (partyError) {
-        console.error("Party lookup error:", partyError);
+      if (serverError) {
+        console.error("Server lookup error:", serverError);
       }
 
-      if (partyData) {
-        setPartyId(partyData.party_id);
-        setIsPartyLeader(partyData.parties.leader_id === user.id);
+      if (serverData) {
+        setServerId(serverData.server_id);
+        setIsServerHost(serverData.servers.host_user_id === user.id);
         
-        // Check if there's already an active battle for this party
+        // Check if there's already an active battle for this server
         const { data: activeBattle } = await supabase
           .from("battle_states")
           .select("id")
           .eq("dungeon_id", id)
-          .eq("party_id", partyData.party_id)
+          .eq("server_id", serverData.server_id)
           .eq("is_active", true)
           .maybeSingle();
 
         if (activeBattle) {
-          console.log('Active party battle found, navigating to battle');
+          console.log('Active server battle found, navigating to battle');
           toast({ title: "Joining active battle..." });
           navigate(`/battle/${id}`);
           return;
@@ -139,7 +140,7 @@ const DungeonLobby = () => {
           .select("id")
           .eq("dungeon_id", id)
           .eq("user_id", user.id)
-          .is("party_id", null)
+          .is("server_id", null)
           .eq("is_active", true)
           .maybeSingle();
 
@@ -164,8 +165,8 @@ const DungeonLobby = () => {
   const handleStartBattle = async (difficulty: "Normal" | "Hardcore") => {
     setLoading(true);
     try {
-      // Log current party state for debugging
-      console.log('Starting battle with state:', { partyId, isPartyLeader, dungeonId: id });
+      // Log current server state for debugging
+      console.log('Starting battle with state:', { serverId, isServerHost, dungeonId: id });
       
       const { data, error } = await supabase.functions.invoke("start-dungeon-battle", {
         body: {
@@ -234,17 +235,17 @@ const DungeonLobby = () => {
                     {dungeon.dungeon_json.questObjective}
                   </p>
                 )}
-                <div className="mt-6 space-y-4">
-                  {partyId && !isPartyLeader ? (
+                  <div className="mt-6 space-y-4">
+                  {serverId && !isServerHost ? (
                     <div className="p-4 bg-muted rounded-lg border-2 border-habbo-dark text-center">
                       <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="font-bold">Waiting for party leader to start...</p>
-                      <p className="text-sm text-muted-foreground mt-1">Only the party leader can choose the difficulty</p>
+                      <p className="font-bold">Waiting for server host to start...</p>
+                      <p className="text-sm text-muted-foreground mt-1">Only the server host can choose the difficulty</p>
                     </div>
                   ) : (
                     <>
                       <p className="font-bold text-sm text-muted-foreground">
-                        {partyId ? "Choose Difficulty for Your Party:" : "Choose Your Difficulty:"}
+                        {serverId ? "Choose Difficulty for Your Server:" : "Choose Your Difficulty:"}
                       </p>
                       <div className="flex gap-4">
                         <Button
@@ -272,47 +273,33 @@ const DungeonLobby = () => {
           </div>
         </HabboPanel>
 
-        {/* Party & Actions Panel */}
+        {/* Server List & Members Panel */}
         <div className="grid md:grid-cols-2 gap-6">
-          <PartyInvite 
-            dungeonId={id}
-            onPartyCreated={async (partyId) => {
-              console.log('Party created:', partyId);
-              setPartyId(partyId);
-              setIsPartyLeader(true);
-              // Reload to check for active battles
-              await loadDungeon();
-            }}
-            onPartyJoined={async (partyId, dungeonId, activeBattle) => {
-              console.log('Party joined:', { partyId, dungeonId, currentDungeon: id, activeBattle });
+          <ServerList 
+            dungeonId={id!}
+            onServerJoined={async (newServerId) => {
+              console.log('Server joined/created:', newServerId);
+              setServerId(newServerId);
               
-              // If there's an active battle, join it immediately
-              if (activeBattle) {
-                toast({
-                  title: "Joining battle in progress!",
-                  description: "Your party is already fighting...",
-                });
-                setTimeout(() => navigate(`/battle/${dungeonId || id}`), 1000);
-                return;
+              // Check if user is the host
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                const { data: server } = await supabase
+                  .from('servers')
+                  .select('host_user_id')
+                  .eq('id', newServerId)
+                  .single();
+                
+                if (server) {
+                  setIsServerHost(server.host_user_id === user.id);
+                }
               }
               
-              // If the party is for a different dungeon, navigate to it
-              if (dungeonId && dungeonId !== id) {
-                toast({
-                  title: "Redirecting to party dungeon...",
-                  description: "Taking you to your party's dungeon lobby",
-                });
-                setTimeout(() => navigate(`/dungeon-lobby/${dungeonId}`), 1000);
-              } else {
-                setPartyId(partyId);
-                setIsPartyLeader(false);
-                // Reload to check for active battles
-                await loadDungeon();
-              }
+              await loadDungeon(); // Reload to update server status
             }}
           />
           
-          {partyId && <PartyMembers partyId={partyId} />}
+          {serverId && <PartyMembers partyId={serverId} />}
         </div>
 
         {/* Return Button */}

@@ -27,55 +27,55 @@ serve(async (req) => {
     console.log('=== LOAD BATTLE DEBUG ===');
     console.log('Loading battle for user:', user.id, 'dungeonId:', battleId);
 
-    // Check if user is in a party for this dungeon
-    const { data: partyMember } = await supabase
-      .from('party_members')
-      .select('party_id, parties!inner(dungeon_id)')
+    // Check if user is in a server for this dungeon
+    const { data: serverMember } = await supabase
+      .from('server_players')
+      .select('server_id, servers!inner(dungeon_id)')
       .eq('user_id', user.id)
-      .eq('parties.dungeon_id', battleId)
+      .eq('servers.dungeon_id', battleId)
       .maybeSingle();
 
-    const partyId = partyMember?.party_id || null;
-    console.log('User party status:', { partyId, hasParty: !!partyId, partyMember });
+    const serverId = serverMember?.server_id || null;
+    console.log('User server status:', { serverId, hasServer: !!serverId, serverMember });
 
-    // Get battle state - with smart party/solo handling
+    // Get battle state - with smart server/solo handling
     let battle = null;
     
-    if (partyId) {
-      console.log('User is in party:', partyId, '- checking for battles');
+    if (serverId) {
+      console.log('User is in server:', serverId, '- checking for battles');
       
-      // First try to find a party battle
-      const { data: partyBattle } = await supabase
+      // First try to find a server battle
+      const { data: serverBattle } = await supabase
         .from('battle_states')
         .select('*, dungeons(*)')
         .eq('dungeon_id', battleId)
-        .eq('party_id', partyId)
+        .eq('server_id', serverId)
         .eq('is_active', true)
         .maybeSingle();
       
-      if (partyBattle) {
-        console.log('Found existing party battle:', partyBattle.id);
-        battle = partyBattle;
+      if (serverBattle) {
+        console.log('Found existing server battle:', serverBattle.id);
+        battle = serverBattle;
       } else {
-        // Check if there's a solo battle we can convert to party
+        // Check if there's a solo battle we can convert to server
         const { data: soloBattle } = await supabase
           .from('battle_states')
           .select('*, dungeons(*)')
           .eq('dungeon_id', battleId)
           .eq('user_id', user.id)
-          .is('party_id', null)
+          .is('server_id', null)
           .eq('is_active', true)
           .maybeSingle();
         
         if (soloBattle) {
-          console.log('Converting solo battle to party battle:', soloBattle.id);
-          // Update the battle to be a party battle
+          console.log('Converting solo battle to server battle:', soloBattle.id);
+          // Update the battle to be a server battle
           await supabase
             .from('battle_states')
-            .update({ party_id: partyId })
+            .update({ server_id: serverId })
             .eq('id', soloBattle.id);
           
-          battle = { ...soloBattle, party_id: partyId };
+          battle = { ...soloBattle, server_id: serverId };
         }
       }
     } else {
@@ -86,7 +86,7 @@ serve(async (req) => {
         .select('*, dungeons(*)')
         .eq('dungeon_id', battleId)
         .eq('user_id', user.id)
-        .is('party_id', null)
+        .is('server_id', null)
         .eq('is_active', true)
         .maybeSingle();
       
@@ -104,17 +104,17 @@ serve(async (req) => {
       throw new Error(`Battle not found for dungeon ${battleId}. Make sure to select a difficulty first.`);
     }
 
-    // Get player stats - if party battle, get all members; otherwise just current user
+    // Get player stats - if server battle, get all members; otherwise just current user
     let players = [];
     
-    if (battle.party_id) {
-      // Get all party members' stats
-      const { data: partyMembers } = await supabase
-        .from('party_members')
+    if (battle.server_id) {
+      // Get all server members' stats
+      const { data: serverPlayers } = await supabase
+        .from('server_players')
         .select('user_id')
-        .eq('party_id', battle.party_id);
+        .eq('server_id', battle.server_id);
       
-      const userIds = partyMembers?.map(m => m.user_id) || [];
+      const userIds = serverPlayers?.map(m => m.user_id) || [];
       
       const { data: allStats } = await supabase
         .from('player_stats')
@@ -234,7 +234,7 @@ serve(async (req) => {
       room_description: currentRoom.description || '',
       battle_log: battleLog,
       mode: mode,
-      isPartyBattle: !!battle.party_id,
+      isPartyBattle: !!battle.server_id,
     };
 
     return new Response(
