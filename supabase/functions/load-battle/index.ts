@@ -177,7 +177,15 @@ serve(async (req) => {
 
     // Validate dungeon data structure
     if (!battle.dungeons) {
-      throw new Error('Dungeon data not found for battle');
+      console.error('Dungeon missing for battle:', { battleId: battle.id, dungeonId: battle.dungeon_id, partyId: battle.party_id });
+      
+      // Clean up the invalid battle state
+      await supabase
+        .from('battle_states')
+        .update({ is_active: false })
+        .eq('id', battle.id);
+      
+      throw new Error('DUNGEON_DELETED:This dungeon no longer exists. The party leader may have deleted it.');
     }
     
     const dungeonData = battle.dungeons.dungeon_json;
