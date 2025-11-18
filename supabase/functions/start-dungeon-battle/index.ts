@@ -35,6 +35,9 @@ const ENEMY_SPRITE_MAP: Record<string, string> = {
   "fire drake": "fire-drake.png",
   "drake": "fire-drake.png",
   "dragon": "fire-drake.png",
+  "rat": "giant-rat.png",
+  "giant rat": "giant-rat.png",
+  "rat swarm": "giant-rat.png",
 };
 
 // Function to find matching sprite based on enemy name
