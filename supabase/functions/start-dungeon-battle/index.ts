@@ -42,7 +42,8 @@ serve(async (req) => {
     if (serverMemberships && serverMemberships.length > 0) {
       const membership = serverMemberships[0];
       serverId = membership.server_id;
-      isHost = membership.servers[0].host_user_id === user.id;
+      const serverData: any = membership.servers;
+      isHost = (Array.isArray(serverData) ? serverData[0]?.host_user_id : serverData?.host_user_id) === user.id;
     }
 
     console.log('User server status:', { serverId, hasServer: !!serverId, isHost });
