@@ -87,9 +87,9 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
         }
       }
 
-      // Create 5 Hardcore servers
-      if (hardcoreServers < 5) {
-        const serversToCreate = 5 - hardcoreServers;
+      // Create 4 Hardcore servers
+      if (hardcoreServers < 4) {
+        const serversToCreate = 4 - hardcoreServers;
         const startNum = hardcoreServers + 1;
         
         for (let i = 0; i < serversToCreate; i++) {
