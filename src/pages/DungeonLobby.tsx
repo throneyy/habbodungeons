@@ -52,12 +52,13 @@ const DungeonLobby = () => {
           console.log('Battle started! Payload:', payload);
           console.log('Current state:', { serverId, isServerHost });
           
-          // If we're in a server and not the host, follow the host to battle
-          if (serverId && !isServerHost) {
-            console.log('Non-host detected, navigating to battle');
-            toast({ title: "Server host started the battle!" });
-            setTimeout(() => navigate(`/battle/${id}`), 1000);
-          }
+          // All players navigate to battle when battle_state is created
+          console.log('Battle detected, navigating all players to battle');
+          toast({ 
+            title: "Battle ready!",
+            description: "Entering combat now..."
+          });
+          setTimeout(() => navigate(`/battle/${id}`), 500);
         }
       )
       .subscribe((status) => {
@@ -177,11 +178,13 @@ const DungeonLobby = () => {
 
       if (error) throw error;
 
-      // Wait a moment for the battle state to be created
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      toast({ title: `${difficulty} mode started!` });
-      navigate(`/battle/${id}`);
+      toast({ 
+        title: `${difficulty} mode battle starting!`,
+        description: "Preparing battle for all players..."
+      });
+      
+      // Don't navigate immediately - let realtime subscription handle it
+      // This ensures all server players navigate together
     } catch (error: any) {
       toast({
         title: "Failed to start battle",
