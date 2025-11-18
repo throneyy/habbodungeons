@@ -33,12 +33,22 @@ interface InventoryItem {
   item_type: string;
 }
 
+interface RecentDungeon {
+  id: string;
+  name: string;
+  difficulty: string;
+  created_at: string;
+  battle_id: string | null;
+  is_active: boolean | null;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [recentDungeons, setRecentDungeons] = useState<RecentDungeon[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,15 +63,42 @@ const Dashboard = () => {
         return;
       }
 
-      const [profileRes, statsRes, inventoryRes] = await Promise.all([
+      const [profileRes, statsRes, inventoryRes, dungeonsRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
         supabase.from("player_stats").select("*").eq("user_id", user.id).single(),
         supabase.from("inventory").select("*").eq("user_id", user.id),
+        supabase
+          .from("dungeons")
+          .select(`
+            id,
+            name,
+            difficulty,
+            created_at,
+            battle_states (
+              id,
+              is_active
+            )
+          `)
+          .eq("owner_user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(5),
       ]);
 
       if (profileRes.data) setProfile(profileRes.data);
       if (statsRes.data) setStats(statsRes.data);
       if (inventoryRes.data) setInventory(inventoryRes.data);
+      
+      if (dungeonsRes.data) {
+        const formatted = dungeonsRes.data.map(d => ({
+          id: d.id,
+          name: d.name,
+          difficulty: d.difficulty,
+          created_at: d.created_at,
+          battle_id: d.battle_states?.[0]?.id || null,
+          is_active: d.battle_states?.[0]?.is_active || null,
+        }));
+        setRecentDungeons(formatted);
+      }
     } catch (error: any) {
       toast({
         title: "Failed to load data",
@@ -226,6 +263,54 @@ const Dashboard = () => {
             )}
           </div>
         </HabboPanel>
+        )}
+
+        {/* Recent Quests */}
+        {profile?.habbo_username && recentDungeons.length > 0 && (
+          <HabboPanel title="Recent Quests">
+            <div className="space-y-3">
+              {recentDungeons.map((dungeon) => (
+                <div
+                  key={dungeon.id}
+                  className={`p-4 rounded-lg border-4 border-habbo-dark transition-all ${
+                    dungeon.is_active
+                      ? "bg-primary/10 cursor-pointer hover:bg-primary/20"
+                      : "bg-muted/50 opacity-60"
+                  }`}
+                  onClick={() => {
+                    if (dungeon.is_active) {
+                      navigate(`/battle/${dungeon.id}`);
+                    }
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-bold text-lg">{dungeon.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {dungeon.difficulty} • {new Date(dungeon.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      {dungeon.is_active ? (
+                        <span className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold">
+                          Active
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-xs font-bold">
+                          Completed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {dungeon.is_active && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Click to continue this quest
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </HabboPanel>
         )}
 
         {/* Actions */}
