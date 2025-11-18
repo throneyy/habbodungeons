@@ -183,6 +183,43 @@ const Battle = () => {
     };
   }, [id]);
 
+  // Load party/server members for story mode party panel
+  useEffect(() => {
+    if (!battleData || battleData.mode !== "story") return;
+
+    // For server-based runs, show all server players
+    if (serverId) {
+      loadServerMembers(serverId);
+      return;
+    }
+
+    // For party-based runs, show all party members
+    if (partyId) {
+      loadPartyMembers(partyId);
+      return;
+    }
+
+    // Solo story run fallback: just the current player
+    if (currentUserId && profile) {
+      setPartyMembers([
+        {
+          userId: currentUserId,
+          username: profile.habbo_username || profile.username?.split("@")[0] || "Player",
+          habboAvatar:
+            profile.habbo_username && profile.habbo_profile_json
+              ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`
+              : null,
+          level: battleData.player.level,
+          currentHp: battleData.player.current_hp,
+          maxHp: battleData.player.max_hp,
+          currentMp: battleData.player.current_mp,
+          maxMp: battleData.player.max_mp,
+          statusEffects: battleData.player.status_effects || [],
+        },
+      ]);
+    }
+  }, [battleData, serverId, partyId, currentUserId, profile]);
+
   const loadBattle = async () => {
     if (!id) {
       console.error("Cannot load battle: battleId is undefined");
@@ -427,6 +464,25 @@ const Battle = () => {
       setPartyMembers(data.members || []);
     } catch (error: any) {
       console.error("Failed to load party members:", error);
+    }
+  };
+
+  const loadServerMembers = async (sId: string | null) => {
+    // Skip if no server ID
+    if (!sId) {
+      console.log("No server ID, skipping server member load");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke("get-server-players", {
+        body: { serverId: sId },
+      });
+
+      if (error) throw error;
+      setPartyMembers(data.members || []);
+    } catch (error: any) {
+      console.error("Failed to load server members:", error);
     }
   };
 
