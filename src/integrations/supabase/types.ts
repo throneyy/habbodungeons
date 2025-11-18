@@ -333,7 +333,7 @@ export type Database = {
         Row: {
           created_at: string
           difficulty: string
-          dungeon_id: string
+          dungeon_id: string | null
           host_user_id: string
           id: string
           is_active: boolean
@@ -344,7 +344,7 @@ export type Database = {
         Insert: {
           created_at?: string
           difficulty?: string
-          dungeon_id: string
+          dungeon_id?: string | null
           host_user_id: string
           id?: string
           is_active?: boolean
@@ -355,7 +355,7 @@ export type Database = {
         Update: {
           created_at?: string
           difficulty?: string
-          dungeon_id?: string
+          dungeon_id?: string | null
           host_user_id?: string
           id?: string
           is_active?: boolean
