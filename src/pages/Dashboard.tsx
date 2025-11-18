@@ -78,31 +78,6 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const handleStartDungeon = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-dungeon", {
-        body: {
-          theme: "Classic",
-          encounters: 3,
-          difficulty: "Normal",
-        },
-      });
-
-      if (error) throw error;
-
-      toast({ title: "Quest generated!" });
-      navigate(`/dungeon-lobby/${data.dungeonId}`);
-    } catch (error: any) {
-      toast({
-        title: "Failed to generate quest",
-        description: error.message,
-        variant: "destructive",
-      });
-      setLoading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -231,26 +206,24 @@ const Dashboard = () => {
         )}
 
 
-        {/* Actions */}
+        {/* Dungeon Browser */}
         {profile?.habbo_username && (
-          <div className="flex gap-4 justify-center">
-            <Button
-              size="lg"
-              onClick={handleStartDungeon}
-              disabled={loading}
-              className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
-            >
-              {loading ? "Generating Quest..." : "Start a Dungeon"}
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/dungeon-list")}
-              className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
-            >
-              View Dungeon List
-            </Button>
-          </div>
+          <HabboPanel title="Find a Dungeon">
+            <div className="space-y-4">
+              <p className="text-center text-muted-foreground">
+                Browse active dungeon runs and join other players on their adventures
+              </p>
+              <div className="flex justify-center">
+                <Button
+                  size="lg"
+                  onClick={() => navigate("/dungeon-list")}
+                  className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
+                >
+                  Browse Active Dungeons
+                </Button>
+              </div>
+            </div>
+          </HabboPanel>
         )}
       </div>
     </AppLayout>
