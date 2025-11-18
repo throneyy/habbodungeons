@@ -110,8 +110,30 @@ const BOSS_ENEMY = {
   baseSpd: 8
 };
 
+const FIRE_DRAKE = {
+  name: "Fire Drake",
+  description: "A legendary dragon wreathed in flames, one of the most fearsome creatures in existence",
+  sprite: "fire-drake.png",
+  baseHp: 1000,
+  baseAtk: 25,
+  baseDef: 20,
+  baseSpd: 12
+};
+
 // Helper function to get random enemy
 function getRandomEnemy(playerLevel: number, isBoss: boolean = false) {
+  // 5% chance to encounter Fire Drake (only for regular enemies, not bosses)
+  if (!isBoss && Math.random() < 0.05) {
+    console.log('🐉 RARE ENCOUNTER: Fire Drake spawned!');
+    return {
+      ...FIRE_DRAKE,
+      hp: FIRE_DRAKE.baseHp,
+      atk: FIRE_DRAKE.baseAtk + Math.floor(playerLevel * 2),
+      def: FIRE_DRAKE.baseDef + Math.floor(playerLevel * 1.5),
+      spd: FIRE_DRAKE.baseSpd + Math.floor(playerLevel * 1)
+    };
+  }
+  
   if (isBoss) {
     return {
       ...BOSS_ENEMY,
