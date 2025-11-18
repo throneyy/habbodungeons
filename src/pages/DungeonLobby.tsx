@@ -240,72 +240,66 @@ const DungeonLobby = () => {
                     <span className="text-muted-foreground">Objective:</span> {dungeon.dungeon_json.questObjective}
                   </p>
                 )}
+                {!serverId && (
                   <div className="mt-6 space-y-4">
-                  {serverId && !isServerHost ? (
-                    <div className="p-4 bg-muted rounded-lg border-2 border-habbo-dark text-center">
-                      <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                      <p className="font-bold">Waiting for server host to start...</p>
-                      <p className="text-sm text-muted-foreground mt-1">Only the server host can choose the difficulty</p>
+                    <p className="font-bold text-sm text-muted-foreground">
+                      Choose Your Difficulty:
+                    </p>
+                    <div className="flex gap-4">
+                      <Button
+                        onClick={() => handleStartBattle("Normal")}
+                        disabled={loading}
+                        className="font-bold border-2 border-primary bg-primary/20 hover:bg-primary/30"
+                      >
+                        <Swords className="w-4 h-4 mr-2" />
+                        Normal
+                      </Button>
+                      <Button
+                        onClick={() => handleStartBattle("Hardcore")}
+                        disabled={loading}
+                        className="font-bold border-2 border-destructive bg-destructive/20 hover:bg-destructive/30"
+                      >
+                        <Swords className="w-4 h-4 mr-2" />
+                        Hardcore
+                      </Button>
                     </div>
-                  ) : (
-                    <>
-                      <p className="font-bold text-sm text-muted-foreground">
-                        {serverId ? "Choose Difficulty for Your Server:" : "Choose Your Difficulty:"}
-                      </p>
-                      <div className="flex gap-4">
-                        <Button
-                          onClick={() => handleStartBattle("Normal")}
-                          disabled={loading}
-                          className="font-bold border-2 border-primary bg-primary/20 hover:bg-primary/30"
-                        >
-                          <Swords className="w-4 h-4 mr-2" />
-                          Normal
-                        </Button>
-                        <Button
-                          onClick={() => handleStartBattle("Hardcore")}
-                          disabled={loading}
-                          className="font-bold border-2 border-destructive bg-destructive/20 hover:bg-destructive/30"
-                        >
-                          <Swords className="w-4 h-4 mr-2" />
-                          Hardcore
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </HabboPanel>
 
         {/* Server List & Members Panel */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <ServerList 
-            dungeonId={id!}
-            onServerJoined={async (newServerId) => {
-              console.log('Server joined/created:', newServerId);
-              setServerId(newServerId);
-              
-              // Check if user is the host
-              const { data: { user } } = await supabase.auth.getUser();
-              if (user) {
-                const { data: server } = await supabase
-                  .from('servers')
-                  .select('host_user_id')
-                  .eq('id', newServerId)
-                  .single();
+        {!serverId ? (
+          <div className="grid md:grid-cols-2 gap-6">
+            <ServerList 
+              dungeonId={id!}
+              onServerJoined={async (newServerId) => {
+                console.log('Server joined/created:', newServerId);
+                setServerId(newServerId);
                 
-                if (server) {
-                  setIsServerHost(server.host_user_id === user.id);
+                // Check if user is the host
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                  const { data: server } = await supabase
+                    .from('servers')
+                    .select('host_user_id')
+                    .eq('id', newServerId)
+                    .single();
+                  
+                  if (server) {
+                    setIsServerHost(server.host_user_id === user.id);
+                  }
                 }
-              }
-              
-              await loadDungeon(); // Reload to update server status
-            }}
-          />
-          
-          {serverId && <PartyMembers partyId={serverId} />}
-        </div>
+                
+                await loadDungeon(); // Reload to update server status
+              }}
+            />
+          </div>
+        ) : (
+          <PartyMembers partyId={serverId} />
+        )}
 
         {/* Return Button */}
         <div className="flex justify-center">
