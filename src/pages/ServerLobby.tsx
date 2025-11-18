@@ -174,20 +174,31 @@ const ServerLobby = () => {
   const handleStartAdventure = async () => {
     setStarting(true);
     try {
+      console.log('🎯 Starting adventure for server:', serverId);
       const { data, error } = await supabase.functions.invoke("start-server-dungeon", {
         body: { serverId },
       });
 
       if (error) throw error;
 
+      console.log('✅ Edge function returned:', data);
+
       toast({ 
         title: "Adventure starting!",
         description: "Loading dungeon for all players..."
       });
       
-      // Don't navigate immediately - let realtime subscription handle it
-      // This ensures both host and non-host navigate at the exact same time
+      // Check for dungeon immediately as fallback in case realtime is slow
+      await checkForDungeon();
+      
+      // If still not navigated after 2 seconds, force check again
+      setTimeout(async () => {
+        console.log('⏰ Timeout fallback - checking for dungeon');
+        await checkForDungeon();
+        setStarting(false); // Reset loading state even if navigation didn't happen
+      }, 2000);
     } catch (error: any) {
+      console.error('❌ Failed to start adventure:', error);
       toast({
         title: "Failed to start adventure",
         description: error.message,
