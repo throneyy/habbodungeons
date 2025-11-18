@@ -179,7 +179,41 @@ const Battle = () => {
     }
     
     try {
-      console.log("Loading battle for battleId:", id);
+      // Pre-check: Verify battle exists and is active before calling edge function
+      console.log("Pre-checking battle status for dungeon:", id);
+      const { data: battleCheck, error: checkError } = await supabase
+        .from('battle_states')
+        .select('is_active')
+        .eq('dungeon_id', id)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error("Error checking battle status:", checkError);
+      }
+      
+      if (!battleCheck) {
+        console.log("No battle found for this dungeon - redirecting to dashboard");
+        toast({
+          title: "Battle Not Started",
+          description: "This dungeon hasn't been started yet. Select a difficulty from the lobby.",
+          variant: "destructive",
+        });
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+      
+      if (!battleCheck.is_active) {
+        console.log("Battle is completed - redirecting to dashboard");
+        toast({
+          title: "Quest Completed",
+          description: "This quest has already been completed.",
+        });
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // Battle is active, proceed with loading
+      console.log("Battle is active, loading data for battleId:", id);
       const { data, error } = await supabase.functions.invoke("load-battle", {
         body: { battleId: id },
       });
