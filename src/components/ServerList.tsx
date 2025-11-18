@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { HabboPanel } from "./HabboPanel";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Crown, Loader2 } from "lucide-react";
+import { Users, Loader2 } from "lucide-react";
 
 interface Server {
   id: string;
@@ -23,12 +22,11 @@ interface ServerListProps {
 export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
   const [servers, setServers] = useState<Server[]>([]);
   const [loading, setLoading] = useState(true);
-  const [serverName, setServerName] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [initializing, setInitializing] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadServers();
+    initializeServers();
     
     // Subscribe to server changes
     const channel = supabase
@@ -54,6 +52,44 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
       supabase.removeChannel(channel);
     };
   }, [dungeonId]);
+
+  const initializeServers = async () => {
+    setLoading(true);
+    setInitializing(true);
+    
+    try {
+      // Check if servers exist
+      const { data: existingServers } = await supabase
+        .from('servers')
+        .select('id')
+        .eq('dungeon_id', dungeonId)
+        .eq('is_active', true);
+
+      // If we don't have 10 servers, create them
+      if (!existingServers || existingServers.length < 10) {
+        const serversToCreate = 10 - (existingServers?.length || 0);
+        const startNum = (existingServers?.length || 0) + 1;
+        
+        for (let i = 0; i < serversToCreate; i++) {
+          await supabase.functions.invoke("create-server", {
+            body: { 
+              dungeonId, 
+              serverName: `Server ${startNum + i}`,
+              maxPlayers: 6,
+              isSystemServer: true
+            },
+          });
+        }
+      }
+      
+      await loadServers();
+    } catch (error: any) {
+      console.error('Failed to initialize servers:', error);
+    } finally {
+      setInitializing(false);
+      setLoading(false);
+    }
+  };
 
   const loadServers = async () => {
     try {
@@ -97,41 +133,6 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
     }
   };
 
-  const createServer = async () => {
-    if (!serverName.trim()) {
-      toast({
-        title: "Run name required",
-        description: "Please enter a name for your run",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setCreating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-server", {
-        body: { dungeonId, serverName: serverName.trim() },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Dungeon Run Started!",
-        description: "Your run is now visible to other players",
-      });
-
-      setServerName("");
-      onServerJoined(data.serverId);
-    } catch (error: any) {
-      toast({
-        title: "Failed to start run",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setCreating(false);
-    }
-  };
 
   const joinServer = async (serverId: string) => {
     try {
@@ -156,41 +157,15 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
   };
 
   return (
-    <HabboPanel title="Dungeon Runs">
+    <HabboPanel title="Join a Server">
       <div className="space-y-4">
-        {/* Create Run Section */}
         <div className="space-y-2">
-          <h3 className="font-bold text-sm">Start a Run</h3>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Run name..."
-              value={serverName}
-              onChange={(e) => setServerName(e.target.value)}
-              maxLength={30}
-              onKeyDown={(e) => e.key === 'Enter' && createServer()}
-            />
-            <Button
-              onClick={createServer}
-              disabled={creating || !serverName.trim()}
-            >
-              {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Start"}
-            </Button>
-          </div>
-        </div>
-
-        {/* Available Runs */}
-        <div className="space-y-2">
-          <h3 className="font-bold text-sm">Available Runs</h3>
+          <h3 className="font-bold text-sm">Available Servers (6 Players Max)</h3>
           
-          {loading ? (
+          {loading || initializing ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin" />
-            </div>
-          ) : servers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No runs available</p>
-              <p className="text-xs">Start a run to get going!</p>
+              {initializing && <p className="ml-2 text-sm">Setting up servers...</p>}
             </div>
           ) : (
             <div className="space-y-2">
@@ -200,12 +175,8 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
                   className="flex items-center justify-between p-3 bg-muted rounded border-2 border-habbo-dark"
                 >
                   <div className="flex-1">
-                    <div className="font-bold flex items-center gap-2">
+                    <div className="font-bold">
                       {server.server_name}
-                      <Crown className="w-3 h-3 text-yellow-500" />
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Host: {server.host_username}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
