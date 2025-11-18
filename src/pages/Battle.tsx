@@ -197,11 +197,25 @@ const Battle = () => {
         }
       }
     } catch (error: any) {
-      toast({
-        title: "Failed to load battle",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Battle load error:", error);
+      
+      // If battle not found, redirect to dashboard
+      if (error.message?.includes("Battle not found") || error.message?.includes("Make sure to select a difficulty")) {
+        toast({
+          title: "Battle Not Found",
+          description: "This battle doesn't exist or hasn't been started yet. Create a new dungeon from the dashboard.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 2000);
+      } else {
+        toast({
+          title: "Failed to load battle",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   };
 
