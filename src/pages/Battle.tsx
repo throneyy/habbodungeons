@@ -1177,7 +1177,7 @@ const Battle = () => {
               {/* Enemy Sprite */}
               {battleData.enemy.sprite && ENEMY_SPRITES[battleData.enemy.sprite] && (
                 <div className="flex justify-center">
-                  <div className="relative rounded-lg overflow-visible bg-card/50 p-2">
+                  <div className="relative overflow-visible p-2">
                     <img
                       src={ENEMY_SPRITES[battleData.enemy.sprite]}
                       alt={battleData.enemy.name}
