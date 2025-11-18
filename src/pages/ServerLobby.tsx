@@ -84,6 +84,12 @@ const ServerLobby = () => {
       .single();
 
     if (serverData?.dungeon_id) {
+      // Show notification for non-host players
+      toast({ 
+        title: "Adventure starting!",
+        description: "The host has started the adventure. Loading..."
+      });
+      
       // Navigate to dungeon lobby
       navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
     }
@@ -157,10 +163,10 @@ const ServerLobby = () => {
 
       if (error) throw error;
 
-      toast({ title: "Adventure starting! Loading for all players..." });
+      toast({ title: "Adventure starting!" });
       
-      // Don't navigate immediately - let the real-time subscription handle it
-      // This ensures both host and non-host navigate at the same time
+      // Host navigates immediately with the dungeon ID from response
+      navigate(`/dungeon-lobby/${data.dungeonId}`);
     } catch (error: any) {
       toast({
         title: "Failed to start adventure",
