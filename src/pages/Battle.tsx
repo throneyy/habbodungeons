@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import explosionHit from "@/assets/explosion-hit.gif";
+import hitBump from "@/assets/hit-bump.gif";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import skeleton from "@/assets/skeleton.png";
 import iceTiger from "@/assets/ice-tiger.gif";
@@ -1117,7 +1118,7 @@ const Battle = () => {
               {/* Enemy Sprite */}
               {battleData.enemy.sprite && ENEMY_SPRITES[battleData.enemy.sprite] && (
                 <div className="flex justify-center">
-                  <div className="relative rounded-lg overflow-hidden bg-card/50 p-2">
+                  <div className="relative rounded-lg overflow-visible bg-card/50 p-2">
                     <img
                       src={ENEMY_SPRITES[battleData.enemy.sprite]}
                       alt={battleData.enemy.name}
@@ -1125,12 +1126,20 @@ const Battle = () => {
                       style={{ width: 'auto', height: 'auto', maxWidth: '120px' }}
                     />
                     {enemyHit && (
-                      <img
-                        src={explosionHit}
-                        alt="Hit"
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-                        style={{ width: '80px', height: '80px' }}
-                      />
+                      <>
+                        <img
+                          src={explosionHit}
+                          alt="Hit"
+                          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+                          style={{ width: '80px', height: '80px' }}
+                        />
+                        <img
+                          src={hitBump}
+                          alt="Bump"
+                          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 pointer-events-none z-10 animate-fade-in"
+                          style={{ width: '60px', height: 'auto' }}
+                        />
+                      </>
                     )}
                   </div>
                 </div>
@@ -1295,7 +1304,7 @@ const Battle = () => {
               {/* Player Habbo Avatar */}
               {profile?.habbo_username && profile.habbo_profile_json && (
                 <div className="flex justify-center">
-                  <div className="relative rounded-lg overflow-hidden bg-card">
+                  <div className="relative rounded-lg overflow-visible bg-card">
                     <img
                       src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=m&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`}
                       alt={profile.habbo_username}
@@ -1303,12 +1312,20 @@ const Battle = () => {
                       style={{ width: 'auto', height: 'auto', maxWidth: '100px' }}
                     />
                     {playerHit && (
-                      <img
-                        src={explosionHit}
-                        alt="Hit"
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-                        style={{ width: '80px', height: '80px' }}
-                      />
+                      <>
+                        <img
+                          src={explosionHit}
+                          alt="Hit"
+                          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
+                          style={{ width: '80px', height: '80px' }}
+                        />
+                        <img
+                          src={hitBump}
+                          alt="Bump"
+                          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 pointer-events-none z-10 animate-fade-in"
+                          style={{ width: '60px', height: 'auto' }}
+                        />
+                      </>
                     )}
                   </div>
                 </div>
