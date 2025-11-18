@@ -147,7 +147,7 @@ serve(async (req) => {
   }
 
   try {
-    const { theme, encounters } = await req.json();
+    const { theme, encounters, difficulty } = await req.json();
     const authHeader = req.headers.get('Authorization')!;
     
     const supabase = createClient(
@@ -187,15 +187,15 @@ CRITICAL: You MUST write EVERYTHING in English only. Do not use Arabic, Chinese,
           },
           {
             role: 'user',
-            content: `Generate a ${theme} dungeon story with ${encounters} rooms for level ${playerLevel} player. 
+            content: `Generate a ${theme} ${difficulty} difficulty dungeon story with ${encounters} rooms for level ${playerLevel} player. 
             
             Create:
-            - An epic dungeon name
+            - An epic dungeon name that hints at the ${difficulty} challenge and ${theme} theme
             - A clear quest objective
             - A brief intro (2-3 sentences)
             - Brief descriptions for ${encounters} rooms (2 sentences each)
             
-            First room should be exploration/story. Last room is the BOSS room. Make it dramatic.`
+            First room should be exploration/story. Last room is the BOSS room. Make it dramatic and match the ${difficulty} difficulty level.`
           }
         ],
         tools: [
@@ -281,14 +281,14 @@ CRITICAL: You MUST write EVERYTHING in English only. Do not use Arabic, Chinese,
       rooms
     };
 
-    // Save dungeon with base stats (no difficulty applied yet)
+    // Save dungeon with difficulty setting
     const { data: dungeon, error } = await supabase
       .from('dungeons')
       .insert({
         owner_user_id: user.id,
         name: dungeonJson.dungeonName,
         theme,
-        difficulty: 'Normal', // Default, will be applied when starting
+        difficulty: difficulty || 'Normal',
         dungeon_json: dungeonJson,
       })
       .select()
