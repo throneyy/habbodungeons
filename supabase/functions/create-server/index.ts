@@ -22,7 +22,7 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    const { dungeonId, serverName } = await req.json();
+    const { dungeonId, serverName, maxPlayers = 6, isSystemServer = false } = await req.json();
 
     console.log("Creating server for user:", user.id, "dungeon:", dungeonId);
 
@@ -37,19 +37,21 @@ serve(async (req) => {
       throw new Error("Dungeon not found");
     }
 
-    // Delete any existing servers for this user in this dungeon
-    const { data: oldServers } = await supabase
-      .from('servers')
-      .select('id')
-      .eq('host_user_id', user.id)
-      .eq('dungeon_id', dungeonId);
-    
-    if (oldServers && oldServers.length > 0) {
-      console.log("Deleting old servers for user:", user.id);
-      await supabase
+    // Only delete existing servers if this is not a system server
+    if (!isSystemServer) {
+      const { data: oldServers } = await supabase
         .from('servers')
-        .delete()
-        .in('id', oldServers.map(s => s.id));
+        .select('id')
+        .eq('host_user_id', user.id)
+        .eq('dungeon_id', dungeonId);
+      
+      if (oldServers && oldServers.length > 0) {
+        console.log("Deleting old servers for user:", user.id);
+        await supabase
+          .from('servers')
+          .delete()
+          .in('id', oldServers.map(s => s.id));
+      }
     }
 
     // Create new server
@@ -59,7 +61,7 @@ serve(async (req) => {
         host_user_id: user.id,
         server_name: serverName,
         dungeon_id: dungeonId,
-        max_players: 4,
+        max_players: maxPlayers,
         is_active: true,
       })
       .select()
@@ -67,15 +69,17 @@ serve(async (req) => {
 
     if (serverError) throw serverError;
 
-    // Add host as first player
-    const { error: playerError } = await supabase
-      .from('server_players')
-      .insert({
-        server_id: server.id,
-        user_id: user.id,
-      });
+    // Only add host as player if this is not a system server
+    if (!isSystemServer) {
+      const { error: playerError } = await supabase
+        .from('server_players')
+        .insert({
+          server_id: server.id,
+          user_id: user.id,
+        });
 
-    if (playerError) throw playerError;
+      if (playerError) throw playerError;
+    }
 
     console.log("Server created successfully:", server.id);
 
