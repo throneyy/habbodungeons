@@ -153,6 +153,25 @@ serve(async (req) => {
           xp_to_next_level: stats.xp_to_next_level || 100,
         };
       });
+
+      // Initialize turn order based on speed (highest speed goes first)
+      const turnOrder = players
+        .sort((a, b) => b.spd - a.spd)
+        .map(p => p.userId);
+      
+      // Set initial turn to the fastest player if not already set
+      if (!battle.current_turn_user_id && turnOrder.length > 0) {
+        await supabaseAdmin
+          .from('battle_states')
+          .update({
+            current_turn_user_id: turnOrder[0],
+            turn_order: turnOrder
+          })
+          .eq('id', battle.id);
+        
+        battle.current_turn_user_id = turnOrder[0];
+        battle.turn_order = turnOrder;
+      }
     } else {
       // Solo battle - just get current user stats
       const { data: stats } = await supabase
@@ -248,6 +267,8 @@ serve(async (req) => {
       battle_log: battleLog,
       mode: mode,
       isPartyBattle: !!battle.server_id,
+      currentTurnUserId: battle.current_turn_user_id,
+      turnOrder: battle.turn_order || []
     };
 
     return new Response(

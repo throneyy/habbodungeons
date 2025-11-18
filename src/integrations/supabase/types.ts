@@ -21,11 +21,13 @@ export type Database = {
           current_enemy_state: Json
           current_room_index: number
           current_story_node: Json | null
+          current_turn_user_id: string | null
           dungeon_id: string
           id: string
           is_active: boolean
           party_id: string | null
           server_id: string | null
+          turn_order: Json | null
           updated_at: string
           user_id: string
         }
@@ -35,11 +37,13 @@ export type Database = {
           current_enemy_state: Json
           current_room_index?: number
           current_story_node?: Json | null
+          current_turn_user_id?: string | null
           dungeon_id: string
           id?: string
           is_active?: boolean
           party_id?: string | null
           server_id?: string | null
+          turn_order?: Json | null
           updated_at?: string
           user_id: string
         }
@@ -49,11 +53,13 @@ export type Database = {
           current_enemy_state?: Json
           current_room_index?: number
           current_story_node?: Json | null
+          current_turn_user_id?: string | null
           dungeon_id?: string
           id?: string
           is_active?: boolean
           party_id?: string | null
           server_id?: string | null
+          turn_order?: Json | null
           updated_at?: string
           user_id?: string
         }
