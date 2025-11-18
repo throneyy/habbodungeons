@@ -12,6 +12,28 @@ import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
+import skeleton from "@/assets/skeleton.png";
+import iceTiger from "@/assets/ice-tiger.gif";
+import iceElemental from "@/assets/ice-elemental.png";
+import iceGuardian from "@/assets/ice-guardian.png";
+import frostWolf from "@/assets/frost-wolf.png";
+import glacialImp from "@/assets/glacial-imp.png";
+import frozenGoblin from "@/assets/frozen-goblin.png";
+import frostMutant from "@/assets/frost-mutant.png";
+import frostWraith from "@/assets/frost-wraith.png";
+
+// Enemy sprite mapping
+const ENEMY_SPRITES: Record<string, string> = {
+  "skeleton.png": skeleton,
+  "ice-tiger.gif": iceTiger,
+  "ice-elemental.png": iceElemental,
+  "ice-guardian.png": iceGuardian,
+  "frost-wolf.png": frostWolf,
+  "glacial-imp.png": glacialImp,
+  "frozen-goblin.png": frozenGoblin,
+  "frost-mutant.png": frostMutant,
+  "frost-wraith.png": frostWraith,
+};
 
 interface BattleLogEntry {
   user_id: string;
@@ -23,6 +45,7 @@ interface BattleData {
   enemy: {
     name: string;
     description: string;
+    sprite?: string;
     current_hp: number;
     max_hp: number;
     atk: number;
@@ -960,6 +983,19 @@ const Battle = () => {
           {battleData.mode === "battle" && battleData.enemy.current_hp > 0 && (
             <HabboPanel title="⚔️ NOW FIGHTING" className="md:col-span-1">
             <div className="space-y-4">
+              {/* Enemy Sprite */}
+              {battleData.enemy.sprite && ENEMY_SPRITES[battleData.enemy.sprite] && (
+                <div className="flex justify-center">
+                  <div className="border-4 border-destructive rounded-lg overflow-hidden bg-card/50 p-2">
+                    <img
+                      src={ENEMY_SPRITES[battleData.enemy.sprite]}
+                      alt={battleData.enemy.name}
+                      className="pixel-icon"
+                      style={{ width: 'auto', height: 'auto', maxWidth: '120px' }}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="p-3 bg-destructive/10 border-2 border-destructive rounded-lg">
                 <p className="text-xs font-bold text-destructive mb-1">CURRENT ENEMY</p>
                 <h3 className="text-2xl font-black text-destructive">{battleData.enemy.name}</h3>
