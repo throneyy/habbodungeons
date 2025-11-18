@@ -62,21 +62,30 @@ const ServerLobby = () => {
         loadServerData();
       })
       .on('postgres_changes', {
-        event: '*',
+        event: 'UPDATE',
         schema: 'public',
         table: 'servers',
         filter: `id=eq.${serverId}`
       }, (payload) => {
-        console.log('🔥 SERVER CHANGE DETECTED:', payload);
+        console.log('🔥 SERVER UPDATE DETECTED:', payload);
+        console.log('🔍 New dungeon_id:', payload.new?.dungeon_id);
         checkForDungeon();
       })
       .subscribe((status) => {
-        console.log('📡 Subscription status:', status);
+        console.log('📡 ServerLobby subscription status:', status);
       });
+
+    // Fallback: Poll for dungeon assignment every 2 seconds
+    // This ensures navigation happens even if real-time fails
+    const pollInterval = setInterval(async () => {
+      console.log('🔄 Polling for dungeon assignment...');
+      await checkForDungeon();
+    }, 2000);
 
     return () => {
       console.log('Cleaning up server subscription');
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, [serverId]);
 
