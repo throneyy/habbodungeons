@@ -24,6 +24,14 @@ serve(async (req) => {
 
     const { partyId } = await req.json();
 
+    // Validate party ID
+    if (!partyId) {
+      return new Response(
+        JSON.stringify({ error: "Party ID is required" }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     console.log("Fetching party members for party:", partyId);
 
     // Get party with all members
