@@ -553,7 +553,7 @@ const Battle = () => {
         userId: "player",
         username: profile?.habbo_username || profile?.username.split("@")[0] || "Player",
         habboAvatar: profile?.habbo_username && profile.habbo_profile_json
-          ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=s`
+          ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`
           : undefined,
         level: battleData.player.level,
         currentHp: battleData.player.current_hp,
@@ -1162,7 +1162,7 @@ const Battle = () => {
                 <div className="flex justify-center">
                   <div className="rounded-lg overflow-hidden bg-card">
                     <img
-                      src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&direction=2&head_direction=3&action=wav&gesture=sml&size=m`}
+                      src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=m&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`}
                       alt={profile.habbo_username}
                       className="pixel-icon"
                       style={{ width: 'auto', height: 'auto', maxWidth: '100px' }}
