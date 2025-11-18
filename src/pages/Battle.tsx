@@ -482,9 +482,8 @@ const Battle = () => {
         // Reload inventory in case items were consumed
         loadInventory();
         
-        // Trigger hit animations based on damage dealt
+        // Trigger hit animations SEQUENTIALLY - player attacks first, then enemy counterattacks
         console.log("Damage dealt - Player:", data.playerDamageDealt, "Enemy:", data.enemyDamageDealt);
-        console.log("Current state - enemyHit:", enemyHit, "playerHit:", playerHit);
         
         if (data.playerDamageDealt && data.playerDamageDealt > 0) {
           console.log("Setting enemyHit to TRUE - Player dealt", data.playerDamageDealt, "damage");
@@ -494,13 +493,17 @@ const Battle = () => {
             setEnemyHit(false);
           }, 600);
         }
+        
+        // Enemy counterattacks AFTER player's attack animation (1 second delay)
         if (data.enemyDamageDealt && data.enemyDamageDealt > 0) {
-          console.log("Setting playerHit to TRUE - Enemy dealt", data.enemyDamageDealt, "damage");
-          setPlayerHit(true);
           setTimeout(() => {
-            console.log("Resetting playerHit to FALSE");
-            setPlayerHit(false);
-          }, 600);
+            console.log("Setting playerHit to TRUE - Enemy dealt", data.enemyDamageDealt, "damage");
+            setPlayerHit(true);
+            setTimeout(() => {
+              console.log("Resetting playerHit to FALSE");
+              setPlayerHit(false);
+            }, 600);
+          }, 1000);
         }
         
         if (data.victory) {
