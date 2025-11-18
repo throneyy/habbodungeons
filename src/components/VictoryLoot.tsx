@@ -24,7 +24,7 @@ export const VictoryLoot = ({ isOpen, onClose, lootItems, xpGained }: VictoryLoo
         <DialogHeader>
           <DialogTitle className="text-center text-3xl font-black flex items-center justify-center gap-3">
             Victory!
-            <img src={victoryTrophy} alt="Victory Trophy" className="w-12 h-12 pixelated inline-block" />
+            <img src={victoryTrophy} alt="Victory Trophy" className="pixelated inline-block" style={{ width: 'auto', height: 'auto' }} />
           </DialogTitle>
         </DialogHeader>
 
