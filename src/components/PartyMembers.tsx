@@ -46,7 +46,12 @@ export const PartyMembers = ({ partyId, serverId }: PartyMembersProps) => {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      console.log('PartyMembers: No ID provided, skipping setup');
+      return;
+    }
+    
+    console.log(`PartyMembers: Setting up for ${isServerMode ? 'server' : 'party'} with ID:`, id);
     
     loadMembers();
 
@@ -54,8 +59,13 @@ export const PartyMembers = ({ partyId, serverId }: PartyMembersProps) => {
     const table = isServerMode ? 'server_players' : 'party_members';
     const filterKey = isServerMode ? 'server_id' : 'party_id';
     
+    // Use unique channel name per subscription to avoid conflicts
+    const channelName = `${table}-${id}-${Date.now()}`;
+    
+    console.log(`Setting up realtime subscription on channel: ${channelName}`);
+    
     const channel = supabase
-      .channel(`${table}-changes`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -64,14 +74,17 @@ export const PartyMembers = ({ partyId, serverId }: PartyMembersProps) => {
           table,
           filter: `${filterKey}=eq.${id}`
         },
-        () => {
-          console.log(`${table} changed, reloading...`);
+        (payload) => {
+          console.log(`🔥 ${table} change detected:`, payload);
           loadMembers();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`📡 Subscription status for ${channelName}:`, status);
+      });
 
     return () => {
+      console.log(`Cleaning up subscription: ${channelName}`);
       supabase.removeChannel(channel);
     };
   }, [id, isServerMode]);
