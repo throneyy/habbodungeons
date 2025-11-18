@@ -26,6 +26,14 @@ serve(async (req) => {
 
     console.log("User attempting to join party:", user.id, "code:", inviteCode);
 
+    // Leave any existing parties first (except the one we're trying to join)
+    const { data: existingMemberships } = await supabase
+      .from('party_members')
+      .select('id, party_id')
+      .eq('user_id', user.id);
+
+    console.log("Found existing party memberships:", existingMemberships?.length || 0);
+
     // Find party by invite code
     const { data: party, error: partyError } = await supabase
       .from('parties')
@@ -41,6 +49,19 @@ serve(async (req) => {
     const isMember = party.party_members.some((m: any) => m.user_id === user.id);
     if (isMember) {
       console.log("User already in party");
+      
+      // Clean up other party memberships
+      if (existingMemberships && existingMemberships.length > 0) {
+        const otherMemberships = existingMemberships.filter(m => m.party_id !== party.id);
+        if (otherMemberships.length > 0) {
+          console.log("Removing", otherMemberships.length, "old party memberships");
+          await supabase
+            .from('party_members')
+            .delete()
+            .in('id', otherMemberships.map(m => m.id));
+        }
+      }
+      
       return new Response(
         JSON.stringify({ party, message: "You're already in this party!" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -50,6 +71,15 @@ serve(async (req) => {
     // Check if party is full
     if (party.party_members.length >= party.max_members) {
       throw new Error("Party is full!");
+    }
+
+    // Leave other parties before joining this one
+    if (existingMemberships && existingMemberships.length > 0) {
+      console.log("Leaving", existingMemberships.length, "old parties");
+      await supabase
+        .from('party_members')
+        .delete()
+        .in('id', existingMemberships.map(m => m.id));
     }
 
     // Add user to party
