@@ -37,22 +37,13 @@ serve(async (req) => {
     console.log('User server memberships:', serverMemberships);
 
     let serverId = null;
-    let isHost = false;
 
     if (serverMemberships && serverMemberships.length > 0) {
       const membership = serverMemberships[0];
       serverId = membership.server_id;
-      // @ts-ignore - servers is an object from the join, not an array
-      isHost = membership.servers.host_user_id === user.id;
     }
 
-    console.log('User server status:', { serverId, hasServer: !!serverId, isHost });
-
-    // If in a server but not the host, reject the request
-    if (serverId && !isHost) {
-      console.error('User is not server host');
-      throw new Error("Only the server host can start the battle");
-    }
+    console.log('User server status:', { serverId, hasServer: !!serverId });
 
     // Get dungeon data
     const { data: dungeon, error: dungeonError } = await supabase
