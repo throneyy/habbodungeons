@@ -834,10 +834,12 @@ const Battle = () => {
       const playerUsername = (p as any).username || profile?.habbo_username || profile?.username?.split("@")[0] || "Player";
       const isCurrentUser = (p as any).userId === currentUserId || (!battleData.players && (p as any).userId === "player");
 
-      // Only current user has a guaranteed avatar; others will still render nicely without one
-      const habboAvatar = isCurrentUser && profile?.habbo_username && profile.habbo_profile_json
-        ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`
-        : undefined;
+      // Use habboAvatar from backend if available, otherwise construct for current user
+      let habboAvatar = (p as any).habboAvatar || null;
+      
+      if (!habboAvatar && isCurrentUser && profile?.habbo_username && profile.habbo_profile_json) {
+        habboAvatar = `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`;
+      }
 
       return {
         userId: (p as any).userId,
