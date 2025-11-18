@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { Sword, Trash2, Check } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getItemImage } from "@/lib/itemAssets";
 
 interface InventoryItem {
@@ -186,64 +187,79 @@ const Inventory = () => {
           {weaponItems.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No weapons in inventory</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {weaponItems.map((item) => (
-                <div
-                  key={item.id}
-                  className={`p-4 rounded-lg border-2 ${
-                    item.is_equipped ? "border-primary bg-primary/10" : "border-habbo-dark bg-muted"
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      {getItemImage(item.item_name) ? (
-                        <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
-                      ) : (
-                        <Sword className="w-5 h-5" />
-                      )}
-                      <div>
-                        <p className="font-bold">{item.item_name}</p>
-                        <p className="text-xs text-muted-foreground">Weapon</p>
-                      </div>
-                    </div>
-                    {item.is_equipped && (
-                      <div className="flex items-center gap-1 text-xs text-primary">
-                        <Check className="w-4 h-4" />
-                        Equipped
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {item.is_equipped ? (
-                      <Button
-                        onClick={() => unequipWeapon(item)}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1"
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {weaponItems.map((item) => (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:scale-105 ${
+                          item.is_equipped ? "border-primary bg-primary/10" : "border-habbo-dark bg-muted"
+                        }`}
                       >
-                        Unequip
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={() => equipWeapon(item)}
-                        variant="default"
-                        size="sm"
-                        className="flex-1"
-                      >
-                        Equip
-                      </Button>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            {getItemImage(item.item_name) ? (
+                              <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                            ) : (
+                              <Sword className="w-5 h-5" />
+                            )}
+                            <div>
+                              <p className="font-bold">{item.item_name}</p>
+                              <p className="text-xs text-muted-foreground">Weapon</p>
+                            </div>
+                          </div>
+                          {item.is_equipped && (
+                            <div className="flex items-center gap-1 text-xs text-primary">
+                              <Check className="w-4 h-4" />
+                              Equipped
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          {item.is_equipped ? (
+                            <Button
+                              onClick={() => unequipWeapon(item)}
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                            >
+                              Unequip
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => equipWeapon(item)}
+                              variant="default"
+                              size="sm"
+                              className="flex-1"
+                            >
+                              Equip
+                            </Button>
+                          )}
+                          <Button
+                            onClick={() => setItemToDelete(item)}
+                            variant="destructive"
+                            size="sm"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    {getItemImage(item.item_name) && (
+                      <TooltipContent side="top" className="bg-background border-2 border-border p-2">
+                        <img 
+                          src={getItemImage(item.item_name)} 
+                          alt={item.item_name} 
+                          className="w-24 h-24 pixelated" 
+                        />
+                        <p className="text-center mt-2 font-bold">{item.item_name}</p>
+                      </TooltipContent>
                     )}
-                    <Button
-                      onClick={() => setItemToDelete(item)}
-                      variant="destructive"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
           )}
         </HabboPanel>
 
@@ -252,68 +268,102 @@ const Inventory = () => {
           {consumableItems.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No consumables in inventory</p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {consumableItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-lg border-2 border-habbo-dark bg-muted"
-                >
-                  <div className="flex items-start gap-3 mb-3">
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {consumableItems.map((item) => (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="p-4 rounded-lg border-2 border-habbo-dark bg-muted cursor-pointer transition-all hover:scale-105"
+                      >
+                        <div className="flex items-start gap-3 mb-3">
+                          {getItemImage(item.item_name) && (
+                            <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                          )}
+                          <div>
+                            <p className="font-bold">{item.item_name}</p>
+                            <p className="text-xs text-muted-foreground">x{item.quantity}</p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => setItemToDelete(item)}
+                          variant="destructive"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
                     {getItemImage(item.item_name) && (
-                      <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                      <TooltipContent side="top" className="bg-background border-2 border-border p-2">
+                        <img 
+                          src={getItemImage(item.item_name)} 
+                          alt={item.item_name} 
+                          className="w-24 h-24 pixelated" 
+                        />
+                        <p className="text-center mt-2 font-bold">{item.item_name}</p>
+                        <p className="text-center text-sm text-muted-foreground">x{item.quantity}</p>
+                      </TooltipContent>
                     )}
-                    <div>
-                      <p className="font-bold">{item.item_name}</p>
-                      <p className="text-xs text-muted-foreground">x{item.quantity}</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => setItemToDelete(item)}
-                    variant="destructive"
-                    size="sm"
-                    className="w-full"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
-              ))}
-            </div>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
           )}
         </HabboPanel>
 
         {/* Other Items */}
         {otherItems.length > 0 && (
           <HabboPanel title="Other Items">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {otherItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-lg border-2 border-habbo-dark bg-muted"
-                >
-                  <div className="flex items-start gap-3 mb-3">
+            <TooltipProvider>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {otherItems.map((item) => (
+                  <Tooltip key={item.id}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="p-4 rounded-lg border-2 border-habbo-dark bg-muted cursor-pointer transition-all hover:scale-105"
+                      >
+                        <div className="flex items-start gap-3 mb-3">
+                          {getItemImage(item.item_name) && (
+                            <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                          )}
+                          <div>
+                            <p className="font-bold">{item.item_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.item_type} {item.quantity > 1 && `x${item.quantity}`}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => setItemToDelete(item)}
+                          variant="destructive"
+                          size="sm"
+                          className="w-full"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TooltipTrigger>
                     {getItemImage(item.item_name) && (
-                      <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                      <TooltipContent side="top" className="bg-background border-2 border-border p-2">
+                        <img 
+                          src={getItemImage(item.item_name)} 
+                          alt={item.item_name} 
+                          className="w-24 h-24 pixelated" 
+                        />
+                        <p className="text-center mt-2 font-bold">{item.item_name}</p>
+                        <p className="text-center text-sm text-muted-foreground">
+                          {item.item_type} {item.quantity > 1 && `x${item.quantity}`}
+                        </p>
+                      </TooltipContent>
                     )}
-                    <div>
-                      <p className="font-bold">{item.item_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.item_type} {item.quantity > 1 && `x${item.quantity}`}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => setItemToDelete(item)}
-                    variant="destructive"
-                    size="sm"
-                    className="w-full"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
-              ))}
-            </div>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
           </HabboPanel>
         )}
       </div>
