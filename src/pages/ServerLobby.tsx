@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { Users, Loader2, ArrowLeft, Swords } from "lucide-react";
+import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 
 interface ServerInfo {
   id: string;
@@ -340,31 +341,33 @@ const ServerLobby = () => {
           <HabboPanel title={dungeon.name}>
             <div className="space-y-4">
               <img 
-                src="/src/assets/the-shattered-frostkeep.gif" 
+                src={frostkeepBanner}
                 alt={dungeon.name}
                 className="w-full rounded-lg border-4 border-habbo-dark"
               />
               
-              <div className="space-y-2">
-                <div className="flex gap-2 text-sm">
-                  <span className="px-2 py-1 bg-muted rounded border-2 border-habbo-dark">{dungeon.theme}</span>
-                  <span className={`px-2 py-1 rounded border-2 border-habbo-dark ${
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <span className="px-3 py-1 bg-muted rounded border-2 border-habbo-dark font-bold text-sm">
+                    {dungeon.theme}
+                  </span>
+                  <span className={`px-3 py-1 rounded border-2 font-bold text-sm ${
                     dungeon.difficulty === 'Hardcore' 
-                      ? 'bg-destructive/20 text-destructive' 
-                      : 'bg-primary/20 text-primary'
+                      ? 'bg-[hsl(0,84%,50%)] text-white border-[hsl(0,84%,50%)]' 
+                      : 'bg-primary/20 text-primary border-primary'
                   }`}>
                     {dungeon.difficulty}
                   </span>
                 </div>
                 
-                <div>
-                  <h3 className="font-bold mb-1">Objective:</h3>
-                  <p className="text-sm">{dungeon.dungeon_json.objective}</p>
+                <div className="p-4 bg-muted/50 rounded-lg border-2 border-habbo-dark">
+                  <h3 className="font-bold text-lg mb-2 text-primary">Quest Objective</h3>
+                  <p className="text-sm leading-relaxed">{dungeon.dungeon_json.objective}</p>
                 </div>
                 
-                <div>
-                  <h3 className="font-bold mb-1">Introduction:</h3>
-                  <p className="text-sm">{dungeon.dungeon_json.intro}</p>
+                <div className="p-4 bg-muted/50 rounded-lg border-2 border-habbo-dark">
+                  <h3 className="font-bold text-lg mb-2 text-primary">The Story Begins...</h3>
+                  <p className="text-sm leading-relaxed">{dungeon.dungeon_json.intro}</p>
                 </div>
               </div>
             </div>
