@@ -1031,14 +1031,14 @@ const Battle = () => {
                     <img
                       src={ENEMY_SPRITES[battleData.enemy.sprite]}
                       alt={battleData.enemy.name}
-                      className={`pixel-icon transition-transform duration-300 ${enemyHit ? 'animate-bump-right' : ''}`}
+                      className={`pixel-icon ${enemyHit ? 'animate-bump-right' : ''}`}
                       style={{ width: 'auto', height: 'auto', maxWidth: '120px' }}
                     />
                     {enemyHit && (
                       <img
                         src={explosionHit}
                         alt="Hit"
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
                         style={{ width: '80px', height: '80px' }}
                       />
                     )}
@@ -1209,14 +1209,14 @@ const Battle = () => {
                     <img
                       src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=m&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`}
                       alt={profile.habbo_username}
-                      className={`pixel-icon transition-transform duration-300 ${playerHit ? 'animate-bump-left' : ''}`}
+                      className={`pixel-icon ${playerHit ? 'animate-bump-left' : ''}`}
                       style={{ width: 'auto', height: 'auto', maxWidth: '100px' }}
                     />
                     {playerHit && (
                       <img
                         src={explosionHit}
                         alt="Hit"
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
                         style={{ width: '80px', height: '80px' }}
                       />
                     )}
