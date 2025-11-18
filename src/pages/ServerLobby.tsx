@@ -6,22 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { Users, Loader2, ArrowLeft, Swords } from "lucide-react";
-import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 
 interface ServerInfo {
   id: string;
   server_name: string;
   difficulty: string;
   max_players: number;
-  dungeon_id: string | null;
-}
-
-interface DungeonInfo {
-  id: string;
-  name: string;
-  theme: string;
-  difficulty: string;
-  dungeon_json: any;
 }
 
 interface Player {
@@ -39,7 +29,6 @@ const ServerLobby = () => {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [dungeon, setDungeon] = useState<DungeonInfo | null>(null);
 
   useEffect(() => {
     // Clean up abandoned servers first
@@ -117,6 +106,7 @@ const ServerLobby = () => {
 
     console.log('🔍 Checking for dungeon assignment for server:', serverId);
 
+    // Check if a dungeon has been assigned to this server
     const { data: serverData, error } = await supabase
       .from('servers')
       .select('dungeon_id')
@@ -130,30 +120,19 @@ const ServerLobby = () => {
       return;
     }
 
-    if (serverData?.dungeon_id && !dungeon) {
-      console.log('✅ Dungeon assigned! Loading dungeon data:', serverData.dungeon_id);
-      await loadDungeonData(serverData.dungeon_id);
+    if (serverData?.dungeon_id) {
+      console.log('✅ Dungeon found! Navigating to:', serverData.dungeon_id);
+      
+      // Show notification for ALL players (host and non-host)
       toast({ 
-        title: "Dungeon ready!",
-        description: "The adventure awaits..."
+        title: "Adventure ready!",
+        description: "Entering dungeon now..."
       });
-    }
-  };
-
-  const loadDungeonData = async (dungeonId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('dungeons')
-        .select('*')
-        .eq('id', dungeonId)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (data) {
-        setDungeon(data);
-      }
-    } catch (error) {
-      console.error('Failed to load dungeon:', error);
+      
+      // Navigate to dungeon lobby - this happens for everyone simultaneously
+      navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
+    } else {
+      console.log('⏳ No dungeon assigned yet');
     }
   };
 
@@ -175,12 +154,13 @@ const ServerLobby = () => {
 
       if (serverError) throw serverError;
       
-      setServer(serverData);
-
-      // If server has a dungeon assigned, load it
+      // If server has a dungeon, navigate there
       if (serverData.dungeon_id) {
-        await loadDungeonData(serverData.dungeon_id);
+        navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
+        return;
       }
+
+      setServer(serverData);
 
       // Get players in server
       const { data: serverPlayers, error: playersError } = await supabase
@@ -238,51 +218,23 @@ const ServerLobby = () => {
       console.log('✅ Edge function returned:', data);
 
       toast({ 
-        title: "Dungeon generating...",
-        description: "Preparing your adventure..."
+        title: "Adventure starting!",
+        description: "Loading dungeon for all players..."
       });
       
+      // Check for dungeon immediately as fallback in case realtime is slow
       await checkForDungeon();
       
+      // If still not navigated after 2 seconds, force check again
       setTimeout(async () => {
+        console.log('⏰ Timeout fallback - checking for dungeon');
         await checkForDungeon();
-        setStarting(false);
+        setStarting(false); // Reset loading state even if navigation didn't happen
       }, 2000);
     } catch (error: any) {
       console.error('❌ Failed to start adventure:', error);
       toast({
         title: "Failed to start adventure",
-        description: error.message,
-        variant: "destructive",
-      });
-      setStarting(false);
-    }
-  };
-
-  const handleEnterDungeon = async () => {
-    if (!dungeon) return;
-    
-    setStarting(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("start-dungeon-battle", {
-        body: { 
-          dungeonId: dungeon.id,
-          serverId: serverId
-        },
-      });
-
-      if (error) throw error;
-
-      toast({ 
-        title: "Entering dungeon!",
-        description: "Adventure begins..."
-      });
-      
-      navigate(`/battle/${dungeon.id}`);
-    } catch (error: any) {
-      console.error('❌ Failed to enter dungeon:', error);
-      toast({
-        title: "Failed to enter dungeon",
         description: error.message,
         variant: "destructive",
       });
@@ -337,64 +289,38 @@ const ServerLobby = () => {
   return (
     <AppLayout>
       <div className="max-w-4xl mx-auto space-y-6">
-        {dungeon && (
-          <HabboPanel title={dungeon.name}>
-            <div className="space-y-4">
-              <img 
-                src={frostkeepBanner}
-                alt={dungeon.name}
-                className="w-full rounded-lg border-4 border-habbo-dark"
-              />
-              
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <span className="px-3 py-1 bg-muted rounded border-2 border-habbo-dark font-bold text-sm">
-                    {dungeon.theme}
-                  </span>
-                  <span className={`px-3 py-1 rounded border-2 font-bold text-sm ${
-                    dungeon.difficulty === 'Hardcore' 
-                      ? 'bg-[hsl(0,84%,50%)] text-white border-[hsl(0,84%,50%)]' 
-                      : 'bg-primary/20 text-primary border-primary'
-                  }`}>
-                    {dungeon.difficulty}
-                  </span>
-                </div>
-                
-                <div className="p-4 bg-muted/50 rounded-lg border-2 border-habbo-dark">
-                  <h3 className="font-bold text-lg mb-2 text-primary">Quest Objective</h3>
-                  <p className="text-sm leading-relaxed">{dungeon.dungeon_json.objective}</p>
-                </div>
-                
-                <div className="p-4 bg-muted/50 rounded-lg border-2 border-habbo-dark">
-                  <h3 className="font-bold text-lg mb-2 text-primary">The Story Begins...</h3>
-                  <p className="text-sm leading-relaxed">{dungeon.dungeon_json.intro}</p>
-                </div>
-              </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-black text-primary">{server.server_name}</h1>
+            <div className="flex items-center gap-2 mt-2">
+              <span className={`px-3 py-1 rounded font-bold text-sm ${
+                isHardcore 
+                  ? 'bg-[hsl(0,84%,50%)] text-white' 
+                  : 'bg-accent text-accent-foreground'
+              }`}>
+                {server.difficulty}
+              </span>
+              <span className="text-muted-foreground">
+                <Users className="w-4 h-4 inline mr-1" />
+                {players.length}/{server.max_players} players
+              </span>
             </div>
-          </HabboPanel>
-        )}
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/dungeon-list")}
+            className="font-bold border-4 border-habbo-dark"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Servers
+          </Button>
+        </div>
 
-        <HabboPanel title={`${server.server_name} - ${server.difficulty}`}>
+        <HabboPanel title="Lobby">
           <div className="space-y-6">
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border-2 border-habbo-dark">
-              <div className="flex items-center gap-3">
-                <Users className="w-5 h-5" />
-                <span className="font-bold">
-                  {players.length} / {server.max_players} Players
-                </span>
-              </div>
-              {server.difficulty === "Hardcore" && (
-                <span className="px-3 py-1 bg-destructive/20 text-destructive rounded-md text-sm font-bold">
-                  Hardcore Mode
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Players in Lobby
-              </h3>
+            {/* Players List */}
+            <div>
+              <h3 className="font-bold mb-3">Players in Lobby</h3>
               {players.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
                   Waiting for players to join...
@@ -422,50 +348,30 @@ const ServerLobby = () => {
               )}
             </div>
 
+            {/* Actions */}
             <div className="flex gap-3 justify-center pt-4 border-t-4 border-habbo-dark">
-              {dungeon ? (
-                <Button
-                  size="lg"
-                  onClick={handleEnterDungeon}
-                  disabled={starting}
-                  className="font-bold text-lg py-6 px-8 border-4 border-habbo-dark"
-                >
-                  {starting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Entering...
-                    </>
-                  ) : (
-                    <>
-                      <Swords className="w-5 h-5 mr-2" />
-                      Enter Dungeon
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  onClick={handleStartAdventure}
-                  disabled={starting || players.length === 0}
-                  className={`font-bold text-lg py-6 px-8 ${
-                    server.difficulty === 'Hardcore'
-                      ? 'bg-[hsl(0,84%,50%)] hover:bg-[hsl(0,84%,45%)] border-0'
-                      : 'border-4 border-habbo-dark'
-                  }`}
-                >
-                  {starting ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Generating Adventure...
-                    </>
-                  ) : (
-                    <>
-                      <Swords className="w-5 h-5 mr-2" />
-                      Start Adventure
-                    </>
-                  )}
-                </Button>
-              )}
+              <Button
+                size="lg"
+                onClick={handleStartAdventure}
+                disabled={starting || players.length === 0}
+                className={`font-bold text-lg py-6 px-8 ${
+                  isHardcore 
+                    ? 'bg-[hsl(0,84%,50%)] hover:bg-[hsl(0,84%,45%)] border-0'
+                    : 'border-4 border-habbo-dark'
+                }`}
+              >
+                {starting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Generating Adventure...
+                  </>
+                ) : (
+                  <>
+                    <Swords className="w-5 h-5 mr-2" />
+                    Start Adventure
+                  </>
+                )}
+              </Button>
               <Button
                 size="lg"
                 variant="outline"
@@ -477,22 +383,13 @@ const ServerLobby = () => {
               </Button>
             </div>
 
-            {players.length > 0 && !dungeon && (
+            {players.length > 0 && (
               <p className="text-center text-sm text-muted-foreground">
                 Any player can start the adventure when ready
               </p>
             )}
           </div>
         </HabboPanel>
-
-        <Button
-          variant="outline"
-          onClick={() => navigate("/dungeon-list")}
-          className="font-bold border-4 border-habbo-dark w-full"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Servers
-        </Button>
       </div>
     </AppLayout>
   );
