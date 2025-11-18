@@ -188,16 +188,28 @@ const Battle = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: memberData } = await supabase
-        .from("party_members")
-        .select("party_id, parties(invite_code)")
-        .eq("user_id", user.id)
+      // Check for party associated with THIS dungeon's battle
+      const { data: battleState } = await supabase
+        .from("battle_states")
+        .select("party_id")
+        .eq("dungeon_id", id)
+        .eq("is_active", true)
         .maybeSingle();
 
-      if (memberData) {
-        setPartyId(memberData.party_id);
-        setInviteCode((memberData.parties as any)?.invite_code || null);
-        loadPartyMembers(memberData.party_id);
+      if (battleState?.party_id) {
+        // Get party info for this specific battle
+        const { data: memberData } = await supabase
+          .from("party_members")
+          .select("party_id, parties(invite_code)")
+          .eq("party_id", battleState.party_id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (memberData) {
+          setPartyId(memberData.party_id);
+          setInviteCode((memberData.parties as any)?.invite_code || null);
+          // Don't call loadPartyMembers - load-battle already provides player data
+        }
       }
     } catch (error: any) {
       console.error("Failed to check existing party:", error);
@@ -230,7 +242,13 @@ const Battle = () => {
     }
   };
 
-  const loadPartyMembers = async (pId: string) => {
+  const loadPartyMembers = async (pId: string | null) => {
+    // Skip if no party ID (solo battle)
+    if (!pId) {
+      console.log("No party ID, skipping party member load");
+      return;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke("get-party-members", {
         body: { partyId: pId },
