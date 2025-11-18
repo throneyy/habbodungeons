@@ -26,16 +26,34 @@ serve(async (req) => {
 
     console.log('Starting battle for dungeon:', dungeonId, 'with difficulty:', difficulty);
 
-    // Check if user is in a party for this dungeon
-    const { data: partyMember } = await supabase
+    // Check if user is in a party for this dungeon - simplified query
+    const { data: partyMemberships, error: memberError } = await supabase
       .from('party_members')
-      .select('party_id, parties!inner(dungeon_id, leader_id)')
-      .eq('user_id', user.id)
-      .eq('parties.dungeon_id', dungeonId)
-      .maybeSingle();
+      .select('party_id')
+      .eq('user_id', user.id);
 
-    const partyId = partyMember?.party_id || null;
-    const isLeader = (partyMember?.parties as any)?.leader_id === user.id;
+    console.log('User party memberships:', partyMemberships);
+
+    let partyId = null;
+    let isLeader = false;
+
+    if (partyMemberships && partyMemberships.length > 0) {
+      // Check each party to find one for this dungeon
+      for (const membership of partyMemberships) {
+        const { data: party } = await supabase
+          .from('parties')
+          .select('dungeon_id, leader_id')
+          .eq('id', membership.party_id)
+          .single();
+
+        if (party && party.dungeon_id === dungeonId) {
+          partyId = membership.party_id;
+          isLeader = party.leader_id === user.id;
+          break;
+        }
+      }
+    }
+
     console.log('User party status:', { partyId, hasParty: !!partyId, isLeader });
 
     // If in a party but not the leader, reject the request

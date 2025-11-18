@@ -99,6 +99,39 @@ const DungeonLobby = () => {
       if (partyData) {
         setPartyId(partyData.party_id);
         setIsPartyLeader(partyData.parties.leader_id === user.id);
+        
+        // Check if there's already an active battle for this party
+        const { data: activeBattle } = await supabase
+          .from("battle_states")
+          .select("id")
+          .eq("dungeon_id", id)
+          .eq("party_id", partyData.party_id)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (activeBattle) {
+          console.log('Active party battle found, navigating to battle');
+          toast({ title: "Joining active battle..." });
+          navigate(`/battle/${id}`);
+          return;
+        }
+      } else {
+        // Solo player - check for their active battle
+        const { data: activeBattle } = await supabase
+          .from("battle_states")
+          .select("id")
+          .eq("dungeon_id", id)
+          .eq("user_id", user.id)
+          .is("party_id", null)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        if (activeBattle) {
+          console.log('Active solo battle found, navigating to battle');
+          toast({ title: "Resuming battle..." });
+          navigate(`/battle/${id}`);
+          return;
+        }
       }
     } catch (error: any) {
       toast({
@@ -114,6 +147,9 @@ const DungeonLobby = () => {
   const handleStartBattle = async (difficulty: "Normal" | "Hardcore") => {
     setLoading(true);
     try {
+      // Log current party state for debugging
+      console.log('Starting battle with state:', { partyId, isPartyLeader, dungeonId: id });
+      
       const { data, error } = await supabase.functions.invoke("start-dungeon-battle", {
         body: {
           dungeonId: id,
@@ -223,11 +259,15 @@ const DungeonLobby = () => {
         <div className="grid md:grid-cols-2 gap-6">
           <PartyInvite 
             dungeonId={id}
-            onPartyCreated={(id) => {
-              setPartyId(id);
+            onPartyCreated={async (partyId) => {
+              console.log('Party created:', partyId);
+              setPartyId(partyId);
               setIsPartyLeader(true);
+              // Reload to check for active battles
+              await loadDungeon();
             }}
-            onPartyJoined={(partyId, dungeonId) => {
+            onPartyJoined={async (partyId, dungeonId) => {
+              console.log('Party joined:', { partyId, dungeonId, currentDungeon: id });
               // If the party is for a different dungeon, navigate to it
               if (dungeonId && dungeonId !== id) {
                 toast({
@@ -238,6 +278,8 @@ const DungeonLobby = () => {
               } else {
                 setPartyId(partyId);
                 setIsPartyLeader(false);
+                // Reload to check for active battles
+                await loadDungeon();
               }
             }}
           />
