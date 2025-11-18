@@ -133,9 +133,13 @@ serve(async (req) => {
       
       players = (allStats || []).map(stats => {
         const profile = allProfiles?.find(p => p.id === stats.user_id);
+        const habboData = profile?.habbo_profile_json;
         return {
           userId: stats.user_id,
           username: profile?.habbo_username || profile?.username || 'Unknown',
+          habboAvatar: habboData?.figureString 
+            ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboData.figureString}&size=s&direction=2&head_direction=3`
+            : null,
           level: stats.level,
           current_hp: stats.current_hp,
           max_hp: stats.max_hp,
@@ -163,9 +167,13 @@ serve(async (req) => {
         .eq('id', user.id)
         .single();
       
+      const habboData = profile?.habbo_profile_json;
       players = [{
         userId: user.id,
         username: profile?.habbo_username || profile?.username || 'You',
+        habboAvatar: habboData?.figureString 
+          ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboData.figureString}&size=s&direction=2&head_direction=3`
+          : null,
         level: stats.level,
         current_hp: stats.current_hp,
         max_hp: stats.max_hp,
