@@ -301,7 +301,7 @@ const DungeonLobby = () => {
             />
           </div>
         ) : (
-          <PartyMembers partyId={serverId} />
+          <PartyMembers serverId={serverId} />
         )}
 
         {/* Return Button */}

@@ -9,6 +9,9 @@ verify_jwt = true
 [functions.generate-story-node]
 verify_jwt = true
 
+[functions.get-server-players]
+verify_jwt = true
+
 [functions.load-battle]
 verify_jwt = true
 
