@@ -115,6 +115,22 @@ const Battle = () => {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showEndQuestDialog, setShowEndQuestDialog] = useState(false);
 
+  // Helper function to render text with weapon names highlighted in purple
+  const renderTextWithWeapons = (text: string) => {
+    const parts = text.split(/(\[WEAPON:.*?\])/g);
+    return parts.map((part, idx) => {
+      const weaponMatch = part.match(/\[WEAPON:(.*?)\]/);
+      if (weaponMatch) {
+        return (
+          <span key={idx} className="text-purple-500 font-bold">
+            {weaponMatch[1]}
+          </span>
+        );
+      }
+      return <span key={idx}>{part}</span>;
+    });
+  };
+
   useEffect(() => {
     loadBattle();
     loadProfile();
@@ -641,14 +657,14 @@ const Battle = () => {
                       <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
                         <span className="text-primary font-bold">›</span>{" "}
                         {isCurrentUser || !userId ? (
-                          message
+                          renderTextWithWeapons(message)
                         ) : (
                           <>
                             {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
                             {message.includes("chose:") ? (
-                              <> {message.replace("You ", "")}</>
+                              <> {renderTextWithWeapons(message.replace("You ", ""))}</>
                             ) : (
-                              <> {isDiceRoll ? message : message}</>
+                              <> {isDiceRoll ? renderTextWithWeapons(message) : renderTextWithWeapons(message)}</>
                             )}
                           </>
                         )}
@@ -964,14 +980,14 @@ const Battle = () => {
                   return (
                     <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
                       {isCurrentUser || !userId ? (
-                        message
+                        renderTextWithWeapons(message)
                       ) : (
                         <>
                           {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
                           {message.includes("chose:") ? (
-                            <> {message.replace("You ", "")}</>
+                            <> {renderTextWithWeapons(message.replace("You ", ""))}</>
                           ) : (
-                            <> {isDiceRoll ? message : message}</>
+                            <> {isDiceRoll ? renderTextWithWeapons(message) : renderTextWithWeapons(message)}</>
                           )}
                         </>
                       )}
