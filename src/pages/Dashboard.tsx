@@ -78,8 +78,29 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  const handleStartDungeon = () => {
-    navigate("/create-dungeon");
+  const handleStartDungeon = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-dungeon", {
+        body: {
+          theme: "Classic",
+          encounters: 3,
+          difficulty: "Normal",
+        },
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Quest generated!" });
+      navigate(`/dungeon-lobby/${data.dungeonId}`);
+    } catch (error: any) {
+      toast({
+        title: "Failed to generate quest",
+        description: error.message,
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -216,9 +237,10 @@ const Dashboard = () => {
             <Button
               size="lg"
               onClick={handleStartDungeon}
+              disabled={loading}
               className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
             >
-              Start a Dungeon
+              {loading ? "Generating Quest..." : "Start a Dungeon"}
             </Button>
           </div>
         )}
