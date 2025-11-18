@@ -157,10 +157,10 @@ const ServerLobby = () => {
 
       if (error) throw error;
 
-      toast({ title: "Adventure starting!" });
+      toast({ title: "Adventure starting! Loading for all players..." });
       
-      // Navigate to dungeon lobby
-      navigate(`/dungeon-lobby/${data.dungeonId}`);
+      // Don't navigate immediately - let the real-time subscription handle it
+      // This ensures both host and non-host navigate at the same time
     } catch (error: any) {
       toast({
         title: "Failed to start adventure",
