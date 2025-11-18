@@ -13,11 +13,18 @@ interface LootItem {
 interface VictoryLootProps {
   isOpen: boolean;
   onClose: () => void;
+  onContinue?: () => void;
   lootItems: LootItem[];
   xpGained: number;
 }
 
-export const VictoryLoot = ({ isOpen, onClose, lootItems, xpGained }: VictoryLootProps) => {
+export const VictoryLoot = ({ isOpen, onClose, onContinue, lootItems, xpGained }: VictoryLootProps) => {
+  const handleContinue = () => {
+    onClose();
+    if (onContinue) {
+      onContinue();
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -73,7 +80,7 @@ export const VictoryLoot = ({ isOpen, onClose, lootItems, xpGained }: VictoryLoo
           )}
 
           <div className="flex justify-center pt-4">
-            <Button onClick={onClose} size="lg" className="min-w-[200px]">
+            <Button onClick={handleContinue} size="lg" className="min-w-[200px]">
               Continue
             </Button>
           </div>

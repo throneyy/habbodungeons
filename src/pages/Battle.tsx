@@ -181,6 +181,10 @@ const Battle = () => {
       return;
     }
     
+    // Reset victory loot state when loading new battle
+    setShowVictoryLoot(false);
+    setVictoryLootData({ items: [], xp: 0 });
+    
     try {
       // Pre-check: Verify battle exists and is active before calling edge function
       console.log("Pre-checking battle status for dungeon:", id);
@@ -612,14 +616,10 @@ const Battle = () => {
         }
         
         if (data.victory) {
-          // Show victory loot modal
+          // Show victory loot modal with data
           setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
           setShowVictoryLoot(true);
-          
-          // After modal is closed, reload to switch to story mode
-          setTimeout(() => {
-            loadBattle();
-          }, 3000);
+          // Note: loadBattle will be called when user closes the modal
         } else if (data.defeat) {
           toast({ 
             title: "Defeated!", 
@@ -1521,7 +1521,14 @@ const Battle = () => {
       {/* Victory Loot Modal */}
       <VictoryLoot
         isOpen={showVictoryLoot}
-        onClose={() => setShowVictoryLoot(false)}
+        onClose={() => {
+          setShowVictoryLoot(false);
+          setVictoryLootData({ items: [], xp: 0 });
+        }}
+        onContinue={() => {
+          // Reload battle to switch to story mode after victory
+          loadBattle();
+        }}
         lootItems={victoryLootData.items}
         xpGained={victoryLootData.xp}
       />
