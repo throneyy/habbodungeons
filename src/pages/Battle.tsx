@@ -484,15 +484,23 @@ const Battle = () => {
         
         // Trigger hit animations based on damage dealt
         console.log("Damage dealt - Player:", data.playerDamageDealt, "Enemy:", data.enemyDamageDealt);
-        if (data.playerDamageDealt > 0) {
-          console.log("Triggering enemy hit animation");
+        console.log("Current state - enemyHit:", enemyHit, "playerHit:", playerHit);
+        
+        if (data.playerDamageDealt && data.playerDamageDealt > 0) {
+          console.log("Setting enemyHit to TRUE - Player dealt", data.playerDamageDealt, "damage");
           setEnemyHit(true);
-          setTimeout(() => setEnemyHit(false), 600);
+          setTimeout(() => {
+            console.log("Resetting enemyHit to FALSE");
+            setEnemyHit(false);
+          }, 600);
         }
-        if (data.enemyDamageDealt > 0) {
-          console.log("Triggering player hit animation");
+        if (data.enemyDamageDealt && data.enemyDamageDealt > 0) {
+          console.log("Setting playerHit to TRUE - Enemy dealt", data.enemyDamageDealt, "damage");
           setPlayerHit(true);
-          setTimeout(() => setPlayerHit(false), 600);
+          setTimeout(() => {
+            console.log("Resetting playerHit to FALSE");
+            setPlayerHit(false);
+          }, 600);
         }
         
         if (data.victory) {
