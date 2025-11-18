@@ -14,25 +14,15 @@ const CreateDungeon = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   
-  const [dungeonName, setDungeonName] = useState("");
   const [difficulty, setDifficulty] = useState("Normal");
   const [theme, setTheme] = useState("Classic");
   const [encounters, setEncounters] = useState(3);
 
   const handleGenerate = async () => {
-    if (!dungeonName.trim()) {
-      toast({
-        title: "Please enter a dungeon name",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-dungeon", {
         body: {
-          dungeonName,
           difficulty,
           theme,
           encounters,
@@ -58,17 +48,6 @@ const CreateDungeon = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         <HabboPanel title="Create a Dungeon">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="dungeon-name">Dungeon Name</Label>
-              <Input
-                id="dungeon-name"
-                value={dungeonName}
-                onChange={(e) => setDungeonName(e.target.value)}
-                placeholder="The Dark Caverns"
-                className="border-2 border-habbo-dark"
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="difficulty">Difficulty</Label>
               <Select value={difficulty} onValueChange={setDifficulty}>

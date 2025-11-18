@@ -229,10 +229,15 @@ const DungeonLobby = () => {
 
             {dungeon && (
               <div className="mt-6 pt-6 border-t-2 border-habbo-dark">
-                <h3 className="text-xl font-black mb-2">Your Quest: {dungeon.name}</h3>
+                <h3 className="text-xl font-black mb-2 text-primary">{dungeon.name}</h3>
+                {dungeon.dungeon_json?.introText && (
+                  <p className="text-base mb-4 text-foreground leading-relaxed italic">
+                    {dungeon.dungeon_json.introText}
+                  </p>
+                )}
                 {dungeon.dungeon_json?.questObjective && (
                   <p className="text-lg mb-4 text-foreground font-semibold">
-                    {dungeon.dungeon_json.questObjective}
+                    <span className="text-muted-foreground">Objective:</span> {dungeon.dungeon_json.questObjective}
                   </p>
                 )}
                   <div className="mt-6 space-y-4">
