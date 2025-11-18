@@ -1,0 +1,329 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { HabboPanel } from "@/components/HabboPanel";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/AppLayout";
+import { Sword, Trash2, Check } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+interface InventoryItem {
+  id: string;
+  item_name: string;
+  quantity: number;
+  item_type: string;
+  is_equipped: boolean;
+}
+
+const Inventory = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
+
+  useEffect(() => {
+    loadInventory();
+  }, []);
+
+  const loadInventory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("inventory")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("item_type")
+        .order("item_name");
+
+      if (error) throw error;
+      setInventory(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Failed to load inventory",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const equipWeapon = async (item: InventoryItem) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Unequip all weapons first
+      await supabase
+        .from("inventory")
+        .update({ is_equipped: false })
+        .eq("user_id", user.id)
+        .eq("item_type", "weapon");
+
+      // Equip the selected weapon
+      const { error } = await supabase
+        .from("inventory")
+        .update({ is_equipped: true })
+        .eq("id", item.id);
+
+      if (error) throw error;
+
+      // Update player_stats to reference this weapon
+      await supabase
+        .from("player_stats")
+        .update({ equipped_weapon_id: item.id })
+        .eq("user_id", user.id);
+
+      toast({
+        title: "Weapon equipped!",
+        description: `${item.item_name} is now equipped.`,
+      });
+
+      loadInventory();
+    } catch (error: any) {
+      toast({
+        title: "Failed to equip weapon",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const unequipWeapon = async (item: InventoryItem) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("inventory")
+        .update({ is_equipped: false })
+        .eq("id", item.id);
+
+      if (error) throw error;
+
+      // Clear equipped weapon reference
+      await supabase
+        .from("player_stats")
+        .update({ equipped_weapon_id: null })
+        .eq("user_id", user.id);
+
+      toast({
+        title: "Weapon unequipped",
+        description: `${item.item_name} has been unequipped.`,
+      });
+
+      loadInventory();
+    } catch (error: any) {
+      toast({
+        title: "Failed to unequip weapon",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteItem = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("inventory")
+        .delete()
+        .eq("id", itemToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Item deleted",
+        description: `${itemToDelete.item_name} has been removed from your inventory.`,
+      });
+
+      setItemToDelete(null);
+      loadInventory();
+    } catch (error: any) {
+      toast({
+        title: "Failed to delete item",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const weaponItems = inventory.filter(i => i.item_type === "weapon");
+  const consumableItems = inventory.filter(i => i.item_type === "consumable");
+  const otherItems = inventory.filter(i => i.item_type !== "weapon" && i.item_type !== "consumable");
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <p className="text-lg">Loading inventory...</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  return (
+    <AppLayout>
+      <div className="space-y-6 p-4 max-w-6xl mx-auto">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold">Inventory</h1>
+          <Button onClick={() => navigate("/dashboard")} variant="outline">
+            Back to Dashboard
+          </Button>
+        </div>
+
+        {/* Weapons */}
+        <HabboPanel title="Weapons">
+          {weaponItems.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No weapons in inventory</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {weaponItems.map((item) => (
+                <div
+                  key={item.id}
+                  className={`p-4 rounded-lg border-2 ${
+                    item.is_equipped ? "border-primary bg-primary/10" : "border-habbo-dark bg-muted"
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Sword className="w-5 h-5" />
+                      <div>
+                        <p className="font-bold">{item.item_name}</p>
+                        <p className="text-xs text-muted-foreground">Weapon</p>
+                      </div>
+                    </div>
+                    {item.is_equipped && (
+                      <div className="flex items-center gap-1 text-xs text-primary">
+                        <Check className="w-4 h-4" />
+                        Equipped
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {item.is_equipped ? (
+                      <Button
+                        onClick={() => unequipWeapon(item)}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        Unequip
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => equipWeapon(item)}
+                        variant="default"
+                        size="sm"
+                        className="flex-1"
+                      >
+                        Equip
+                      </Button>
+                    )}
+                    <Button
+                      onClick={() => setItemToDelete(item)}
+                      variant="destructive"
+                      size="sm"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </HabboPanel>
+
+        {/* Consumables */}
+        <HabboPanel title="Consumables">
+          {consumableItems.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">No consumables in inventory</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {consumableItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-lg border-2 border-habbo-dark bg-muted"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-bold">{item.item_name}</p>
+                      <p className="text-xs text-muted-foreground">x{item.quantity}</p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => setItemToDelete(item)}
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </HabboPanel>
+
+        {/* Other Items */}
+        {otherItems.length > 0 && (
+          <HabboPanel title="Other Items">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {otherItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-lg border-2 border-habbo-dark bg-muted"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-bold">{item.item_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.item_type} {item.quantity > 1 && `x${item.quantity}`}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => setItemToDelete(item)}
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </HabboPanel>
+        )}
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {itemToDelete?.item_name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteItem}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </AppLayout>
+  );
+};
+
+export default Inventory;

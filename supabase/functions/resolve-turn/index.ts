@@ -36,7 +36,7 @@ serve(async (req) => {
 
     console.log(`Resolving turn for user: ${user.id}, action: ${action}, itemName: ${itemName || 'none'}`);
 
-    // Get battle and player stats
+    // Get battle, player stats, and equipped weapon
     const [battleRes, statsRes] = await Promise.all([
       supabase
         .from('battle_states')
@@ -58,7 +58,18 @@ serve(async (req) => {
 
     if (!battle || !stats) throw new Error("Battle or stats not found");
 
-    // Call AI for combat resolution
+    // Fetch equipped weapon
+    const { data: equippedWeapon } = await supabase
+      .from('inventory')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_equipped', true)
+      .eq('item_type', 'weapon')
+      .maybeSingle();
+
+    console.log(`Equipped weapon: ${equippedWeapon?.item_name || 'none'}`);
+
+    // Call AI for combat resolution with equipped weapon info
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -71,13 +82,33 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG combat engine. Calculate turn outcomes based on stats and dice rolls. Output ONLY valid JSON (no markdown formatting) with: {playerDamageDealt, playerDamageTaken, enemyAction, playerNewHp, enemyNewHp, narration: string[], victory: boolean, defeat: boolean}. Use dice sum for attack variance. Keep narration exciting but brief (2-3 lines).`
+            content: `You are a JRPG combat engine. Calculate BOTH player and enemy actions in the same turn.
+            
+CRITICAL: The enemy ALWAYS counterattacks after the player acts (unless the enemy is defeated). 
+
+Factor in equipped weapon for damage calculation. Output ONLY valid JSON (no markdown formatting) with: 
+{
+  playerDamageDealt: number,
+  playerDamageTaken: number,
+  enemyAction: string (describe what enemy did),
+  playerNewHp: number,
+  enemyNewHp: number,
+  narration: string[] (2-4 lines describing both player action AND enemy counterattack),
+  victory: boolean,
+  defeat: boolean
+}
+
+Use dice sum for attack variance. Keep narration exciting but brief. Always include enemy counterattack in narration unless enemy is defeated.`
           },
           {
             role: 'user',
             content: JSON.stringify({
               action,
               dice,
+              equippedWeapon: equippedWeapon ? {
+                name: equippedWeapon.item_name,
+                type: equippedWeapon.item_type
+              } : null,
               playerStats: {
                 hp: stats.current_hp,
                 mp: stats.current_mp,

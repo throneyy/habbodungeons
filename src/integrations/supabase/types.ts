@@ -102,6 +102,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_equipped: boolean | null
           item_name: string
           item_type: string
           quantity: number
@@ -111,6 +112,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_equipped?: boolean | null
           item_name: string
           item_type: string
           quantity?: number
@@ -120,6 +122,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_equipped?: boolean | null
           item_name?: string
           item_type?: string
           quantity?: number
@@ -203,6 +206,7 @@ export type Database = {
           current_mp: number
           current_xp: number
           def: number
+          equipped_weapon_id: string | null
           id: string
           level: number
           max_hp: number
@@ -220,6 +224,7 @@ export type Database = {
           current_mp?: number
           current_xp?: number
           def?: number
+          equipped_weapon_id?: string | null
           id?: string
           level?: number
           max_hp?: number
@@ -237,6 +242,7 @@ export type Database = {
           current_mp?: number
           current_xp?: number
           def?: number
+          equipped_weapon_id?: string | null
           id?: string
           level?: number
           max_hp?: number
@@ -247,7 +253,15 @@ export type Database = {
           user_id?: string
           xp_to_next_level?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "player_stats_equipped_weapon_id_fkey"
+            columns: ["equipped_weapon_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
