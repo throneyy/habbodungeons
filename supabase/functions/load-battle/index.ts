@@ -79,18 +79,17 @@ serve(async (req) => {
         }
       }
     } else {
-      console.log('Solo player - looking for solo battle');
-      // Solo player - just get their battle
-      const { data: soloBattle } = await supabase
+      console.log('Solo player - looking for any battle by user_id');
+      // Solo player - get their battle (could be solo or orphaned from a server)
+      const { data: userBattle } = await supabase
         .from('battle_states')
         .select('*, dungeons(*)')
         .eq('dungeon_id', battleId)
         .eq('user_id', user.id)
-        .is('server_id', null)
         .eq('is_active', true)
         .maybeSingle();
       
-      battle = soloBattle;
+      battle = userBattle;
     }
 
     console.log('Battle query result:', { 
