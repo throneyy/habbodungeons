@@ -22,7 +22,8 @@ const DungeonList = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadServers();
+    // Clean up abandoned servers first, then load
+    cleanupServers();
 
     // Subscribe to changes
     const channel = supabase
@@ -47,6 +48,19 @@ const DungeonList = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const cleanupServers = async () => {
+    try {
+      console.log('🧹 Cleaning up abandoned servers...');
+      await supabase.functions.invoke("cleanup-completed-servers");
+      console.log('✅ Cleanup complete, loading servers...');
+      loadServers();
+    } catch (error) {
+      console.error('Cleanup failed:', error);
+      // Still load servers even if cleanup fails
+      loadServers();
+    }
+  };
 
   const loadServers = async () => {
     try {
