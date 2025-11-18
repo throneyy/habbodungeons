@@ -86,6 +86,8 @@ serve(async (req) => {
             
 CRITICAL: The enemy ALWAYS counterattacks after the player acts (unless the enemy is defeated). 
 
+When the player attacks with a weapon, ALWAYS mention the weapon name in the narration by wrapping it like this: [WEAPON:weapon_name]
+
 Factor in equipped weapon for damage calculation. Output ONLY valid JSON (no markdown formatting) with: 
 {
   playerDamageDealt: number,
@@ -93,10 +95,12 @@ Factor in equipped weapon for damage calculation. Output ONLY valid JSON (no mar
   enemyAction: string (describe what enemy did),
   playerNewHp: number,
   enemyNewHp: number,
-  narration: string[] (2-4 lines describing both player action AND enemy counterattack),
+  narration: string[] (2-4 lines describing both player action AND enemy counterattack, with weapon name wrapped as [WEAPON:name]),
   victory: boolean,
   defeat: boolean
 }
+
+Example narration with weapon: "You strike with your [WEAPON:Rusty Sword], dealing 15 damage!"
 
 Use dice sum for attack variance. Keep narration exciting but brief. Always include enemy counterattack in narration unless enemy is defeated.`
           },
