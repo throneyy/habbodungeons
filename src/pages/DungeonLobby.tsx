@@ -84,11 +84,57 @@ const DungeonLobby = () => {
         console.log('Subscription status:', status);
       });
 
+    // Fallback: Poll for active battle every 2 seconds
+    // This ensures navigation happens even if real-time fails
+    const pollInterval = setInterval(async () => {
+      console.log('🔄 Polling for active battle...');
+      await checkForActiveBattle();
+    }, 2000);
+
     return () => {
       console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
+      clearInterval(pollInterval);
     };
   }, [id, serverId, currentUserId]);
+
+  const checkForActiveBattle = async () => {
+    if (!id || !currentUserId) return;
+
+    console.log('🔍 Checking for active battle for dungeon:', id);
+
+    // Check if there's an active battle for this user/server
+    let query = supabase
+      .from('battle_states')
+      .select('id, is_active')
+      .eq('dungeon_id', id)
+      .eq('user_id', currentUserId)
+      .eq('is_active', true);
+
+    if (serverId) {
+      query = query.eq('server_id', serverId);
+    } else {
+      query = query.is('server_id', null);
+    }
+
+    const { data: battleData, error } = await query.maybeSingle();
+
+    console.log('📋 Battle query result:', { data: battleData, error });
+
+    if (error) {
+      console.error('❌ Error checking for battle:', error);
+      return;
+    }
+
+    if (battleData?.is_active) {
+      console.log('✅ Active battle found! Navigating to battle');
+      toast({
+        title: "Adventure begins!",
+        description: "Starting your exploration...",
+      });
+      setTimeout(() => navigate(`/battle/${id}`), 500);
+    }
+  };
 
   const loadDungeon = async () => {
     try {
