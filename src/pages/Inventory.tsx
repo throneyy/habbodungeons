@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { Sword, Trash2, Check } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getItemImage } from "@/lib/itemAssets";
 
 interface InventoryItem {
@@ -187,16 +187,15 @@ const Inventory = () => {
           {weaponItems.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No weapons in inventory</p>
           ) : (
-            <TooltipProvider>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {weaponItems.map((item) => (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <div
-                        className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:scale-105 ${
-                          item.is_equipped ? "border-primary bg-primary/10" : "border-habbo-dark bg-muted"
-                        }`}
-                      >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {weaponItems.map((item) => (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all hover:scale-105 ${
+                        item.is_equipped ? "border-primary bg-primary/10" : "border-habbo-dark bg-muted"
+                      }`}
+                    >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
                             {getItemImage(item.item_name) ? (
@@ -259,23 +258,21 @@ const Inventory = () => {
                   </Tooltip>
                 ))}
               </div>
-            </TooltipProvider>
-          )}
-        </HabboPanel>
+            )}
+          </HabboPanel>
 
         {/* Consumables */}
         <HabboPanel title="Consumables">
           {consumableItems.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No consumables in inventory</p>
           ) : (
-            <TooltipProvider>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {consumableItems.map((item) => (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <div
-                        className="p-4 rounded-lg border-2 border-habbo-dark bg-muted cursor-pointer transition-all hover:scale-105"
-                      >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {consumableItems.map((item) => (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="p-4 rounded-lg border-2 border-habbo-dark bg-muted cursor-pointer transition-all hover:scale-105"
+                    >
                         <div className="flex items-start gap-3 mb-3">
                           {getItemImage(item.item_name) && (
                             <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
@@ -310,21 +307,19 @@ const Inventory = () => {
                   </Tooltip>
                 ))}
               </div>
-            </TooltipProvider>
-          )}
-        </HabboPanel>
+            )}
+          </HabboPanel>
 
         {/* Other Items */}
         {otherItems.length > 0 && (
           <HabboPanel title="Other Items">
-            <TooltipProvider>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {otherItems.map((item) => (
-                  <Tooltip key={item.id}>
-                    <TooltipTrigger asChild>
-                      <div
-                        className="p-4 rounded-lg border-2 border-habbo-dark bg-muted cursor-pointer transition-all hover:scale-105"
-                      >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {otherItems.map((item) => (
+                <Tooltip key={item.id}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className="p-4 rounded-lg border-2 border-habbo-dark bg-muted cursor-pointer transition-all hover:scale-105"
+                    >
                         <div className="flex items-start gap-3 mb-3">
                           {getItemImage(item.item_name) && (
                             <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
@@ -363,9 +358,8 @@ const Inventory = () => {
                   </Tooltip>
                 ))}
               </div>
-            </TooltipProvider>
-          </HabboPanel>
-        )}
+            </HabboPanel>
+          )}
       </div>
 
       {/* Delete Confirmation Dialog */}
