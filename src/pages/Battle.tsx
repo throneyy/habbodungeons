@@ -99,6 +99,7 @@ const Battle = () => {
   const [partyProfiles, setPartyProfiles] = useState<Map<string, Profile>>(new Map());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [partyId, setPartyId] = useState<string | null>(null);
+  const [serverId, setServerId] = useState<string | null>(null);
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [selectedAction, setSelectedAction] = useState<string>("");
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
@@ -345,15 +346,18 @@ const Battle = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Check for party associated with THIS dungeon's battle
+      // Check for party or server associated with THIS dungeon's battle
       const { data: battleState } = await supabase
         .from("battle_states")
-        .select("party_id")
+        .select("party_id, server_id")
         .eq("dungeon_id", id)
         .eq("is_active", true)
         .maybeSingle();
 
-      if (battleState?.party_id) {
+      // Server battle takes priority
+      if (battleState?.server_id) {
+        setServerId(battleState.server_id);
+      } else if (battleState?.party_id) {
         // Get party info for this specific battle
         const { data: memberData } = await supabase
           .from("party_members")
@@ -1470,8 +1474,10 @@ const Battle = () => {
 
         {/* Party Members Section */}
         <div className="grid md:grid-cols-2 gap-6">
-          <HabboPanel title="Party Members">
-            {partyId ? (
+          <HabboPanel title={serverId ? "Server Players" : "Party Members"}>
+            {serverId ? (
+              <PartyMembers serverId={serverId} />
+            ) : partyId ? (
               <PartyMembers partyId={partyId} />
             ) : (
               <div className="text-center space-y-4 p-4">
