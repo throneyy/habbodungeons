@@ -38,6 +38,25 @@ const DungeonLobby = () => {
 
     console.log('Setting up realtime subscription', { serverId, currentUserId });
 
+    const handleBattleChange = (payload: any) => {
+      console.log('Battle state change:', payload);
+      const battle = payload.new as any;
+      if (!battle) return;
+
+      // Ensure this is for the current dungeon
+      if (battle.dungeon_id !== id) return;
+
+      // Only navigate when battle becomes active in the starting room
+      if (!battle.is_active || battle.current_room_index !== 0) return;
+
+      console.log('Battle detected, navigating player to exploration');
+      toast({
+        title: "Adventure begins!",
+        description: "Starting your exploration...",
+      });
+      setTimeout(() => navigate(`/battle/${id}`), 500);
+    };
+
     // Subscribe to battle state changes for this dungeon
     const channel = supabase
       .channel(`dungeon-${id}`)
@@ -47,19 +66,19 @@ const DungeonLobby = () => {
           event: 'INSERT',
           schema: 'public',
           table: 'battle_states',
-          filter: `dungeon_id=eq.${id}`
+          filter: `dungeon_id=eq.${id}`,
         },
-        (payload) => {
-          console.log('Battle started! Payload:', payload);
-          
-          // All players navigate to battle when battle_state is created
-          console.log('Battle detected, navigating all players to exploration');
-          toast({ 
-            title: "Adventure begins!",
-            description: "Starting your exploration..."
-          });
-          setTimeout(() => navigate(`/battle/${id}`), 500);
-        }
+        handleBattleChange,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'battle_states',
+          filter: `dungeon_id=eq.${id}`,
+        },
+        handleBattleChange,
       )
       .subscribe((status) => {
         console.log('Subscription status:', status);
