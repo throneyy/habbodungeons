@@ -248,6 +248,7 @@ What happens as a result of this choice?`,
         updateData.current_enemy_state = {
           name: enemy.name,
           description: enemy.description,
+          sprite: enemy.sprite,
           hp: enemy.hp,
           current_hp: enemy.hp,
           max_hp: enemy.hp,
