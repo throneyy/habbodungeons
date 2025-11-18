@@ -162,15 +162,87 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
       }
     }
 
-    // Handle victory - award XP and check for level up
+    // Handle victory - award XP, loot, and check for level up
     let xpGained = 0;
     let leveledUp = false;
     let newLevel = stats.level;
     let xpMessages: string[] = [];
+    let lootItems: Array<{ item_name: string; quantity: number; item_type: string }> = [];
 
     if (result.victory) {
-      // Calculate XP based on enemy level relative to player level (traditional JRPG formula)
+      // Generate loot drops
       const enemyLevel = battle.current_enemy_state.level || 1;
+      const lootTableBasic = [
+        { name: 'Gold', type: 'currency', weight: 40 },
+        { name: 'Silver', type: 'currency', weight: 30 },
+        { name: 'Potion', type: 'consumable', weight: 20 },
+        { name: 'Ether', type: 'consumable', weight: 15 },
+        { name: 'Herb', type: 'consumable', weight: 15 },
+        { name: 'Crystal Shards', type: 'material', weight: 10 },
+        { name: 'Runestones', type: 'material', weight: 8 },
+        { name: 'Scroll', type: 'consumable', weight: 7 },
+        { name: 'Ancient Scroll', type: 'consumable', weight: 5 },
+        { name: 'Tome', type: 'consumable', weight: 3 },
+      ];
+
+      // Number of loot drops increases with enemy level
+      const numDrops = Math.min(1 + Math.floor(enemyLevel / 3), 4);
+      
+      for (let i = 0; i < numDrops; i++) {
+        const totalWeight = lootTableBasic.reduce((sum, item) => sum + item.weight, 0);
+        const random = Math.random() * totalWeight;
+        let currentWeight = 0;
+        
+        for (const lootEntry of lootTableBasic) {
+          currentWeight += lootEntry.weight;
+          if (random <= currentWeight) {
+            // Determine quantity based on item type
+            let quantity = 1;
+            if (lootEntry.type === 'currency') {
+              quantity = Math.floor(10 + (enemyLevel * 5) + (Math.random() * 20));
+            } else if (lootEntry.type === 'material') {
+              quantity = Math.floor(1 + Math.random() * 3);
+            }
+            
+            lootItems.push({
+              item_name: lootEntry.name,
+              quantity,
+              item_type: lootEntry.type,
+            });
+            break;
+          }
+        }
+      }
+
+      // Add loot to player inventory
+      for (const loot of lootItems) {
+        // Check if item already exists in inventory
+        const { data: existingItem } = await supabase
+          .from('inventory')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('item_name', loot.item_name)
+          .maybeSingle();
+
+        if (existingItem) {
+          // Update quantity
+          await supabase
+            .from('inventory')
+            .update({ quantity: existingItem.quantity + loot.quantity })
+            .eq('id', existingItem.id);
+        } else {
+          // Insert new item
+          await supabase
+            .from('inventory')
+            .insert({
+              user_id: user.id,
+              item_name: loot.item_name,
+              item_type: loot.item_type,
+              quantity: loot.quantity,
+            });
+        }
+      }
+      // Calculate XP based on enemy level relative to player level (traditional JRPG formula)
       const levelDiff = enemyLevel - stats.level;
       const baseXP = Math.floor(enemyLevel * enemyLevel * 8); // Base formula: level^2 * 8
       const diffMultiplier = Math.max(0.5, 1 + (levelDiff * 0.1)); // Bonus for higher level enemies
@@ -324,6 +396,8 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
         defeat: result.defeat,
         playerDamageDealt: result.playerDamageDealt,
         enemyDamageDealt: result.playerDamageTaken,
+        lootItems: result.victory ? lootItems : [],
+        xpGained: result.victory ? xpGained : 0,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
