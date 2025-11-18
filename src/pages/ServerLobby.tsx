@@ -92,14 +92,25 @@ const ServerLobby = () => {
   const checkForDungeon = async () => {
     if (!serverId) return;
 
+    console.log('🔍 Checking for dungeon assignment for server:', serverId);
+
     // Check if a dungeon has been assigned to this server
-    const { data: serverData } = await supabase
+    const { data: serverData, error } = await supabase
       .from('servers')
       .select('dungeon_id')
       .eq('id', serverId)
       .maybeSingle();
 
+    console.log('📋 Server query result:', { data: serverData, error });
+
+    if (error) {
+      console.error('❌ Error checking for dungeon:', error);
+      return;
+    }
+
     if (serverData?.dungeon_id) {
+      console.log('✅ Dungeon found! Navigating to:', serverData.dungeon_id);
+      
       // Show notification for ALL players (host and non-host)
       toast({ 
         title: "Adventure ready!",
@@ -108,6 +119,8 @@ const ServerLobby = () => {
       
       // Navigate to dungeon lobby - this happens for everyone simultaneously
       navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
+    } else {
+      console.log('⏳ No dungeon assigned yet');
     }
   };
 
