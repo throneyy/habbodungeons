@@ -264,6 +264,7 @@ What happens as a result of this choice?`,
         updateData.current_enemy_state = {
           name: "Ice Shade",
           description: "A mysterious creature emerges from the shadows!",
+          sprite: "skeleton.png",
           hp: 30,
           current_hp: 30,
           max_hp: 30,
