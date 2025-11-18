@@ -21,6 +21,12 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    // Admin client bypasses RLS so we can load all server players' stats
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
@@ -107,7 +113,7 @@ serve(async (req) => {
     let players = [];
     
     if (battle.server_id) {
-      // Get all server members' stats
+      // Get all server members' stats for this shared battle
       const { data: serverPlayers } = await supabase
         .from('server_players')
         .select('user_id')
@@ -115,12 +121,12 @@ serve(async (req) => {
       
       const userIds = serverPlayers?.map(m => m.user_id) || [];
       
-      const { data: allStats } = await supabase
+      const { data: allStats } = await supabaseAdmin
         .from('player_stats')
         .select('*')
         .in('user_id', userIds);
       
-      const { data: allProfiles } = await supabase
+      const { data: allProfiles } = await supabaseAdmin
         .from('profiles')
         .select('*')
         .in('id', userIds);

@@ -27,6 +27,12 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    // Admin client bypasses RLS so we can see all server players' stats
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
@@ -104,7 +110,7 @@ serve(async (req) => {
     let partyStats = [];
     
     if (battleState.server_id) {
-      // Get all server members' stats
+      // Get all server members' stats using admin client (bypass RLS)
       const { data: serverPlayers } = await supabaseClient
         .from('server_players')
         .select('user_id')
@@ -112,7 +118,7 @@ serve(async (req) => {
       
       if (serverPlayers && serverPlayers.length > 0) {
         const userIds = serverPlayers.map(p => p.user_id);
-        const { data } = await supabaseClient
+        const { data } = await supabaseAdmin
           .from("player_stats")
           .select("*")
           .in("user_id", userIds);
@@ -228,17 +234,29 @@ Generate an atmospheric scene and 3-4 meaningful choices.`,
 
     // Store the story node in battle_states for multiplayer sync
     if (serverId) {
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-      );
-
-      await supabaseAdmin
+      // Only write the first story node for this room, then always read back
+      const { error: updateError } = await supabaseAdmin
         .from("battle_states")
         .update({ current_story_node: storyNode })
-        .eq("id", battleState.id);
-      
-      console.log("Stored story node for multiplayer sync");
+        .eq("id", battleState.id)
+        .is("current_story_node", null);
+
+      if (updateError) {
+        console.error("Failed to store story node:", updateError);
+      } else {
+        console.log("Stored story node for multiplayer sync");
+      }
+
+      // Always load the canonical story node to avoid race conditions
+      const { data: refreshedBattle, error: refreshError } = await supabaseAdmin
+        .from("battle_states")
+        .select("current_story_node")
+        .eq("id", battleState.id)
+        .maybeSingle();
+
+      if (!refreshError && refreshedBattle?.current_story_node) {
+        storyNode = refreshedBattle.current_story_node;
+      }
     }
 
     return new Response(JSON.stringify({ storyNode }), {
