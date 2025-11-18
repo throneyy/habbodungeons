@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { VictoryLoot } from "@/components/VictoryLoot";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
@@ -107,6 +108,8 @@ const Battle = () => {
   const [showCombatPanels, setShowCombatPanels] = useState(false);
   const [questComplete, setQuestComplete] = useState(false);
   const [battleLoadError, setBattleLoadError] = useState<string | null>(null);
+  const [showVictoryLoot, setShowVictoryLoot] = useState(false);
+  const [victoryLootData, setVictoryLootData] = useState<{ items: any[]; xp: number }>({ items: [], xp: 0 });
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -609,11 +612,14 @@ const Battle = () => {
         }
         
         if (data.victory) {
-          toast({ title: "Victory!", description: "You defeated the enemy!" });
-          // After victory, reload to switch to story mode
+          // Show victory loot modal
+          setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
+          setShowVictoryLoot(true);
+          
+          // After modal is closed, reload to switch to story mode
           setTimeout(() => {
             loadBattle();
-          }, 2000);
+          }, 3000);
         } else if (data.defeat) {
           toast({ 
             title: "Defeated!", 
@@ -1511,6 +1517,14 @@ const Battle = () => {
         </Button>
         </div>
       </div>
+
+      {/* Victory Loot Modal */}
+      <VictoryLoot
+        isOpen={showVictoryLoot}
+        onClose={() => setShowVictoryLoot(false)}
+        lootItems={victoryLootData.items}
+        xpGained={victoryLootData.xp}
+      />
 
       {/* End Quest Confirmation Dialog */}
       <AlertDialog open={showEndQuestDialog} onOpenChange={setShowEndQuestDialog}>
