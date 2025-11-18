@@ -223,11 +223,36 @@ const Battle = () => {
       // Check for errors in both error object and data.error
       if (error) {
         console.error("Edge function error:", error);
-        throw new Error(error.message || JSON.stringify(error));
+        
+        // Check for specific error types
+        const errorMsg = error.message || JSON.stringify(error);
+        if (errorMsg.includes('DUNGEON_DELETED')) {
+          toast({
+            title: "Dungeon Deleted",
+            description: "This dungeon was deleted by its owner. The party has been disbanded.",
+            variant: "destructive",
+          });
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+        
+        throw new Error(errorMsg);
       }
       
       if (data?.error) {
         console.error("Data error:", data.error);
+        
+        // Check for specific error types
+        if (data.error.includes('DUNGEON_DELETED')) {
+          toast({
+            title: "Dungeon Deleted",
+            description: "This dungeon was deleted by its owner. The party has been disbanded.",
+            variant: "destructive",
+          });
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+        
         throw new Error(data.error);
       }
       
