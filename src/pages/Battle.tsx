@@ -449,6 +449,7 @@ const Battle = () => {
           battleId: id,
           action: selectedAction,
           dice,
+          itemName: selectedItem,
         },
       });
 
@@ -457,6 +458,10 @@ const Battle = () => {
       if (data.battleData) {
         setBattleData(data.battleData);
         setSelectedAction("");
+        setSelectedItem(null);
+        
+        // Reload inventory in case items were consumed
+        loadInventory();
         
         if (data.victory) {
           toast({ title: "Victory!", description: "You defeated the enemy!" });
@@ -1222,6 +1227,15 @@ const Battle = () => {
                   <p className="font-bold">{battleData.player.spd}</p>
                 </div>
               </div>
+              
+              {/* Equipped Weapon */}
+              <div className="p-3 bg-muted rounded-lg border-2 border-habbo-dark">
+                <p className="text-xs font-bold mb-1">Equipped Weapon:</p>
+                <p className="text-sm">
+                  {inventory.find(item => item.is_equipped && item.item_type === 'weapon')?.item_name || 'None'}
+                </p>
+              </div>
+              
               {battleData.player.status_effects.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs font-bold">Status Effects:</p>

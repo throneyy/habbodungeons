@@ -9,6 +9,7 @@ import LinkHabbo from "./pages/LinkHabbo";
 import Dashboard from "./pages/Dashboard";
 import DungeonLobby from "./pages/DungeonLobby";
 import Battle from "./pages/Battle";
+import Inventory from "./pages/Inventory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/link-habbo" element={<LinkHabbo />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/inventory" element={<Inventory />} />
           <Route path="/dungeon-lobby/:id" element={<DungeonLobby />} />
           <Route path="/battle/:id" element={<Battle />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

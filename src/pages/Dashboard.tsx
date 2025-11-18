@@ -201,17 +201,29 @@ const Dashboard = () => {
         {/* Inventory */}
         {profile?.habbo_username && (
         <HabboPanel title="Inventory">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {inventory.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 bg-muted rounded-lg border-4 border-habbo-dark text-center"
-              >
-                <p className="font-bold">{item.item_name}</p>
-                <p className="text-sm text-muted-foreground">x{item.quantity}</p>
-                <p className="text-xs text-muted-foreground capitalize">{item.item_type}</p>
-              </div>
-            ))}
+          <div className="space-y-4">
+            <div className="flex justify-end">
+              <Button onClick={() => navigate("/inventory")} variant="outline" size="sm">
+                Manage Inventory
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {inventory.slice(0, 8).map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 bg-muted rounded-lg border-4 border-habbo-dark text-center"
+                >
+                  <p className="font-bold">{item.item_name}</p>
+                  <p className="text-sm text-muted-foreground">x{item.quantity}</p>
+                  <p className="text-xs text-muted-foreground capitalize">{item.item_type}</p>
+                </div>
+              ))}
+            </div>
+            {inventory.length > 8 && (
+              <p className="text-xs text-muted-foreground text-center">
+                Showing 8 of {inventory.length} items
+              </p>
+            )}
           </div>
         </HabboPanel>
         )}
