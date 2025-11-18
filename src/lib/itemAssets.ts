@@ -46,6 +46,11 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Scroll": scroll,
   "Ancient Scroll": scrollStack,
   "Tome": scrollOpen,
+  // Additional mappings for quest items
+  "Scroll of Minor Healing": scroll,
+  "Potion of Minor Healing": potion,
+  "Rune of Frostsight": runestones,
+  "Frostbloom Herb": herb,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {

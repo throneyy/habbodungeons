@@ -199,7 +199,7 @@ const Inventory = () => {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
                             {getItemImage(item.item_name) ? (
-                              <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                              <img src={getItemImage(item.item_name)} alt={item.item_name} className="h-8 pixelated" style={{ width: 'auto' }} />
                             ) : (
                               <Sword className="w-5 h-5" />
                             )}
@@ -250,7 +250,8 @@ const Inventory = () => {
                         <img 
                           src={getItemImage(item.item_name)} 
                           alt={item.item_name} 
-                          className="w-24 h-24 pixelated" 
+                          className="h-24 pixelated mx-auto" 
+                          style={{ width: 'auto' }}
                         />
                         <p className="text-center mt-2 font-bold">{item.item_name}</p>
                       </TooltipContent>
@@ -275,7 +276,7 @@ const Inventory = () => {
                     >
                         <div className="flex items-start gap-3 mb-3">
                           {getItemImage(item.item_name) && (
-                            <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                            <img src={getItemImage(item.item_name)} alt={item.item_name} className="h-8 pixelated" style={{ width: 'auto' }} />
                           )}
                           <div>
                             <p className="font-bold">{item.item_name}</p>
@@ -298,7 +299,8 @@ const Inventory = () => {
                         <img 
                           src={getItemImage(item.item_name)} 
                           alt={item.item_name} 
-                          className="w-24 h-24 pixelated" 
+                          className="h-24 pixelated mx-auto" 
+                          style={{ width: 'auto' }}
                         />
                         <p className="text-center mt-2 font-bold">{item.item_name}</p>
                         <p className="text-center text-sm text-muted-foreground">x{item.quantity}</p>
@@ -322,7 +324,7 @@ const Inventory = () => {
                     >
                         <div className="flex items-start gap-3 mb-3">
                           {getItemImage(item.item_name) && (
-                            <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                            <img src={getItemImage(item.item_name)} alt={item.item_name} className="h-8 pixelated" style={{ width: 'auto' }} />
                           )}
                           <div>
                             <p className="font-bold">{item.item_name}</p>
@@ -347,7 +349,8 @@ const Inventory = () => {
                         <img 
                           src={getItemImage(item.item_name)} 
                           alt={item.item_name} 
-                          className="w-24 h-24 pixelated" 
+                          className="h-24 pixelated mx-auto" 
+                          style={{ width: 'auto' }}
                         />
                         <p className="text-center mt-2 font-bold">{item.item_name}</p>
                         <p className="text-center text-sm text-muted-foreground">

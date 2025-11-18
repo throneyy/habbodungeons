@@ -58,7 +58,8 @@ export const VictoryLoot = ({ isOpen, onClose, onContinue, lootItems, xpGained }
                         <img
                           src={itemImage}
                           alt={item.item_name}
-                          className="w-16 h-16 object-contain pixelated"
+                          className="h-16 pixelated mx-auto"
+                          style={{ width: 'auto' }}
                         />
                       )}
                       <div className="text-center">
