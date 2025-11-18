@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { HabboPanel } from "@/components/HabboPanel";
 import { getItemImage } from "@/lib/itemAssets";
 import { Button } from "@/components/ui/button";
+import victoryTrophy from "@/assets/victory-trophy.png";
 
 interface LootItem {
   item_name: string;
@@ -21,8 +22,9 @@ export const VictoryLoot = ({ isOpen, onClose, lootItems, xpGained }: VictoryLoo
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-center text-3xl font-black">
-            Victory! 🏆
+          <DialogTitle className="text-center text-3xl font-black flex items-center justify-center gap-3">
+            Victory!
+            <img src={victoryTrophy} alt="Victory Trophy" className="w-12 h-12 pixelated inline-block" />
           </DialogTitle>
         </DialogHeader>
 
