@@ -146,13 +146,21 @@ Return ONLY valid JSON in this exact format:
 
     console.log("Dungeon created:", dungeon.id);
 
-    // Link dungeon to server
-    const { error: updateError } = await supabase
+    // Link dungeon to server using service role to bypass RLS
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+    
+    const { error: updateError } = await supabaseAdmin
       .from('servers')
       .update({ dungeon_id: dungeon.id })
       .eq('id', serverId);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error("Failed to link server to dungeon:", updateError);
+      throw updateError;
+    }
 
     console.log("Server linked to dungeon successfully");
 
