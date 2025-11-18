@@ -45,6 +45,20 @@ serve(async (req) => {
       throw new Error("Party not found. Check your invite code.");
     }
 
+    // Verify the dungeon still exists
+    if (party.dungeon_id) {
+      const { data: dungeon, error: dungeonError } = await supabase
+        .from('dungeons')
+        .select('id')
+        .eq('id', party.dungeon_id)
+        .maybeSingle();
+      
+      if (!dungeon) {
+        console.log("Party's dungeon was deleted:", party.dungeon_id);
+        throw new Error("PARTY_DUNGEON_DELETED:This party's dungeon no longer exists. The party leader may have deleted it.");
+      }
+    }
+
     // Check if already a member
     const isMember = party.party_members.some((m: any) => m.user_id === user.id);
     if (isMember) {

@@ -53,11 +53,22 @@ export const JoinPartyQuick = () => {
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Failed to join party",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Join party error:", error);
+      
+      // Handle specific error cases
+      if (error.message?.includes('PARTY_DUNGEON_DELETED')) {
+        toast({
+          title: "Dungeon Deleted",
+          description: "This party's dungeon was deleted by its owner. The party is no longer active.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Failed to join party",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
