@@ -29,6 +29,8 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
   useEffect(() => {
     initializeServers();
     
+    console.log('Setting up ServerList subscriptions for dungeon:', dungeonId);
+    
     // Subscribe to server changes
     const channel = supabase
       .channel(`servers-${dungeonId}`)
@@ -37,19 +39,24 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
         schema: 'public',
         table: 'servers',
         filter: `dungeon_id=eq.${dungeonId}`
-      }, () => {
+      }, (payload) => {
+        console.log('🔥 SERVER CHANGE in ServerList:', payload);
         loadServers();
       })
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'server_players'
-      }, () => {
+      }, (payload) => {
+        console.log('🔥 SERVER_PLAYERS CHANGE in ServerList:', payload);
         loadServers();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 ServerList subscription status:', status);
+      });
 
     return () => {
+      console.log('Cleaning up ServerList subscriptions');
       supabase.removeChannel(channel);
     };
   }, [dungeonId]);
@@ -116,6 +123,8 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
 
   const loadServers = async () => {
     try {
+      console.log('Loading servers for dungeon:', dungeonId);
+      
       const { data, error } = await supabase
         .from('servers')
         .select(`
@@ -132,6 +141,8 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
         .order('server_name', { ascending: true });
 
       if (error) throw error;
+
+      console.log('📊 Loaded servers:', data?.length, 'servers');
 
       // Get host usernames
       const hostIds = data?.map(s => s.host_user_id) || [];
@@ -151,6 +162,11 @@ export const ServerList = ({ dungeonId, onServerJoined }: ServerListProps) => {
                       || profiles?.find(p => p.id === server.host_user_id)?.username 
                       || 'Unknown'
       })) || [];
+
+      console.log('📊 Servers with player counts:', serversWithData.map(s => ({
+        name: s.server_name,
+        players: s.player_count
+      })));
 
       setServers(serversWithData);
     } catch (error: any) {
