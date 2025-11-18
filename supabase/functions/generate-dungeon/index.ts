@@ -104,7 +104,7 @@ const BOSS_ENEMY = {
   name: "Frost Wraith",
   description: "The ancient guardian of the Frostkeep, a powerful spirit of eternal winter",
   sprite: "frost-wraith.png",
-  baseHp: 100,
+  baseHp: 200,
   baseAtk: 15,
   baseDef: 10,
   baseSpd: 8
