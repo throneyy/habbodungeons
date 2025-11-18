@@ -59,12 +59,11 @@ serve(async (req) => {
       );
     }
 
-    // Leave any other servers for this dungeon
+    // Leave any other servers
     const { data: otherMemberships } = await supabase
       .from('server_players')
-      .select('id, servers!inner(dungeon_id)')
-      .eq('user_id', user.id)
-      .eq('servers.dungeon_id', server.dungeon_id);
+      .select('id')
+      .eq('user_id', user.id);
 
     if (otherMemberships && otherMemberships.length > 0) {
       await supabase
