@@ -13,6 +13,8 @@ import fightersSword from "@/assets/fighters-sword.png";
 import warriorsSword from "@/assets/warriors-sword.png";
 import mageStaff from "@/assets/mage-staff.png";
 import powerfulMageStaff from "@/assets/powerful-mage-staff.png";
+import frothyPint from "@/assets/frothy-pint.png";
+import sweetcakes from "@/assets/sweetcakes.png";
 
 export const ITEM_ASSETS: Record<string, string> = {
   "Rusty Sword": rustySword,
@@ -30,6 +32,8 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Warriors Sword": warriorsSword,
   "Mage Staff": mageStaff,
   "Powerful Mage Staff": powerfulMageStaff,
+  "Frothy Pint": frothyPint,
+  "Sweetcakes": sweetcakes,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {
