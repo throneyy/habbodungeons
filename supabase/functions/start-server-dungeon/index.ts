@@ -6,6 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function extractJSON(text: string): string {
+  // Remove markdown code blocks if present
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    return codeBlockMatch[1].trim();
+  }
+  return text.trim();
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -113,7 +122,8 @@ Return ONLY valid JSON in this exact format:
       if (!content) {
         throw new Error("No content in AI response");
       }
-      dungeonContent = JSON.parse(content);
+      const cleanedContent = extractJSON(content);
+      dungeonContent = JSON.parse(cleanedContent);
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError);
       throw new Error("Invalid dungeon content format");
