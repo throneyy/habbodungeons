@@ -101,15 +101,15 @@ serve(async (req) => {
 
     console.log("Resolving choice:", choiceLabel);
 
-    // Get the current and next room enemy info
+    // Get the current room's enemy info for context
     const dungeon = battleState.dungeons.dungeon_json as any;
     const currentRoomIndex = battleState.current_room_index;
-    const nextRoomIndex = currentRoomIndex + 1;
     
     let enemyContext = "";
-    if (nextRoomIndex < dungeon.rooms.length) {
-      const nextRoom = dungeon.rooms[nextRoomIndex];
-      enemyContext = `\n\n🔥 CRITICAL: If triggersBattle=true, you MUST write: "the ${nextRoom.enemy.name}" or "a ${nextRoom.enemy.name}" or "${nextRoom.enemy.name}" in your consequenceText. The enemy name is: "${nextRoom.enemy.name}" (${nextRoom.enemy.description}). DO NOT write vague phrases like "drawing attention" or "something emerges" - USE THE EXACT ENEMY NAME!`;
+    // If we're in story mode, the current room is what we're exploring
+    const currentRoom = dungeon.rooms[currentRoomIndex];
+    if (currentRoom && currentRoom.enemy) {
+      enemyContext = `\n\n🔥 CRITICAL: If triggersBattle=true, you MUST write: "the ${currentRoom.enemy.name}" or "a ${currentRoom.enemy.name}" or "${currentRoom.enemy.name}" in your consequenceText. The enemy name is: "${currentRoom.enemy.name}" (${currentRoom.enemy.description}). DO NOT write vague phrases like "drawing attention" or "something emerges" - USE THE EXACT ENEMY NAME!`;
     }
 
     // Call Lovable AI to determine outcome
@@ -286,20 +286,17 @@ What happens as a result of this choice?`,
 
     // Set up enemy if battle is triggered
     if (outcome.triggersBattle) {
-      // CRITICAL: Progress to next room and get that room's enemy (matching AI context)
-      const battleRoomIndex = Math.min(newRoomIndex + 1, maxRoomIndex);
-      const battleRoom = dungeonData.rooms[battleRoomIndex];
+      // Battle the enemy from the current room (the one AI was told about)
+      const battleRoom = dungeonData.rooms[newRoomIndex];
       
       if (battleRoom && battleRoom.enemy) {
-        // Set up the enemy for battle from the NEXT room
+        // Set up the enemy for battle from the CURRENT room
         const enemy = battleRoom.enemy;
         
-        // Update room index to the battle room
-        updateData.current_room_index = battleRoomIndex;
         updateData.current_enemy_state = {
           name: enemy.name,
           description: enemy.description,
-          sprite: enemy.sprite,
+          sprite: enemy.sprite || findEnemySprite(enemy.name),
           hp: enemy.hp,
           current_hp: enemy.hp,
           max_hp: enemy.hp,
@@ -310,8 +307,7 @@ What happens as a result of this choice?`,
           mode: "battle",
         };
       } else {
-        // No enemy in room, but triggering battle - create a generic enemy and advance room
-        updateData.current_room_index = battleRoomIndex;
+        // No enemy in current room - this shouldn't happen, but handle gracefully
         updateData.current_enemy_state = {
           name: "Ice Shade",
           description: "A mysterious creature emerges from the shadows!",
