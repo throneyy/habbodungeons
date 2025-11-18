@@ -734,14 +734,15 @@ const Battle = () => {
                       <button
                         key={`avatar-${member.userId}`}
                         onClick={() => setSelectedMemberId(member.userId)}
-                        className="w-12 h-12 border-2 border-habbo-dark rounded overflow-hidden bg-card hover:border-primary transition-colors cursor-pointer flex items-center justify-center"
+                        className="w-12 border-2 border-habbo-dark rounded overflow-hidden bg-card hover:border-primary transition-colors cursor-pointer"
                         title={`Click to view ${member.username}'s stats`}
                       >
                         {member.habboAvatar && (
                           <img
                             src={member.habboAvatar}
                             alt={member.username}
-                            className="pixel-icon object-contain max-w-full max-h-full"
+                            className="pixel-icon"
+                            style={{ width: 'auto', height: 'auto', maxWidth: '100%' }}
                           />
                         )}
                       </button>
@@ -750,7 +751,7 @@ const Battle = () => {
                       <button
                         key={`empty-${i}`}
                         onClick={() => partyId ? setShowInviteDialog(true) : createParty()}
-                        className="w-12 h-12 border-2 border-dashed border-muted rounded bg-muted/20 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        className="w-12 h-12 border-2 border-dashed border-muted rounded bg-muted/20 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer min-h-[48px]"
                         title="Invite player"
                       >
                         <Plus className="text-muted-foreground w-4 h-4" />
