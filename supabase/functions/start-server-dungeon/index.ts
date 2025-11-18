@@ -57,7 +57,7 @@ serve(async (req) => {
 
     console.log("Generating dungeon with AI...");
 
-    const aiResponse = await fetch('https://api.lovable.app/v1/ai/generate', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${lovableApiKey}`,
@@ -65,8 +65,15 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        prompt: `Generate a ${difficulty} difficulty dungeon with ${encounters} encounters themed as "${theme}".
-        
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a dungeon master creating exciting adventure content. Always respond with valid JSON only.'
+          },
+          {
+            role: 'user',
+            content: `Generate a ${difficulty} difficulty dungeon with ${encounters} encounters themed as "${theme}".
+
 Return ONLY valid JSON in this exact format:
 {
   "name": "Epic dungeon name",
@@ -85,9 +92,9 @@ Return ONLY valid JSON in this exact format:
       "reward": {"gold": ${difficulty === 'Hardcore' ? 150 : 100}, "xp": ${difficulty === 'Hardcore' ? 100 : 50}}
     }
   ]
-}`,
-        max_tokens: 2000,
-        temperature: 0.7
+}`
+          }
+        ]
       })
     });
 
@@ -98,13 +105,17 @@ Return ONLY valid JSON in this exact format:
     }
 
     const aiData = await aiResponse.json();
-    console.log("AI response received");
+    console.log("AI response received:", JSON.stringify(aiData));
 
     let dungeonContent;
     try {
-      dungeonContent = JSON.parse(aiData.content);
+      const content = aiData.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error("No content in AI response");
+      }
+      dungeonContent = JSON.parse(content);
     } catch (parseError) {
-      console.error("Failed to parse AI response:", aiData.content);
+      console.error("Failed to parse AI response:", parseError);
       throw new Error("Invalid dungeon content format");
     }
 
