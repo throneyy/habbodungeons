@@ -322,6 +322,8 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
         battleData,
         victory: result.victory,
         defeat: result.defeat,
+        playerDamageDealt: result.playerDamageDealt,
+        enemyDamageDealt: result.playerDamageTaken,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
