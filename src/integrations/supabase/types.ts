@@ -24,6 +24,7 @@ export type Database = {
           id: string
           is_active: boolean
           party_id: string | null
+          server_id: string | null
           updated_at: string
           user_id: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           party_id?: string | null
+          server_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -48,6 +50,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           party_id?: string | null
+          server_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -64,6 +67,13 @@ export type Database = {
             columns: ["party_id"]
             isOneToOne: false
             referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "battle_states_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
             referencedColumns: ["id"]
           },
         ]
@@ -289,6 +299,76 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      server_players: {
+        Row: {
+          id: string
+          joined_at: string
+          server_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          server_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          server_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_players_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servers: {
+        Row: {
+          created_at: string
+          dungeon_id: string
+          host_user_id: string
+          id: string
+          is_active: boolean
+          max_players: number
+          server_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dungeon_id: string
+          host_user_id: string
+          id?: string
+          is_active?: boolean
+          max_players?: number
+          server_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dungeon_id?: string
+          host_user_id?: string
+          id?: string
+          is_active?: boolean
+          max_players?: number
+          server_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servers_dungeon_id_fkey"
+            columns: ["dungeon_id"]
+            isOneToOne: false
+            referencedRelation: "dungeons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

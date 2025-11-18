@@ -26,40 +26,31 @@ serve(async (req) => {
 
     console.log('Starting battle for dungeon:', dungeonId, 'with difficulty:', difficulty);
 
-    // Check if user is in a party for this dungeon - simplified query
-    const { data: partyMemberships, error: memberError } = await supabase
-      .from('party_members')
-      .select('party_id')
-      .eq('user_id', user.id);
+    // Check if user is in a server for this dungeon
+    const { data: serverMemberships } = await supabase
+      .from('server_players')
+      .select('server_id, servers!inner(host_user_id, dungeon_id)')
+      .eq('user_id', user.id)
+      .eq('servers.dungeon_id', dungeonId)
+      .eq('servers.is_active', true);
 
-    console.log('User party memberships:', partyMemberships);
+    console.log('User server memberships:', serverMemberships);
 
-    let partyId = null;
-    let isLeader = false;
+    let serverId = null;
+    let isHost = false;
 
-    if (partyMemberships && partyMemberships.length > 0) {
-      // Check each party to find one for this dungeon
-      for (const membership of partyMemberships) {
-        const { data: party } = await supabase
-          .from('parties')
-          .select('dungeon_id, leader_id')
-          .eq('id', membership.party_id)
-          .single();
-
-        if (party && party.dungeon_id === dungeonId) {
-          partyId = membership.party_id;
-          isLeader = party.leader_id === user.id;
-          break;
-        }
-      }
+    if (serverMemberships && serverMemberships.length > 0) {
+      const membership = serverMemberships[0];
+      serverId = membership.server_id;
+      isHost = membership.servers[0].host_user_id === user.id;
     }
 
-    console.log('User party status:', { partyId, hasParty: !!partyId, isLeader });
+    console.log('User server status:', { serverId, hasServer: !!serverId, isHost });
 
-    // If in a party but not the leader, reject the request
-    if (partyId && !isLeader) {
-      console.error('User is not party leader');
-      throw new Error("Only the party leader can start the battle");
+    // If in a server but not the host, reject the request
+    if (serverId && !isHost) {
+      console.error('User is not server host');
+      throw new Error("Only the server host can start the battle");
     }
 
     // Get dungeon data
@@ -123,22 +114,22 @@ serve(async (req) => {
 
     console.log('Initial enemy state:', initialEnemyState);
 
-    // Check if battle state exists (for party or solo)
+    // Check if battle state exists (for server or solo)
     let existingBattleQuery = supabase
       .from('battle_states')
       .select('id')
       .eq('dungeon_id', dungeonId);
     
-    // If in a party, check for party battle; otherwise check for solo battle
-    if (partyId) {
-      existingBattleQuery = existingBattleQuery.eq('party_id', partyId);
+    // If in a server, check for server battle; otherwise check for solo battle
+    if (serverId) {
+      existingBattleQuery = existingBattleQuery.eq('server_id', serverId);
     } else {
-      existingBattleQuery = existingBattleQuery.eq('user_id', user.id).is('party_id', null);
+      existingBattleQuery = existingBattleQuery.eq('user_id', user.id).is('server_id', null);
     }
     
     const { data: existingBattle, error: checkError } = await existingBattleQuery.maybeSingle();
 
-    console.log('Existing battle check:', { existingBattle, checkError, partyId });
+    console.log('Existing battle check:', { existingBattle, checkError, serverId });
 
     if (existingBattle) {
       console.log('Updating existing battle state:', existingBattle.id);
@@ -158,12 +149,12 @@ serve(async (req) => {
         throw updateError;
       }
     } else {
-      console.log('Creating new battle state with partyId:', partyId);
+      console.log('Creating new battle state with serverId:', serverId);
       // Create new battle state
       const { error: insertError } = await supabase.from('battle_states').insert({
         user_id: user.id,
         dungeon_id: dungeonId,
-        party_id: partyId,
+        server_id: serverId,
         current_room_index: 0,
         current_enemy_state: initialEnemyState,
         battle_log: [dungeonJson.introText, modifiedRooms[0].description],
