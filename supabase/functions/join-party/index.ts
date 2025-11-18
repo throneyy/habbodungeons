@@ -62,8 +62,21 @@ serve(async (req) => {
         }
       }
       
+      // Check if there's an active battle for this party
+      const { data: activeBattle } = await supabase
+        .from('battle_states')
+        .select('id')
+        .eq('party_id', party.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      
       return new Response(
-        JSON.stringify({ party, message: "You're already in this party!" }),
+        JSON.stringify({ 
+          party, 
+          dungeonId: party.dungeon_id,
+          activeBattle: !!activeBattle,
+          message: "You're already in this party!" 
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
