@@ -75,16 +75,31 @@ const DungeonLobby = () => {
 
   // Auto-start exploration for server host after brief intro display
   useEffect(() => {
-    if (!dungeon || !serverId || !isServerHost || loading || starting) return;
+    console.log('🎮 Auto-start check:', { 
+      hasDungeon: !!dungeon, 
+      hasServerId: !!serverId, 
+      isHost: isServerHost, 
+      isLoading: loading, 
+      isStarting: starting 
+    });
 
-    console.log('Host ready, auto-starting exploration in 3 seconds...');
+    if (!dungeon || !serverId || !isServerHost || loading || starting) {
+      console.log('⏸️ Not auto-starting - conditions not met');
+      return;
+    }
+
+    console.log('🚀 Host ready, auto-starting exploration in 3 seconds...');
     
     const autoStartTimer = setTimeout(() => {
+      console.log('⏰ Timer fired, calling handleStartBattle');
       handleStartBattle(serverDifficulty);
     }, 3000); // 3 second delay to show intro
 
-    return () => clearTimeout(autoStartTimer);
-  }, [dungeon, serverId, isServerHost, loading]);
+    return () => {
+      console.log('🧹 Clearing auto-start timer');
+      clearTimeout(autoStartTimer);
+    };
+  }, [dungeon, serverId, isServerHost, loading, starting, serverDifficulty]);
 
   const loadDungeon = async () => {
     try {
