@@ -105,6 +105,7 @@ const Battle = () => {
   const [loading, setLoading] = useState(false);
   const [showCombatPanels, setShowCombatPanels] = useState(false);
   const [questComplete, setQuestComplete] = useState(false);
+  const [battleLoadError, setBattleLoadError] = useState<string | null>(null);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -224,15 +225,17 @@ const Battle = () => {
                                errorMessage.includes("Make sure to select a difficulty") ||
                                errorMessage.includes("not found for dungeon");
       
+      setBattleLoadError(errorMessage);
+      
       if (isBattleNotFound) {
         toast({
           title: "Battle Not Found",
-          description: "This battle doesn't exist or has been completed. Start a new dungeon from the dashboard.",
+          description: "This battle doesn't exist or has been completed. Redirecting to dashboard...",
           variant: "destructive",
         });
         setTimeout(() => {
           navigate("/dashboard");
-        }, 2000);
+        }, 2500);
       } else {
         toast({
           title: "Failed to load battle",
@@ -571,6 +574,41 @@ const Battle = () => {
     }
     setLoading(false);
   };
+
+  // Show error screen if battle load failed
+  if (battleLoadError) {
+    const isBattleNotFound = battleLoadError.includes("Battle not found") || 
+                             battleLoadError.includes("Make sure to select a difficulty") ||
+                             battleLoadError.includes("not found for dungeon");
+    
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-3xl font-bold text-destructive">
+            {isBattleNotFound ? "Battle Not Found" : "Error Loading Battle"}
+          </h1>
+          <p className="text-muted-foreground">
+            {isBattleNotFound 
+              ? "This battle doesn't exist or has already been completed. You'll be redirected to the dashboard to start a new adventure."
+              : battleLoadError
+            }
+          </p>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground animate-pulse">
+            <span>Redirecting to dashboard</span>
+            <span className="inline-block animate-bounce">...</span>
+          </div>
+          <Button 
+            onClick={() => navigate("/dashboard")} 
+            variant="outline"
+            className="mt-4"
+          >
+            Go to Dashboard Now
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!battleData) {
     return (
