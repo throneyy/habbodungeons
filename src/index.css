@@ -127,7 +127,7 @@ All colors MUST be HSL.
   }
 
   /* Pixel art styling */
-  .pixel-icon {
+  .pixel-icon, .pixelated {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
