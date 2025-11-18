@@ -182,8 +182,20 @@ const Battle = () => {
         body: { battleId: id },
       });
 
-      if (error) throw error;
-      if (data.battleData) {
+      console.log("Load battle response:", { data, error });
+
+      // Check for errors in both error object and data.error
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || JSON.stringify(error));
+      }
+      
+      if (data?.error) {
+        console.error("Data error:", data.error);
+        throw new Error(data.error);
+      }
+      
+      if (data?.battleData) {
         setBattleData(data.battleData);
         
         // If in story mode, load story node
@@ -195,6 +207,8 @@ const Battle = () => {
           setStoryNode(null);
           setTimeout(() => setShowCombatPanels(true), 100);
         }
+      } else {
+        throw new Error("No battle data received");
       }
     } catch (error: any) {
       console.error("Battle load error:", error);
