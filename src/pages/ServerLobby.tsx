@@ -31,6 +31,8 @@ const ServerLobby = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Clean up abandoned servers first
+    cleanupServers();
     loadServerData();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -41,6 +43,16 @@ const ServerLobby = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  const cleanupServers = async () => {
+    try {
+      console.log('🧹 Running server cleanup...');
+      await supabase.functions.invoke("cleanup-completed-servers");
+    } catch (error) {
+      console.error('Cleanup failed:', error);
+      // Don't show error to user, just log it
+    }
+  };
 
   useEffect(() => {
     if (!serverId) return;
