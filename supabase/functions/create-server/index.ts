@@ -22,7 +22,7 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    const { dungeonId, serverName, maxPlayers = 6, isSystemServer = false } = await req.json();
+    const { dungeonId, serverName, maxPlayers = 6, difficulty = 'Normal', isSystemServer = false } = await req.json();
 
     console.log("Creating server for user:", user.id, "dungeon:", dungeonId);
 
@@ -62,6 +62,7 @@ serve(async (req) => {
         server_name: serverName,
         dungeon_id: dungeonId,
         max_players: maxPlayers,
+        difficulty: difficulty,
         is_active: true,
       })
       .select()
