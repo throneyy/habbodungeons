@@ -88,6 +88,15 @@ const ENEMY_POOL = [
     baseAtk: 9,
     baseDef: 6,
     baseSpd: 6
+  },
+  {
+    name: "Frostbite Spider",
+    description: "A venomous arachnid whose bite inflicts icy necrosis",
+    sprite: "frostbite-spider.webp",
+    baseHp: 36,
+    baseAtk: 10,
+    baseDef: 4,
+    baseSpd: 11
   }
 ];
 
