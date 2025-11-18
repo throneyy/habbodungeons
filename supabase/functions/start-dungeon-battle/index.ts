@@ -77,6 +77,12 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    // Admin client bypasses RLS for shared battle state writes
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
@@ -170,7 +176,7 @@ serve(async (req) => {
     console.log('Initial enemy state:', initialEnemyState);
 
     // Check if battle state exists (for server or solo)
-    let existingBattleQuery = supabase
+    let existingBattleQuery = supabaseAdmin
       .from('battle_states')
       .select('id')
       .eq('dungeon_id', dungeonId);
@@ -189,7 +195,7 @@ serve(async (req) => {
     if (existingBattle) {
       console.log('Updating existing battle state:', existingBattle.id);
       // Update existing battle state
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseAdmin
         .from('battle_states')
         .update({
           current_room_index: 0,
@@ -206,7 +212,7 @@ serve(async (req) => {
     } else {
       console.log('Creating new battle state with serverId:', serverId);
       // Create new battle state
-      const { error: insertError } = await supabase.from('battle_states').insert({
+      const { error: insertError } = await supabaseAdmin.from('battle_states').insert({
         user_id: user.id,
         dungeon_id: dungeonId,
         server_id: serverId,
@@ -221,10 +227,10 @@ serve(async (req) => {
         throw insertError;
       }
     }
-
+    
     // Store modified dungeon JSON with difficulty-adjusted stats
     const modifiedDungeonJson = { ...dungeonJson, rooms: modifiedRooms };
-    const { error: updateDungeonError } = await supabase
+    const { error: updateDungeonError } = await supabaseAdmin
       .from('dungeons')
       .update({ 
         dungeon_json: modifiedDungeonJson,
@@ -257,7 +263,7 @@ serve(async (req) => {
           if (player.user_id === user.id) continue; // Skip the host, already created
           
           // Check if battle state exists for this player
-          const { data: existingPlayerBattle } = await supabase
+          const { data: existingPlayerBattle } = await supabaseAdmin
             .from('battle_states')
             .select('id')
             .eq('dungeon_id', dungeonId)
@@ -267,7 +273,7 @@ serve(async (req) => {
 
           if (existingPlayerBattle) {
             // Update existing battle
-            await supabase
+            const { error: updateError } = await supabaseAdmin
               .from('battle_states')
               .update({
                 current_room_index: 0,
@@ -276,10 +282,15 @@ serve(async (req) => {
                 is_active: true,
               })
               .eq('id', existingPlayerBattle.id);
-            console.log('Updated battle state for player:', player.user_id);
+
+            if (updateError) {
+              console.error('Update player battle error:', updateError);
+            } else {
+              console.log('Updated battle state for player:', player.user_id);
+            }
           } else {
             // Create new battle state
-            await supabase.from('battle_states').insert({
+            const { error: insertError } = await supabaseAdmin.from('battle_states').insert({
               user_id: player.user_id,
               dungeon_id: dungeonId,
               server_id: serverId,
@@ -288,7 +299,12 @@ serve(async (req) => {
               battle_log: [dungeonJson.introText, modifiedRooms[0].description],
               is_active: true,
             });
-            console.log('Created battle state for player:', player.user_id);
+
+            if (insertError) {
+              console.error('Insert player battle error:', insertError);
+            } else {
+              console.log('Created battle state for player:', player.user_id);
+            }
           }
         }
       }
