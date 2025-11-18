@@ -1024,25 +1024,65 @@ const Battle = () => {
               {/* Party Panel */}
               <div className="md:col-span-1">
                 <HabboPanel title="Your Party">
+                  {/* Turn Order Info */}
+                  {battleData.isPartyBattle && battleData.turnOrder && battleData.turnOrder.length > 1 && (
+                    <div className="mb-4 p-2 bg-muted/50 border-2 border-habbo-dark rounded text-center">
+                      <p className="text-xs font-bold text-muted-foreground">
+                        Turn Order: {battleData.turnOrder.map((id, idx) => {
+                          const member = partyMembers.find(m => m.userId === id);
+                          const isActive = id === battleData.currentTurnUserId;
+                          return (
+                            <span key={id} className={isActive ? 'text-green-400 font-black' : ''}>
+                              {member?.username || 'Unknown'}
+                              {idx < battleData.turnOrder.length - 1 ? ' → ' : ''}
+                            </span>
+                          );
+                        })}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Party Avatars Row */}
-                  <div className="flex gap-2 mb-4 pb-4 border-habbo-dark">
-                    {partyMembers.slice(0, 4).map((member) => (
-                      <button
-                        key={`avatar-${member.userId}`}
-                        onClick={() => setSelectedMemberId(member.userId)}
-                        className="w-12 border-2 border-habbo-dark rounded overflow-hidden bg-card hover:border-primary transition-colors cursor-pointer"
-                        title={`Click to view ${member.username}'s stats`}
-                      >
-                        {member.habboAvatar && (
-                          <img
-                            src={member.habboAvatar}
-                            alt={member.username}
-                            className="pixel-icon"
-                            style={{ width: 'auto', height: 'auto', maxWidth: '100%' }}
-                          />
-                        )}
-                      </button>
-                    ))}
+                  <div className="flex gap-2 mb-4 pb-4 border-b-2 border-habbo-dark">
+                    {partyMembers.slice(0, 4).map((member) => {
+                      const isCurrentTurn = battleData.currentTurnUserId === member.userId;
+                      const turnIndex = battleData.turnOrder?.indexOf(member.userId);
+                      
+                      return (
+                        <button
+                          key={`avatar-${member.userId}`}
+                          onClick={() => setSelectedMemberId(member.userId)}
+                          className={`relative w-12 h-12 border-2 rounded overflow-hidden transition-all cursor-pointer ${
+                            isCurrentTurn 
+                              ? 'border-green-400 ring-4 ring-green-400/50 bg-green-500/20 animate-pulse' 
+                              : 'border-habbo-dark bg-card hover:border-primary'
+                          }`}
+                          title={`${member.username}${isCurrentTurn ? ' - CURRENT TURN' : ''}`}
+                        >
+                          {/* Turn order badge */}
+                          {turnIndex !== undefined && turnIndex >= 0 && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10">
+                              {turnIndex + 1}
+                            </div>
+                          )}
+                          
+                          {/* Active turn indicator */}
+                          {isCurrentTurn && (
+                            <div className="absolute -top-2 -left-2 z-20 animate-bounce">
+                              <span className="text-xl">⚔️</span>
+                            </div>
+                          )}
+                          
+                          {member.habboAvatar && (
+                            <img
+                              src={member.habboAvatar}
+                              alt={member.username}
+                              className="pixel-icon w-full h-full object-cover"
+                            />
+                          )}
+                        </button>
+                      );
+                    })}
                     {partyMembers.length < 4 && Array.from({ length: 4 - partyMembers.length }).map((_, i) => (
                       <button
                         key={`empty-${i}`}
@@ -1059,11 +1099,27 @@ const Battle = () => {
                     {selectedMemberId && partyMembers.find(m => m.userId === selectedMemberId) ? (
                       (() => {
                         const member = partyMembers.find(m => m.userId === selectedMemberId)!;
+                        const isCurrentTurn = battleData.currentTurnUserId === member.userId;
+                        const isCurrentUser = member.userId === currentUserId;
+                        
                         return (
                       <div
                         key={member.userId}
-                        className="p-4 bg-muted rounded-lg border-2 border-habbo-dark space-y-3"
+                        className={`p-4 rounded-lg border-2 space-y-3 ${
+                          isCurrentTurn 
+                            ? 'bg-green-500/20 border-green-400 ring-2 ring-green-400/50' 
+                            : 'bg-muted border-habbo-dark'
+                        }`}
                       >
+                        {/* Turn status banner */}
+                        {isCurrentTurn && (
+                          <div className="text-center py-2 bg-green-500/30 -mx-4 -mt-4 mb-3 border-b-2 border-green-400">
+                            <p className="font-black text-green-400 text-sm animate-pulse">
+                              ⚔️ CURRENTLY ACTING ⚔️
+                            </p>
+                          </div>
+                        )}
+
                         {/* Avatar */}
                         {member.habboAvatar && (
                           <div className="flex justify-center">
@@ -1080,7 +1136,10 @@ const Battle = () => {
 
                         {/* Name & Level */}
                         <div className="text-center">
-                          <p className="font-bold">{member.username}</p>
+                          <p className="font-bold">
+                            {member.username}
+                            {isCurrentUser && <span className="ml-2 text-xs text-primary">(You)</span>}
+                          </p>
                           <p className="text-xs text-muted-foreground">Level {member.level}</p>
                         </div>
 
@@ -1122,24 +1181,57 @@ const Battle = () => {
                         );
                       })()
                     ) : (
-                      partyMembers.map((member) => (
+                      partyMembers.map((member) => {
+                        const isCurrentTurn = battleData.currentTurnUserId === member.userId;
+                        const isCurrentUser = member.userId === currentUserId;
+                        
+                        return (
                         <div
                           key={member.userId}
-                          className="p-3 bg-muted rounded border border-habbo-dark flex items-center gap-3"
+                          onClick={() => setSelectedMemberId(member.userId)}
+                          className={`p-3 rounded border-2 flex items-center gap-3 cursor-pointer transition-all ${
+                            isCurrentTurn
+                              ? 'bg-green-500/20 border-green-400 ring-2 ring-green-400/50 hover:bg-green-500/30'
+                              : 'bg-muted border-habbo-dark hover:border-primary'
+                          }`}
                         >
+                          {/* Turn indicator */}
+                          {isCurrentTurn && (
+                            <div className="flex items-center justify-center">
+                              <span className="text-xl animate-bounce">⚔️</span>
+                            </div>
+                          )}
+                          
                           {member.habboAvatar && (
                             <img
                               src={member.habboAvatar}
                               alt={member.username}
-                              className="pixel-icon w-8 h-8"
+                              className="pixel-icon w-10 h-10 border-2 border-habbo-dark rounded"
                             />
                           )}
-                          <div className="flex-1">
-                            <p className="font-bold text-sm">{member.username}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className={`font-bold text-sm truncate ${isCurrentTurn ? 'text-green-400' : ''}`}>
+                              {member.username}
+                              {isCurrentUser && <span className="ml-1 text-xs text-primary">(You)</span>}
+                            </p>
                             <p className="text-xs text-muted-foreground">Level {member.level}</p>
+                            {isCurrentTurn && (
+                              <p className="text-xs text-green-400 font-bold animate-pulse">Taking turn...</p>
+                            )}
+                          </div>
+                          
+                          {/* HP bar mini preview */}
+                          <div className="w-16">
+                            <div className="h-2 bg-muted border border-habbo-dark rounded-sm overflow-hidden">
+                              <div 
+                                className="h-full bg-hp transition-all"
+                                style={{ width: `${(member.currentHp / member.maxHp) * 100}%` }}
+                              />
+                            </div>
                           </div>
                         </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                   
@@ -1361,7 +1453,8 @@ const Battle = () => {
                     setSelectedAction("attack");
                     setSelectedItem(null);
                   }}
-                  className="font-bold border-4 border-habbo-dark"
+                  disabled={!isMyTurn}
+                  className="font-bold border-4 border-habbo-dark disabled:opacity-50"
                 >
                   <Swords className="w-4 h-4 mr-2" />
                   Attack
@@ -1372,7 +1465,8 @@ const Battle = () => {
                     setSelectedAction("skill");
                     setSelectedItem(null);
                   }}
-                  className="font-bold border-4 border-habbo-dark"
+                  disabled={!isMyTurn}
+                  className="font-bold border-4 border-habbo-dark disabled:opacity-50"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   Skill
@@ -1383,7 +1477,8 @@ const Battle = () => {
                     setSelectedAction("defend");
                     setSelectedItem(null);
                   }}
-                  className="font-bold border-4 border-habbo-dark"
+                  disabled={!isMyTurn}
+                  className="font-bold border-4 border-habbo-dark disabled:opacity-50"
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Defend
@@ -1391,7 +1486,8 @@ const Battle = () => {
                 <Button
                   variant={selectedAction === "item" ? "default" : "outline"}
                   onClick={() => setSelectedAction("item")}
-                  className="font-bold border-4 border-habbo-dark"
+                  disabled={!isMyTurn}
+                  className="font-bold border-4 border-habbo-dark disabled:opacity-50"
                 >
                   <Package className="w-4 h-4 mr-2" />
                   Item
