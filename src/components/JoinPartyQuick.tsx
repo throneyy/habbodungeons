@@ -32,7 +32,17 @@ export const JoinPartyQuick = () => {
 
       toast({ title: "Joined party!" });
       
-      // Navigate to the dungeon lobby using the dungeonId returned from the edge function
+      // If there's an active battle, navigate directly to it
+      if (data.activeBattle && data.dungeonId) {
+        toast({
+          title: "Joining battle in progress!",
+          description: "Your party is already fighting...",
+        });
+        navigate(`/battle/${data.dungeonId}`);
+        return;
+      }
+      
+      // Otherwise navigate to the dungeon lobby
       if (data.dungeonId) {
         navigate(`/dungeon-lobby/${data.dungeonId}`);
       } else {
