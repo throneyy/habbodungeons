@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { Sword, Trash2, Check } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { getItemImage } from "@/lib/itemAssets";
 
 interface InventoryItem {
   id: string;
@@ -194,8 +195,12 @@ const Inventory = () => {
                   }`}
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Sword className="w-5 h-5" />
+                    <div className="flex items-center gap-3">
+                      {getItemImage(item.item_name) ? (
+                        <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                      ) : (
+                        <Sword className="w-5 h-5" />
+                      )}
                       <div>
                         <p className="font-bold">{item.item_name}</p>
                         <p className="text-xs text-muted-foreground">Weapon</p>
@@ -253,7 +258,10 @@ const Inventory = () => {
                   key={item.id}
                   className="p-4 rounded-lg border-2 border-habbo-dark bg-muted"
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start gap-3 mb-3">
+                    {getItemImage(item.item_name) && (
+                      <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                    )}
                     <div>
                       <p className="font-bold">{item.item_name}</p>
                       <p className="text-xs text-muted-foreground">x{item.quantity}</p>
@@ -283,7 +291,10 @@ const Inventory = () => {
                   key={item.id}
                   className="p-4 rounded-lg border-2 border-habbo-dark bg-muted"
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start gap-3 mb-3">
+                    {getItemImage(item.item_name) && (
+                      <img src={getItemImage(item.item_name)} alt={item.item_name} className="w-8 h-8 pixelated" />
+                    )}
                     <div>
                       <p className="font-bold">{item.item_name}</p>
                       <p className="text-xs text-muted-foreground">
