@@ -7,7 +7,7 @@ import { getItemImage } from "@/lib/itemAssets";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Link, Users, Gift } from "lucide-react";
+import { LogOut, Link, Users, Gift, RefreshCw } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 
 interface Profile {
@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -77,6 +78,50 @@ const Dashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const refreshAvatar = async () => {
+    if (!profile?.habbo_username) return;
+    
+    setRefreshing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-habbo-profile", {
+        body: { username: profile.habbo_username },
+      });
+
+      if (error) throw error;
+
+      if (data.profile) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Not authenticated");
+
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({
+            habbo_profile_json: data.profile,
+          })
+          .eq("id", user.id);
+
+        if (updateError) throw updateError;
+
+        setProfile({
+          ...profile,
+          habbo_profile_json: data.profile,
+        });
+
+        toast({ 
+          title: "Avatar refreshed!", 
+          description: "Your Habbo outfit has been updated." 
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to refresh avatar",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setRefreshing(false);
   };
 
   if (loading) {
@@ -132,6 +177,16 @@ const Dashboard = () => {
                       <p className="italic">{profile.habbo_profile_json.motto}</p>
                     </div>
                   )}
+                  <Button
+                    onClick={refreshAvatar}
+                    disabled={refreshing}
+                    variant="outline"
+                    size="sm"
+                    className="font-bold border-2 border-habbo-dark"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+                    Refresh Avatar
+                  </Button>
                 </>
               ) : (
                 <Button
