@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,19 @@ import npcKnight from "@/assets/npc-knight.png";
 const Home = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
@@ -113,11 +126,11 @@ const Home = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
               <Button
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate(isAuthenticated ? "/dashboard" : "/auth")}
                 size="lg"
                 className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark bg-primary hover:bg-primary/90 shadow-lg hover-scale"
               >
-                Start Your Adventure
+                {isAuthenticated ? "Go to Dashboard" : "Start Your Adventure"}
               </Button>
               <Button
                 onClick={() => navigate("/dungeon-list")}
