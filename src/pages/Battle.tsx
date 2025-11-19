@@ -1791,9 +1791,9 @@ const Battle = () => {
           </HabboPanel>
         </div>
 
-        {/* Party Members Section - Show in all modes */}
-        <div className="grid md:grid-cols-2 gap-6">
-            <HabboPanel title={serverId ? "Server Players" : "Party Members"}>
+        {/* Party Members Section - Horizontal in battle mode, grid in story mode */}
+        <div className={battleData.mode === "battle" ? "flex gap-6" : "grid md:grid-cols-2 gap-6"}>
+            <HabboPanel title={serverId ? "Server Players" : "Party Members"} className={battleData.mode === "battle" ? "flex-1" : ""}>
               {serverId ? (
                 <PartyMembers serverId={serverId} />
               ) : partyId ? (
@@ -1812,7 +1812,7 @@ const Battle = () => {
               )}
             </HabboPanel>
 
-            {partyId && inviteCode && (
+            {partyId && inviteCode && battleData.mode !== "battle" && (
               <HabboPanel title="Invite Friends">
                 <div className="space-y-4">
                   <p className="text-sm">Share this code with your friends:</p>
