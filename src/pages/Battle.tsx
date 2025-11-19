@@ -240,11 +240,33 @@ const Battle = () => {
     try {
       // Pre-check: Verify battle exists and is active before calling edge function
       console.log("Pre-checking battle status for dungeon:", id);
-      let { data: battleCheck, error: checkError } = await supabase
+      
+      // Check if user is in a server first to determine which battle to look for
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
+      const { data: serverMember } = await supabase
+        .from('server_players')
+        .select('server_id, servers!inner(dungeon_id)')
+        .eq('user_id', userId || '')
+        .eq('servers.dungeon_id', id)
+        .maybeSingle();
+      
+      const userServerId = serverMember?.server_id || null;
+      
+      // Build query based on whether this is a server battle or solo
+      let battleQuery = supabase
         .from('battle_states')
         .select('is_active')
-        .eq('dungeon_id', id)
-        .maybeSingle();
+        .eq('dungeon_id', id);
+      
+      if (userServerId) {
+        battleQuery = battleQuery.eq('server_id', userServerId);
+      } else {
+        battleQuery = battleQuery.eq('user_id', userId || '').is('server_id', null);
+      }
+      
+      let { data: battleCheck, error: checkError } = await battleQuery.maybeSingle();
       
       if (checkError) {
         console.error("Error checking battle status:", checkError);
@@ -275,12 +297,19 @@ const Battle = () => {
 
           console.log("Battle initialized, re-fetching battle state...");
           
-          // Re-fetch the battle state after initialization
-          const { data: newBattleCheck, error: refetchError } = await supabase
+          // Re-fetch the battle state after initialization with proper filtering
+          let refetchQuery = supabase
             .from('battle_states')
             .select('is_active')
-            .eq('dungeon_id', id)
-            .maybeSingle();
+            .eq('dungeon_id', id);
+          
+          if (userServerId) {
+            refetchQuery = refetchQuery.eq('server_id', userServerId);
+          } else {
+            refetchQuery = refetchQuery.eq('user_id', userId || '').is('server_id', null);
+          }
+          
+          const { data: newBattleCheck, error: refetchError } = await refetchQuery.maybeSingle();
           
           if (refetchError || !newBattleCheck) {
             console.error("Failed to fetch battle after initialization:", refetchError);
