@@ -195,6 +195,14 @@ CRITICAL RULES:
 - Stay in character as dungeon master
 - Output ONLY valid JSON, no markdown
 
+CRITICAL RULE - Room Progression:
+- Set progressRoom=true in 70% of choices (most choices should advance the story)
+- Only set progressRoom=false for: resting in place, careful searching of current area, or explicitly staying put
+- ANY forward movement → progressRoom=true
+- Combat choices → progressRoom=true + triggersBattle=true
+- Exploration → progressRoom=true
+- "Continue/proceed/move/advance" → ALWAYS progressRoom=true
+
 Output format:
 {
   "consequenceText": "Brief narration of what happens. If triggersBattle=true, MUST mention the enemy name! Example: 'An Ice Elemental materializes before you!'",
@@ -202,14 +210,15 @@ Output format:
   "mpChange": -5 to +10,
   "itemsGained": [{"name": "item name", "quantity": 1}] or [],
   "triggersBattle": true/false,
-  "progressRoom": true/false (whether to advance to next room)
+  "progressRoom": true/false (whether to advance to next room - default to TRUE)
 }
 
 Example interpretations:
-- "Charge in recklessly" → High damage risk, likely battle, maybe items from aggression
-- "Carefully search the area" → Small HP cost from effort, might find items, low battle chance
-- "Rest by the fire" → Restore HP/MP, very low battle chance
-- "Investigate the strange noise" → Neutral outcome, moderate battle chance based on what's found`,
+- "Charge ahead" → progressRoom=true, high damage, likely battle
+- "Proceed cautiously" → progressRoom=true, small HP cost, explore forward
+- "Search current area" → progressRoom=false, might find items
+- "Rest here" → progressRoom=false, restore HP/MP
+- "Investigate and move on" → progressRoom=true`,
           },
           {
             role: "user",
@@ -262,6 +271,7 @@ What happens as a result of this choice?`,
     };
 
     console.log("Sanitized outcome:", sanitizedOutcome);
+    console.log(`🔄 progressRoom=${sanitizedOutcome.progressRoom}, current_room=${battleState.current_room_index}, triggersBattle=${sanitizedOutcome.triggersBattle}`);
 
     // Apply HP/MP changes
     const newHp = Math.max(0, Math.min(
