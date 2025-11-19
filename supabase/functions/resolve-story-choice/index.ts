@@ -40,6 +40,11 @@ const ENEMY_SPRITE_MAP: Record<string, string> = {
   "warrior": "skeleton.png",
   "shade": "ice-shade.png",
   "ice shade": "ice-shade.png",
+  "ice knight": "ice-knight-boss.png",
+  "knight commander": "ice-knight-boss.png",
+  "ice knight commander": "ice-knight-boss.png",
+  "blood dragon": "blood-dragon-boss.gif",
+  "dragon": "blood-dragon-boss.gif",
 };
 
 // Function to find matching sprite based on enemy name
