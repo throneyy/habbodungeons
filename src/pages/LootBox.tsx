@@ -139,10 +139,10 @@ export default function LootBox() {
         <div className="mb-8">
           <h1 className="text-4xl font-black text-center mb-2">
             <Sparkles className="inline-block mr-2 h-8 w-8" />
-            Loot Box Opening
+            Chest Opening
           </h1>
           <p className="text-center text-muted-foreground">
-            Open chests to receive random loot and powerful items!
+            Open treasure chests to receive random loot and powerful items!
           </p>
         </div>
 

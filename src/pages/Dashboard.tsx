@@ -235,10 +235,10 @@ const Dashboard = () => {
               </div>
             </HabboPanel>
             
-            <HabboPanel title="Open Loot Boxes">
+            <HabboPanel title="Treasure Chests">
               <div className="space-y-4">
                 <p className="text-center text-muted-foreground">
-                  Open chests to receive random loot and powerful items!
+                  Open treasure chests to receive random loot and powerful items!
                 </p>
                 <div className="flex justify-center">
                   <Button
