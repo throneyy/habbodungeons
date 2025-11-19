@@ -954,6 +954,29 @@ const Battle = () => {
           });
           // Stay on current view, don't reload battle
           shouldReloadBattle = false;
+        } else if (data.outcome.progressRoom) {
+          // Calculate and show dice result if this was a dice check
+          let toastTitle = "Moving forward";
+          let toastDescription = data.outcome.consequenceText;
+          
+          if (choice.diceRequired && choice.diceDC) {
+            const diceTotal = storyDice.reduce((a, b) => a + b, 0);
+            const success = diceTotal >= choice.diceDC;
+            const margin = diceTotal - choice.diceDC;
+            
+            toastTitle = success 
+              ? `Success! (${diceTotal} vs DC ${choice.diceDC}, +${margin})`
+              : `Failed! (${diceTotal} vs DC ${choice.diceDC}, ${margin})`;
+          }
+          
+          toast({
+            title: toastTitle,
+            description: toastDescription,
+          });
+          
+          // Advance to next room
+          await handleContinueToNextRoom();
+          shouldReloadBattle = false;
         } else {
           // Calculate and show dice result if this was a dice check
           let toastTitle = data.outcome.triggersBattle ? "Battle!" : "The path unfolds";
