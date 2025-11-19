@@ -206,7 +206,7 @@ export default function LootBox() {
         {/* Rewards Display */}
         {showRewards && rewards.length > 0 && (
           <div className="mt-8 animate-fade-in">
-            <HabboPanel title="🎁 Rewards Received!">
+            <HabboPanel title="Rewards Received!">
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
                 {rewards.map((reward, index) => (
                   <div
