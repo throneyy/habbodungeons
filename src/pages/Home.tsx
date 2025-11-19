@@ -47,7 +47,7 @@ const Home = () => {
         <MainNav />
         
         {/* Search Habbo Players */}
-        <div className="bg-card border-4 border-habbo-dark rounded-xl p-4">
+        <div className="bg-card border-4 border-habbo-dark rounded-xl p-4 shadow-lg">
           <div className="flex gap-2">
             <Input
               placeholder="Enter your Habboname and find your fishy info"
