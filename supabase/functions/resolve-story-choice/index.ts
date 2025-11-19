@@ -263,7 +263,7 @@ Return ONLY valid JSON (no markdown):
       progressRoom = false;
     }
 
-    const sanitizedOutcome = {
+    let sanitizedOutcome = {
       consequenceText: typeof outcome.consequenceText === 'string' 
         ? outcome.consequenceText 
         : typeof outcome.narrativeText === 'string'
@@ -275,6 +275,13 @@ Return ONLY valid JSON (no markdown):
       triggersBattle,
       progressRoom,
     };
+
+    // If a battle is requested but this room has no enemy configured in the dungeon,
+    // cancel the battle to avoid desynced fights with a generic Ice Shade.
+    if (sanitizedOutcome.triggersBattle && (!currentRoom || !currentRoom.enemy)) {
+      console.log("Story choice requested a battle, but current room has no enemy. Keeping this as a story event only.");
+      sanitizedOutcome.triggersBattle = false;
+    }
 
     console.log("Sanitized outcome:", sanitizedOutcome);
     console.log(`🔄 progressRoom=${sanitizedOutcome.progressRoom}, current_room=${battleState.current_room_index}, triggersBattle=${sanitizedOutcome.triggersBattle}`);
