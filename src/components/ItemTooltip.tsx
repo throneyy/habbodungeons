@@ -17,7 +17,7 @@ export const ItemTooltip = ({ itemName, children }: ItemTooltipProps) => {
       onMouseLeave={() => setShowTooltip(false)}
     >
       {children}
-      {showTooltip && itemImage && (
+      {showTooltip && (
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 animate-fade-in">
           <div className="bg-habbo-dark border-2 border-primary p-2 rounded shadow-lg">
             <img 
@@ -25,6 +25,9 @@ export const ItemTooltip = ({ itemName, children }: ItemTooltipProps) => {
               alt={itemName}
               className="pixel-icon w-16 h-16 object-contain"
             />
+            <p className="text-xs text-center text-foreground mt-1 font-bold whitespace-nowrap">
+              {itemName}
+            </p>
           </div>
         </div>
       )}

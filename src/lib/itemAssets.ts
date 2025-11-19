@@ -53,20 +53,68 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Scroll": scroll,
   "Ancient Scroll": scrollStack,
   "Tome": scrollOpen,
-  // Additional mappings for quest items
+  // Quest items
   "Scroll of Minor Healing": scroll,
   "Potion of Minor Healing": potion,
   "Rune of Frostsight": runestones,
   "Frostbloom Herb": herb,
-  // Generic fallbacks for common item types
+  // Weapons - daggers, swords
+  "Ornate Dagger": rustySword,
+  "Dagger": rustySword,
+  "Blade": rustySword,
+  "Sword": fightersSword,
+  "Longsword": warriorsSword,
+  "Shortsword": fightersSword,
+  "Greatsword": warriorsSword,
+  // Keys
   "Key": metalIngot,
+  "Old Key": metalIngot,
+  "Ancient Key": metalIngot,
+  "Rusted Key": metalIngot,
+  // Gems and crystals
   "Gem": crystalShards,
   "Crystal": crystalShards,
+  "Jewel": crystalShards,
+  "Diamond": crystalShards,
+  "Ruby": crystalShards,
+  "Sapphire": crystalShards,
+  "Emerald": crystalShards,
+  // Currency
   "Coins": goldCoins,
+  "Silver Coins": goldCoins,
+  "Copper Coins": goldCoins,
+  // Consumables
   "Food": sweetcakes,
   "Drink": frothyPint,
+  "Bread": sweetcakes,
+  "Meat": sweetcakes,
+  "Water": frothyPint,
+  "Wine": frothyPint,
+  // Materials
+  "Leather": clothSquares,
+  "Hide": clothSquares,
+  "Fur": clothSquares,
+  "Ore": metalIngot,
+  "Ingot": metalIngot,
+  "Stone": runestones,
+  "Rock": runestones,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {
-  return ITEM_ASSETS[itemName];
+  // Direct match
+  if (ITEM_ASSETS[itemName]) {
+    return ITEM_ASSETS[itemName];
+  }
+  
+  // Try partial matching for items with adjectives
+  const nameLower = itemName.toLowerCase();
+  for (const [key, sprite] of Object.entries(ITEM_ASSETS)) {
+    const keyLower = key.toLowerCase();
+    if (nameLower.includes(keyLower) || keyLower.includes(nameLower)) {
+      return sprite;
+    }
+  }
+  
+  // Default fallback - use everyday supply chest as generic item icon
+  return everydaySupplyChest;
 };
