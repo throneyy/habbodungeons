@@ -1309,18 +1309,24 @@ const Battle = () => {
               {/* Quest Information - Always at top */}
               {battleData.dungeon_name && (
                 <div className="mb-4 p-4 bg-primary/10 border-2 border-primary rounded-lg">
-                  <h3 className="text-xl font-black text-primary mb-2">
+                  <h3 className="text-xl font-black text-primary mb-3">
                     Quest: {battleData.dungeon_name}
                   </h3>
                   {battleData.intro_text && (
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {battleData.intro_text}
-                    </p>
+                    <div className="text-sm text-foreground mb-3 space-y-1">
+                      {battleData.intro_text.split('. ').filter(s => s.trim()).map((sentence, i) => (
+                        <div key={i} className="flex gap-2">
+                          <span className="text-primary">&gt;</span>
+                          <span>{sentence.trim()}{sentence.includes('.') ? '' : '.'}</span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                   {battleData.quest_objective && (
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-bold">Objective:</span> {battleData.quest_objective}
-                    </p>
+                    <div className="text-sm text-foreground flex gap-2 pt-2 border-t border-primary/20">
+                      <span className="text-primary">&gt;</span>
+                      <span><span className="font-bold text-primary">Objective:</span> {battleData.quest_objective}</span>
+                    </div>
                   )}
                 </div>
               )}
