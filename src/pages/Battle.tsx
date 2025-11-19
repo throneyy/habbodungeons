@@ -919,13 +919,15 @@ const Battle = () => {
           choiceId: choice.id,
           choiceLabel: choice.label,
           storyText: storyNode.storyText,
-          diceRoll: choice.diceRequired ? storyDice.reduce((a, b) => a + b, 0) : undefined,
+          diceRoll: choice.diceRequired ? storyDice : undefined,
+          diceDC: choice.diceDC,
+          skillType: choice.skillType || "check",
         },
       });
 
       if (error) throw error;
 
-      // Show consequence toast
+      // Show consequence toast with dice result if applicable
       if (data.outcome) {
         if (data.outcome.dungeonComplete) {
           setQuestComplete(true);
@@ -935,9 +937,23 @@ const Battle = () => {
           });
           return;
         } else {
+          // Calculate and show dice result if this was a dice check
+          let toastTitle = data.outcome.triggersBattle ? "Battle!" : "The path unfolds";
+          let toastDescription = data.outcome.consequenceText;
+          
+          if (choice.diceRequired && choice.diceDC) {
+            const diceTotal = storyDice.reduce((a, b) => a + b, 0);
+            const success = diceTotal >= choice.diceDC;
+            const margin = diceTotal - choice.diceDC;
+            
+            toastTitle = success 
+              ? `Success! (${diceTotal} vs DC ${choice.diceDC}, +${margin})`
+              : `Failed! (${diceTotal} vs DC ${choice.diceDC}, ${margin})`;
+          }
+          
           toast({
-            title: data.outcome.triggersBattle ? "Battle!" : "The path unfolds",
-            description: data.outcome.consequenceText,
+            title: toastTitle,
+            description: toastDescription,
           });
         }
       }
@@ -945,11 +961,22 @@ const Battle = () => {
       // Reload battle to get updated state (only if not complete)
       await loadBattle();
     } catch (error: any) {
-      toast({
-        title: "Failed to resolve choice",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error("Story choice error:", error);
+      
+      // Handle specific error cases
+      if (error.message?.includes("Not your turn")) {
+        toast({
+          title: "Not Your Turn",
+          description: "Please wait for your turn to make a choice.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Failed to resolve choice",
+          description: error.message || "An unexpected error occurred",
+          variant: "destructive",
+        });
+      }
     }
     setStoryLoading(false);
     // Reset dice input state
