@@ -259,10 +259,13 @@ serve(async (req) => {
       battleLog = battleLog.map((msg: any) => ({ user_id: user.id, message: msg }));
     }
 
+    // Find the current user's stats in the players array
+    const currentPlayer = players.find(p => p.userId === user.id) || players[0];
+    
     const battleData = {
       enemy: enemyState,
       players: players, // Array of all players (party or solo)
-      player: players[0], // Keep for backwards compatibility
+      player: currentPlayer, // Current user's stats
       room_description: currentRoom.description || '',
       battle_log: battleLog,
       mode: mode,
