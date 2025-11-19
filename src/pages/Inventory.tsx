@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
-import { Sword, Trash2, Check } from "lucide-react";
+import { Sword, Trash2, Check, Gift } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getItemImage } from "@/lib/itemAssets";
@@ -177,9 +177,15 @@ const Inventory = () => {
       <div className="space-y-6 p-4 max-w-6xl mx-auto">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Inventory</h1>
-          <Button onClick={() => navigate("/dashboard")} variant="outline">
-            Back to Dashboard
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/loot-box")} variant="default">
+              <Gift className="mr-2 h-4 w-4" />
+              Open Loot Boxes
+            </Button>
+            <Button onClick={() => navigate("/dashboard")} variant="outline">
+              Back to Dashboard
+            </Button>
+          </div>
         </div>
 
         {/* Weapons */}
