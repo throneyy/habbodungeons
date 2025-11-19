@@ -13,18 +13,24 @@ serve(async (req) => {
 
   try {
     const { username, newPassword } = await req.json();
-    console.log("Resetting password for:", username);
+    const normalizedUsername = String(username).trim().toLowerCase();
+    console.log("Resetting password for:", normalizedUsername);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the user profile to get the user ID (case-insensitive, handle email format)
+    // Build email-style username used in auth / profiles
+    const emailUsername = normalizedUsername.includes("@")
+      ? normalizedUsername
+      : `${normalizedUsername}@habbo-dungeons.local`;
+
+    // Find the user profile to get the user ID (exact email match)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id, username')
-      .ilike('username', `${username.toLowerCase()}%`)
-      .single();
+      .eq('username', emailUsername)
+      .maybeSingle();
 
     if (profileError || !profile) {
       throw new Error("User not found");
