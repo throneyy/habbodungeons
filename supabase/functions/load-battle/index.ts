@@ -271,6 +271,8 @@ serve(async (req) => {
       dungeon_name: battle.dungeons.name,
       dungeon_theme: battle.dungeons.theme,
       dungeon_difficulty: battle.dungeons.difficulty,
+      quest_objective: dungeonData.questObjective || null,
+      intro_text: dungeonData.introText || null,
       room_description: currentRoom.description || '',
       room_type: currentRoom.roomType || 'story',
       treasure_description: currentRoom.treasureDescription || null,
