@@ -124,25 +124,20 @@ const Home = () => {
         
         {/* Hero Search */}
         <HabboPanel className="bg-gradient-to-br from-primary/20 to-secondary/20">
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold text-center text-foreground">
-              Enter your Habboname and find your stats
-            </h1>
-            <div className="flex gap-2 max-w-2xl mx-auto">
-              <Input
-                placeholder="Enter your Habboname and find your stats"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="h-12 text-lg border-2 border-habbo-dark"
-              />
-              <Button
-                onClick={handleSearch}
-                className="h-12 px-8 font-bold border-2 border-habbo-dark bg-green-600 hover:bg-green-700"
-              >
-                Search
-              </Button>
-            </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter your Habboname and find your stats"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="h-12 text-lg border-2 border-habbo-dark"
+            />
+            <Button
+              onClick={handleSearch}
+              className="h-12 px-8 font-bold border-2 border-habbo-dark bg-green-600 hover:bg-green-700 whitespace-nowrap"
+            >
+              Search
+            </Button>
           </div>
         </HabboPanel>
 

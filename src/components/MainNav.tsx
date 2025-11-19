@@ -23,7 +23,7 @@ export const MainNav = () => {
         <img 
           src={habboDungeonsBanner}
           alt="Habbo Dungeons"
-          className="cursor-pointer pixel-icon h-12"
+          className="cursor-pointer pixel-icon h-8"
           onClick={() => navigate("/")}
         />
         
