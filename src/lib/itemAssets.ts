@@ -20,6 +20,16 @@ import herb from "@/assets/herb.png";
 import scroll from "@/assets/scroll.png";
 import scrollStack from "@/assets/scroll-stack.png";
 import scrollOpen from "@/assets/scroll-open.png";
+import sackOfPotatoes from "@/assets/sack-of-potatoes.png";
+import curedMeat from "@/assets/cured-meat.png";
+import pouch from "@/assets/pouch.png";
+import candles from "@/assets/candles.png";
+import poison from "@/assets/poison.png";
+import longFeathers from "@/assets/long-feathers.png";
+import crystals from "@/assets/crystals.png";
+import werewolf from "@/assets/werewolf.png";
+import flamingPhantom from "@/assets/flaming-phantom.png";
+import spiritOwl from "@/assets/spirit-owl.png";
 
 export const ITEM_ASSETS: Record<string, string> = {
   "Rusty Sword": rustySword,
@@ -53,6 +63,22 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Scroll": scroll,
   "Ancient Scroll": scrollStack,
   "Tome": scrollOpen,
+  "Sack of Potatoes": sackOfPotatoes,
+  "Potatoes": sackOfPotatoes,
+  "Cured Meat": curedMeat,
+  "Pouch": pouch,
+  "Candles": candles,
+  "Candle": candles,
+  "Poison": poison,
+  "Long Feathers": longFeathers,
+  "Feathers": longFeathers,
+  "Feather": longFeathers,
+  "Crystals": crystals,
+  "Werewolf": werewolf,
+  "Flaming Phantom": flamingPhantom,
+  "Phantom": flamingPhantom,
+  "Spirit Owl": spiritOwl,
+  "Owl": spiritOwl,
   // Quest items
   "Scroll of Minor Healing": scroll,
   "Potion of Minor Healing": potion,
