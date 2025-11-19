@@ -89,6 +89,16 @@ serve(async (req) => {
 
     // For party/server battles, check if it's the player's turn
     const isPartyBattle = !!battle.party_id || !!battle.server_id;
+    const deadPlayers = (battle.dead_players || []) as string[];
+    
+    // Check if current player is already dead
+    if (isPartyBattle && deadPlayers.includes(user.id)) {
+      return new Response(
+        JSON.stringify({ error: "You are dead. Waiting for party members to continue..." }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
     if (isPartyBattle) {
       if (battle.current_turn_user_id !== user.id) {
         return new Response(
@@ -208,6 +218,10 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
     let newLevel = stats.level;
     let xpMessages: string[] = [];
     let lootItems: Array<{ item_name: string; quantity: number; item_type: string }> = [];
+    
+    // Track dead players for party battles
+    let updatedDeadPlayers = [...deadPlayers];
+    let isEntirePartyDead = false;
 
     if (result.victory) {
       // Generate loot drops
@@ -346,20 +360,66 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
     } else {
       // No victory - check for defeat and handle respawn
       if (result.defeat) {
-        // Soft defeat: Restore 50% HP and MP, player respawns at town
-        const respawnHp = Math.floor(stats.max_hp * 0.5);
-        const respawnMp = Math.floor(stats.max_mp * 0.5);
-        
-        await supabase
-          .from('player_stats')
-          .update({ 
-            current_hp: respawnHp,
-            current_mp: respawnMp 
-          })
-          .eq('user_id', user.id);
-        
-        xpMessages.push(`You were defeated and retreated to town...`);
-        xpMessages.push(`HP and MP restored to 50%.`);
+        if (isPartyBattle) {
+          // In party battles, mark player as dead but keep HP at 0
+          if (!updatedDeadPlayers.includes(user.id)) {
+            updatedDeadPlayers.push(user.id);
+          }
+          
+          await supabase
+            .from('player_stats')
+            .update({ current_hp: 0 })
+            .eq('user_id', user.id);
+          
+          xpMessages.push(`You have been defeated!`);
+          xpMessages.push(`Waiting for party members to continue...`);
+          
+          // Check if entire party is dead
+          const turnOrder = battle.turn_order as string[];
+          isEntirePartyDead = turnOrder.every(playerId => updatedDeadPlayers.includes(playerId));
+          
+          if (isEntirePartyDead) {
+            xpMessages.push(`The entire party has been wiped out!`);
+            // Restore all players to 50% HP/MP
+            const supabaseAdmin = createClient(
+              Deno.env.get('SUPABASE_URL') ?? '',
+              Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+            );
+            
+            for (const playerId of turnOrder) {
+              const { data: playerStats } = await supabaseAdmin
+                .from('player_stats')
+                .select('max_hp, max_mp')
+                .eq('user_id', playerId)
+                .single();
+              
+              if (playerStats) {
+                await supabaseAdmin
+                  .from('player_stats')
+                  .update({
+                    current_hp: Math.floor(playerStats.max_hp * 0.5),
+                    current_mp: Math.floor(playerStats.max_mp * 0.5),
+                  })
+                  .eq('user_id', playerId);
+              }
+            }
+          }
+        } else {
+          // Solo battle - restore to 50% HP/MP and end battle
+          const respawnHp = Math.floor(stats.max_hp * 0.5);
+          const respawnMp = Math.floor(stats.max_mp * 0.5);
+          
+          await supabase
+            .from('player_stats')
+            .update({ 
+              current_hp: respawnHp,
+              current_mp: respawnMp 
+            })
+            .eq('user_id', user.id);
+          
+          xpMessages.push(`You were defeated and retreated to town...`);
+          xpMessages.push(`HP and MP restored to 50%.`);
+        }
       } else {
         // Just update HP if not defeated
         await supabase
@@ -387,8 +447,20 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
       mode: result.victory ? "story" : "battle", // Switch to story mode after victory
     };
 
-    // If victory, check if we should progress to the next room
+    // If victory, revive dead party members with 5 HP and check room progression
     if (result.victory) {
+      // Revive dead party members with 5 HP
+      if (isPartyBattle && updatedDeadPlayers.length > 0) {
+        for (const deadPlayerId of updatedDeadPlayers) {
+          await supabase
+            .from('player_stats')
+            .update({ current_hp: 5 })
+            .eq('user_id', deadPlayerId);
+        }
+        updatedDeadPlayers = []; // Clear dead players list
+        xpMessages.push(`Fallen party members have been revived with 5 HP!`);
+      }
+      
       newRoomIndex = battle.current_room_index + 1;
       
       if (newRoomIndex < totalRooms) {
@@ -426,19 +498,20 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
 
     // Calculate next turn for party/server battles
     let nextTurnUserId = battle.current_turn_user_id;
-    if (isPartyBattle && battle.turn_order && !result.defeat) {
+    if (isPartyBattle && battle.turn_order && !isEntirePartyDead) {
       const turnOrder = battle.turn_order as string[];
+      const alivePlayers = turnOrder.filter(id => !updatedDeadPlayers.includes(id));
       
       if (result.victory && newRoomIndex < totalRooms) {
-        // Reset to first player for new room
-        nextTurnUserId = turnOrder[0];
-        console.log(`Victory! Resetting turn to first player: ${nextTurnUserId}`);
-      } else if (!result.victory) {
-        // Normal turn rotation during combat
-        const currentIndex = turnOrder.indexOf(user.id);
-        const nextIndex = (currentIndex + 1) % turnOrder.length;
-        nextTurnUserId = turnOrder[nextIndex];
-        console.log(`Advancing turn from ${user.id} to ${nextTurnUserId}`);
+        // Reset to first alive player for new room
+        nextTurnUserId = alivePlayers[0] || turnOrder[0];
+        console.log(`Victory! Resetting turn to first alive player: ${nextTurnUserId}`);
+      } else if (!result.victory && alivePlayers.length > 0) {
+        // Normal turn rotation during combat - skip dead players
+        const currentIndex = alivePlayers.indexOf(user.id);
+        const nextIndex = (currentIndex + 1) % alivePlayers.length;
+        nextTurnUserId = alivePlayers[nextIndex];
+        console.log(`Advancing turn from ${user.id} to ${nextTurnUserId} (skipping dead players)`);
       }
     }
 
@@ -449,7 +522,8 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
         battle_log: updatedLog,
         current_room_index: newRoomIndex,
         current_turn_user_id: nextTurnUserId,
-        is_active: !result.defeat && newRoomIndex < totalRooms, // Mark inactive if defeated or quest complete
+        dead_players: updatedDeadPlayers,
+        is_active: !(isPartyBattle ? isEntirePartyDead : result.defeat) && newRoomIndex < totalRooms, // Mark inactive if entire party defeated or quest complete
       })
       .eq('id', battle.id);
 
@@ -484,7 +558,8 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
       JSON.stringify({
         battleData,
         victory: result.victory,
-        defeat: result.defeat,
+        defeat: isPartyBattle ? isEntirePartyDead : result.defeat, // Only send defeat if entire party is dead
+        playerDied: result.defeat, // Indicate if THIS player died
         playerDamageDealt: result.playerDamageDealt,
         enemyDamageDealt: result.playerDamageTaken,
         lootItems: result.victory ? lootItems : [],

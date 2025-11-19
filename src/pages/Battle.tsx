@@ -853,10 +853,22 @@ const Battle = () => {
           setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
           setShowVictoryLoot(true);
           // Note: loadBattle will be called when user closes the modal
-        } else if (data.defeat) {
+        } else if (data.playerDied && !data.defeat) {
+          // This player died but party continues
           toast({ 
-            title: "Defeated!", 
-            description: "You retreat to town with 50% HP/MP restored...",
+            title: "You have fallen!", 
+            description: "Your party members continue the fight. You'll be revived if they win!",
+            variant: "destructive" 
+          });
+          // Reload battle to show updated state
+          setTimeout(() => {
+            loadBattle();
+          }, 2000);
+        } else if (data.defeat) {
+          // Entire party wiped out
+          toast({ 
+            title: "Party Defeated!", 
+            description: "The entire party has been wiped out. Returning to town...",
             variant: "destructive" 
           });
           // Redirect to dashboard after defeat
