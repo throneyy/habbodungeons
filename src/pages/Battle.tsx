@@ -904,6 +904,12 @@ const Battle = () => {
     const choice = storyNode.choices.find((c) => c.id === choiceId);
     if (!choice) return;
 
+    // If choice requires dice and we haven't skipped the check, show dice input
+    if (choice.diceRequired && !skipDiceCheck) {
+      setSelectedChoice(choice);
+      return;
+    }
+
     setStoryLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("resolve-story-choice", {
@@ -912,6 +918,7 @@ const Battle = () => {
           choiceId: choice.id,
           choiceLabel: choice.label,
           storyText: storyNode.storyText,
+          diceRoll: diceValues ? parseInt(diceValues) : undefined,
         },
       });
 
@@ -944,6 +951,9 @@ const Battle = () => {
       });
     }
     setStoryLoading(false);
+    // Reset dice input state
+    setSelectedChoice(null);
+    setDiceValues("");
   };
 
   const handleClaimTreasure = async () => {
