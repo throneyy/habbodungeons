@@ -942,6 +942,8 @@ const Battle = () => {
 
       if (error) throw error;
 
+      let shouldReloadBattle = true;
+
       // Show consequence toast with dice result if applicable
       if (data.outcome) {
         if (data.outcome.dungeonComplete) {
@@ -950,7 +952,8 @@ const Battle = () => {
             title: "Quest Complete!",
             description: "You have conquered this challenge. What will you do next?",
           });
-          return;
+          // Stay on current view, don't reload battle
+          shouldReloadBattle = false;
         } else {
           // Calculate and show dice result if this was a dice check
           let toastTitle = data.outcome.triggersBattle ? "Battle!" : "The path unfolds";
@@ -974,7 +977,9 @@ const Battle = () => {
       }
 
       // Reload battle to get updated state (only if not complete)
-      await loadBattle();
+      if (shouldReloadBattle) {
+        await loadBattle();
+      }
     } catch (error: any) {
       console.error("Story choice error:", error);
       
