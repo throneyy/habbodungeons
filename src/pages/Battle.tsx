@@ -29,6 +29,7 @@ import frostWraith from "@/assets/frost-wraith.png";
 import undeadHabbo from "@/assets/undead-habbo.png";
 import frostbiteSpider from "@/assets/frostbite-spider.webp";
 import giantRat from "@/assets/giant-rat.png";
+import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import { getNPCById } from "@/lib/npcData";
 
 // Enemy sprite mapping
@@ -1447,7 +1448,10 @@ const Battle = () => {
                       {/* Treasure Room */}
                       {battleData.room_type === 'treasure' && (
                         <div className="space-y-4">
-                          <h3 className="text-2xl font-black text-center mb-4">🎁 Treasure Found!</h3>
+                          <h3 className="text-2xl font-black text-center mb-4 flex items-center justify-center gap-2">
+                            <img src={treasureChestOpen} alt="Treasure" className="w-8 h-8 pixelated" />
+                            Treasure Found!
+                          </h3>
                           <p className="text-lg leading-relaxed">
                             {battleData.treasure_description || 'A mysterious chest awaits...'}
                           </p>
