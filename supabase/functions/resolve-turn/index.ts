@@ -136,9 +136,15 @@ serve(async (req) => {
             
 CRITICAL: The enemy ALWAYS counterattacks after the player acts (unless the enemy is defeated). 
 
+DAMAGE FORMULA (USE THIS EXACTLY):
+- Player damage = (playerATK + weaponBonus) × (diceSum / 3) - (enemyDEF / 4)
+- Enemy damage = enemyATK × 1.2 - (playerDEF / 4)
+- Minimum damage is always 1
+- weaponBonus: Basic weapons = 5, Powerful weapons = 10, No weapon = 0
+
 When the player attacks with a weapon, ALWAYS mention the weapon name in the narration by wrapping it like this: [WEAPON:weapon_name]
 
-Factor in equipped weapon for damage calculation. Output ONLY valid JSON (no markdown formatting) with: 
+Output ONLY valid JSON (no markdown formatting) with: 
 {
   playerDamageDealt: number,
   playerDamageTaken: number,
@@ -152,7 +158,7 @@ Factor in equipped weapon for damage calculation. Output ONLY valid JSON (no mar
 
 Example narration with weapon: "You strike with your [WEAPON:Rusty Sword], dealing 15 damage!"
 
-Use dice sum for attack variance. Keep narration exciting but brief. Always include enemy counterattack in narration unless enemy is defeated.`
+Keep narration exciting but brief. Always include enemy counterattack in narration unless enemy is defeated.`
           },
           {
             role: 'user',

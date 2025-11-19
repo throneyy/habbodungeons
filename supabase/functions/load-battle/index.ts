@@ -267,6 +267,11 @@ serve(async (req) => {
       players: players, // Array of all players (party or solo)
       player: currentPlayer, // Current user's stats
       room_description: currentRoom.description || '',
+      room_type: currentRoom.roomType || 'story',
+      treasure_description: currentRoom.treasureDescription || null,
+      event_type: currentRoom.eventType || null,
+      event_amount: currentRoom.eventAmount || null,
+      event_description: currentRoom.eventDescription || null,
       battle_log: battleLog,
       mode: mode,
       isPartyBattle: !!(battle.server_id || battle.party_id),

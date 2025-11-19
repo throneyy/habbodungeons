@@ -85,6 +85,11 @@ interface BattleData {
   // All participants in the battle (solo, party, or server-wide)
   players?: PlayerStats[];
   room_description: string;
+  room_type?: string;
+  treasure_description?: string | null;
+  event_type?: string | null;
+  event_amount?: number | null;
+  event_description?: string | null;
   battle_log: BattleLogEntry[];
   mode?: "story" | "battle";
   isPartyBattle?: boolean;
@@ -797,6 +802,109 @@ const Battle = () => {
     setStoryLoading(false);
   };
 
+  const handleClaimTreasure = async () => {
+    if (!id) return;
+    
+    setLoading(true);
+    try {
+      // Generate random loot
+      const treasureLoot = [
+        { item_name: "Gold Coins", quantity: Math.floor(Math.random() * 50) + 20, item_type: "currency" },
+        { item_name: "Potion", quantity: Math.floor(Math.random() * 3) + 1, item_type: "consumable" }
+      ];
+      
+      // Add loot to inventory
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      for (const loot of treasureLoot) {
+        const { data: existing } = await supabase
+          .from('inventory')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('item_name', loot.item_name)
+          .maybeSingle();
+        
+        if (existing) {
+          await supabase
+            .from('inventory')
+            .update({ quantity: existing.quantity + loot.quantity })
+            .eq('id', existing.id);
+        } else {
+          await supabase
+            .from('inventory')
+            .insert({ user_id: user.id, ...loot });
+        }
+      }
+      
+      toast({
+        title: "Treasure Found!",
+        description: `You received: ${treasureLoot.map(l => `${l.quantity}x ${l.item_name}`).join(', ')}`,
+      });
+      
+      // Move to next room
+      await loadBattle();
+    } catch (error: any) {
+      toast({
+        title: "Error claiming treasure",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setLoading(false);
+  };
+
+  const handleApplyEventBoost = async () => {
+    if (!id || !battleData?.event_type) return;
+    
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Apply stat boost
+      const { data: stats } = await supabase
+        .from('player_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (stats) {
+        const updates: any = {};
+        
+        if (battleData.event_type === 'hp') {
+          updates.current_hp = Math.min(stats.max_hp, stats.current_hp + (battleData.event_amount || 0));
+        } else if (battleData.event_type === 'mp') {
+          updates.current_mp = Math.min(stats.max_mp, stats.current_mp + (battleData.event_amount || 0));
+        } else if (battleData.event_type === 'atk') {
+          updates.atk = stats.atk + (battleData.event_amount || 0);
+        } else if (battleData.event_type === 'def') {
+          updates.def = stats.def + (battleData.event_amount || 0);
+        }
+        
+        await supabase
+          .from('player_stats')
+          .update(updates)
+          .eq('user_id', user.id);
+        
+        toast({
+          title: "Power Surge!",
+          description: battleData.event_description || "You feel stronger!",
+        });
+      }
+      
+      // Move to next room
+      await loadBattle();
+    } catch (error: any) {
+      toast({
+        title: "Error applying boost",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setLoading(false);
+  };
+
   const handleResolveTurn = async () => {
     if (!selectedAction) {
       toast({ title: "Please select an action", variant: "destructive" });
@@ -1144,25 +1252,72 @@ const Battle = () => {
                   <div className="space-y-6">
                     {/* Story Text */}
                     <div className="p-6 bg-muted/50 border-2 border-habbo-dark rounded-lg min-h-[200px]">
-                      {storyLoading && !storyNode ? (
-                        <div className="flex items-center justify-center h-40">
-                          <p className="text-lg italic animate-pulse">
-                            The dungeon master consults the ancient tomes...
+                      {/* Treasure Room */}
+                      {battleData.room_type === 'treasure' && (
+                        <div className="space-y-4">
+                          <h3 className="text-2xl font-black text-center mb-4">🎁 Treasure Found!</h3>
+                          <p className="text-lg leading-relaxed">
+                            {battleData.treasure_description || 'A mysterious chest awaits...'}
                           </p>
+                          <div className="flex justify-center pt-4">
+                            <Button
+                              onClick={handleClaimTreasure}
+                              disabled={loading}
+                              size="lg"
+                              className="font-black text-lg px-8"
+                            >
+                              <Package className="mr-2 h-5 w-5" />
+                              {loading ? 'Opening...' : 'Open Chest'}
+                            </Button>
+                          </div>
                         </div>
-                      ) : storyNode ? (
-                        <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                          {storyNode.storyText}
-                        </p>
-                      ) : (
-                        <p className="text-lg italic text-muted-foreground">
-                          Awaiting your next decision...
-                        </p>
+                      )}
+                      
+                      {/* Event Room */}
+                      {battleData.room_type === 'event' && (
+                        <div className="space-y-4">
+                          <h3 className="text-2xl font-black text-center mb-4">✨ Mystical Encounter</h3>
+                          <p className="text-lg leading-relaxed">
+                            {battleData.event_description || 'Strange energies fill the air...'}
+                          </p>
+                          <div className="flex justify-center pt-4">
+                            <Button
+                              onClick={handleApplyEventBoost}
+                              disabled={loading}
+                              size="lg"
+                              className="font-black text-lg px-8"
+                            >
+                              <Sparkles className="mr-2 h-5 w-5" />
+                              {loading ? 'Accepting...' : 'Accept Blessing'}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Regular Story Content */}
+                      {(!battleData.room_type || battleData.room_type === 'story') && (
+                        <>
+                          {storyLoading && !storyNode ? (
+                            <div className="flex items-center justify-center h-40">
+                              <p className="text-lg italic animate-pulse">
+                                The dungeon master consults the ancient tomes...
+                              </p>
+                            </div>
+                          ) : storyNode ? (
+                            <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                              {storyNode.storyText}
+                            </p>
+                          ) : (
+                            <p className="text-lg italic text-muted-foreground">
+                              Awaiting your next decision...
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
 
-                    {/* Choices */}
-                    {storyNode && storyNode.choices.length > 0 && (
+                    {/* Choices - Only show for regular story rooms */}
+                    {(!battleData.room_type || battleData.room_type === 'story') && storyNode && storyNode.choices.length > 0 && (
                       <div className="space-y-3">
                         {/* Turn-based choice header */}
                         {battleData.isPartyBattle && (
