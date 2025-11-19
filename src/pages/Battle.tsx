@@ -886,12 +886,6 @@ const Battle = () => {
       return;
     }
     
-    // Prevent concurrent loads
-    if (storyLoading) {
-      console.log("Story node already loading, skipping duplicate call");
-      return;
-    }
-    
     setStoryLoading(true);
     try {
       console.log("Loading story node for battleId:", id);
