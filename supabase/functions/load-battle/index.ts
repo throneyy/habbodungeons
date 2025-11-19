@@ -268,6 +268,9 @@ serve(async (req) => {
       enemy: enemyState,
       players: players, // Array of all players (party or solo)
       player: currentPlayer, // Current user's stats
+      dungeon_name: battle.dungeons.name,
+      dungeon_theme: battle.dungeons.theme,
+      dungeon_difficulty: battle.dungeons.difficulty,
       room_description: currentRoom.description || '',
       room_type: currentRoom.roomType || 'story',
       treasure_description: currentRoom.treasureDescription || null,

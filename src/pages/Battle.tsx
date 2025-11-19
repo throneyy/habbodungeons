@@ -86,6 +86,9 @@ interface BattleData {
   player: PlayerStats;
   // All participants in the battle (solo, party, or server-wide)
   players?: PlayerStats[];
+  dungeon_name?: string;
+  dungeon_theme?: string;
+  dungeon_difficulty?: string;
   room_description: string;
   room_type?: string;
   treasure_description?: string | null;
@@ -1301,6 +1304,23 @@ const Battle = () => {
             {/* Battle Log - Main Focus */}
             <HabboPanel title="Chronicle of Events">
               <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
+              {/* Quest Information - Always at top */}
+              {battleData.dungeon_name && (
+                <div className="mb-4 p-4 bg-primary/10 border-2 border-primary rounded-lg">
+                  <h3 className="text-xl font-black text-primary mb-2">
+                    Quest: {battleData.dungeon_name}
+                  </h3>
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-muted-foreground">
+                      <span className="font-bold">Theme:</span> {battleData.dungeon_theme}
+                    </span>
+                    <span className="text-muted-foreground">
+                      <span className="font-bold">Difficulty:</span> {battleData.dungeon_difficulty}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
               {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry: any, i) => {
                     // Handle entry - can be string, object, or JSON string
