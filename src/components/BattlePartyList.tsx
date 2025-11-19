@@ -49,7 +49,7 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
           >
             {/* Turn order badge */}
             {turnOrder && turnIndex !== undefined && turnIndex >= 0 && (
-              <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10">
+              <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10">
                 {turnIndex + 1}
               </div>
             )}
