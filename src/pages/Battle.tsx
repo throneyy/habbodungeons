@@ -209,6 +209,31 @@ const Battle = () => {
       const itemMatch = part.match(/\[([^\]]+)\]/);
       if (itemMatch) {
         const itemName = itemMatch[1];
+        const currentUserName = profile?.habbo_username || profile?.username;
+        
+        // Check if this is the current user's name
+        if (currentUserName && itemName.toLowerCase() === currentUserName.toLowerCase()) {
+          const avatarUrl = profile?.habbo_profile_json 
+            ? `https://www.habbo.com/habbo-imaging/avatarimage?user=${profile.habbo_username}&direction=2&head_direction=3&gesture=sml&size=s`
+            : null;
+          
+          return (
+            <span key={idx} className="inline-flex items-center gap-1">
+              {avatarUrl && (
+                <img 
+                  src={avatarUrl} 
+                  alt={currentUserName}
+                  className="inline-block w-4 h-4 pixel-icon"
+                />
+              )}
+              <span className="text-[#FFD700] font-bold">
+                [{itemName}]
+              </span>
+            </span>
+          );
+        }
+        
+        // Regular item
         return (
           <ItemTooltip key={idx} itemName={itemName}>
             <span className="text-purple-500 font-bold cursor-help">
