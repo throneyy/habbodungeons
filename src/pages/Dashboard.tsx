@@ -88,7 +88,7 @@ const Dashboard = () => {
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
       toast({
-        title: "Please enter a Habbo username",
+        title: "Please enter a Habbo Origins username",
         variant: "destructive",
       });
       return;
@@ -99,11 +99,12 @@ const Dashboard = () => {
       .select('habbo_username')
       .ilike('habbo_username', searchTerm.trim())
       .not('habbo_username', 'is', null)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       toast({
-        title: "No player found with that Habbo username",
+        title: "Player not found",
+        description: "No player with that Habbo Origins username has linked their account yet.",
         variant: "destructive",
       });
       return;
@@ -308,7 +309,7 @@ const Dashboard = () => {
         <div className="bg-card border-4 border-habbo-dark rounded-xl p-4 shadow-lg">
           <div className="flex gap-2">
             <Input
-              placeholder="Search adventurers by Habbo username"
+              placeholder="Search by Habbo Origins username"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
