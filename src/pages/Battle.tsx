@@ -1861,9 +1861,9 @@ const Battle = () => {
                   return (
                     <div className="flex gap-4 items-start">
                       {/* Medium Avatar */}
-                      <div className="w-24 h-32 relative flex items-center justify-center flex-shrink-0 bg-muted/50 border border-habbo-dark rounded-lg">
+                      <div className="w-32 h-40 relative flex items-center justify-center flex-shrink-0 bg-muted/50 border border-habbo-dark rounded-lg p-2">
                         <img
-                          src={player.habboAvatar || ''}
+                          src={player.habboAvatar?.replace('size=s', 'size=m') || ''}
                           alt={player.username}
                           className="max-w-full max-h-full object-contain pixelated"
                         />
