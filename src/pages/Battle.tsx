@@ -257,7 +257,7 @@ const Battle = () => {
                 if (tooltip) tooltip.remove();
               }}
             >
-              <span className={`${isCurrentUser ? 'text-[#FFD700]' : 'text-purple-500'} font-bold cursor-help`}>
+              <span className="text-[#FFD700] font-bold cursor-help">
                 [{itemName}]
               </span>
             </span>
