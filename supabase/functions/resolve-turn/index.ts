@@ -136,6 +136,13 @@ serve(async (req) => {
             
 CRITICAL: The enemy ALWAYS counterattacks after the player acts (unless the enemy is defeated). 
 
+IMPORTANT HP CALCULATION RULES:
+- The enemy's CURRENT HP is found in enemyStats.current_hp (NOT enemyStats.hp which is max HP)
+- Calculate enemyNewHp by subtracting damage from enemyStats.current_hp
+- NEVER heal or increase enemy HP during combat
+- enemyNewHp must ALWAYS be less than or equal to current_hp (unless healing item/ability used)
+- If enemyNewHp would be greater than current_hp, set it to current_hp
+
 DAMAGE FORMULA (USE THIS EXACTLY):
 - Player damage = (playerATK + weaponBonus) × (diceSum / 3) - (enemyDEF / 4)
 - Enemy damage = enemyATK × 1.2 - (playerDEF / 4)
