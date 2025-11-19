@@ -195,7 +195,6 @@ Recent events: ${context.recentEvents.join("; ") || "The adventure begins"}
 Generate an atmospheric scene with 3-4 meaningful choices. Return ONLY the JSON object.`,
           },
         ],
-        temperature: 0.8,
       }),
     });
 
@@ -230,8 +229,19 @@ Generate an atmospheric scene with 3-4 meaningful choices. Return ONLY the JSON 
             throw new Error("No JSON found in response");
           }
         } catch (e3) {
-          console.error("Failed to parse AI response:", content);
-          throw new Error("Invalid AI response format");
+          console.error("Failed to parse AI response after all attempts:", content);
+          // Return a fallback generic story node instead of failing
+          const dungeon = battleState.dungeons;
+          storyNode = {
+            storyText: `You find yourself in ${dungeon.name}. The atmosphere is thick with mystery and danger. Ancient passages stretch out before you, each promising adventure and peril in equal measure.`,
+            choices: [
+              { id: "explore_ahead", label: "Venture deeper into the dungeon" },
+              { id: "search_area", label: "Search the immediate area" },
+              { id: "rest_here", label: "Take a moment to rest" },
+              { id: "be_cautious", label: "Proceed with extreme caution" }
+            ]
+          };
+          console.log("Using fallback story node due to AI parsing failure");
         }
       }
     }
