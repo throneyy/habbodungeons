@@ -143,7 +143,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-center">
-            <img src={npcWarrior} alt="Party System" className="w-24 h-24 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
+            <img src={npcWarrior} alt="Party System" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Party System</h3>
             <p className="text-muted-foreground">
               Team up with friends or join public servers to conquer dungeons together
