@@ -19,6 +19,30 @@ interface BattlePartyListProps {
   turnOrder?: string[];
 }
 
+const getHabboAvatarWithExpression = (
+  figureString: string | undefined,
+  hpPercentage: number,
+  isCurrentTurn: boolean
+): string => {
+  if (!figureString) return '';
+  
+  let gesture = 'std';
+  let action = 'std';
+  
+  if (hpPercentage <= 0) {
+    action = 'lay';
+    gesture = 'std';
+  } else if (hpPercentage < 30) {
+    gesture = 'sad';
+    action = 'std';
+  } else if (isCurrentTurn) {
+    gesture = 'agr';
+    action = 'std';
+  }
+  
+  return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${figureString}&hotel=COM&size=s&action=${action}&gesture=${gesture}&direction=2&head_direction=2&service=official`;
+};
+
 export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, turnOrder }: BattlePartyListProps) => {
   // Sort members by turn order if available
   const sortedMembers = turnOrder && turnOrder.length > 0
@@ -35,6 +59,13 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
         const isCurrentTurn = currentTurnUserId === member.userId;
         const turnIndex = turnOrder?.indexOf(member.userId);
         const isCurrentUser = member.userId === currentUserId;
+        const hpPercentage = (member.currentHp / member.maxHp) * 100;
+        
+        // Extract figure string from habboAvatar URL if available
+        const figureString = member.habboAvatar?.match(/figure=([^&]+)/)?.[1];
+        const avatarUrl = figureString 
+          ? getHabboAvatarWithExpression(figureString, hpPercentage, isCurrentTurn)
+          : member.habboAvatar;
         
         return (
           <div
@@ -49,22 +80,22 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
           >
             {/* Turn order badge */}
             {turnOrder && turnIndex !== undefined && turnIndex >= 0 && (
-              <div className="absolute top-1 right-1 w-6 h-6 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10">
+              <div className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10 shadow-lg">
                 {turnIndex + 1}
               </div>
             )}
             
             {/* Current turn indicator */}
             {isCurrentTurn && (
-              <div className="absolute -top-1 -left-1 animate-bounce z-10">
-                <Swords className="w-4 h-4 text-green-400" />
+              <div className="absolute -top-2 -left-2 animate-bounce z-10">
+                <Swords className="w-5 h-5 text-green-400 drop-shadow-lg" />
               </div>
             )}
 
             <div className="flex flex-col items-center gap-1">
-              {member.habboAvatar && (
+              {avatarUrl && (
                 <img 
-                  src={member.habboAvatar} 
+                  src={avatarUrl} 
                   alt={member.username}
                   className="w-12 h-12 pixelated"
                 />
@@ -75,7 +106,7 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
               <div className="w-full bg-muted border border-habbo-dark rounded-sm h-2 overflow-hidden">
                 <div 
                   className="h-full bg-hp transition-all duration-300"
-                  style={{ width: `${(member.currentHp / member.maxHp) * 100}%` }}
+                  style={{ width: `${hpPercentage}%` }}
                 />
               </div>
             </div>
