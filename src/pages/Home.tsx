@@ -28,10 +28,9 @@ const Home = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('habbo_username')
-      .eq('habbo_username', searchTerm.trim())
+      .ilike('habbo_username', searchTerm.trim())
       .not('habbo_username', 'is', null)
-      .limit(1)
-      .maybeSingle();
+      .single();
 
     if (error || !data) {
       toast.error("No player found with that Habbo username");
