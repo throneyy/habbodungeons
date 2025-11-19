@@ -208,7 +208,15 @@ const Inventory = () => {
 
   const isConsumable = (itemName: string): boolean => {
     const name = itemName.toLowerCase();
-    return name.includes("potion") || name.includes("ether") || name.includes("elixer");
+    return name.includes("potion") || 
+           name.includes("ether") || 
+           name.includes("elixer") || 
+           name.includes("elixir") ||
+           name.includes("herb") ||
+           name.includes("pint") ||
+           name.includes("sweetcakes") ||
+           name.includes("cured meat") ||
+           name.includes("potatoes");
   };
 
   const weaponItems = inventory.filter(i => i.item_type === "weapon");
