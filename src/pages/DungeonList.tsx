@@ -157,6 +157,16 @@ const DungeonList = () => {
         player_count: server.server_players[0]?.count || 0,
       })) || [];
 
+      // Sort by difficulty (Normal first) then by extracting number from name
+      serversWithData.sort((a, b) => {
+        if (a.difficulty !== b.difficulty) {
+          return a.difficulty === 'Normal' ? -1 : 1;
+        }
+        const numA = parseInt(a.server_name.match(/\d+$/)?.[0] || '0');
+        const numB = parseInt(b.server_name.match(/\d+$/)?.[0] || '0');
+        return numA - numB;
+      });
+
       setServers(serversWithData);
     } catch (error: any) {
       console.error('Failed to load servers:', error);
