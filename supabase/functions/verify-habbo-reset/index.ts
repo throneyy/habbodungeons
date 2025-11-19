@@ -12,13 +12,18 @@ serve(async (req) => {
 
   try {
     const { habboUsername, verificationCode } = await req.json();
+    
+    if (!habboUsername || !verificationCode) {
+      throw new Error("Habbo username and verification code are required");
+    }
+    
     console.log("Verifying Habbo account:", habboUsername, "with code:", verificationCode);
 
     // Fetch the Habbo profile to check motto
     const habboResponse = await fetch(`https://www.habbo.com/api/public/users?name=${habboUsername}`);
     
     if (!habboResponse.ok) {
-      throw new Error("Failed to fetch Habbo profile");
+      throw new Error("Failed to fetch Habbo profile. Please check the username.");
     }
 
     const habboData = await habboResponse.json();

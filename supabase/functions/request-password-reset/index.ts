@@ -13,6 +13,11 @@ serve(async (req) => {
 
   try {
     const { username, habboUsername } = await req.json();
+    
+    if (!username || !habboUsername) {
+      throw new Error("Username and Habbo username are required");
+    }
+    
     console.log("Password reset requested for:", username, "with Habbo username:", habboUsername);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

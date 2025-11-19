@@ -97,6 +97,16 @@ const Auth = () => {
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!resetUsername || !resetHabboUsername) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both your HabboDungeons username and Habbo username",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
