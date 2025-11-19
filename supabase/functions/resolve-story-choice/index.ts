@@ -252,6 +252,17 @@ Return ONLY valid JSON (no markdown):
 
     // Sanitize outcome to ensure all fields are proper types
     // Support both old field names (narrativeText, shouldStartBattle) and new ones (consequenceText, triggersBattle)
+    const triggersBattle = outcome.triggersBattle === true || outcome.shouldStartBattle === true;
+    let progressRoom = outcome.progressRoom === true || outcome.shouldAdvanceRoom === true;
+
+    // If a battle is triggered, keep the player in the current room so
+    // the story text, room description and enemy all stay in sync.
+    // This prevents situations where the narrative describes one room
+    // but combat starts in the next room.
+    if (triggersBattle && progressRoom) {
+      progressRoom = false;
+    }
+
     const sanitizedOutcome = {
       consequenceText: typeof outcome.consequenceText === 'string' 
         ? outcome.consequenceText 
@@ -261,8 +272,8 @@ Return ONLY valid JSON (no markdown):
       hpChange: typeof outcome.hpChange === 'number' ? outcome.hpChange : 0,
       mpChange: typeof outcome.mpChange === 'number' ? outcome.mpChange : 0,
       itemsGained: Array.isArray(outcome.itemsGained) ? outcome.itemsGained : [],
-      triggersBattle: outcome.triggersBattle === true || outcome.shouldStartBattle === true,
-      progressRoom: outcome.progressRoom === true || outcome.shouldAdvanceRoom === true,
+      triggersBattle,
+      progressRoom,
     };
 
     console.log("Sanitized outcome:", sanitizedOutcome);
