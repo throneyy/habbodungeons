@@ -31,6 +31,7 @@ import werewolf from "@/assets/werewolf.png";
 import flamingPhantom from "@/assets/flaming-phantom.png";
 import spiritOwl from "@/assets/spirit-owl.png";
 import victoryTrophy from "@/assets/victory-trophy.png";
+import rareTreasureChest from "@/assets/rare-treasure-chest.png";
 
 export const ITEM_ASSETS: Record<string, string> = {
   "Rusty Sword": rustySword,
@@ -53,7 +54,7 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Ether": elixer,
   "Elixer": elixer,
   "Everyday Supply Chest": everydaySupplyChest,
-  "Rare Treasure Chest": victoryTrophy,
+  "Rare Treasure Chest": rareTreasureChest,
   "Fighters Sword": fightersSword,
   "Warriors Sword": warriorsSword,
   "Mage Staff": mageStaff,
