@@ -160,3 +160,103 @@ export const getItemImage = (itemName: string): string | undefined => {
   // Default fallback - use everyday supply chest as generic item icon
   return everydaySupplyChest;
 };
+
+export const ITEM_DESCRIPTIONS: Record<string, string> = {
+  // Weapons
+  "Rusty Sword": "A weathered blade that's seen better days. Basic but reliable.",
+  "Fighters Sword": "A well-crafted blade for seasoned warriors. +15 ATK",
+  "Warriors Sword": "A masterwork weapon forged for champions. +25 ATK",
+  "Mage Staff": "Channels magical energy for devastating spells. +10 ATK, +20 MP",
+  "Powerful Mage Staff": "An ancient staff pulsing with arcane power. +20 ATK, +40 MP",
+  "Bow & Arrow": "Strike enemies from afar with precision. +12 ATK",
+  "Ornate Dagger": "A decorated blade perfect for swift strikes. +8 ATK",
+  "Dagger": "A simple but deadly close-range weapon. +5 ATK",
+  "Longsword": "A versatile blade favored by knights. +18 ATK",
+  "Shortsword": "Quick and nimble for fast attacks. +10 ATK",
+  "Greatsword": "A massive two-handed weapon of destruction. +30 ATK",
+  "Blade": "A sharp cutting weapon. +8 ATK",
+  "Sword": "A reliable steel blade. +12 ATK",
+  
+  // Armor
+  "Spiked Chest Armour": "Heavy plated armor with dangerous spikes. +20 DEF",
+  "Iron Chest Armour": "Solid iron protection for your torso. +15 DEF",
+  "Iron Sabatons": "Heavy boots that protect your feet. +8 DEF",
+  "Horned Helmet": "An intimidating helm with curved horns. +12 DEF",
+  "Iron Helmet": "Standard iron headgear for warriors. +10 DEF",
+  "Iron Leg Armour": "Protective plating for your legs. +10 DEF",
+  
+  // Consumables - Healing
+  "Potion": "Restores 50 HP. A staple for any adventurer.",
+  "Potion of Minor Healing": "Heals minor wounds. Restores 30 HP.",
+  "Elixer": "Restores 50 MP. Essential for spellcasters.",
+  "Ether": "Replenishes magical energy. Restores 40 MP.",
+  
+  // Consumables - Food
+  "Frothy Pint": "A hearty drink that restores stamina. +20 HP",
+  "Sweetcakes": "Delicious pastries that boost morale. +15 HP",
+  "Sack of Potatoes": "Simple but filling. Can cook for better effects.",
+  "Potatoes": "Raw vegetables. Better when cooked.",
+  "Cured Meat": "Preserved meat for long journeys. +25 HP",
+  
+  // Materials - Basic
+  "Stick Pile": "Common wood scraps. Used in basic crafting.",
+  "Sticks": "Simple wooden sticks. Crafting material.",
+  "Wood": "Sturdy timber for construction and crafting.",
+  "Cloth Squares": "Woven fabric for tailoring and bandages.",
+  "Cloth": "Basic textile material.",
+  
+  // Materials - Metals
+  "Metal Ingot": "Refined metal ready for smithing.",
+  "Metal": "Raw metallic material.",
+  "Iron": "Strong metal for weapons and armor.",
+  "Bronze": "A durable copper-tin alloy.",
+  "Silver": "Precious metal with mystical properties.",
+  
+  // Materials - Magical
+  "Runestones": "Ancient stones inscribed with power runes.",
+  "Crystal Shards": "Fragments of magical crystals. Glow faintly.",
+  "Crystals": "Pure magical crystals radiating energy.",
+  "Frostbloom Herb": "A rare herb that grows in frozen conditions.",
+  "Herb": "Medicinal plant for brewing potions.",
+  
+  // Scrolls & Books
+  "Scroll": "A rolled parchment containing knowledge.",
+  "Scroll of Minor Healing": "A magical scroll that heals wounds when read.",
+  "Ancient Scroll": "Yellowed parchment with forgotten wisdom.",
+  "Tome": "A thick book filled with arcane secrets.",
+  
+  // Quest Items
+  "Rune of Frostsight": "A mystical rune revealing hidden ice magic.",
+  "Silver Key": "An ornate key that opens special locks.",
+  "Key": "A simple key. Wonder what it unlocks?",
+  "Old Key": "A tarnished key from ages past.",
+  "Ancient Key": "A mysterious key covered in runes.",
+  "Rusted Key": "Barely functional but might still work.",
+  
+  // Currency & Treasure
+  "Gold Coins": "Shiny currency accepted everywhere.",
+  "Gold": "Valuable gold pieces.",
+  "Everyday Supply Chest": "A common chest with basic supplies inside.",
+  "Rare Treasure Chest": "A precious chest containing rare items!",
+  "Victory Trophy": "A gleaming trophy proving your triumph.",
+  
+  // Misc Items
+  "Candles": "Wax candles that provide light in darkness.",
+  "Candle": "A single candle. Burns for several hours.",
+  "Poison": "Deadly toxin. Handle with extreme care!",
+  "Long Feathers": "Pristine feathers for fletching arrows.",
+  "Feathers": "Soft plumage from various birds.",
+  "Feather": "A single delicate feather.",
+  "Pouch": "A small leather bag for carrying items.",
+  
+  // Creature Items
+  "Werewolf": "A cursed lycanthrope pelt. Radiates dark magic.",
+  "Flaming Phantom": "Essence of a fire spirit. Burns eternally.",
+  "Phantom": "Spectral residue from defeated ghosts.",
+  "Spirit Owl": "The spirit of a wise owl. Offers guidance.",
+  "Owl": "Feathers and talons from a mystical owl.",
+};
+
+export const getItemDescription = (itemName: string): string => {
+  return ITEM_DESCRIPTIONS[itemName] || "A mysterious item.";
+};
