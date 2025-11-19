@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
-import { Sword, Trash2, Check, Gift } from "lucide-react";
+import { Sword, Trash2, Check, Gift, Pill } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getItemImage } from "@/lib/itemAssets";
+import { StatBar } from "@/components/StatBar";
 
 interface InventoryItem {
   id: string;
@@ -18,10 +19,22 @@ interface InventoryItem {
   is_equipped: boolean;
 }
 
+interface PlayerStats {
+  level: number;
+  current_hp: number;
+  max_hp: number;
+  current_mp: number;
+  max_mp: number;
+  atk: number;
+  def: number;
+  spd: number;
+}
+
 const Inventory = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [stats, setStats] = useState<PlayerStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
 
@@ -37,15 +50,24 @@ const Inventory = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from("inventory")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("item_type")
-        .order("item_name");
+      const [inventoryRes, statsRes] = await Promise.all([
+        supabase
+          .from("inventory")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("item_type")
+          .order("item_name"),
+        supabase
+          .from("player_stats")
+          .select("*")
+          .eq("user_id", user.id)
+          .single(),
+      ]);
 
-      if (error) throw error;
-      setInventory(data || []);
+      if (inventoryRes.error) throw inventoryRes.error;
+      setInventory(inventoryRes.data || []);
+      
+      if (statsRes.data) setStats(statsRes.data);
     } catch (error: any) {
       toast({
         title: "Failed to load inventory",
@@ -158,6 +180,37 @@ const Inventory = () => {
     }
   };
 
+  const useConsumable = async (itemId: string, itemName: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("use-consumable", {
+        body: { itemId },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: `${itemName} used!`,
+          description: data.message,
+        });
+
+        // Refresh data to show updated stats and inventory
+        await loadInventory();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to use item",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const isConsumable = (itemName: string): boolean => {
+    const name = itemName.toLowerCase();
+    return name.includes("potion") || name.includes("ether") || name.includes("elixer");
+  };
+
   const weaponItems = inventory.filter(i => i.item_type === "weapon");
   const consumableItems = inventory.filter(i => i.item_type === "consumable");
   const otherItems = inventory.filter(i => i.item_type !== "weapon" && i.item_type !== "consumable");
@@ -187,6 +240,26 @@ const Inventory = () => {
             </Button>
           </div>
         </div>
+
+        {/* Player Stats */}
+        {stats && (
+          <HabboPanel title="Player Stats">
+            <div className="grid md:grid-cols-2 gap-4">
+              <StatBar
+                label="HP"
+                current={stats.current_hp}
+                max={stats.max_hp}
+                color="hp"
+              />
+              <StatBar
+                label="MP"
+                current={stats.current_mp}
+                max={stats.max_mp}
+                color="mp"
+              />
+            </div>
+          </HabboPanel>
+        )}
 
         {/* Weapons */}
         <HabboPanel title="Weapons">
@@ -289,15 +362,26 @@ const Inventory = () => {
                             <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                           </div>
                         </div>
-                        <Button
-                          onClick={() => setItemToDelete(item)}
-                          variant="destructive"
-                          size="sm"
-                          className="w-full"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => useConsumable(item.id, item.item_name)}
+                            variant="default"
+                            size="sm"
+                            className="flex-1"
+                          >
+                            <Pill className="w-4 h-4 mr-2" />
+                            Use
+                          </Button>
+                          <Button
+                            onClick={() => setItemToDelete(item)}
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </Button>
+                        </div>
                       </div>
                     </TooltipTrigger>
                     {getItemImage(item.item_name) && (
