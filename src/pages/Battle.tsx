@@ -1828,11 +1828,13 @@ const Battle = () => {
                     )}
                     
                     {/* Avatar */}
-                    <img
-                      src={player.habboAvatar || ''}
-                      alt={player.username}
-                      className="w-16 h-16 pixelated"
-                    />
+                    <div className="w-16 h-20 relative flex items-center justify-center">
+                      <img
+                        src={player.habboAvatar || ''}
+                        alt={player.username}
+                        className="max-w-full max-h-full object-contain pixelated"
+                      />
+                    </div>
                     
                     {/* Username */}
                     <div className="text-xs font-bold text-center max-w-[80px] truncate">
@@ -1857,22 +1859,34 @@ const Battle = () => {
                 {(() => {
                   const player = battleData.players.find(p => p.userId === selectedMemberId)!;
                   return (
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">HP</p>
-                        <p className="text-lg font-bold">{player.current_hp}/{player.max_hp}</p>
+                    <div className="flex gap-4 items-start">
+                      {/* Medium Avatar */}
+                      <div className="w-24 h-32 relative flex items-center justify-center flex-shrink-0 bg-muted/50 border border-habbo-dark rounded-lg">
+                        <img
+                          src={player.habboAvatar || ''}
+                          alt={player.username}
+                          className="max-w-full max-h-full object-contain pixelated"
+                        />
                       </div>
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">MP</p>
-                        <p className="text-lg font-bold">{player.current_mp}/{player.max_mp}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">ATK</p>
-                        <p className="text-lg font-bold">{player.atk}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">DEF</p>
-                        <p className="text-lg font-bold">{player.def}</p>
+                      
+                      {/* Stats Grid */}
+                      <div className="flex-1 grid grid-cols-2 gap-3">
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground">HP</p>
+                          <p className="text-lg font-bold">{player.current_hp}/{player.max_hp}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground">MP</p>
+                          <p className="text-lg font-bold">{player.current_mp}/{player.max_mp}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground">ATK</p>
+                          <p className="text-lg font-bold">{player.atk}</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs text-muted-foreground">DEF</p>
+                          <p className="text-lg font-bold">{player.def}</p>
+                        </div>
                       </div>
                     </div>
                   );
