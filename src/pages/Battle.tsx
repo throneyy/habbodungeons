@@ -226,8 +226,8 @@ const Battle = () => {
         if (playerProfile && playerUserId) {
           // It's a player name - show avatar on hover with yellow color for current user
           const isCurrentUser = playerUserId === currentUserId;
-          const avatarUrl = playerProfile.habbo_profile_json 
-            ? `https://www.habbo.com/habbo-imaging/avatarimage?user=${playerProfile.habbo_username}&direction=2&head_direction=3&gesture=sml&size=s`
+          const avatarUrl = playerProfile.habbo_profile_json?.figureString
+            ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${playerProfile.habbo_profile_json.figureString}&hotel=COM&size=b&action=std&gesture=sml&direction=2&head_direction=2&service=official`
             : null;
           
           return (
