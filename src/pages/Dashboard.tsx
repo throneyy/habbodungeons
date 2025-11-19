@@ -7,7 +7,7 @@ import { getItemImage } from "@/lib/itemAssets";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Link } from "lucide-react";
+import { LogOut, Link, Users, Gift } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 
 interface Profile {
@@ -143,6 +143,26 @@ const Dashboard = () => {
                 </Button>
               )}
             </div>
+            
+            {profile?.habbo_username && (
+              <div className="flex flex-col gap-3">
+                <Button
+                  onClick={() => navigate("/dungeon-list")}
+                  className="font-bold border-4 border-habbo-dark whitespace-nowrap"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Browse Servers
+                </Button>
+                <Button
+                  onClick={() => navigate("/loot-box")}
+                  variant="secondary"
+                  className="font-bold border-4 border-habbo-dark whitespace-nowrap"
+                >
+                  <Gift className="w-4 h-4 mr-2" />
+                  Open Chests
+                </Button>
+              </div>
+            )}
           </div>
         </HabboPanel>
 
