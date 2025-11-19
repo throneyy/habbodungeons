@@ -153,6 +153,101 @@ serve(async (req) => {
     const questObjective = dungeonJson.questObjective || "Complete the dungeon";
     const roomDescription = currentRoom?.description || "You enter a mysterious chamber.";
 
+    const aiPrompt = `You are a JRPG dungeon master for "The Shattered Frostkeep", creating exciting story encounters in a frozen dungeon.
+
+Party stats: ${JSON.stringify(partyStats)}
+Dungeon: ${battleState.dungeons.name} (${battleState.dungeons.difficulty})
+Theme: ${battleState.dungeons.theme}
+Current room: ${currentRoomIndex + 1}/${rooms.length}
+Room type: ${currentRoom.room_type}
+${lastChoice ? `Last choice: ${lastChoice}` : ''}
+
+## CRITICAL DICE MECHANIC INSTRUCTIONS
+When players encounter enemies, merchants, NPCs, or any situation requiring social skills (~30% of encounters):
+- ALWAYS include dialogue/skill check options that require dice rolls (marked with "diceRequired": true)
+- Dice checks use 5 six-sided dice (Habbo holodice): totals range from 5 (all 1s) to 30 (all 6s)
+- Set appropriate DC (difficulty class) based on the challenge:
+  * Easy checks: DC 10-14 (e.g., intimidate weak goblin)
+  * Medium checks: DC 15-19 (e.g., persuade suspicious guard)
+  * Hard checks: DC 20-24 (e.g., deceive powerful enemy)
+  * Very hard checks: DC 25-29 (e.g., reason with hostile boss)
+- Always provide 3-5 dialogue options: persuade, intimidate, deceive, bribe (if applicable), and attack
+
+## DICE CHECK CHOICE FORMAT
+For choices requiring dice:
+{
+  "id": "unique_id",
+  "label": "Try to persuade the guard [Dice Check: DC 15]",
+  "diceRequired": true,
+  "diceDC": 15,
+  "skillType": "persuasion"  // or "intimidation", "deception", "insight", etc.
+}
+
+For regular choices (no dice):
+{
+  "id": "unique_id", 
+  "label": "Attack immediately",
+  "diceRequired": false
+}
+
+## Story Structure Rules
+1. Create varied, unpredictable encounters:
+   - Enemy encounters (~40%): May include dialogue options before combat
+   - Environmental challenges (~20%): Puzzles, traps, hazards
+   - NPCs/merchants (~15%): Allies, neutral parties, potential trades
+   - Discoveries (~15%): Lore, clues, mysterious artifacts
+   - Rest opportunities (~10%): Safe spots, camps, healing fountains
+
+2. When creating enemy encounters with dialogue:
+   - Describe the enemy's appearance, demeanor, and initial reaction
+   - Include at least one dialogue option with dice requirement
+   - Example: "A frost goblin blocks your path, eyeing you suspiciously..."
+     * "Try to reason with it [Dice Check: DC 12]" (diceRequired: true, diceDC: 12)
+     * "Intimidate it with your weapon [Dice Check: DC 14]" (diceRequired: true, diceDC: 14)
+     * "Attack immediately" (diceRequired: false)
+
+3. Narrative continuity:
+   - Reference previous choices when appropriate
+   - Build tension toward the final boss
+   - Acknowledge party members in descriptions
+   - Maintain consistent tone and theme
+
+4. Item rewards (VERY RARE, ~5% of story choices):
+   - Only award items for exceptional discoveries or major victories
+   - Items MUST have valid format: { "name": "Iron Helmet", "quantity": 1, "type": "armor" }
+   - Never reward items for simple choices or basic exploration
+   - Typical rewards: story progression, XP, HP/MP restoration, information
+
+5. Consequences matter:
+   - Failed dice checks should have meaningful (but not game-ending) consequences
+   - Successful checks provide advantages: avoid combat, gain allies, learn secrets
+   - Some encounters should be unavoidable to maintain challenge
+
+## Response Format
+Return ONLY a valid JSON object:
+{
+  "storyText": "Atmospheric description of current situation (100-200 words)",
+  "choices": [
+    {
+      "id": "unique_id_1",
+      "label": "Choice description [Dice Check: DC 15]",
+      "diceRequired": true,
+      "diceDC": 15,
+      "skillType": "persuasion"
+    },
+    {
+      "id": "unique_id_2", 
+      "label": "Regular choice description",
+      "diceRequired": false
+    }
+  ],
+  "itemsGained": []  // Usually empty, only for exceptional discoveries
+}
+
+- Provide 2-4 meaningful choices
+- Use vivid, concise descriptions (100-200 words)
+- DO NOT include any emojis`;
+
     // Call Lovable AI
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -164,54 +259,51 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           {
-            role: "system",
-            content: `You are the dungeon master for The Shattered Frostkeep. Keep scenes grounded and tense. Short, sharp descriptions.
-
-CRITICAL: Return ONLY valid JSON. No markdown, no text outside the JSON object.
-
-BALDUR'S GATE STYLE - Pre-Combat Dialogue:
-- When enemies are nearby, sometimes offer dialogue/negotiation options BEFORE combat
-- Include choices like: "Try to reason with them", "Intimidate them", "Deceive them", "Attack immediately"
-- Let players talk their way through or gain advantages before battle
-- 30% of enemy encounters should have dialogue opportunities
-- Make dialogue feel meaningful - success can avoid combat, gain info, or provide tactical advantages
-
-Required format:
-{
-  "storyText": "2-4 sentences. What's happening right now. If enemies are present, describe their demeanor and potential for dialogue.",
-  "choices": [
-    {"id": "choice_1", "label": "Dialogue or diplomatic option (5-8 words)"},
-    {"id": "choice_2", "label": "Another approach (5-8 words)"},
-    {"id": "choice_3", "label": "Aggressive/combat option (5-8 words)"},
-    {"id": "choice_4", "label": "Optional fourth (5-8 words)"}
-  ]
-}
-
-Story rules:
-- Use the room description as your foundation
-- Keep the quest objective in mind
-- 40-70 words max for storyText
-- Mix tactical, diplomatic, and risky choices
-- When enemies appear, consider if they might talk first
-- Some choices lead to combat, some to negotiations, some to discoveries
-- Make choices feel impactful, not flavor text`,
-          },
-          {
             role: "user",
-            content: `Quest: ${questObjective}
-Dungeon: ${context.dungeon.name}
-Difficulty: ${context.dungeon.difficulty}
-Room ${context.roomIndex + 1}: ${roomDescription}
-
-Party status: ${context.party?.[0]?.current_hp || 100}/${context.party?.[0]?.max_hp || 100} HP
-Last action: ${context.lastChoice || "Just arrived"}
-Recent: ${context.recentEvents.slice(-2).join("; ") || "Adventure begins"}
-
-Create a scene for this room. Base it on the room description. Keep the quest in mind. Return ONLY the JSON.`,
-          },
+            content: aiPrompt
+          }
         ],
+        temperature: 0.8,
       }),
     });
+
+    if (!aiResponse.ok) {
+      throw new Error(`AI API error: ${aiResponse.status}`);
+    }
+
+    const aiData = await aiResponse.json();
+    console.log("AI response:", aiData);
+
+    let storyContent = aiData.choices[0]?.message?.content || "";
+    storyContent = storyContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+
+    const storyNode = JSON.parse(storyContent);
+
+    // Store story node in battle state for multiplayer sync
+    if (serverId) {
+      const { error: updateError } = await supabaseClient
+        .from("battle_states")
+        .update({ current_story_node: storyNode })
+        .eq("dungeon_id", battleId)
+        .eq("server_id", serverId);
+
+      if (updateError) {
+        console.error("Failed to update story node:", updateError);
+      }
+    }
+
+
+    return new Response(JSON.stringify({ storyNode }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Error in generate-story-node:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
