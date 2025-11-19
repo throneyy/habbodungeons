@@ -151,7 +151,9 @@ serve(async (req) => {
     // If we're in story mode, the current room is what we're exploring
     const currentRoom = dungeon.rooms[currentRoomIndex];
     if (currentRoom && currentRoom.enemy) {
-      enemyContext = `\n\n🔥 CRITICAL: If triggersBattle=true, you MUST write: "the ${currentRoom.enemy.name}" or "a ${currentRoom.enemy.name}" or "${currentRoom.enemy.name}" in your consequenceText. The enemy name is: "${currentRoom.enemy.name}" (${currentRoom.enemy.description}). DO NOT write vague phrases like "drawing attention" or "something emerges" - USE THE EXACT ENEMY NAME!`;
+      enemyContext = `\n\n🔥 CRITICAL: This room HAS an enemy configured: "${currentRoom.enemy.name}" (${currentRoom.enemy.description}). If triggersBattle=true, you MUST write: "the ${currentRoom.enemy.name}" or "a ${currentRoom.enemy.name}" or "${currentRoom.enemy.name}" in your consequenceText. DO NOT write vague phrases - USE THE EXACT ENEMY NAME!`;
+    } else {
+      enemyContext = `\n\n🚫 CRITICAL: This room has NO enemy configured. You MUST NOT mention enemies, monsters, or creatures in your narrative. DO NOT set shouldStartBattle=true. This is a story/exploration room only. Focus on atmosphere, discovery, puzzles, or environmental challenges instead.`;
     }
 
     // Calculate dice check result if applicable
