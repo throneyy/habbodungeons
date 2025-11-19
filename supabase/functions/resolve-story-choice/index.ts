@@ -89,7 +89,7 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    const { battleId, choiceId, choiceLabel, storyText } = await req.json();
+    const { battleId, choiceId, choiceLabel, storyText, diceRoll, diceDC, skillType } = await req.json();
 
     // Check if user is in a server for this dungeon
     const { data: serverMember } = await supabaseClient
@@ -184,8 +184,8 @@ serve(async (req) => {
         model: "google/gemini-2.5-flash",
         messages: [
           {
-            role: "system",
-            content: `You are a dungeon master resolving player choices in The Shattered Frostkeep ice dungeon. Determine the consequence of their action.
+            role: "user",
+            content: aiPrompt
 
 CRITICAL RULES:
 - Narrate the outcome dramatically but concisely (2-3 sentences)

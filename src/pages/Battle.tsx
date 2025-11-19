@@ -115,7 +115,13 @@ interface Profile {
 
 interface StoryNode {
   storyText: string;
-  choices: Array<{ id: string; label: string }>;
+  choices: Array<{ 
+    id: string; 
+    label: string;
+    diceRequired?: boolean;
+    diceDC?: number;
+    skillType?: string;
+  }>;
 }
 
 // Helper function to get dynamic Habbo avatar based on state
@@ -183,6 +189,8 @@ const Battle = () => {
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
   const [treasureClaimed, setTreasureClaimed] = useState(false);
+  const [selectedChoice, setSelectedChoice] = useState<StoryNode['choices'][0] | null>(null);
+  const [diceValues, setDiceValues] = useState<string>("");
   
   // Party states
   const [partyMembers, setPartyMembers] = useState<any[]>([]);
@@ -890,7 +898,7 @@ const Battle = () => {
     setStoryLoading(false);
   };
 
-  const handleStoryChoice = async (choiceId: string) => {
+  const handleStoryChoice = async (choiceId: string, skipDiceCheck = false) => {
     if (!storyNode) return;
 
     const choice = storyNode.choices.find((c) => c.id === choiceId);
@@ -1621,17 +1629,73 @@ const Battle = () => {
                         )}
                         
                         <h3 className="text-xl font-black mb-4">What will you do?</h3>
+                        
+                        {/* Dice input dialog */}
+                        {selectedChoice && selectedChoice.diceRequired && (
+                          <div className="mb-6 p-6 bg-muted border-4 border-habbo-dark rounded-lg space-y-4">
+                            <h4 className="text-lg font-black text-center">
+                              Roll Your Holodice!
+                            </h4>
+                            <p className="text-sm text-center text-muted-foreground">
+                              {selectedChoice.label}
+                            </p>
+                            <p className="text-center font-bold text-primary">
+                              Target: {selectedChoice.diceDC}+ (Roll 5 dice in Habbo)
+                            </p>
+                            <div className="space-y-2">
+                              <label className="text-sm font-bold">
+                                Enter your 5 dice results (e.g., "3 5 2 6 4"):
+                              </label>
+                              <Input
+                                value={diceValues}
+                                onChange={(e) => setDiceValues(e.target.value)}
+                                placeholder="1 2 3 4 5"
+                                className="text-center text-lg font-bold border-4 border-habbo-dark"
+                                disabled={storyLoading}
+                              />
+                            </div>
+                            <div className="flex gap-3">
+                              <Button
+                                onClick={() => handleStoryChoice(selectedChoice.id, true)}
+                                disabled={storyLoading || !diceValues.trim()}
+                                className="flex-1 font-black border-4 border-habbo-dark"
+                                size="lg"
+                              >
+                                <Sparkles className="mr-2 h-5 w-5" />
+                                {storyLoading ? "Resolving..." : "Submit Dice"}
+                              </Button>
+                              <Button
+                                onClick={() => {
+                                  setSelectedChoice(null);
+                                  setDiceValues("");
+                                }}
+                                disabled={storyLoading}
+                                variant="outline"
+                                className="font-bold border-4 border-habbo-dark"
+                                size="lg"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        
                         <div className="space-y-3">
                           {storyNode.choices.map((choice) => (
                             <Button
                               key={choice.id}
                               onClick={() => handleStoryChoice(choice.id)}
-                              disabled={storyLoading || (battleData.isPartyBattle && !isMyTurn)}
+                              disabled={storyLoading || (battleData.isPartyBattle && !isMyTurn) || (selectedChoice !== null)}
                               variant="outline"
                               className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark text-base hover-scale disabled:opacity-50"
                             >
                               <span className="mr-3 text-2xl">›</span>
                               {choice.label}
+                              {choice.diceRequired && (
+                                <span className="ml-2 text-xs text-primary font-bold">
+                                  [🎲 DICE]
+                                </span>
+                              )}
                             </Button>
                           ))}
                         </div>
