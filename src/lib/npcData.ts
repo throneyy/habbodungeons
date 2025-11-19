@@ -20,13 +20,13 @@ export interface NPC {
 export const NPCS: NPC[] = [
   {
     id: "warrior",
-    name: "Bjorn the Brave",
+    name: "Bjorn the Bard",
     sprite: npcWarrior,
-    title: "Veteran Warrior",
-    personality: "A gruff but honorable warrior who values strength and courage. He speaks directly and has little patience for cowardice.",
-    questTheme: "Combat-focused dungeons with challenging enemy encounters and boss battles",
-    questTypes: ["Defeat powerful enemies", "Clear monster nests", "Hunt legendary beasts"],
-    greeting: "You look like you can handle yourself in a fight. I've got work for capable warriors."
+    title: "Traveling Minstrel",
+    personality: "A charismatic bard who weaves tales through song and lute. He's jovial and dramatic, believing every quest deserves an epic ballad.",
+    questTheme: "Story-rich dungeons with memorable encounters and dramatic moments worth singing about",
+    questTypes: ["Uncover legendary tales", "Meet interesting characters", "Create memorable stories"],
+    greeting: "Hail, friend! Every great hero needs a witness to their deeds. Care to give me a tale worth singing?"
   },
   {
     id: "merchant",
