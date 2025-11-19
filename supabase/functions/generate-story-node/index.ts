@@ -147,6 +147,12 @@ serve(async (req) => {
 
     console.log("Generating story node with context:", context);
 
+    // Get quest context from dungeon JSON
+    const dungeonJson = battleState.dungeons.dungeon_json as any;
+    const currentRoom = dungeonJson.rooms?.[context.roomIndex];
+    const questObjective = dungeonJson.questObjective || "Complete the dungeon";
+    const roomDescription = currentRoom?.description || "You enter a mysterious chamber.";
+
     // Call Lovable AI
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -159,40 +165,41 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a dungeon master generating narrative scenes for a Habbo-themed JRPG dungeon crawler.
+            content: `You are the dungeon master for The Shattered Frostkeep. Keep scenes grounded and tense. Short, sharp descriptions.
 
-CRITICAL: Your response must be ONLY a valid JSON object. No explanations, no markdown, no text before or after. Just the JSON.
+CRITICAL: Return ONLY valid JSON. No markdown, no text outside the JSON object.
 
-Required JSON format:
+Required format:
 {
-  "storyText": "A short, evocative paragraph (2-4 sentences) describing the current scene with vivid sensory details.",
+  "storyText": "2-4 sentences. What's happening right now. Keep it direct.",
   "choices": [
-    {"id": "choice_1", "label": "First action option"},
-    {"id": "choice_2", "label": "Second action option"},
-    {"id": "choice_3", "label": "Third action option"},
-    {"id": "choice_4", "label": "Fourth action option (optional)"}
+    {"id": "choice_1", "label": "What they can do (5-8 words)"},
+    {"id": "choice_2", "label": "Another option (5-8 words)"},
+    {"id": "choice_3", "label": "Third option (5-8 words)"},
+    {"id": "choice_4", "label": "Optional fourth (5-8 words)"}
   ]
 }
 
-Guidelines:
-- storyText: 40-80 words, atmospheric and mysterious
-- Provide 3-4 choices (5-10 words each)
-- Mix safe/dangerous options
-- Match the dungeon's theme and atmosphere
-- Some choices hint at combat, exploration, or rest
-- Each choice should feel meaningful and consequential`,
+Story rules:
+- Use the room description as your foundation
+- Keep the quest objective in mind
+- 40-70 words max for storyText
+- Mix tactical and risky choices
+- Some choices lead to combat, some to discoveries
+- Make choices feel impactful, not flavor text`,
           },
           {
             role: "user",
-            content: `Dungeon: ${context.dungeon.name}
-Theme: ${context.dungeon.theme}
+            content: `Quest: ${questObjective}
+Dungeon: ${context.dungeon.name}
 Difficulty: ${context.dungeon.difficulty}
-Room: ${context.roomIndex}
-Party HP: ${context.party?.[0]?.current_hp || 100}/${context.party?.[0]?.max_hp || 100}
-Last choice: ${context.lastChoice || "None - this is the start"}
-Recent events: ${context.recentEvents.join("; ") || "The adventure begins"}
+Room ${context.roomIndex + 1}: ${roomDescription}
 
-Generate an atmospheric scene with 3-4 meaningful choices. Return ONLY the JSON object.`,
+Party status: ${context.party?.[0]?.current_hp || 100}/${context.party?.[0]?.max_hp || 100} HP
+Last action: ${context.lastChoice || "Just arrived"}
+Recent: ${context.recentEvents.slice(-2).join("; ") || "Adventure begins"}
+
+Create a scene for this room. Base it on the room description. Keep the quest in mind. Return ONLY the JSON.`,
           },
         ],
       }),
