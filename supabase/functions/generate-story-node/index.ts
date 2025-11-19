@@ -159,19 +159,13 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a dungeon master for The Shattered Frostkeep, a dark ice dungeon in a Habbo-themed JRPG world. Generate immersive narrative scenes with multiple choice options.
+            content: `You are a dungeon master generating narrative scenes for a Habbo-themed JRPG dungeon crawler.
 
-CRITICAL RULES:
-- Stay in character as a dungeon master narrating events
-- Keep tone atmospheric and mysterious, fitting the ice dungeon theme
-- Choices should be varied: some risky, some safe, some lead to battles
-- Each choice should feel meaningful and consequential
-- Never break character or mention you are AI
-- Output ONLY valid JSON, no markdown, no explanations
+CRITICAL: Your response must be ONLY a valid JSON object. No explanations, no markdown, no text before or after. Just the JSON.
 
-Output format:
+Required JSON format:
 {
-  "storyText": "A short, evocative paragraph (2-4 sentences) describing the current scene. Use vivid sensory details about the ice, cold, and mysterious atmosphere.",
+  "storyText": "A short, evocative paragraph (2-4 sentences) describing the current scene with vivid sensory details.",
   "choices": [
     {"id": "choice_1", "label": "First action option"},
     {"id": "choice_2", "label": "Second action option"},
@@ -181,24 +175,24 @@ Output format:
 }
 
 Guidelines:
-- storyText should be 40-80 words
-- Provide 3-4 choices
-- Choices should be concise (5-10 words each)
+- storyText: 40-80 words, atmospheric and mysterious
+- Provide 3-4 choices (5-10 words each)
 - Mix safe/dangerous options
-- Some choices hint at combat ("confront", "attack")
-- Some choices hint at exploration ("investigate", "search")
-- Some choices hint at rest/healing ("rest", "tend wounds")`,
+- Match the dungeon's theme and atmosphere
+- Some choices hint at combat, exploration, or rest
+- Each choice should feel meaningful and consequential`,
           },
           {
             role: "user",
-            content: `Generate the next story node for:
-Dungeon: ${context.dungeon.name} (${context.dungeon.theme}, ${context.dungeon.difficulty})
-Room Index: ${context.roomIndex}
-Party HP Average: ${context.party?.[0]?.current_hp || 100}/${context.party?.[0]?.max_hp || 100}
+            content: `Dungeon: ${context.dungeon.name}
+Theme: ${context.dungeon.theme}
+Difficulty: ${context.dungeon.difficulty}
+Room: ${context.roomIndex}
+Party HP: ${context.party?.[0]?.current_hp || 100}/${context.party?.[0]?.max_hp || 100}
 Last choice: ${context.lastChoice || "None - this is the start"}
 Recent events: ${context.recentEvents.join("; ") || "The adventure begins"}
 
-Generate an atmospheric scene and 3-4 meaningful choices.`,
+Generate an atmospheric scene with 3-4 meaningful choices. Return ONLY the JSON object.`,
           },
         ],
         temperature: 0.8,
@@ -216,15 +210,30 @@ Generate an atmospheric scene and 3-4 meaningful choices.`,
 
     const content = aiData.choices[0].message.content;
     
-    // Try to parse JSON, handling markdown code blocks
+    // Try to parse JSON, handling various formats
     let storyNode;
     try {
-      // Remove markdown code blocks if present
-      const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-      storyNode = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error("Failed to parse AI response:", content);
-      throw new Error("Invalid AI response format");
+      // First, try direct parsing
+      storyNode = JSON.parse(content);
+    } catch (e1) {
+      try {
+        // Remove markdown code blocks if present
+        const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+        storyNode = JSON.parse(cleanContent);
+      } catch (e2) {
+        try {
+          // Try to extract JSON object from text
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            storyNode = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error("No JSON found in response");
+          }
+        } catch (e3) {
+          console.error("Failed to parse AI response:", content);
+          throw new Error("Invalid AI response format");
+        }
+      }
     }
 
     // Validate structure
