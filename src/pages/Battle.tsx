@@ -1016,10 +1016,15 @@ const Battle = () => {
 
       // Reload battle to get updated state (only if not complete)
       if (shouldReloadBattle) {
+        // Clear loading state BEFORE reload to prevent UI flicker
+        setStoryLoading(false);
         await loadBattle();
+      } else {
+        setStoryLoading(false);
       }
     } catch (error: any) {
       console.error("Story choice error:", error);
+      setStoryLoading(false);
       
       // Handle specific error cases
       if (error.message?.includes("Not your turn")) {
@@ -1036,8 +1041,6 @@ const Battle = () => {
         });
       }
     } finally {
-      // Ensure loading state is ALWAYS cleared
-      setStoryLoading(false);
       // Reset dice input state
       setSelectedChoice(null);
       setStoryDice([1, 1, 1, 1, 1]);
