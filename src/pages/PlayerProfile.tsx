@@ -76,13 +76,26 @@ export default function PlayerProfile() {
 
       if (statsError) throw statsError;
 
+      if (!statsData) {
+        toast.error("No stats found for this player");
+        navigate("/");
+        return;
+      }
+
       const habboProfile = profileData.habbo_profile_json as { figureString?: string } | null;
       
       setPlayer({
         username: profileData.username,
         habbo_username: profileData.habbo_username || "",
         figureString: habboProfile?.figureString,
-        ...statsData,
+        level: statsData.level || 1,
+        max_hp: statsData.max_hp || 100,
+        current_hp: statsData.current_hp || 100,
+        max_mp: statsData.max_mp || 50,
+        current_mp: statsData.current_mp || 50,
+        atk: statsData.atk || 10,
+        def: statsData.def || 10,
+        spd: statsData.spd || 10,
       });
     } catch (error: any) {
       console.error("Error loading player:", error);
