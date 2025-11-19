@@ -208,22 +208,34 @@ CRITICAL RULE - Room Progression:
 - Exploration → progressRoom=true
 - "Continue/proceed/move/advance" → ALWAYS progressRoom=true
 
+CRITICAL RULE - Item Rewards:
+- **ITEMS ARE RARE!** Only give itemsGained for SIGNIFICANT achievements:
+  * Defeating enemies (done automatically, don't add here)
+  * Solving complex puzzles
+  * Finding hidden treasure caches (not just walking around)
+  * Making exceptional choices with clear risk
+- **NEVER** give items for: simply exploring, walking into rooms, basic movement, or routine choices
+- 90% of choices should have itemsGained: [] (empty array)
+- Walking into a room = NO ITEMS
+- Looking around = NO ITEMS
+- Moving forward = NO ITEMS
+
 Output format:
 {
   "consequenceText": "Brief narration of what happens. If triggersBattle=true, MUST mention the enemy name! Example: 'An Ice Elemental materializes before you!'",
   "hpChange": -10 to +20 (negative for damage, positive for healing, 0 for none),
   "mpChange": -5 to +10,
-  "itemsGained": [{"name": "item name", "quantity": 1}] or [],
+  "itemsGained": [] (ALMOST ALWAYS EMPTY - only for major discoveries),
   "triggersBattle": true/false,
   "progressRoom": true/false (whether to advance to next room - default to TRUE)
 }
 
 Example interpretations:
-- "Charge ahead" → progressRoom=true, high damage, likely battle
-- "Proceed cautiously" → progressRoom=true, small HP cost, explore forward
-- "Search current area" → progressRoom=false, might find items
-- "Rest here" → progressRoom=false, restore HP/MP
-- "Investigate and move on" → progressRoom=true`,
+- "Charge ahead" → progressRoom=true, high damage, likely battle, NO ITEMS
+- "Proceed cautiously" → progressRoom=true, small HP cost, explore forward, NO ITEMS
+- "Search current area" → progressRoom=false, MAYBE small items if very lucky
+- "Rest here" → progressRoom=false, restore HP/MP, NO ITEMS
+- "Investigate and move on" → progressRoom=true, NO ITEMS unless finding secret treasure`,
           },
           {
             role: "user",

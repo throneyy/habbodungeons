@@ -1011,6 +1011,76 @@ const Battle = () => {
     setLoading(false);
   };
 
+  const handleSaveChestForLater = async () => {
+    if (!id || treasureClaimed) return;
+    
+    setLoading(true);
+    setTreasureClaimed(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Add unopened chest to inventory
+      const chestItem = { 
+        item_name: "Rare Treasure Chest", 
+        quantity: 1, 
+        item_type: "chest" 
+      };
+      
+      const { data: existing } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('item_name', chestItem.item_name)
+        .maybeSingle();
+      
+      if (existing) {
+        await supabase
+          .from('inventory')
+          .update({ quantity: existing.quantity + 1 })
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('inventory')
+          .insert({ user_id: user.id, ...chestItem });
+      }
+      
+      toast({
+        title: "Chest saved!",
+        description: "The treasure chest has been added to your inventory for later.",
+      });
+      
+      // Add to battle log
+      const { data: battleState } = await supabase
+        .from('battle_states')
+        .select('battle_log')
+        .eq('dungeon_id', id)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (battleState) {
+        const currentLog = (battleState.battle_log as any[]) || [];
+        await supabase
+          .from('battle_states')
+          .update({
+            battle_log: [...currentLog, { user_id: user.id, message: "Saved a treasure chest for later" }]
+          })
+          .eq('dungeon_id', id)
+          .eq('user_id', user.id);
+      }
+      
+      // Move to next room
+      await loadBattle();
+    } catch (error: any) {
+      toast({
+        title: "Error saving chest",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setLoading(false);
+  };
+
   const handleApplyEventBoost = async () => {
     if (!id || !battleData?.event_type) return;
     
@@ -1460,9 +1530,9 @@ const Battle = () => {
                             Treasure Found!
                           </h3>
                           <p className="text-lg leading-relaxed">
-                            {battleData.treasure_description || 'A mysterious chest awaits...'}
+                            {battleData.treasure_description || 'A frost-covered chest sits in the corner, its contents unknown...'}
                           </p>
-                          <div className="flex justify-center pt-4">
+                          <div className="flex justify-center gap-4 pt-4">
                             <Button
                               onClick={handleClaimTreasure}
                               disabled={loading || treasureClaimed}
@@ -1471,6 +1541,15 @@ const Battle = () => {
                             >
                               <Package className="mr-2 h-5 w-5" />
                               {treasureClaimed ? 'Claimed!' : loading ? 'Opening...' : 'Open Chest'}
+                            </Button>
+                            <Button
+                              onClick={handleSaveChestForLater}
+                              disabled={loading || treasureClaimed}
+                              size="lg"
+                              variant="outline"
+                              className="font-black text-lg px-8 border-4 border-habbo-dark"
+                            >
+                              {treasureClaimed ? 'Saved!' : loading ? 'Saving...' : 'Open Later'}
                             </Button>
                           </div>
                         </div>
