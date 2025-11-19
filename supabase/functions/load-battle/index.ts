@@ -137,6 +137,7 @@ serve(async (req) => {
         return {
           userId: stats.user_id,
           username: profile?.habbo_username || profile?.username || 'Unknown',
+          figureString: habboData?.figureString || undefined,
           habboAvatar: habboData?.figureString 
             ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboData.figureString}&size=s&direction=2&head_direction=3`
             : null,
@@ -190,6 +191,7 @@ serve(async (req) => {
       players = [{
         userId: user.id,
         username: profile?.habbo_username || profile?.username || 'You',
+        figureString: habboData?.figureString || undefined,
         habboAvatar: habboData?.figureString 
           ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${habboData.figureString}&size=s&direction=2&head_direction=3`
           : null,

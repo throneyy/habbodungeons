@@ -235,7 +235,11 @@ const Battle = () => {
       console.log('Setting up real-time subscription with filter:', filter);
       
       const channel = supabase
-        .channel('battle-updates')
+        .channel('battle-updates', {
+          config: {
+            broadcast: { self: true }
+          }
+        })
         .on(
           'postgres_changes',
           {
@@ -245,12 +249,15 @@ const Battle = () => {
             filter
           },
           async (payload) => {
-            console.log('Battle state updated via realtime:', payload);
-            // Reload battle data when it changes
+            console.log('🔄 Battle state updated via realtime:', payload);
+            
+            // Force a fresh reload to ensure we get latest data
             await loadBattle();
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Realtime subscription status:', status);
+        });
 
       return channel;
     };
@@ -259,7 +266,10 @@ const Battle = () => {
     setupSubscription().then(ch => { channel = ch; });
 
     return () => {
-      if (channel) supabase.removeChannel(channel);
+      if (channel) {
+        console.log('Cleaning up realtime subscription');
+        supabase.removeChannel(channel);
+      }
     };
   }, [id]);
 
