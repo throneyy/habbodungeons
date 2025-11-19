@@ -509,20 +509,22 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       if (newRoomIndex < totalRooms) {
         // Load next room's enemy
         console.log(`Loading next room ${newRoomIndex}`);
-        const nextRoom = dungeonData.rooms[newRoomIndex];
+        const nextRoom = dungeonData?.rooms?.[newRoomIndex];
+        console.log('Next room data:', JSON.stringify(nextRoom));
         
-        // Check if next room has an enemy
-        if (nextRoom?.enemy && nextRoom.enemy.hp) {
+        // Check if next room has an enemy with valid HP
+        if (nextRoom && nextRoom.enemy && typeof nextRoom.enemy.hp === 'number') {
+          const enemy = nextRoom.enemy;
           updatedEnemy = {
-            ...nextRoom.enemy,
-            current_hp: nextRoom.enemy.hp,
-            max_hp: nextRoom.enemy.hp,
+            ...enemy,
+            current_hp: enemy.hp,
+            max_hp: enemy.hp,
             mode: "story",
             status_effects: [],
           };
         } else {
           // No enemy in next room - set to story mode with placeholder
-          console.log(`Next room has no enemy, entering story mode`);
+          console.log(`Next room has no enemy or invalid enemy data, entering story mode`);
           updatedEnemy = {
             name: "",
             description: "",
