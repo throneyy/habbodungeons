@@ -193,7 +193,7 @@ For choices requiring dice:
   "label": "Try to persuade the guard [Dice Check: DC 15]",
   "diceRequired": true,
   "diceDC": 15,
-  "skillType": "persuasion"  // or "intimidation", "deception", "insight", etc.
+  "skillType": "persuasion"  // or "intimidation", "deception", "insight", "investigation", "perception", etc.
 }
 
 For regular choices (no dice):
@@ -202,6 +202,26 @@ For regular choices (no dice):
   "label": "Attack immediately",
   "diceRequired": false
 }
+
+## MANDATORY DICE CHECK EXAMPLES - THESE MUST HAVE DICE:
+❌ WRONG: "Search the perimeter for hidden doors" (diceRequired: false)
+✅ CORRECT: "Carefully search the perimeter for hidden doors [Dice Check: DC 16]" (diceRequired: true, diceDC: 16, skillType: "investigation")
+
+❌ WRONG: "Look for weaknesses in the barrier" (diceRequired: false)
+✅ CORRECT: "Examine the barrier for structural weaknesses [Dice Check: DC 18]" (diceRequired: true, diceDC: 18, skillType: "perception")
+
+❌ WRONG: "Call out to the mage" (diceRequired: false)
+✅ CORRECT: "Call out to demand passage [Dice Check: DC 15]" (diceRequired: true, diceDC: 15, skillType: "persuasion")
+
+❌ WRONG: "Try to break through the ice" (diceRequired: false)
+✅ CORRECT: "Force your way through the magical barrier [Dice Check: DC 22]" (diceRequired: true, diceDC: 22, skillType: "strength")
+
+If an action contains these words, it MUST have diceRequired: true:
+- "search", "look for", "find", "discover", "investigate", "examine", "inspect", "scout"
+- "persuade", "convince", "reason", "negotiate", "talk", "call out", "demand"
+- "intimidate", "threaten", "force", "break", "smash", "destroy"
+- "sneak", "hide", "steal", "pickpocket", "avoid detection"
+- "dispel", "disrupt", "manipulate", "analyze", "decipher"
 
 ## Story Structure Rules
 1. Create varied, unpredictable encounters:
