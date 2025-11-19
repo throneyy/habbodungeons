@@ -28,7 +28,7 @@ export const AppLayout = ({ children, hideBanner = false }: AppLayoutProps) => {
               alt="Habbo Dungeons" 
               className="cursor-pointer pixel-icon"
               onClick={() => navigate("/dashboard")}
-              style={{ height: 'auto', width: 'auto', maxHeight: '48px' }}
+              style={{ height: 'auto', width: 'auto', maxHeight: '96px' }}
             />
           </div>
         )}
