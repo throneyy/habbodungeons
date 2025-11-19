@@ -80,11 +80,15 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
           ? getHabboAvatarWithExpression(figureString, hpPercentage, isCurrentTurn)
           : member.habboAvatar;
         
+        const isDead = hpPercentage <= 0;
+        
         return (
           <div
             key={member.userId}
-            className={`relative flex-1 p-2 rounded-lg border-2 ${
-              isCurrentTurn
+            className={`relative flex-1 p-2 rounded-lg border-2 transition-all duration-300 ${
+              isDead
+                ? 'bg-muted/30 border-red-900/50 opacity-70'
+                : isCurrentTurn
                 ? 'bg-green-500/30 border-green-400 ring-2 ring-green-400/50 animate-pulse'
                 : isCurrentUser
                 ? 'bg-primary/20 border-primary'
@@ -93,13 +97,13 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
           >
             {/* Turn order badge */}
             {turnOrder && turnIndex !== undefined && turnIndex >= 0 && (
-              <div className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10 shadow-lg">
+              <div className={`absolute -top-3 -right-3 w-7 h-7 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10 shadow-lg ${isDead ? 'opacity-30' : ''}`}>
                 {turnIndex + 1}
               </div>
             )}
             
-            {/* Current turn indicator */}
-            {isCurrentTurn && (
+            {/* Current turn indicator - hidden when dead */}
+            {isCurrentTurn && !isDead && (
               <div className="absolute -top-2 -left-2 animate-bounce z-10">
                 <Swords className="w-5 h-5 text-green-400 drop-shadow-lg" />
               </div>
@@ -118,8 +122,8 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
               </div>
               <div className="w-full bg-muted border border-habbo-dark rounded-sm h-2 overflow-hidden">
                 <div 
-                  className="h-full bg-hp transition-all duration-300"
-                  style={{ width: `${hpPercentage}%` }}
+                  className={`h-full transition-all duration-300 ${isDead ? 'bg-red-900' : 'bg-hp'}`}
+                  style={{ width: `${Math.max(0, hpPercentage)}%` }}
                 />
               </div>
             </div>
