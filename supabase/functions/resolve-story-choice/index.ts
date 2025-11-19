@@ -424,11 +424,9 @@ ${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
       console.log(`Story choice: Advancing turn from ${user.id} to ${turnOrder[nextIndex]}`);
     }
 
-    // Clear story node if advancing to a new room (for multiplayer sync)
-    if (sanitizedOutcome.progressRoom) {
-      updateData.current_story_node = null;
-      console.log("Clearing story node for new room");
-    }
+    // Clear story node after any story choice so a fresh node is generated next time
+    updateData.current_story_node = null;
+    console.log("Clearing story node after story choice");
 
     // Set up enemy if battle is triggered
     if (sanitizedOutcome.triggersBattle) {
