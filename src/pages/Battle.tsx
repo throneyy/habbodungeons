@@ -30,6 +30,13 @@ import undeadHabbo from "@/assets/undead-habbo.png";
 import frostbiteSpider from "@/assets/frostbite-spider.webp";
 import giantRat from "@/assets/giant-rat.png";
 import iceShade from "@/assets/ice-shade.png";
+import fireDrake from "@/assets/fire-drake.png";
+import bloodDragonBoss from "@/assets/blood-dragon-boss.gif";
+import flamingPhantom from "@/assets/flaming-phantom.png";
+import goblinTrio from "@/assets/goblin-trio.png";
+import iceKnightBoss from "@/assets/ice-knight-boss.png";
+import spiritOwl from "@/assets/spirit-owl.png";
+import werewolf from "@/assets/werewolf.png";
 import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import diceSprite from "@/assets/dice-sprite.gif";
 import { getNPCById } from "@/lib/npcData";
@@ -50,6 +57,13 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frostbite-spider.webp": frostbiteSpider,
   "giant-rat.png": giantRat,
   "ice-shade.png": iceShade,
+  "fire-drake.png": fireDrake,
+  "blood-dragon-boss.gif": bloodDragonBoss,
+  "flaming-phantom.png": flamingPhantom,
+  "goblin-trio.png": goblinTrio,
+  "ice-knight-boss.png": iceKnightBoss,
+  "spirit-owl.png": spiritOwl,
+  "werewolf.png": werewolf,
 };
 
 interface BattleLogEntry {
