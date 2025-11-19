@@ -470,9 +470,12 @@ Return ONLY valid JSON (no markdown):
       console.log(`Story choice: Advancing turn from ${user.id} to ${turnOrder[nextIndex]}`);
     }
 
-    // Clear story node after any story choice so a fresh node is generated next time
-    updateData.current_story_node = null;
-    console.log("Clearing story node after story choice");
+    // Only clear story node when actually progressing to a new room
+    // so the story text stays consistent when triggering battles in the same room
+    if (sanitizedOutcome.progressRoom) {
+      updateData.current_story_node = null;
+      console.log("Clearing story node because room advanced");
+    }
 
     // Set up enemy if battle is triggered
     if (sanitizedOutcome.triggersBattle) {
