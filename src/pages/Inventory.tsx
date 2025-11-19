@@ -180,7 +180,7 @@ const Inventory = () => {
           <div className="flex gap-2">
             <Button onClick={() => navigate("/loot-box")} variant="default">
               <Gift className="mr-2 h-4 w-4" />
-              Open Loot Boxes
+              Open Chests
             </Button>
             <Button onClick={() => navigate("/dashboard")} variant="outline">
               Back to Dashboard
