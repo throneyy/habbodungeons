@@ -211,6 +211,7 @@ const Battle = () => {
   const [showVictoryLoot, setShowVictoryLoot] = useState(false);
   const [victoryLootData, setVictoryLootData] = useState<{ items: any[]; xp: number }>({ items: [], xp: 0 });
   const victoryDialogActiveRef = useRef(false);
+  const lastRoomIndexRef = useRef<number | null>(null);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -381,6 +382,16 @@ const Battle = () => {
             // Don't reload if victory dialog is showing - let user close it first
             if (victoryDialogActiveRef.current) {
               console.log('Victory dialog is showing, skipping reload');
+              return;
+            }
+            
+            // Check if this is a room progression (victory transition) - if so, skip reload
+            // The handleResolveTurn function will handle showing the victory modal
+            const newState = payload.new as any;
+            if (newState && lastRoomIndexRef.current !== null && 
+                newState.current_room_index > lastRoomIndexRef.current) {
+              console.log('Room progressed from', lastRoomIndexRef.current, 'to', newState.current_room_index, '- skipping reload, waiting for victory modal');
+              lastRoomIndexRef.current = newState.current_room_index;
               return;
             }
             
@@ -613,6 +624,11 @@ const Battle = () => {
       
       if (data?.battleData) {
         setBattleData(data.battleData);
+        
+        // Track room index for realtime updates
+        if (data.battleData.room_index !== undefined) {
+          lastRoomIndexRef.current = data.battleData.room_index;
+        }
         
         // Load party profiles for battle log display
         loadPartyProfiles(userServerId);
@@ -1411,10 +1427,14 @@ const Battle = () => {
         }
         
         if (data.victory) {
-          // Show victory loot modal with data
+          // Set victory dialog flag immediately to prevent realtime update from interfering
           victoryDialogActiveRef.current = true;
-          setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
-          setShowVictoryLoot(true);
+          
+          // Show victory loot modal with data after a brief delay to allow state to settle
+          setTimeout(() => {
+            setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
+            setShowVictoryLoot(true);
+          }, 100);
           // Note: loadBattle will be called when user closes the modal
         } else if (data.playerDied && !data.defeat) {
           // This player died but party continues
