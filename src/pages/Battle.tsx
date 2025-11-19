@@ -1590,26 +1590,39 @@ const Battle = () => {
                           <p className="text-lg leading-relaxed">
                             {battleData.treasure_description || 'A frost-covered chest sits in the corner, its contents unknown...'}
                           </p>
-                          <div className="flex justify-center gap-4 pt-4">
-                            <Button
-                              onClick={handleClaimTreasure}
-                              disabled={loading || treasureClaimed}
-                              size="lg"
-                              className="font-black text-lg px-8"
-                            >
-                              <Package className="mr-2 h-5 w-5" />
-                              {treasureClaimed ? 'Claimed!' : loading ? 'Opening...' : 'Open Chest'}
-                            </Button>
-                            <Button
-                              onClick={handleSaveChestForLater}
-                              disabled={loading || treasureClaimed}
-                              size="lg"
-                              variant="outline"
-                              className="font-black text-lg px-8 border-4 border-habbo-dark"
-                            >
-                              {treasureClaimed ? 'Saved!' : loading ? 'Saving...' : 'Open Later'}
-                            </Button>
-                          </div>
+                          {!treasureClaimed ? (
+                            <div className="flex justify-center gap-4 pt-4">
+                              <Button
+                                onClick={handleClaimTreasure}
+                                disabled={loading}
+                                size="lg"
+                                className="font-black text-lg px-8"
+                              >
+                                <Package className="mr-2 h-5 w-5" />
+                                {loading ? 'Opening...' : 'Open Chest'}
+                              </Button>
+                              <Button
+                                onClick={handleSaveChestForLater}
+                                disabled={loading}
+                                size="lg"
+                                variant="outline"
+                                className="font-black text-lg px-8 border-4 border-habbo-dark"
+                              >
+                                {loading ? 'Saving...' : 'Open Later'}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-center pt-4">
+                              <Button
+                                onClick={() => loadBattle()}
+                                disabled={loading}
+                                size="lg"
+                                className="font-black text-lg px-8"
+                              >
+                                {loading ? 'Loading...' : 'Continue'}
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                       
