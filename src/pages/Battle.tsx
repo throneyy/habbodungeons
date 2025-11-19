@@ -1089,18 +1089,28 @@ const Battle = () => {
                     const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
                     const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                     
+                    // Replace "You" with actual username for other players' messages
+                    let displayMessage = message;
+                    if (!isCurrentUser && userId) {
+                      // Replace "You " at the start of the message with the username
+                      displayMessage = message.replace(/^You /, `${username} `);
+                      // Replace " You " in the middle with the username
+                      displayMessage = displayMessage.replace(/ You /g, ` ${username} `);
+                      // Replace "Your " with possessive form
+                      displayMessage = displayMessage.replace(/Your /g, `${username}'s `);
+                    }
+                    
                     return (
                       <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
                         <span className="text-primary font-bold">›</span>{" "}
                         {isCurrentUser || !userId ? (
-                          renderTextWithWeapons(message)
+                          renderTextWithWeapons(displayMessage)
                         ) : (
                           <>
-                            {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
-                            {message.includes("chose:") ? (
-                              <> {renderTextWithWeapons(message.replace("You ", ""))}</>
+                            {isDiceRoll ? (
+                              renderTextWithWeapons(displayMessage)
                             ) : (
-                              <> {isDiceRoll ? renderTextWithWeapons(message) : renderTextWithWeapons(message)}</>
+                              renderTextWithWeapons(displayMessage)
                             )}
                           </>
                         )}
@@ -1550,17 +1560,28 @@ const Battle = () => {
                   const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
                   const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                   
+                  // Replace "You" with actual username for other players' messages
+                  let displayMessage = message;
+                  if (!isCurrentUser && userId) {
+                    // Replace "You " at the start of the message with the username
+                    displayMessage = message.replace(/^You /, `${username} `);
+                    // Replace " You " in the middle with the username
+                    displayMessage = displayMessage.replace(/ You /g, ` ${username} `);
+                    // Replace "Your " with possessive form
+                    displayMessage = displayMessage.replace(/Your /g, `${username}'s `);
+                  }
+                  
                   return (
                     <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
+                      <span className="text-primary font-bold">›</span>{" "}
                       {isCurrentUser || !userId ? (
-                        renderTextWithWeapons(message)
+                        renderTextWithWeapons(displayMessage)
                       ) : (
                         <>
-                          {!isDiceRoll && <span className="text-[#FFD700] font-bold">{username}</span>}
-                          {message.includes("chose:") ? (
-                            <> {renderTextWithWeapons(message.replace("You ", ""))}</>
+                          {isDiceRoll ? (
+                            renderTextWithWeapons(displayMessage)
                           ) : (
-                            <> {isDiceRoll ? renderTextWithWeapons(message) : renderTextWithWeapons(message)}</>
+                            renderTextWithWeapons(displayMessage)
                           )}
                         </>
                       )}
