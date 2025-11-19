@@ -1681,23 +1681,32 @@ const Battle = () => {
                         )}
                         
                         <div className="space-y-3">
-                          {storyNode.choices.map((choice) => (
-                            <Button
-                              key={choice.id}
-                              onClick={() => handleStoryChoice(choice.id)}
-                              disabled={storyLoading || (battleData.isPartyBattle && !isMyTurn) || (selectedChoice !== null)}
-                              variant="outline"
-                              className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark text-base hover-scale disabled:opacity-50"
-                            >
-                              <span className="mr-3 text-2xl">›</span>
-                              {choice.label}
-                              {choice.diceRequired && (
-                                <span className="ml-2 text-xs text-primary font-bold">
-                                  [🎲 DICE]
-                                </span>
-                              )}
-                            </Button>
-                          ))}
+                          {storyNode.choices.map((choice) => {
+                            // Remove the dice check text from the label if it exists
+                            const cleanLabel = choice.label.replace(/\s*\[Dice Check:.*?\]\s*$/i, '');
+                            
+                            return (
+                              <Button
+                                key={choice.id}
+                                onClick={() => handleStoryChoice(choice.id)}
+                                disabled={storyLoading || (battleData.isPartyBattle && !isMyTurn) || (selectedChoice !== null)}
+                                variant="outline"
+                                className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark hover-scale disabled:opacity-50 flex-col items-start"
+                              >
+                                <div className="flex items-start w-full">
+                                  <span className="mr-3 text-2xl flex-shrink-0">›</span>
+                                  <div className="flex-1">
+                                    <div className="text-base font-bold">{cleanLabel}</div>
+                                    {choice.diceRequired && choice.diceDC && (
+                                      <div className="text-xs italic text-muted-foreground mt-1">
+                                        Dice Check: DC {choice.diceDC}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </Button>
+                            );
+                          })}
                         </div>
                         
                         {/* End Quest Button */}
