@@ -142,6 +142,15 @@ const ENEMY_POOL = [
     baseAtk: 14,
     baseDef: 5,
     baseSpd: 8
+  },
+  {
+    name: "Ice Shade",
+    description: "A crystalline wraith that phases through solid ice",
+    sprite: "ice-shade.png",
+    baseHp: 40,
+    baseAtk: 12,
+    baseDef: 6,
+    baseSpd: 10
   }
 ];
 
