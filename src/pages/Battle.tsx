@@ -1142,6 +1142,47 @@ const Battle = () => {
     setLoading(false);
   };
 
+  const handleContinueToNextRoom = async () => {
+    if (!id) return;
+    
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      // Get current battle state to increment room index
+      const { data: battleState } = await supabase
+        .from('battle_states')
+        .select('current_room_index, server_id')
+        .eq('dungeon_id', id)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (battleState) {
+        // Increment room index and clear story node
+        await supabase
+          .from('battle_states')
+          .update({ 
+            current_room_index: battleState.current_room_index + 1,
+            current_story_node: null
+          })
+          .eq('dungeon_id', id)
+          .eq(battleState.server_id ? 'server_id' : 'user_id', battleState.server_id || user.id);
+      }
+      
+      // Reload battle with new room
+      await loadBattle();
+      setTreasureClaimed(false);
+    } catch (error: any) {
+      toast({
+        title: "Error advancing room",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setLoading(false);
+  };
+
   const handleApplyEventBoost = async () => {
     if (!id || !battleData?.event_type) return;
     
@@ -1182,7 +1223,7 @@ const Battle = () => {
       }
       
       // Move to next room
-      await loadBattle();
+      await handleContinueToNextRoom();
     } catch (error: any) {
       toast({
         title: "Error applying boost",
@@ -1614,7 +1655,7 @@ const Battle = () => {
                           ) : (
                             <div className="flex justify-center pt-4">
                               <Button
-                                onClick={() => loadBattle()}
+                                onClick={handleContinueToNextRoom}
                                 disabled={loading}
                                 size="lg"
                                 className="font-black text-lg px-8"
