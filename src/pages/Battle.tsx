@@ -1298,12 +1298,17 @@ const Battle = () => {
                     // Replace "You" with actual username for other players' messages
                     let displayMessage = message;
                     if (!isCurrentUser && userId) {
-                      // Replace "You " at the start of the message with the username
-                      displayMessage = message.replace(/^You /, `${username} `);
-                      // Replace " You " in the middle with the username
-                      displayMessage = displayMessage.replace(/ You /g, ` ${username} `);
-                      // Replace "Your " with possessive form
-                      displayMessage = displayMessage.replace(/Your /g, `${username}'s `);
+                      // Replace "You " at the start of the message with [username] in brackets
+                      displayMessage = message.replace(/^You /, `[${username}] `);
+                      // Replace " You " in the middle with [username] in brackets
+                      displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
+                      // Replace "Your " with possessive form in brackets
+                      displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
+                    } else if (isCurrentUser) {
+                      // Replace "You " with [username] in brackets for current user too
+                      displayMessage = message.replace(/^You /, `[${username}] `);
+                      displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
+                      displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
                     }
                     
                     return (
@@ -1816,12 +1821,17 @@ const Battle = () => {
                   // Replace "You" with actual username for other players' messages
                   let displayMessage = message;
                   if (!isCurrentUser && userId) {
-                    // Replace "You " at the start of the message with the username
-                    displayMessage = message.replace(/^You /, `${username} `);
-                    // Replace " You " in the middle with the username
-                    displayMessage = displayMessage.replace(/ You /g, ` ${username} `);
-                    // Replace "Your " with possessive form
-                    displayMessage = displayMessage.replace(/Your /g, `${username}'s `);
+                    // Replace "You " at the start of the message with [username] in brackets
+                    displayMessage = message.replace(/^You /, `[${username}] `);
+                    // Replace " You " in the middle with [username] in brackets
+                    displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
+                    // Replace "Your " with possessive form in brackets
+                    displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
+                  } else if (isCurrentUser) {
+                    // Replace "You " with [username] in brackets for current user too
+                    displayMessage = message.replace(/^You /, `[${username}] `);
+                    displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
+                    displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
                   }
                   
                   return (
