@@ -1691,12 +1691,12 @@ const Battle = () => {
                                 onClick={() => handleStoryChoice(choice.id)}
                                 disabled={storyLoading || (battleData.isPartyBattle && !isMyTurn) || (selectedChoice !== null)}
                                 variant="outline"
-                                className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark hover-scale disabled:opacity-50 flex-col items-start"
+                                className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark hover-scale disabled:opacity-50 flex-col items-start whitespace-normal"
                               >
                                 <div className="flex items-start w-full">
                                   <span className="mr-3 text-2xl flex-shrink-0">›</span>
-                                  <div className="flex-1">
-                                    <div className="text-base font-bold">{cleanLabel}</div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-base font-bold break-words">{cleanLabel}</div>
                                     {choice.diceRequired && choice.diceDC && (
                                       <div className="text-xs italic text-muted-foreground mt-1">
                                         Dice Check: DC {choice.diceDC}
