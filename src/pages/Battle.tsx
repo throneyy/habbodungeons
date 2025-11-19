@@ -237,10 +237,10 @@ const Battle = () => {
             table: 'battle_states',
             filter
           },
-          (payload) => {
-            console.log('Battle state updated:', payload);
+          async (payload) => {
+            console.log('Battle state updated via realtime:', payload);
             // Reload battle data when it changes
-            loadBattle();
+            await loadBattle();
           }
         )
         .subscribe();
@@ -454,7 +454,7 @@ const Battle = () => {
         // If in story mode, load story node
         if (data.battleData.mode === "story") {
           setShowCombatPanels(false);
-          loadStoryNode();
+          await loadStoryNode();
         } else {
           // Clear story node and trigger combat panel animation for battle mode
           setStoryNode(null);
