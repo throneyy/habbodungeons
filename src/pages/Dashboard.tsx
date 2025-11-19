@@ -217,22 +217,41 @@ const Dashboard = () => {
 
         {/* Server Browser */}
         {profile?.habbo_username && (
-          <HabboPanel title="Join Adventure">
-            <div className="space-y-4">
-              <p className="text-center text-muted-foreground">
-                Browse available servers and team up with other players for epic dungeon runs
-              </p>
-              <div className="flex justify-center">
-                <Button
-                  size="lg"
-                  onClick={() => navigate("/dungeon-list")}
-                  className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
-                >
-                  Browse Servers
-                </Button>
+          <div className="grid md:grid-cols-2 gap-4">
+            <HabboPanel title="Join Adventure">
+              <div className="space-y-4">
+                <p className="text-center text-muted-foreground">
+                  Browse available servers and team up with other players for epic dungeon runs
+                </p>
+                <div className="flex justify-center">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate("/dungeon-list")}
+                    className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
+                  >
+                    Browse Servers
+                  </Button>
+                </div>
               </div>
-            </div>
-          </HabboPanel>
+            </HabboPanel>
+            
+            <HabboPanel title="Open Loot Boxes">
+              <div className="space-y-4">
+                <p className="text-center text-muted-foreground">
+                  Open chests to receive random loot and powerful items!
+                </p>
+                <div className="flex justify-center">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate("/loot-box")}
+                    className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
+                  >
+                    Open Chests
+                  </Button>
+                </div>
+              </div>
+            </HabboPanel>
+          </div>
         )}
       </div>
     </AppLayout>
