@@ -209,24 +209,55 @@ const Battle = () => {
       const itemMatch = part.match(/\[([^\]]+)\]/);
       if (itemMatch) {
         const itemName = itemMatch[1];
-        const currentUserName = profile?.habbo_username || profile?.username;
         
-        // Check if this is the current user's name
-        if (currentUserName && itemName.toLowerCase() === currentUserName.toLowerCase()) {
-          const avatarUrl = profile?.habbo_profile_json 
-            ? `https://www.habbo.com/habbo-imaging/avatarimage?user=${profile.habbo_username}&direction=2&head_direction=3&gesture=sml&size=s`
+        // Check if this is a player name by looking in partyProfiles
+        let playerUserId: string | null = null;
+        let playerProfile: Profile | null = null;
+        
+        for (const [userId, profile] of partyProfiles.entries()) {
+          if ((profile.habbo_username && profile.habbo_username.toLowerCase() === itemName.toLowerCase()) ||
+              (profile.username && profile.username.toLowerCase() === itemName.toLowerCase())) {
+            playerUserId = userId;
+            playerProfile = profile;
+            break;
+          }
+        }
+        
+        if (playerProfile && playerUserId) {
+          // It's a player name - show avatar on hover with yellow color for current user
+          const isCurrentUser = playerUserId === currentUserId;
+          const avatarUrl = playerProfile.habbo_profile_json 
+            ? `https://www.habbo.com/habbo-imaging/avatarimage?user=${playerProfile.habbo_username}&direction=2&head_direction=3&gesture=sml&size=s`
             : null;
           
           return (
-            <span key={idx} className="inline-flex items-center gap-1">
-              {avatarUrl && (
-                <img 
-                  src={avatarUrl} 
-                  alt={currentUserName}
-                  className="inline-block w-4 h-4 pixel-icon"
-                />
-              )}
-              <span className="text-[#FFD700] font-bold">
+            <span 
+              key={idx} 
+              className="relative inline-block"
+              onMouseEnter={(e) => {
+                if (!avatarUrl) return;
+                const tooltip = document.createElement('div');
+                tooltip.className = 'absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 animate-fade-in';
+                tooltip.innerHTML = `
+                  <div class="bg-habbo-dark border-2 border-primary p-2 rounded shadow-lg">
+                    <img 
+                      src="${avatarUrl}" 
+                      alt="${itemName}"
+                      class="pixel-icon w-16 h-16 object-contain"
+                    />
+                    <p class="text-xs text-center text-foreground mt-1 font-bold whitespace-nowrap">
+                      ${itemName}
+                    </p>
+                  </div>
+                `;
+                e.currentTarget.appendChild(tooltip);
+              }}
+              onMouseLeave={(e) => {
+                const tooltip = e.currentTarget.querySelector('.animate-fade-in');
+                if (tooltip) tooltip.remove();
+              }}
+            >
+              <span className={`${isCurrentUser ? 'text-[#FFD700]' : 'text-purple-500'} font-bold cursor-help`}>
                 [{itemName}]
               </span>
             </span>
