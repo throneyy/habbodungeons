@@ -1222,37 +1222,76 @@ const Battle = () => {
                     </div>
                   )}
 
-                  {/* Party Avatars Row */}
-                  <div className="flex gap-2 mb-4 pb-4 border-b-2 border-habbo-dark">
+                  {/* Party Avatars Row - Updated to match battle mode styling */}
+                  <div className="flex gap-3 mb-4 pb-4 border-b-2 border-habbo-dark">
                     {partyMembers.slice(0, 4).map((member) => {
                       const isCurrentTurn = battleData.currentTurnUserId === member.userId;
+                      const isCurrentUser = member.userId === currentUserId;
                       const turnIndex = battleData.turnOrder?.indexOf(member.userId);
+                      const hpPercentage = (member.currentHp / member.maxHp) * 100;
+                      
+                      // Get dynamic avatar with expression based on state
+                      const dynamicAvatar = member.figureString 
+                        ? getHabboAvatar(member.figureString, hpPercentage, isCurrentTurn, false, 's')
+                        : member.habboAvatar;
                       
                       return (
                         <button
                           key={`avatar-${member.userId}`}
                           onClick={() => setSelectedMemberId(member.userId)}
-                          className={`relative flex items-center justify-center w-16 min-h-[64px] border-2 rounded overflow-hidden transition-all cursor-pointer ${
+                          className={`relative flex-1 min-w-[120px] p-3 rounded-lg border-4 transition-all cursor-pointer ${
                             isCurrentTurn 
                               ? 'border-green-400 ring-4 ring-green-400/50 bg-green-500/20 animate-pulse' 
-                              : 'border-habbo-dark bg-card hover:border-primary'
+                              : isCurrentUser
+                              ? 'border-primary bg-primary/10 hover:bg-primary/20'
+                              : 'border-habbo-dark bg-muted/50 hover:border-primary/50'
                           }`}
                           title={`${member.username}${isCurrentTurn ? ' - CURRENT TURN' : ''}`}
                         >
                           {/* Turn order badge */}
                           {turnIndex !== undefined && turnIndex >= 0 && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10">
+                            <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-sm font-bold z-10 shadow-lg">
                               {turnIndex + 1}
                             </div>
                           )}
                           
-                          {member.habboAvatar && (
-                            <img
-                              src={member.habboAvatar}
-                              alt={member.username}
-                              className="pixelated max-w-full max-h-[60px] w-auto h-auto"
-                            />
+                          {/* Current turn indicator */}
+                          {isCurrentTurn && (
+                            <div className="absolute -top-2 -left-2 animate-bounce z-10">
+                              <Swords className="w-5 h-5 text-green-400 drop-shadow-lg" />
+                            </div>
                           )}
+                          
+                          <div className="flex flex-col items-center gap-2">
+                            {/* Avatar */}
+                            {dynamicAvatar && (
+                              <div className="w-20 h-24 flex items-center justify-center">
+                                <img
+                                  src={dynamicAvatar}
+                                  alt={member.username}
+                                  className="pixelated max-w-full max-h-full object-contain"
+                                />
+                              </div>
+                            )}
+                            
+                            {/* Username */}
+                            <div className="text-sm font-bold text-center truncate w-full px-1">
+                              {member.username}
+                            </div>
+                            
+                            {/* HP Bar */}
+                            <div className="w-full bg-muted border-2 border-habbo-dark rounded-md h-3 overflow-hidden">
+                              <div 
+                                className="h-full bg-hp transition-all duration-300"
+                                style={{ width: `${hpPercentage}%` }}
+                              />
+                            </div>
+                            
+                            {/* HP Text */}
+                            <div className="text-xs font-bold text-muted-foreground">
+                              {member.currentHp}/{member.maxHp}
+                            </div>
+                          </div>
                         </button>
                       );
                     })}
@@ -1260,10 +1299,10 @@ const Battle = () => {
                       <button
                         key={`empty-${i}`}
                         onClick={() => partyId ? setShowInviteDialog(true) : createParty()}
-                        className="w-12 h-12 border-2 border-dashed border-muted rounded bg-muted/20 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer min-h-[48px]"
+                        className="flex-1 min-w-[120px] p-3 border-4 border-dashed border-muted rounded-lg bg-muted/20 flex items-center justify-center hover:border-primary hover:bg-primary/10 transition-colors cursor-pointer"
                         title="Invite player"
                       >
-                        <Plus className="text-muted-foreground w-4 h-4" />
+                        <Plus className="text-muted-foreground w-8 h-8" />
                       </button>
                     ))}
                   </div>
