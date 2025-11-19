@@ -981,15 +981,34 @@ const Battle = () => {
                     {/* Choices */}
                     {storyNode && storyNode.choices.length > 0 && (
                       <div className="space-y-3">
+                        {/* Turn-based choice header */}
+                        {battleData.isPartyBattle && (
+                          <div className={`p-3 rounded-lg border-2 mb-4 ${
+                            isMyTurn 
+                              ? 'bg-green-500/20 border-green-400' 
+                              : 'bg-gray-500/20 border-gray-400'
+                          }`}>
+                            <div className="text-center font-bold text-sm">
+                              {isMyTurn ? (
+                                <span className="text-green-400">Your turn to choose!</span>
+                              ) : (
+                                <span className="text-gray-300">
+                                  Waiting for {currentTurnPlayer?.username || 'player'} to decide...
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
                         <h3 className="text-xl font-black mb-4">What will you do?</h3>
                         <div className="space-y-3">
                           {storyNode.choices.map((choice) => (
                             <Button
                               key={choice.id}
                               onClick={() => handleStoryChoice(choice.id)}
-                              disabled={storyLoading}
+                              disabled={storyLoading || (battleData.isPartyBattle && !isMyTurn)}
                               variant="outline"
-                              className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark text-base hover-scale"
+                              className="w-full text-left justify-start h-auto py-4 px-6 font-bold border-4 border-habbo-dark text-base hover-scale disabled:opacity-50"
                             >
                               <span className="mr-3 text-2xl">›</span>
                               {choice.label}
@@ -1069,7 +1088,7 @@ const Battle = () => {
                           {/* Active turn indicator */}
                           {isCurrentTurn && (
                             <div className="absolute -top-2 -left-2 z-20 animate-bounce">
-                              <span className="text-xl">⚔️</span>
+                              <Swords className="w-5 h-5 text-green-400" />
                             </div>
                           )}
                           
@@ -1113,10 +1132,12 @@ const Battle = () => {
                       >
                         {/* Turn status banner */}
                         {isCurrentTurn && (
-                          <div className="text-center py-2 bg-green-500/30 -mx-4 -mt-4 mb-3 border-b-2 border-green-400">
+                          <div className="text-center py-2 bg-green-500/30 -mx-4 -mt-4 mb-3 border-b-2 border-green-400 flex items-center justify-center gap-2">
+                            <Swords className="w-4 h-4 text-green-400 animate-pulse" />
                             <p className="font-black text-green-400 text-sm animate-pulse">
-                              ⚔️ CURRENTLY ACTING ⚔️
+                              CURRENTLY ACTING
                             </p>
+                            <Swords className="w-4 h-4 text-green-400 animate-pulse" />
                           </div>
                         )}
 
@@ -1373,7 +1394,7 @@ const Battle = () => {
           }`}>
           {/* Enemy Panel - Only show when in battle mode with valid enemy */}
           {battleData.mode === "battle" && battleData.enemy.current_hp > 0 && (
-            <HabboPanel title="⚔️ NOW FIGHTING" className="md:col-span-1">
+            <HabboPanel title="NOW FIGHTING" className="md:col-span-1">
             <div className="space-y-4">
               {/* Enemy Sprite */}
               {battleData.enemy.sprite && ENEMY_SPRITES[battleData.enemy.sprite] && (
