@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { PartyMembers } from "@/components/PartyMembers";
@@ -169,6 +169,7 @@ const Battle = () => {
   const [battleLoadError, setBattleLoadError] = useState<string | null>(null);
   const [showVictoryLoot, setShowVictoryLoot] = useState(false);
   const [victoryLootData, setVictoryLootData] = useState<{ items: any[]; xp: number }>({ items: [], xp: 0 });
+  const victoryDialogActiveRef = useRef(false);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -273,13 +274,13 @@ const Battle = () => {
             console.log('🔄 Battle state updated via realtime:', payload);
             
             // Don't reload if victory dialog is showing - let user close it first
-            if (showVictoryLoot) {
+            if (victoryDialogActiveRef.current) {
               console.log('Victory dialog is showing, skipping reload');
               return;
             }
             
             // Force a fresh reload to ensure we get latest data
-            await loadBattle(true); // Preserve victory state in case it just got set
+            await loadBattle();
           }
         )
         .subscribe((status) => {
@@ -338,15 +339,15 @@ const Battle = () => {
     }
   }, [battleData, serverId, partyId, currentUserId, profile]);
 
-  const loadBattle = async (isRetry = false, preserveVictoryState = false) => {
+  const loadBattle = async (isRetry = false) => {
     if (!id) {
       console.error("Cannot load battle: battleId is undefined");
       navigate("/dashboard");
       return;
     }
     
-    // Reset victory loot state when loading new battle (unless preserving for victory dialog)
-    if (!preserveVictoryState) {
+    // Reset victory loot state when loading new battle (unless dialog is currently active)
+    if (!victoryDialogActiveRef.current) {
       setShowVictoryLoot(false);
       setVictoryLootData({ items: [], xp: 0 });
     }
@@ -1025,6 +1026,7 @@ const Battle = () => {
         
         if (data.victory) {
           // Show victory loot modal with data
+          victoryDialogActiveRef.current = true;
           setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
           setShowVictoryLoot(true);
           // Note: loadBattle will be called when user closes the modal
@@ -2301,10 +2303,12 @@ const Battle = () => {
       <VictoryLoot
         isOpen={showVictoryLoot}
         onClose={() => {
+          victoryDialogActiveRef.current = false;
           setShowVictoryLoot(false);
           setVictoryLootData({ items: [], xp: 0 });
         }}
         onContinue={async () => {
+          victoryDialogActiveRef.current = false;
           setShowVictoryLoot(false);
           setVictoryLootData({ items: [], xp: 0 });
           
