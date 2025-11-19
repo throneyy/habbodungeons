@@ -439,33 +439,8 @@ Return ONLY valid JSON (no markdown):
     if (sanitizedOutcome.progressRoom) {
       newRoomIndex = Math.min(battleState.current_room_index + 1, maxRoomIndex);
       
-      // If we've reached the end of the dungeon
-      if (newRoomIndex >= maxRoomIndex && battleState.current_room_index === maxRoomIndex) {
-        battleLog.push({ 
-          user_id: user.id, 
-          message: "You have reached the end of this dungeon! Congratulations on surviving The Shattered Frostkeep!" 
-        });
-        
-        // Update battle log but keep battle active so frontend can load final state
-        await supabaseClient
-          .from("battle_states")
-          .update({
-            battle_log: battleLog,
-            current_room_index: newRoomIndex,
-          })
-          .eq("id", battleState.id);
-          
-        return new Response(
-          JSON.stringify({
-            outcome: { ...outcome, dungeonComplete: true },
-            newHp,
-            newMp,
-          }),
-          {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
+      // Don't auto-complete dungeon just for reaching last room
+      // Dungeon completion is handled when the final boss is defeated in resolve-turn
     }
 
     // Prepare update object
