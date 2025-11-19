@@ -154,15 +154,35 @@ const ENEMY_POOL = [
   }
 ];
 
-const BOSS_ENEMY = {
-  name: "Frost Wraith",
-  description: "The ancient guardian of the Frostkeep, a powerful spirit of eternal winter",
-  sprite: "frost-wraith.png",
-  baseHp: 200,
-  baseAtk: 15,
-  baseDef: 10,
-  baseSpd: 8
-};
+const BOSS_POOL = [
+  {
+    name: "Frost Wraith",
+    description: "The ancient guardian of the Frostkeep, a powerful spirit of eternal winter",
+    sprite: "frost-wraith.png",
+    baseHp: 200,
+    baseAtk: 15,
+    baseDef: 10,
+    baseSpd: 8
+  },
+  {
+    name: "Ice Knight Commander",
+    description: "An elite warrior clad in frozen armor, wielding a blade of eternal ice",
+    sprite: "ice-knight-boss.png",
+    baseHp: 220,
+    baseAtk: 18,
+    baseDef: 14,
+    baseSpd: 7
+  },
+  {
+    name: "Blood Dragon",
+    description: "A massive wyrm with scales as hard as iron, breathing crimson flames",
+    sprite: "blood-dragon-boss.gif",
+    baseHp: 250,
+    baseAtk: 20,
+    baseDef: 12,
+    baseSpd: 9
+  }
+];
 
 const FIRE_DRAKE = {
   name: "Fire Drake",
@@ -235,12 +255,13 @@ function getRandomEnemy(playerLevel: number, isBoss: boolean = false) {
   }
   
   if (isBoss) {
+    const boss = BOSS_POOL[Math.floor(Math.random() * BOSS_POOL.length)];
     return {
-      ...BOSS_ENEMY,
-      hp: BOSS_ENEMY.baseHp + (playerLevel * 5),
-      atk: BOSS_ENEMY.baseAtk + Math.floor(playerLevel * 1.5),
-      def: BOSS_ENEMY.baseDef + Math.floor(playerLevel * 1.2),
-      spd: BOSS_ENEMY.baseSpd + Math.floor(playerLevel * 0.8)
+      ...boss,
+      hp: boss.baseHp + (playerLevel * 5),
+      atk: boss.baseAtk + Math.floor(playerLevel * 1.5),
+      def: boss.baseDef + Math.floor(playerLevel * 1.2),
+      spd: boss.baseSpd + Math.floor(playerLevel * 0.8)
     };
   }
   
