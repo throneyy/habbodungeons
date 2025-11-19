@@ -8,7 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { Sword, Trash2, Check, Gift, Pill } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { getItemImage } from "@/lib/itemAssets";
+import { getItemImage, getItemDescription } from "@/lib/itemAssets";
 import { StatBar } from "@/components/StatBar";
 
 interface InventoryItem {
@@ -302,6 +302,9 @@ const Inventory = () => {
                             </div>
                           )}
                         </div>
+                        <p className="text-xs text-muted-foreground italic mb-3">
+                          {getItemDescription(item.item_name)}
+                        </p>
                         <div className="flex gap-2">
                           {item.is_equipped ? (
                             <Button
@@ -341,6 +344,9 @@ const Inventory = () => {
                           style={{ width: 'auto' }}
                         />
                         <p className="text-center mt-2 font-bold">{item.item_name}</p>
+                        <p className="text-center text-xs text-muted-foreground mt-1">
+                          {getItemDescription(item.item_name)}
+                        </p>
                       </TooltipContent>
                     )}
                   </Tooltip>
@@ -370,6 +376,9 @@ const Inventory = () => {
                             <p className="text-xs text-muted-foreground">x{item.quantity}</p>
                           </div>
                         </div>
+                        <p className="text-xs text-muted-foreground italic mb-3">
+                          {getItemDescription(item.item_name)}
+                        </p>
                         <div className="flex gap-2">
                           <Button
                             onClick={() => useConsumable(item.id, item.item_name)}
@@ -401,6 +410,9 @@ const Inventory = () => {
                           style={{ width: 'auto' }}
                         />
                         <p className="text-center mt-2 font-bold">{item.item_name}</p>
+                        <p className="text-center text-xs text-muted-foreground mt-1">
+                          {getItemDescription(item.item_name)}
+                        </p>
                         <p className="text-center text-sm text-muted-foreground">x{item.quantity}</p>
                       </TooltipContent>
                     )}
@@ -431,6 +443,9 @@ const Inventory = () => {
                             </p>
                           </div>
                         </div>
+                        <p className="text-xs text-muted-foreground italic mb-3">
+                          {getItemDescription(item.item_name)}
+                        </p>
                         <Button
                           onClick={() => setItemToDelete(item)}
                           variant="destructive"
@@ -451,6 +466,9 @@ const Inventory = () => {
                           style={{ width: 'auto' }}
                         />
                         <p className="text-center mt-2 font-bold">{item.item_name}</p>
+                        <p className="text-center text-xs text-muted-foreground mt-1">
+                          {getItemDescription(item.item_name)}
+                        </p>
                         <p className="text-center text-sm text-muted-foreground">
                           {item.item_type} {item.quantity > 1 && `x${item.quantity}`}
                         </p>

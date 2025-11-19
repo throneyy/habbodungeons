@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
-import { getItemImage } from "@/lib/itemAssets";
+import { getItemImage, getItemDescription } from "@/lib/itemAssets";
 
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -329,6 +329,9 @@ const Dashboard = () => {
                     />
                   )}
                   <p className="font-bold">{item.item_name}</p>
+                  <p className="text-xs text-muted-foreground italic">
+                    {getItemDescription(item.item_name)}
+                  </p>
                   <p className="text-sm text-muted-foreground">x{item.quantity}</p>
                   <p className="text-xs text-muted-foreground capitalize">{item.item_type}</p>
                   {isConsumable(item.item_name) && (

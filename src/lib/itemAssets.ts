@@ -189,6 +189,7 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Potion": "Restores 50 HP. A staple for any adventurer.",
   "Potion of Minor Healing": "Heals minor wounds. Restores 30 HP.",
   "Elixer": "Restores 50 MP. Essential for spellcasters.",
+  "Elixir": "Restores 50 MP. Essential for spellcasters.",
   "Ether": "Replenishes magical energy. Restores 40 MP.",
   
   // Consumables - Food
