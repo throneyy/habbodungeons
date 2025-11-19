@@ -182,6 +182,7 @@ const Battle = () => {
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
+  const [treasureClaimed, setTreasureClaimed] = useState(false);
   
   // Party states
   const [partyMembers, setPartyMembers] = useState<any[]>([]);
@@ -402,6 +403,11 @@ const Battle = () => {
       ]);
     }
   }, [battleData, serverId, partyId, currentUserId, profile]);
+
+  // Reset treasure claimed when room changes
+  useEffect(() => {
+    setTreasureClaimed(false);
+  }, [battleData?.room_description, battleData?.room_type]);
 
   const loadBattle = async (isRetry = false) => {
     if (!id) {
@@ -933,9 +939,10 @@ const Battle = () => {
   };
 
   const handleClaimTreasure = async () => {
-    if (!id) return;
+    if (!id || treasureClaimed) return;
     
     setLoading(true);
+    setTreasureClaimed(true);
     try {
       // Generate random loot
       const treasureLoot = [
@@ -1458,12 +1465,12 @@ const Battle = () => {
                           <div className="flex justify-center pt-4">
                             <Button
                               onClick={handleClaimTreasure}
-                              disabled={loading}
+                              disabled={loading || treasureClaimed}
                               size="lg"
                               className="font-black text-lg px-8"
                             >
                               <Package className="mr-2 h-5 w-5" />
-                              {loading ? 'Opening...' : 'Open Chest'}
+                              {treasureClaimed ? 'Claimed!' : loading ? 'Opening...' : 'Open Chest'}
                             </Button>
                           </div>
                         </div>
