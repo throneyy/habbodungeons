@@ -174,7 +174,7 @@ const Battle = () => {
           event: 'UPDATE',
           schema: 'public',
           table: 'battle_states',
-          filter: `id=eq.${id}`
+          filter: `dungeon_id=eq.${id}`
         },
         (payload) => {
           console.log('Battle state updated:', payload);
