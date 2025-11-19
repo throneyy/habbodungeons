@@ -21,6 +21,7 @@ const DungeonList = () => {
   const [servers, setServers] = useState<Server[]>([]);
   const [loading, setLoading] = useState(true);
   const [initializing, setInitializing] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,7 +35,14 @@ const DungeonList = () => {
         navigate("/auth");
         return;
       }
-      initializeGlobalServers();
+      
+      // Only initialize once per session
+      if (!hasInitialized) {
+        setHasInitialized(true);
+        await initializeGlobalServers();
+      } else {
+        await loadServers();
+      }
     };
     
     checkAuth();
@@ -82,16 +90,17 @@ const DungeonList = () => {
       const normalServers = existingServers?.filter(s => s.difficulty === 'Normal').length || 0;
       const hardcoreServers = existingServers?.filter(s => s.difficulty === 'Hardcore').length || 0;
 
-      // Only create missing servers
+      // Only create missing servers with immersive names
       if (normalServers < 10) {
         const needed = 10 - normalServers;
-        console.log(`Creating ${needed} Normal servers...`);
+        console.log(`⚔️ Creating ${needed} Normal dungeons...`);
         for (let i = 0; i < needed; i++) {
           await supabase.functions.invoke("create-server", {
             body: { 
-              serverName: `Server ${normalServers + i + 1}`,
+              serverName: `Frostkeep Dungeon ${normalServers + i + 1}`,
               maxPlayers: 6,
-              difficulty: 'Normal'
+              difficulty: 'Normal',
+              isSystemServer: true
             },
           });
         }
@@ -99,13 +108,14 @@ const DungeonList = () => {
 
       if (hardcoreServers < 4) {
         const needed = 4 - hardcoreServers;
-        console.log(`Creating ${needed} Hardcore servers...`);
+        console.log(`🔥 Creating ${needed} Hardcore dungeons...`);
         for (let i = 0; i < needed; i++) {
           await supabase.functions.invoke("create-server", {
             body: { 
-              serverName: `Hardcore ${hardcoreServers + i + 1}`,
+              serverName: `Frostkeep Hardcore ${hardcoreServers + i + 1}`,
               maxPlayers: 6,
-              difficulty: 'Hardcore'
+              difficulty: 'Hardcore',
+              isSystemServer: true
             },
           });
         }
