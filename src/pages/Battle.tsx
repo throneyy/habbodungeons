@@ -529,6 +529,9 @@ const Battle = () => {
       if (data?.battleData) {
         setBattleData(data.battleData);
         
+        // Load party profiles for battle log display
+        loadPartyProfiles(userServerId);
+        
         // If in story mode, load story node
         if (data.battleData.mode === "story") {
           setShowCombatPanels(false);
@@ -752,20 +755,34 @@ const Battle = () => {
 
       if (error) throw error;
       setProfile(data);
-      
-      // Load all party members' profiles for battle log display
-      await loadPartyProfiles();
     } catch (error: any) {
       console.error("Failed to load profile:", error);
     }
   };
 
-  const loadPartyProfiles = async () => {
+  const loadPartyProfiles = async (serverIdParam?: string) => {
     try {
-      // Get all unique user IDs from battle log entries
-      if (!battleData?.battle_log) return;
+      let userIds: string[] = [];
       
-      const userIds = [...new Set(battleData.battle_log.map(entry => entry.user_id))];
+      // For server battles, get all server players
+      if (serverIdParam || serverId) {
+        const { data: serverPlayers, error: serverError } = await supabase
+          .from("server_players")
+          .select("user_id")
+          .eq("server_id", serverIdParam || serverId);
+        
+        if (!serverError && serverPlayers) {
+          userIds = serverPlayers.map(sp => sp.user_id);
+        }
+      }
+      
+      // Also get user IDs from battle log entries
+      if (battleData?.battle_log) {
+        const logUserIds = [...new Set(battleData.battle_log.map((entry: any) => entry.user_id).filter(Boolean))];
+        userIds = [...new Set([...userIds, ...logUserIds])];
+      }
+      
+      if (userIds.length === 0) return;
       
       const { data, error } = await supabase
         .from("profiles")
@@ -779,6 +796,7 @@ const Battle = () => {
         profileMap.set(profile.id, profile);
       });
       
+      console.log("Loaded party profiles:", profileMap.size, "profiles for users:", userIds);
       setPartyProfiles(profileMap);
     } catch (error: any) {
       console.error("Failed to load party profiles:", error);
@@ -1021,6 +1039,9 @@ const Battle = () => {
         setBattleData(data.battleData);
         setSelectedAction("");
         setSelectedItem(null);
+        
+        // Load party profiles for battle log display (in case new entries were added)
+        loadPartyProfiles(serverId || undefined);
         
         // Reload inventory in case items were consumed
         loadInventory();
