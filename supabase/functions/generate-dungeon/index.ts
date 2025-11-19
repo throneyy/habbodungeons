@@ -278,23 +278,74 @@ CRITICAL: You MUST write EVERYTHING in English only. Do not use Arabic, Chinese,
     const dungeonStructure = JSON.parse(toolCall.function.arguments);
     console.log("Parsed dungeon:", dungeonStructure.dungeonName);
 
-    // Add enemies from static pool
+    // Add enemies and events from static pool
     const rooms = dungeonStructure.rooms.map((room: any, index: number) => {
       // First room has no enemy (exploration)
       if (index === 0) {
         return {
           ...room,
-          enemy: null
+          enemy: null,
+          roomType: 'story'
         };
       }
       
       // Last room gets the boss
-      const isBoss = index === dungeonStructure.rooms.length - 1;
-      const enemy = getRandomEnemy(playerLevel, isBoss);
+      if (index === dungeonStructure.rooms.length - 1) {
+        const bossEnemy = getRandomEnemy(playerLevel, true);
+        return {
+          ...room,
+          enemy: bossEnemy,
+          roomType: 'boss'
+        };
+      }
       
+      // For middle rooms, roll for room type
+      const roll = Math.random();
+      
+      // 10% chance for treasure chest
+      if (roll < 0.10) {
+        return {
+          ...room,
+          enemy: null,
+          roomType: 'treasure',
+          treasureDescription: 'A frost-covered chest sits in the corner, its contents unknown...'
+        };
+      }
+      
+      // 10% chance for stat boost event
+      if (roll < 0.20) {
+        const statEvents = [
+          { stat: 'hp', description: 'A warm magical aura fills the room, healing your wounds!', amount: 20 },
+          { stat: 'mp', description: 'Ancient runes glow softly, restoring your magical energy!', amount: 15 },
+          { stat: 'atk', description: 'You find a warrior\'s shrine. Your attacks feel stronger! (+1 ATK)', amount: 1 },
+          { stat: 'def', description: 'Mystical ice armor forms around you. Your defense improves! (+1 DEF)', amount: 1 }
+        ];
+        const event = statEvents[Math.floor(Math.random() * statEvents.length)];
+        return {
+          ...room,
+          enemy: null,
+          roomType: 'event',
+          eventType: event.stat,
+          eventAmount: event.amount,
+          eventDescription: event.description
+        };
+      }
+      
+      // 40% chance for regular battle (0.20-0.60)
+      if (roll < 0.60) {
+        const enemy = getRandomEnemy(playerLevel, false);
+        return {
+          ...room,
+          enemy,
+          roomType: 'battle'
+        };
+      }
+      
+      // 40% remaining for story/exploration (0.60-1.00)
       return {
         ...room,
-        enemy
+        enemy: null,
+        roomType: 'story'
       };
     });
 
