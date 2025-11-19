@@ -212,7 +212,7 @@ const Battle = () => {
 
   // Set up Realtime subscription for battle state changes
   useEffect(() => {
-    if (!id) return;
+    if (!id || showPartyWipeDialog) return; // Pause realtime updates while dialog is showing
 
     // Determine the correct filter for the subscription
     const setupSubscription = async () => {
@@ -273,7 +273,7 @@ const Battle = () => {
         supabase.removeChannel(channel);
       }
     };
-  }, [id]);
+  }, [id, showPartyWipeDialog]);
 
   // Load party/server members for story mode party panel
   useEffect(() => {
@@ -414,7 +414,13 @@ const Battle = () => {
       }
       
       if (battleCheck && !battleCheck.is_active) {
-        console.log("Battle is completed - redirecting to dashboard");
+        console.log("Battle is completed - checking if party wipe dialog is showing");
+        // Don't auto-redirect if party wipe dialog is showing - let user close it manually
+        if (showPartyWipeDialog) {
+          console.log("Party wipe dialog is showing, skipping auto-redirect");
+          return;
+        }
+        console.log("Redirecting to dashboard");
         toast({
           title: "Quest Completed",
           description: "This quest has already been completed.",
