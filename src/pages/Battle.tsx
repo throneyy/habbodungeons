@@ -240,7 +240,7 @@ const Battle = () => {
     try {
       // Pre-check: Verify battle exists and is active before calling edge function
       console.log("Pre-checking battle status for dungeon:", id);
-      const { data: battleCheck, error: checkError } = await supabase
+      let { data: battleCheck, error: checkError } = await supabase
         .from('battle_states')
         .select('is_active')
         .eq('dungeon_id', id)
@@ -289,7 +289,7 @@ const Battle = () => {
           }
           
           // Update battleCheck with the newly created battle
-          Object.assign(battleCheck || {}, newBattleCheck);
+          battleCheck = newBattleCheck;
         } catch (initError) {
           console.error("Error initializing battle:", initError);
           navigate("/dashboard", { replace: true });
