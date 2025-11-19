@@ -360,10 +360,10 @@ ${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
     });
     
     // Add dice roll result if applicable
-    if (diceCheckResult) {
-      const resultMessage = diceCheckResult.success 
-        ? `🎲 Dice Check: ${diceCheckResult.total} vs DC ${diceCheckResult.dc} - SUCCESS! (+${diceCheckResult.margin})`
-        : `🎲 Dice Check: ${diceCheckResult.total} vs DC ${diceCheckResult.dc} - FAILED! (${diceCheckResult.margin})`;
+    if (diceCheckResult && diceRoll) {
+      const diceValues = diceRoll.join(',');
+      const resultText = diceCheckResult.success ? 'SUCCEEDING' : 'FAILING';
+      const resultMessage = `${playerName} attempted a dice check. They rolled ${diceValues} ${resultText} their attempted dice check (DC ${diceCheckResult.dc})`;
       
       cleanedBattleLog.push({
         user_id: user.id,
