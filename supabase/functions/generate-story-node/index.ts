@@ -257,29 +257,15 @@ If an action contains these words, it MUST have diceRequired: true:
    - Some encounters should be unavoidable to maintain challenge
 
 ## Response Format
-Return ONLY a valid JSON object:
-{
-  "storyText": "Atmospheric description of current situation (100-200 words)",
-  "choices": [
-    {
-      "id": "unique_id_1",
-      "label": "Choice description [Dice Check: DC 15]",
-      "diceRequired": true,
-      "diceDC": 15,
-      "skillType": "persuasion"
-    },
-    {
-      "id": "unique_id_2", 
-      "label": "Regular choice description",
-      "diceRequired": false
-    }
-  ],
-  "itemsGained": []  // Usually empty, only for exceptional discoveries
-}
+**CRITICAL: You MUST return ONLY a valid JSON object with this structure:**
+- storyText: string (100-200 words describing the situation)
+- choices: array of 2-4 choice objects, each with id, label, diceRequired boolean, and if dice: diceDC number and skillType string
+- itemsGained: array (usually empty)
 
-- Provide 2-4 meaningful choices
-- Use vivid, concise descriptions (100-200 words)
-- DO NOT include any emojis`;
+Example choice with dice: {"id": "choice1", "label": "Search for clues [Dice Check: DC 16]", "diceRequired": true, "diceDC": 16, "skillType": "investigation"}
+Example choice without dice: {"id": "choice2", "label": "Attack immediately", "diceRequired": false}
+
+DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JSON OBJECT.`;
 
     // Call Lovable AI
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -308,9 +294,24 @@ Return ONLY a valid JSON object:
     console.log("AI response:", aiData);
 
     let storyContent = aiData.choices[0]?.message?.content || "";
+    
+    // Remove markdown code fences and any explanatory text
     storyContent = storyContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    
+    // Try to extract JSON if it's wrapped in text
+    const jsonMatch = storyContent.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      storyContent = jsonMatch[0];
+    }
 
-    const storyNode = JSON.parse(storyContent);
+    let storyNode;
+    try {
+      storyNode = JSON.parse(storyContent);
+    } catch (parseError) {
+      console.error("Failed to parse AI response:", storyContent);
+      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+      throw new Error(`Invalid AI response format: ${errorMsg}`);
+    }
 
     // Store story node in battle state for multiplayer sync
     if (serverId) {
