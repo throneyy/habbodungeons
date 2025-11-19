@@ -96,12 +96,13 @@ const Dashboard = () => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('habbo_username')
+      .select('habbo_username, created_at')
       .ilike('habbo_username', searchTerm.trim())
       .not('habbo_username', 'is', null)
-      .maybeSingle();
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
       toast({
         title: "Player not found",
         description: "No player with that Habbo Origins username has linked their account yet.",
@@ -110,7 +111,7 @@ const Dashboard = () => {
       return;
     }
 
-    navigate(`/player/${data.habbo_username}`);
+    navigate(`/player/${data[0].habbo_username}`);
   };
 
   const refreshAvatar = async () => {
