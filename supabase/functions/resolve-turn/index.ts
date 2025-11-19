@@ -516,12 +516,17 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       }
     }
 
+    // Ensure narration is an array of strings
+    const safeNarration = Array.isArray(result.narration) 
+      ? result.narration.map((msg: any) => String(msg || ''))
+      : [];
+
     const updatedLog = [
       ...(battle.battle_log || []),
-      { user_id: user.id, message: diceRollMessage, type: 'dice_roll' },
-      ...result.narration.map((msg: string) => ({ user_id: user.id, message: msg })),
-      ...xpMessages.map((msg: string) => ({ user_id: user.id, message: msg })),
-      ...lootMessages.map((msg: string) => ({ user_id: user.id, message: msg }))
+      { user_id: user.id, message: String(diceRollMessage), type: 'dice_roll' },
+      ...safeNarration.map((msg: string) => ({ user_id: user.id, message: msg })),
+      ...xpMessages.map((msg: string) => ({ user_id: user.id, message: String(msg) })),
+      ...lootMessages.map((msg: string) => ({ user_id: user.id, message: String(msg) }))
     ];
 
     // Calculate next turn for party/server battles
