@@ -1645,7 +1645,7 @@ const Battle = () => {
                 );
               })()}
               
-              {battleData.battle_log.length > 0 ? (
+              {battleData.battle_log && battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry: any, i) => {
                     // Handle entry - can be string, object, or JSON string
                     let message = '';
@@ -1840,7 +1840,7 @@ const Battle = () => {
                     </div>
 
                     {/* Choices - Only show for regular story rooms */}
-                    {battleData.mode === "story" && (!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && storyNode && storyNode.choices.length > 0 && (
+                    {battleData.mode === "story" && (!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && storyNode && storyNode.choices && storyNode.choices.length > 0 && (
                       <div className="space-y-3">
                         {/* Turn-based choice header */}
                         {battleData.isPartyBattle && (
@@ -2287,7 +2287,7 @@ const Battle = () => {
           {/* Battle Log - Main Focus */}
           <HabboPanel title="Battle Log">
             <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
-              {battleData.battle_log.length > 0 ? (
+              {battleData.battle_log && battleData.battle_log.length > 0 ? (
                 battleData.battle_log.map((entry: any, i) => {
                   // Handle entry - can be string, object, or JSON string
                   let message = '';
@@ -2448,7 +2448,7 @@ const Battle = () => {
                   <p className="font-bold">{battleData.enemy.spd}</p>
                 </div>
               </div>
-              {battleData.enemy.status_effects.length > 0 && (
+              {battleData.enemy.status_effects && battleData.enemy.status_effects.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs font-bold">Status Effects:</p>
                   {battleData.enemy.status_effects.map((effect, i) => (
@@ -2519,7 +2519,7 @@ const Battle = () => {
               {selectedAction === "item" && (
                 <div className="space-y-2 p-3 bg-muted rounded border-2 border-habbo-dark">
                   <p className="text-xs font-bold mb-2">Select Item:</p>
-                  {inventory.length > 0 ? (
+                  {inventory && inventory.length > 0 ? (
                     <div className="grid grid-cols-2 gap-2">
                       {inventory.map((item) => (
                         <Button
@@ -2679,7 +2679,7 @@ const Battle = () => {
                 </p>
               </div>
               
-              {battleData.player.status_effects.length > 0 && (
+              {battleData.player.status_effects && battleData.player.status_effects.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs font-bold">Status Effects:</p>
                   {battleData.player.status_effects.map((effect, i) => (
