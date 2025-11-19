@@ -5,6 +5,7 @@ import { StatBar } from "@/components/StatBar";
 import { getItemImage, getItemDescription } from "@/lib/itemAssets";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Link, Users, Gift, RefreshCw, Shield } from "lucide-react";
@@ -44,6 +45,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     loadData();
@@ -81,6 +83,33 @@ const Dashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/");
+  };
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      toast({
+        title: "Please enter a Habbo username",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('habbo_username')
+      .ilike('habbo_username', searchTerm.trim())
+      .not('habbo_username', 'is', null)
+      .single();
+
+    if (error || !data) {
+      toast({
+        title: "No player found with that Habbo username",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    navigate(`/player/${data.habbo_username}`);
   };
 
   const refreshAvatar = async () => {
@@ -274,6 +303,25 @@ const Dashboard = () => {
             )}
           </div>
         </HabboPanel>
+
+        {/* Search Habbo Players */}
+        <div className="bg-card border-4 border-habbo-dark rounded-xl p-4 shadow-lg">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Search adventurers by Habbo username"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="flex-1 h-12 text-base bg-card border-2 border-habbo-dark"
+            />
+            <Button
+              onClick={handleSearch}
+              className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white font-bold border-2 border-habbo-dark"
+            >
+              Search
+            </Button>
+          </div>
+        </div>
 
         {/* Player Stats */}
         {profile?.habbo_username && stats && (
