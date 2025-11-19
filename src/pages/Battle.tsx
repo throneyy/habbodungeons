@@ -273,8 +273,23 @@ const Battle = () => {
             return;
           }
 
-          console.log("Battle initialized, reloading...");
-          // Continue loading after initialization
+          console.log("Battle initialized, re-fetching battle state...");
+          
+          // Re-fetch the battle state after initialization
+          const { data: newBattleCheck, error: refetchError } = await supabase
+            .from('battle_states')
+            .select('is_active')
+            .eq('dungeon_id', id)
+            .maybeSingle();
+          
+          if (refetchError || !newBattleCheck) {
+            console.error("Failed to fetch battle after initialization:", refetchError);
+            navigate("/dashboard", { replace: true });
+            return;
+          }
+          
+          // Update battleCheck with the newly created battle
+          Object.assign(battleCheck || {}, newBattleCheck);
         } catch (initError) {
           console.error("Error initializing battle:", initError);
           navigate("/dashboard", { replace: true });
@@ -282,7 +297,7 @@ const Battle = () => {
         }
       }
       
-      if (!battleCheck.is_active) {
+      if (battleCheck && !battleCheck.is_active) {
         console.log("Battle is completed - redirecting to dashboard");
         toast({
           title: "Quest Completed",
