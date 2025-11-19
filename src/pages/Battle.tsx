@@ -604,7 +604,14 @@ const Battle = () => {
         // If in story mode, load story node
         if (data.battleData.mode === "story") {
           setShowCombatPanels(false);
-          await loadStoryNode();
+          
+          // Use existing story node from battleData if available
+          if (data.battleData.current_story_node) {
+            setStoryNode(data.battleData.current_story_node);
+          } else {
+            // Only generate new story node if one doesn't exist
+            await loadStoryNode();
+          }
         } else {
           // Clear story node and trigger combat panel animation for battle mode
           setStoryNode(null);
