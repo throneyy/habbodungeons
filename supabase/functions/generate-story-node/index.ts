@@ -169,13 +169,20 @@ serve(async (req) => {
 
 CRITICAL: Return ONLY valid JSON. No markdown, no text outside the JSON object.
 
+BALDUR'S GATE STYLE - Pre-Combat Dialogue:
+- When enemies are nearby, sometimes offer dialogue/negotiation options BEFORE combat
+- Include choices like: "Try to reason with them", "Intimidate them", "Deceive them", "Attack immediately"
+- Let players talk their way through or gain advantages before battle
+- 30% of enemy encounters should have dialogue opportunities
+- Make dialogue feel meaningful - success can avoid combat, gain info, or provide tactical advantages
+
 Required format:
 {
-  "storyText": "2-4 sentences. What's happening right now. Keep it direct.",
+  "storyText": "2-4 sentences. What's happening right now. If enemies are present, describe their demeanor and potential for dialogue.",
   "choices": [
-    {"id": "choice_1", "label": "What they can do (5-8 words)"},
-    {"id": "choice_2", "label": "Another option (5-8 words)"},
-    {"id": "choice_3", "label": "Third option (5-8 words)"},
+    {"id": "choice_1", "label": "Dialogue or diplomatic option (5-8 words)"},
+    {"id": "choice_2", "label": "Another approach (5-8 words)"},
+    {"id": "choice_3", "label": "Aggressive/combat option (5-8 words)"},
     {"id": "choice_4", "label": "Optional fourth (5-8 words)"}
   ]
 }
@@ -184,8 +191,9 @@ Story rules:
 - Use the room description as your foundation
 - Keep the quest objective in mind
 - 40-70 words max for storyText
-- Mix tactical and risky choices
-- Some choices lead to combat, some to discoveries
+- Mix tactical, diplomatic, and risky choices
+- When enemies appear, consider if they might talk first
+- Some choices lead to combat, some to negotiations, some to discoveries
 - Make choices feel impactful, not flavor text`,
           },
           {

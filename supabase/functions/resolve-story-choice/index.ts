@@ -219,6 +219,17 @@ CRITICAL RULE - Item Rewards:
 - Walking into a room = NO ITEMS
 - Looking around = NO ITEMS
 - Moving forward = NO ITEMS
+- **CRITICAL**: When you DO give items, ALWAYS use this exact format:
+  itemsGained: [{"name": "Item Name Here", "quantity": 1, "type": "material"}]
+  * "name" must be a non-empty string
+  * "quantity" must be a positive number
+  * "type" should be one of: "material", "consumable", "currency", "weapon", "armor"
+
+BALDUR'S GATE STYLE - Dialogue Before Combat:
+- If choices suggest diplomacy/intimidation/deception with enemies, consider having triggersBattle depend on their response
+- Successful negotiation might avoid battle, reveal information, or weaken enemies
+- Failed negotiation leads to battle as usual
+- Include this in your consequenceText: "The [enemy] seems willing to talk..." or "They attack without warning!"
 
 Output format:
 {
@@ -311,26 +322,38 @@ What happens as a result of this choice?`,
     // Add items if any
     if (sanitizedOutcome.itemsGained && sanitizedOutcome.itemsGained.length > 0) {
       for (const item of sanitizedOutcome.itemsGained) {
+        // Validate item has required properties
+        if (!item || !item.name || typeof item.name !== 'string') {
+          console.error('Invalid item in itemsGained:', item);
+          continue; // Skip invalid items
+        }
+        
+        const itemName = item.name.trim();
+        const itemQuantity = typeof item.quantity === 'number' && item.quantity > 0 ? item.quantity : 1;
+        const itemType = typeof item.type === 'string' ? item.type : 'material';
+        
+        console.log(`📦 Adding item: ${itemName} x${itemQuantity} (${itemType})`);
+        
         const { data: existingItem } = await supabaseClient
           .from("inventory")
           .select("*")
           .eq("user_id", battleState.user_id)
-          .eq("item_name", item.name)
-          .single();
+          .eq("item_name", itemName)
+          .maybeSingle();
 
         if (existingItem) {
           await supabaseClient
             .from("inventory")
-            .update({ quantity: existingItem.quantity + item.quantity })
+            .update({ quantity: existingItem.quantity + itemQuantity })
             .eq("id", existingItem.id);
         } else {
           await supabaseClient
             .from("inventory")
             .insert({
               user_id: battleState.user_id,
-              item_name: item.name,
-              item_type: "quest",
-              quantity: item.quantity,
+              item_name: itemName,
+              quantity: itemQuantity,
+              item_type: itemType,
             });
         }
       }
