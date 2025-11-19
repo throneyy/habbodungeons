@@ -165,28 +165,6 @@ const Home = () => {
           </div>
         </HabboPanel>
 
-        {/* Player Search */}
-        <HabboPanel className="bg-gradient-to-br from-primary/20 to-secondary/20">
-          <h2 className="text-2xl font-bold text-foreground mb-4 text-center">
-            Search for Players
-          </h2>
-          <div className="flex gap-2 max-w-2xl mx-auto">
-            <Input
-              placeholder="Enter Habboname to view their profile"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="h-12 text-lg border-2 border-habbo-dark"
-            />
-            <Button
-              onClick={handleSearch}
-              className="h-12 px-8 font-bold border-2 border-habbo-dark bg-green-600 hover:bg-green-700 whitespace-nowrap"
-            >
-              Search
-            </Button>
-          </div>
-        </HabboPanel>
-
         <p className="text-center text-sm text-muted-foreground">
           This is a fan-made project and is not affiliated with Habbo or Sulake Corporation Oy.
         </p>
