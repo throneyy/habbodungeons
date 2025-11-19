@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { MainNav } from "@/components/MainNav";
 import dungeonBg from "@/assets/dungeon-bg.png";
+import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import SnowFall from "@/components/SnowFall";
 import { toast } from "sonner";
 import { Swords, Users, Trophy, Shield } from "lucide-react";
@@ -68,18 +69,23 @@ const Home = () => {
         {/* Hero Section */}
         <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 text-center">
           <div className="space-y-6 py-8">
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-4">
-              Habbo Dungeons
-            </h1>
+            <img 
+              src={frostkeepBanner}
+              alt="The Shattered Frostkeep"
+              className="mx-auto pixel-icon"
+              style={{ imageRendering: 'pixelated' }}
+            />
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Embark on epic adventures through frozen dungeons. Battle fierce enemies, 
-              collect legendary loot, and prove your worth as a Habbo hero!
+              Deep within the frozen wastes lies the Shattered Frostkeep, an ancient fortress consumed by eternal winter. 
+              Once a beacon of civilization, it now harbors unspeakable horrors and forgotten treasures. 
+              The Ice Knight and his cursed legion await those brave enough to venture into the frozen depths. 
+              Will you survive the bitter cold and claim the legendary artifacts within?
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <Button
                 onClick={() => navigate("/auth")}
                 size="lg"
-                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark bg-primary hover:bg-primary/90"
+                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark bg-primary hover:bg-primary/90 shadow-md"
               >
                 Start Your Adventure
               </Button>
@@ -87,7 +93,7 @@ const Home = () => {
                 onClick={() => navigate("/dungeon-list")}
                 size="lg"
                 variant="outline"
-                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark"
+                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark shadow-md"
               >
                 Browse Dungeons
               </Button>
