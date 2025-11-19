@@ -173,6 +173,29 @@ serve(async (req) => {
       enemyContext = `\n\n🔥 CRITICAL: If triggersBattle=true, you MUST write: "the ${currentRoom.enemy.name}" or "a ${currentRoom.enemy.name}" or "${currentRoom.enemy.name}" in your consequenceText. The enemy name is: "${currentRoom.enemy.name}" (${currentRoom.enemy.description}). DO NOT write vague phrases like "drawing attention" or "something emerges" - USE THE EXACT ENEMY NAME!`;
     }
 
+    // Calculate dice check result if applicable
+    let diceCheckResult = null;
+    if (diceRoll && diceDC) {
+      const diceTotal = diceRoll.reduce((sum: number, die: number) => sum + die, 0);
+      const success = diceTotal >= diceDC;
+      const margin = diceTotal - diceDC;
+      diceCheckResult = {
+        success,
+        total: diceTotal,
+        dc: diceDC,
+        margin,
+        skillType: skillType || "check"
+      };
+      console.log("Dice check result:", diceCheckResult);
+    }
+
+    const aiPrompt = `Resolve: ${choiceLabel}
+Dungeon: ${battleState.dungeons.name}
+${diceCheckResult ? `\nDICE: ${diceCheckResult.total} vs DC ${diceCheckResult.dc} = ${diceCheckResult.success ? 'SUCCESS' : 'FAIL'} (${diceCheckResult.margin >= 0 ? '+' : ''}${diceCheckResult.margin})` : ''}${enemyContext}
+
+Return JSON: {narrativeText: "what happens", hpChange: 0, mpChange: 0, shouldStartBattle: false, shouldAdvanceRoom: true, itemsGained: [], enemyModifier: null}
+${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
+
     // Call Lovable AI to determine outcome
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -186,81 +209,7 @@ serve(async (req) => {
           {
             role: "user",
             content: aiPrompt
-
-CRITICAL RULES:
-- Narrate the outcome dramatically but concisely (2-3 sentences)
-- **MANDATORY**: When triggersBattle is true, your consequenceText MUST include the exact enemy name provided in the context. Never write "drawing unwanted attention" or "something emerges" - always name the specific enemy!
-- **ANALYZE THE CHOICE TEXT CAREFULLY**: The outcome should directly reflect the tone and nature of what the player chose:
-  * If the choice describes something chaotic, reckless, or wild → Make the outcome chaotic with high risk/reward
-  * If the choice describes something careful, cautious, or defensive → Make the outcome safer and more predictable
-  * If the choice describes something neutral or investigative → Make the outcome balanced and fair
-  * If the choice involves aggression or combat → Very likely to trigger battles
-  * If the choice involves stealth or avoidance → Less likely to trigger battles but might have other consequences
-- Don't just use percentages - let the actual wording of the choice guide your response
-- Stay in character as dungeon master
-- Output ONLY valid JSON, no markdown
-
-CRITICAL RULE - Room Progression:
-- Set progressRoom=true in 70% of choices (most choices should advance the story)
-- Only set progressRoom=false for: resting in place, careful searching of current area, or explicitly staying put
-- ANY forward movement → progressRoom=true
-- Combat choices → progressRoom=true + triggersBattle=true
-- Exploration → progressRoom=true
-- "Continue/proceed/move/advance" → ALWAYS progressRoom=true
-
-CRITICAL RULE - Item Rewards:
-- **ITEMS ARE RARE!** Only give itemsGained for SIGNIFICANT achievements:
-  * Defeating enemies (done automatically, don't add here)
-  * Solving complex puzzles
-  * Finding hidden treasure caches (not just walking around)
-  * Making exceptional choices with clear risk
-- **NEVER** give items for: simply exploring, walking into rooms, basic movement, or routine choices
-- 90% of choices should have itemsGained: [] (empty array)
-- Walking into a room = NO ITEMS
-- Looking around = NO ITEMS
-- Moving forward = NO ITEMS
-- **CRITICAL**: When you DO give items, ALWAYS use this exact format:
-  itemsGained: [{"name": "Item Name Here", "quantity": 1, "type": "material"}]
-  * "name" must be a non-empty string
-  * "quantity" must be a positive number
-  * "type" should be one of: "material", "consumable", "currency", "weapon", "armor"
-
-BALDUR'S GATE STYLE - Dialogue Before Combat:
-- If choices suggest diplomacy/intimidation/deception with enemies, consider having triggersBattle depend on their response
-- Successful negotiation might avoid battle, reveal information, or weaken enemies
-- Failed negotiation leads to battle as usual
-- Include this in your consequenceText: "The [enemy] seems willing to talk..." or "They attack without warning!"
-
-Output format:
-{
-  "consequenceText": "Brief narration of what happens. If triggersBattle=true, MUST mention the enemy name! Example: 'An Ice Elemental materializes before you!'",
-  "hpChange": -10 to +20 (negative for damage, positive for healing, 0 for none),
-  "mpChange": -5 to +10,
-  "itemsGained": [] (ALMOST ALWAYS EMPTY - only for major discoveries),
-  "triggersBattle": true/false,
-  "progressRoom": true/false (whether to advance to next room - default to TRUE)
-}
-
-Example interpretations:
-- "Charge ahead" → progressRoom=true, high damage, likely battle, NO ITEMS
-- "Proceed cautiously" → progressRoom=true, small HP cost, explore forward, NO ITEMS
-- "Search current area" → progressRoom=false, MAYBE small items if very lucky
-- "Rest here" → progressRoom=false, restore HP/MP, NO ITEMS
-- "Investigate and move on" → progressRoom=true, NO ITEMS unless finding secret treasure`,
-          },
-          {
-            role: "user",
-            content: `Previous scene: ${storyText}
-
-Player chose: "${choiceLabel}"
-
-Dungeon: ${battleState.dungeons.name} (${battleState.dungeons.difficulty})
-Current room: ${battleState.current_room_index}
-Party HP: ${partyStats.current_hp}/${partyStats.max_hp}
-Party MP: ${partyStats.current_mp}/${partyStats.max_mp}${enemyContext}
-
-What happens as a result of this choice?`,
-          },
+          }
         ],
         temperature: 0.8,
       }),
