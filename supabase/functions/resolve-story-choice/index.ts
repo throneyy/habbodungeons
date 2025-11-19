@@ -458,6 +458,15 @@ Return ONLY valid JSON (no markdown):
       
       // Don't auto-complete dungeon just for reaching last room
       // Dungeon completion is handled when the final boss is defeated in resolve-turn
+      
+      // If advancing to a treasure room, add it to the battle log
+      const newRoom = dungeonData.rooms[newRoomIndex];
+      if (newRoom?.roomType === 'treasure') {
+        cleanedBattleLog.push({
+          user_id: user.id,
+          message: newRoom.treasureDescription || 'A frost-covered chest sits in the corner, its contents unknown...'
+        });
+      }
     }
 
     // Prepare update object
