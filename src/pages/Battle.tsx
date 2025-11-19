@@ -1791,9 +1791,8 @@ const Battle = () => {
           </HabboPanel>
         </div>
 
-        {/* Party Members Section - Only show in story mode or when no battle is active */}
-        {battleData.mode !== "battle" && (
-          <div className="grid md:grid-cols-2 gap-6">
+        {/* Party Members Section - Always show for visibility of turn indicators */}
+        <div className="grid md:grid-cols-2 gap-6">
             <HabboPanel title={serverId ? "Server Players" : "Party Members"}>
               {serverId ? (
                 <PartyMembers serverId={serverId} />
@@ -1834,7 +1833,7 @@ const Battle = () => {
               </HabboPanel>
             )}
           </div>
-        )}
+        </div>
         <Button
           variant="outline"
           onClick={() => navigate("/dashboard")}
@@ -1842,7 +1841,6 @@ const Battle = () => {
         >
           Return to Dashboard
         </Button>
-        </div>
       </div>
 
       {/* Victory Loot Modal */}
