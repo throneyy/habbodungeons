@@ -9,7 +9,10 @@ import dungeonBg from "@/assets/dungeon-bg.png";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import SnowFall from "@/components/SnowFall";
 import { toast } from "sonner";
-import { Swords, Users, Trophy, Shield } from "lucide-react";
+import pixelSword from "@/assets/pixel-sword.png";
+import goblinTrio from "@/assets/goblin-trio.png";
+import victoryTrophy from "@/assets/victory-trophy.png";
+import pixelStar from "@/assets/pixel-star.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -105,7 +108,7 @@ const Home = () => {
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <HabboPanel className="bg-gradient-to-br from-red-500/20 to-orange-500/20 text-center">
-            <Swords className="w-12 h-12 mx-auto mb-4 text-red-500" />
+            <img src={pixelSword} alt="Epic Battles" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Epic Battles</h3>
             <p className="text-muted-foreground">
               Face challenging enemies in turn-based combat with strategic depth
@@ -113,7 +116,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-center">
-            <Users className="w-12 h-12 mx-auto mb-4 text-blue-500" />
+            <img src={goblinTrio} alt="Party System" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Party System</h3>
             <p className="text-muted-foreground">
               Team up with friends or join public servers to conquer dungeons together
@@ -121,7 +124,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-yellow-500/20 to-amber-500/20 text-center">
-            <Trophy className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
+            <img src={victoryTrophy} alt="Legendary Loot" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Legendary Loot</h3>
             <p className="text-muted-foreground">
               Discover powerful weapons, armor, and consumables to enhance your character
@@ -129,7 +132,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-center">
-            <Shield className="w-12 h-12 mx-auto mb-4 text-purple-500" />
+            <img src={pixelStar} alt="Level Up" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Level Up</h3>
             <p className="text-muted-foreground">
               Gain experience, increase your stats, and become an unstoppable warrior
