@@ -31,7 +31,7 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
 
   return (
     <div className="flex gap-2">
-      {sortedMembers.slice(0, 4).map((member) => {
+      {sortedMembers.slice(0, 6).map((member) => {
         const isCurrentTurn = currentTurnUserId === member.userId;
         const turnIndex = turnOrder?.indexOf(member.userId);
         const isCurrentUser = member.userId === currentUserId;
