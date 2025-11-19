@@ -87,17 +87,41 @@ const DungeonList = () => {
 
       console.log('📊 Found', existingServers?.length || 0, 'available global servers');
 
-      const normalServers = existingServers?.filter(s => s.difficulty === 'Normal').length || 0;
-      const hardcoreServers = existingServers?.filter(s => s.difficulty === 'Hardcore').length || 0;
+      // Extract existing server numbers for each difficulty
+      const existingNormalNumbers = new Set(
+        existingServers
+          ?.filter(s => s.difficulty === 'Normal')
+          .map(s => {
+            const match = s.server_name.match(/Frostkeep Dungeon (\d+)/);
+            return match ? parseInt(match[1]) : null;
+          })
+          .filter(n => n !== null) || []
+      );
 
-      // Only create missing servers with immersive names
-      if (normalServers < 10) {
-        const needed = 10 - normalServers;
-        console.log(`⚔️ Creating ${needed} Normal dungeons...`);
-        for (let i = 0; i < needed; i++) {
+      const existingHardcoreNumbers = new Set(
+        existingServers
+          ?.filter(s => s.difficulty === 'Hardcore')
+          .map(s => {
+            const match = s.server_name.match(/Frostkeep Hardcore (\d+)/);
+            return match ? parseInt(match[1]) : null;
+          })
+          .filter(n => n !== null) || []
+      );
+
+      // Create missing Normal servers (1-10)
+      const missingNormal = [];
+      for (let i = 1; i <= 10; i++) {
+        if (!existingNormalNumbers.has(i)) {
+          missingNormal.push(i);
+        }
+      }
+
+      if (missingNormal.length > 0) {
+        console.log(`⚔️ Creating ${missingNormal.length} missing Normal dungeons: ${missingNormal.join(', ')}`);
+        for (const num of missingNormal) {
           await supabase.functions.invoke("create-server", {
             body: { 
-              serverName: `Frostkeep Dungeon ${normalServers + i + 1}`,
+              serverName: `Frostkeep Dungeon ${num}`,
               maxPlayers: 6,
               difficulty: 'Normal',
               isSystemServer: true
@@ -106,13 +130,20 @@ const DungeonList = () => {
         }
       }
 
-      if (hardcoreServers < 4) {
-        const needed = 4 - hardcoreServers;
-        console.log(`🔥 Creating ${needed} Hardcore dungeons...`);
-        for (let i = 0; i < needed; i++) {
+      // Create missing Hardcore servers (1-4)
+      const missingHardcore = [];
+      for (let i = 1; i <= 4; i++) {
+        if (!existingHardcoreNumbers.has(i)) {
+          missingHardcore.push(i);
+        }
+      }
+
+      if (missingHardcore.length > 0) {
+        console.log(`🔥 Creating ${missingHardcore.length} missing Hardcore dungeons: ${missingHardcore.join(', ')}`);
+        for (const num of missingHardcore) {
           await supabase.functions.invoke("create-server", {
             body: { 
-              serverName: `Frostkeep Hardcore ${hardcoreServers + i + 1}`,
+              serverName: `Frostkeep Hardcore ${num}`,
               maxPlayers: 6,
               difficulty: 'Hardcore',
               isSystemServer: true
