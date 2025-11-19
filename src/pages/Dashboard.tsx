@@ -124,6 +124,37 @@ const Dashboard = () => {
     setRefreshing(false);
   };
 
+  const useConsumable = async (itemId: string, itemName: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("use-consumable", {
+        body: { itemId },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: `${itemName} used!`,
+          description: data.message,
+        });
+
+        // Refresh data to show updated stats and inventory
+        await loadData();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Failed to use item",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const isConsumable = (itemName: string): boolean => {
+    const name = itemName.toLowerCase();
+    return name.includes("potion") || name.includes("ether") || name.includes("elixer");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -277,6 +308,15 @@ const Dashboard = () => {
                   <p className="font-bold">{item.item_name}</p>
                   <p className="text-sm text-muted-foreground">x{item.quantity}</p>
                   <p className="text-xs text-muted-foreground capitalize">{item.item_type}</p>
+                  {isConsumable(item.item_name) && (
+                    <Button
+                      onClick={() => useConsumable(item.id, item.item_name)}
+                      size="sm"
+                      className="w-full font-bold border-2 border-habbo-dark"
+                    >
+                      Use
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
