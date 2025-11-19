@@ -106,6 +106,7 @@ const getHabboAvatar = (
   figureString: string | undefined,
   hpPercentage: number,
   isCurrentTurn: boolean,
+  isVictory: boolean,
   size: 's' | 'm' | 'b' = 's'
 ): string => {
   if (!figureString) return '';
@@ -117,6 +118,10 @@ const getHabboAvatar = (
     // Dead
     action = 'lay';
     gesture = 'std';
+  } else if (isVictory) {
+    // Victory - smiling
+    gesture = 'sml';
+    action = 'std';
   } else if (hpPercentage < 30) {
     // Hurt
     gesture = 'sad';
@@ -125,11 +130,8 @@ const getHabboAvatar = (
     // Fighting
     gesture = 'agr';
     action = 'std';
-  } else {
-    // Normal/Victory
-    gesture = 'sml';
-    action = 'std';
   }
+  // Default is std/std for normal idle state
   
   return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${figureString}&hotel=COM&size=${size}&action=${action}&gesture=${gesture}&direction=2&head_direction=2&service=official`;
 };
@@ -1839,10 +1841,11 @@ const Battle = () => {
                 const turnIndex = battleData.turnOrder?.indexOf(player.userId);
                 const isCurrentUser = player.userId === currentUserId;
                 const hpPercentage = (player.current_hp / player.max_hp) * 100;
+                const isVictory = false; // Victory is shown in separate screen
                 
                 // Get dynamic avatar based on state
                 const dynamicAvatar = player.figureString 
-                  ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, 's')
+                  ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, isVictory, 's')
                   : player.habboAvatar;
                 
                 return (
@@ -1904,10 +1907,11 @@ const Battle = () => {
                   const player = battleData.players.find(p => p.userId === selectedMemberId)!;
                   const hpPercentage = (player.current_hp / player.max_hp) * 100;
                   const isCurrentTurn = battleData.currentTurnUserId === player.userId;
+                  const isVictory = false; // Victory is shown in separate screen
                   
                   // Get dynamic medium avatar
                   const dynamicAvatar = player.figureString 
-                    ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, 'm')
+                    ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, isVictory, 'm')
                     : player.habboAvatar?.replace('size=s', 'size=m');
                   
                   return (
