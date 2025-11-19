@@ -24,7 +24,8 @@ const Home = () => {
       .select('habbo_username')
       .ilike('habbo_username', searchTerm)
       .not('habbo_username', 'is', null)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (error || !data) {
       toast.error("No player found with that Habbo username");
