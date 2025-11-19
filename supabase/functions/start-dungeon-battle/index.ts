@@ -6,61 +6,46 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Enemy sprite mapping based on name patterns
-const ENEMY_SPRITE_MAP: Record<string, string> = {
-  "skeleton": "skeleton.png",
-  "ice tiger": "ice-tiger.gif",
-  "tiger": "ice-tiger.gif",
-  "ice elemental": "ice-elemental.png",
-  "elemental": "ice-elemental.png",
-  "ice guardian": "ice-guardian.png",
-  "guardian": "ice-guardian.png",
-  "frost wolf": "frost-wolf.png",
-  "wolf": "frost-wolf.png",
-  "glacial imp": "glacial-imp.png",
-  "imp": "glacial-imp.png",
-  "frozen goblin": "frozen-goblin.png",
-  "goblin": "frozen-goblin.png",
-  "goblin trio": "goblin-trio.png",
-  "trio": "goblin-trio.png",
-  "frost mutant": "frost-mutant.png",
-  "mutant": "frost-mutant.png",
-  "frost wraith": "frost-wraith.png",
-  "wraith": "frost-wraith.png",
-  "frost undead": "undead-habbo.png",
-  "undead": "undead-habbo.png",
-  "frostbite spider": "frostbite-spider.webp",
-  "spider": "frostbite-spider.webp",
-  "ghoul": "undead-habbo.png",
-  "ancient": "skeleton.png",
-  "warrior": "skeleton.png",
-  "fire drake": "fire-drake.png",
-  "drake": "fire-drake.png",
-  "dragon": "fire-drake.png",
-  "rat": "giant-rat.png",
-  "giant rat": "giant-rat.png",
-  "rat swarm": "giant-rat.png",
-};
-
-// Function to find matching sprite based on enemy name
-function findEnemySprite(enemyName: string): string {
+// Function to find matching sprite based on enemy name from database
+async function findEnemySprite(enemyName: string, supabaseClient: any): Promise<string> {
   if (!enemyName) return "skeleton.png";
   
   const nameLower = enemyName.toLowerCase();
   
-  // Try exact match first
-  if (ENEMY_SPRITE_MAP[nameLower]) {
-    return ENEMY_SPRITE_MAP[nameLower];
-  }
-  
-  // Try partial matches
-  for (const [key, sprite] of Object.entries(ENEMY_SPRITE_MAP)) {
-    if (nameLower.includes(key) || key.includes(nameLower)) {
-      return sprite;
+  // Try to fetch from database
+  try {
+    // Try exact match first
+    const { data: exactMatch } = await supabaseClient
+      .from("enemy_sprites")
+      .select("sprite_filename")
+      .ilike("enemy_name", nameLower)
+      .maybeSingle();
+    
+    if (exactMatch) {
+      console.log(`Found exact sprite match for "${enemyName}": ${exactMatch.sprite_filename}`);
+      return exactMatch.sprite_filename;
     }
+    
+    // Try partial match
+    const { data: allSprites } = await supabaseClient
+      .from("enemy_sprites")
+      .select("enemy_name, sprite_filename");
+    
+    if (allSprites) {
+      for (const sprite of allSprites) {
+        const spriteName = sprite.enemy_name.toLowerCase();
+        if (nameLower.includes(spriteName) || spriteName.includes(nameLower)) {
+          console.log(`Found partial sprite match for "${enemyName}": ${sprite.sprite_filename}`);
+          return sprite.sprite_filename;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching sprite from database:", error);
   }
   
   // Default fallback
+  console.log(`No sprite found for "${enemyName}", using skeleton.png`);
   return "skeleton.png";
 }
 
@@ -129,9 +114,11 @@ serve(async (req) => {
     // Apply difficulty multiplier to enemy stats AND add sprite mapping
     const difficultyMultiplier = difficulty === "Hardcore" ? 1.5 : 1.0;
     const dungeonJson = dungeon.dungeon_json;
-    const modifiedRooms = dungeonJson.rooms.map((room: any) => {
+    
+    // Process rooms with async sprite loading
+    const modifiedRooms = await Promise.all(dungeonJson.rooms.map(async (room: any) => {
       if (room.enemy) {
-        const sprite = findEnemySprite(room.enemy.name);
+        const sprite = await findEnemySprite(room.enemy.name, supabase);
         return {
           ...room,
           enemy: {
@@ -144,7 +131,7 @@ serve(async (req) => {
         };
       }
       return room;
-    });
+    }));
 
     // Update dungeon difficulty
     await supabase
@@ -156,7 +143,7 @@ serve(async (req) => {
     const firstEnemy = modifiedRooms[0].enemy;
     const initialEnemyState = firstEnemy ? {
       ...firstEnemy,
-      sprite: firstEnemy.sprite || findEnemySprite(firstEnemy.name),
+      sprite: firstEnemy.sprite || await findEnemySprite(firstEnemy.name, supabase),
       current_hp: firstEnemy.hp,
       max_hp: firstEnemy.hp,
       status_effects: [],

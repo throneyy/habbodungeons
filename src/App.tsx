@@ -14,6 +14,7 @@ import Battle from "./pages/Battle";
 import Inventory from "./pages/Inventory";
 import NotFound from "./pages/NotFound";
 import LootBox from "./pages/LootBox";
+import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/server-lobby/:serverId" element={<ServerLobby />} />
           <Route path="/battle/:id" element={<Battle />} />
           <Route path="/loot-box" element={<LootBox />} />
+          <Route path="/admin" element={<AdminPanel />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

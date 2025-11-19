@@ -7,65 +7,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Enemy sprite mapping based on name patterns
-const ENEMY_SPRITE_MAP: Record<string, string> = {
-  "skeleton": "skeleton.png",
-  "ice tiger": "ice-tiger.gif",
-  "tiger": "ice-tiger.gif",
-  "ice elemental": "ice-elemental.png",
-  "elemental": "ice-elemental.png",
-  "ice guardian": "ice-guardian.png",
-  "guardian": "ice-guardian.png",
-  "frost wolf": "frost-wolf.png",
-  "wolf": "frost-wolf.png",
-  "glacial imp": "glacial-imp.png",
-  "imp": "glacial-imp.png",
-  "frozen goblin": "frozen-goblin.png",
-  "goblin": "frozen-goblin.png",
-  "goblin trio": "goblin-trio.png",
-  "trio": "goblin-trio.png",
-  "frost mutant": "frost-mutant.png",
-  "mutant": "frost-mutant.png",
-  "frost wraith": "frost-wraith.png",
-  "wraith": "frost-wraith.png",
-  "frost undead": "undead-habbo.png",
-  "undead": "undead-habbo.png",
-  "frostbite spider": "frostbite-spider.webp",
-  "spider": "frostbite-spider.webp",
-  "giant rat": "giant-rat.png",
-  "rat": "giant-rat.png",
-  "sewer rat": "giant-rat.png",
-  "ghoul": "undead-habbo.png",
-  "ancient": "skeleton.png",
-  "warrior": "skeleton.png",
-  "shade": "ice-shade.png",
-  "ice shade": "ice-shade.png",
-  "ice knight": "ice-knight-boss.png",
-  "knight commander": "ice-knight-boss.png",
-  "ice knight commander": "ice-knight-boss.png",
-  "blood dragon": "blood-dragon-boss.gif",
-  "dragon": "blood-dragon-boss.gif",
-};
-
-// Function to find matching sprite based on enemy name
-function findEnemySprite(enemyName: string): string {
+// Function to find matching sprite based on enemy name from database
+async function findEnemySprite(enemyName: string, supabaseClient: any): Promise<string> {
   if (!enemyName) return "skeleton.png";
   
   const nameLower = enemyName.toLowerCase();
   
-  // Try exact match first
-  if (ENEMY_SPRITE_MAP[nameLower]) {
-    return ENEMY_SPRITE_MAP[nameLower];
-  }
-  
-  // Try partial matches
-  for (const [key, sprite] of Object.entries(ENEMY_SPRITE_MAP)) {
-    if (nameLower.includes(key) || key.includes(nameLower)) {
-      return sprite;
+  // Try to fetch from database
+  try {
+    // Try exact match first
+    const { data: exactMatch } = await supabaseClient
+      .from("enemy_sprites")
+      .select("sprite_filename")
+      .ilike("enemy_name", nameLower)
+      .maybeSingle();
+    
+    if (exactMatch) {
+      console.log(`Found exact sprite match for "${enemyName}": ${exactMatch.sprite_filename}`);
+      return exactMatch.sprite_filename;
     }
+    
+    // Try partial match
+    const { data: allSprites } = await supabaseClient
+      .from("enemy_sprites")
+      .select("enemy_name, sprite_filename");
+    
+    if (allSprites) {
+      for (const sprite of allSprites) {
+        const spriteName = sprite.enemy_name.toLowerCase();
+        if (nameLower.includes(spriteName) || spriteName.includes(nameLower)) {
+          console.log(`Found partial sprite match for "${enemyName}": ${sprite.sprite_filename}`);
+          return sprite.sprite_filename;
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching sprite from database:", error);
   }
   
   // Default fallback
+  console.log(`No sprite found for "${enemyName}", using skeleton.png`);
   return "skeleton.png";
 }
 
@@ -449,11 +430,12 @@ ${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
       if (battleRoom && battleRoom.enemy) {
         // Set up the enemy for battle from the CURRENT room
         const enemy = battleRoom.enemy;
+        const enemySprite = enemy.sprite || await findEnemySprite(enemy.name, supabaseClient);
         
         updateData.current_enemy_state = {
           name: enemy.name,
           description: enemy.description,
-          sprite: enemy.sprite || findEnemySprite(enemy.name),
+          sprite: enemySprite,
           hp: enemy.hp,
           current_hp: enemy.hp,
           max_hp: enemy.hp,
