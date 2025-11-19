@@ -40,6 +40,7 @@ import werewolf from "@/assets/werewolf.png";
 import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import mysticalIcon from "@/assets/mystical-icon.png";
 import diceSprite from "@/assets/dice-sprite.gif";
+import victoryTrophy from "@/assets/victory-trophy.png";
 import { getNPCById } from "@/lib/npcData";
 
 // Enemy sprite mapping
@@ -1497,7 +1498,9 @@ const Battle = () => {
         <div className="relative z-10 p-8 max-w-2xl w-full">
           <HabboPanel title="Quest Complete!">
             <div className="space-y-6 p-6 text-center">
-              <div className="text-6xl">🏆</div>
+              <div className="flex justify-center">
+                <img src={victoryTrophy} alt="Victory Trophy" className="pixelated" style={{ width: 'auto', height: 'auto', maxWidth: '120px' }} />
+              </div>
               <h2 className="text-3xl font-black">Victory!</h2>
               <p className="text-lg">
                 You have conquered this challenge and emerged victorious. The realm needs heroes like you.

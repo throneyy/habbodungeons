@@ -141,13 +141,18 @@ serve(async (req) => {
 
     // Create initial enemy state - use placeholder if first room has no enemy
     const firstEnemy = modifiedRooms[0].enemy;
+    const firstRoomType = modifiedRooms[0].roomType;
+    
+    // Set mode based on room type and enemy presence
+    const shouldStartInBattle = firstEnemy && (firstRoomType === 'battle' || firstRoomType === 'boss');
+    
     const initialEnemyState = firstEnemy ? {
       ...firstEnemy,
       sprite: firstEnemy.sprite || await findEnemySprite(firstEnemy.name, supabase),
       current_hp: firstEnemy.hp,
       max_hp: firstEnemy.hp,
       status_effects: [],
-      mode: "story",
+      mode: shouldStartInBattle ? "battle" : "story",
     } : {
       name: "Unknown",
       description: "Exploring the dungeon...",
