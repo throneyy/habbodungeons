@@ -228,6 +228,11 @@ const Battle = () => {
       if (itemMatch) {
         const itemName = itemMatch[1];
         
+        // Skip styling for "Dice Check:" text
+        if (itemName.includes('Dice Check:')) {
+          return <span key={idx}>{part}</span>;
+        }
+        
         // Check if this is a player name by looking in partyProfiles
         let playerUserId: string | null = null;
         let playerProfile: Profile | null = null;
