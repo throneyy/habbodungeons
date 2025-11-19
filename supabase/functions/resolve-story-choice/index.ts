@@ -359,6 +359,19 @@ ${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
       type: 'choice' 
     });
     
+    // Add dice roll result if applicable
+    if (diceCheckResult) {
+      const resultMessage = diceCheckResult.success 
+        ? `🎲 Dice Check: ${diceCheckResult.total} vs DC ${diceCheckResult.dc} - SUCCESS! (+${diceCheckResult.margin})`
+        : `🎲 Dice Check: ${diceCheckResult.total} vs DC ${diceCheckResult.dc} - FAILED! (${diceCheckResult.margin})`;
+      
+      cleanedBattleLog.push({
+        user_id: user.id,
+        message: resultMessage,
+        type: diceCheckResult.success ? 'dice_success' : 'dice_failure'
+      });
+    }
+    
     // Format consequence text with items in brackets - ensure it's a string
     let consequenceWithItems = String(sanitizedOutcome.consequenceText || '');
     if (sanitizedOutcome.itemsGained && sanitizedOutcome.itemsGained.length > 0) {
