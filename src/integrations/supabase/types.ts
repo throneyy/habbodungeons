@@ -22,6 +22,7 @@ export type Database = {
           current_room_index: number
           current_story_node: Json | null
           current_turn_user_id: string | null
+          dead_players: Json | null
           dungeon_id: string
           id: string
           is_active: boolean
@@ -38,6 +39,7 @@ export type Database = {
           current_room_index?: number
           current_story_node?: Json | null
           current_turn_user_id?: string | null
+          dead_players?: Json | null
           dungeon_id: string
           id?: string
           is_active?: boolean
@@ -54,6 +56,7 @@ export type Database = {
           current_room_index?: number
           current_story_node?: Json | null
           current_turn_user_id?: string | null
+          dead_players?: Json | null
           dungeon_id?: string
           id?: string
           is_active?: boolean
