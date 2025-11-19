@@ -55,7 +55,7 @@ const Home = () => {
         <div className="bg-card border-4 border-habbo-dark rounded-xl p-4 shadow-lg">
           <div className="flex gap-2">
             <Input
-              placeholder="Enter your Habboname and find your fishy info"
+              placeholder="Search adventurers by Habbo username"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
