@@ -166,26 +166,54 @@ const Battle = () => {
   useEffect(() => {
     if (!id) return;
 
-    const channel = supabase
-      .channel('battle-updates')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'battle_states',
-          filter: `dungeon_id=eq.${id}`
-        },
-        (payload) => {
-          console.log('Battle state updated:', payload);
-          // Reload battle data when it changes
-          loadBattle();
-        }
-      )
-      .subscribe();
+    // Determine the correct filter for the subscription
+    const setupSubscription = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+      
+      // Check if user is in a server for this dungeon
+      const { data: serverMember } = await supabase
+        .from('server_players')
+        .select('server_id, servers!inner(dungeon_id)')
+        .eq('user_id', userId || '')
+        .eq('servers.dungeon_id', id)
+        .maybeSingle();
+      
+      const userServerId = serverMember?.server_id;
+      
+      // Build filter based on whether this is a server battle
+      const filter = userServerId 
+        ? `server_id=eq.${userServerId}`
+        : `dungeon_id=eq.${id}`;
+      
+      console.log('Setting up real-time subscription with filter:', filter);
+      
+      const channel = supabase
+        .channel('battle-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'battle_states',
+            filter
+          },
+          (payload) => {
+            console.log('Battle state updated:', payload);
+            // Reload battle data when it changes
+            loadBattle();
+          }
+        )
+        .subscribe();
+
+      return channel;
+    };
+
+    let channel: any;
+    setupSubscription().then(ch => { channel = ch; });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [id]);
 
@@ -1130,9 +1158,9 @@ const Battle = () => {
                 </HabboPanel>
               </div>
 
-              {/* Party Panel */}
-              <div className="md:col-span-1">
-                <HabboPanel title="Your Party">
+              {/* Party Panel - Wider in battle mode */}
+              <div className={battleData.mode !== "story" ? "md:col-span-2" : "md:col-span-1"}>
+                <HabboPanel title={battleData.mode !== "story" ? "Battle Party" : "Your Party"}>
                   {/* Turn Order Info */}
                   {battleData.isPartyBattle && battleData.turnOrder && battleData.turnOrder.length > 1 && (
                     <div className="mb-4 p-2 bg-muted/50 border-2 border-habbo-dark rounded text-center">
@@ -1763,48 +1791,50 @@ const Battle = () => {
           </HabboPanel>
         </div>
 
-        {/* Party Members Section */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <HabboPanel title={serverId ? "Server Players" : "Party Members"}>
-            {serverId ? (
-              <PartyMembers serverId={serverId} />
-            ) : partyId ? (
-              <PartyMembers partyId={partyId} />
-            ) : (
-              <div className="text-center space-y-4 p-4">
-                <Users className="w-12 h-12 mx-auto text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  No active party
-                </p>
-                <Button onClick={createParty} className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Party
-                </Button>
-              </div>
-            )}
-          </HabboPanel>
-
-          {partyId && inviteCode && (
-            <HabboPanel title="Invite Friends">
-              <div className="space-y-4">
-                <p className="text-sm">Share this code with your friends:</p>
-                <div className="flex gap-2">
-                  <Input
-                    value={inviteCode}
-                    readOnly
-                    className="font-mono text-lg font-bold text-center"
-                  />
-                  <Button size="icon" variant="outline" onClick={copyInviteCode}>
-                    <Copy className="w-4 h-4" />
+        {/* Party Members Section - Only show in story mode or when no battle is active */}
+        {battleData.mode !== "battle" && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <HabboPanel title={serverId ? "Server Players" : "Party Members"}>
+              {serverId ? (
+                <PartyMembers serverId={serverId} />
+              ) : partyId ? (
+                <PartyMembers partyId={partyId} />
+              ) : (
+                <div className="text-center space-y-4 p-4">
+                  <Users className="w-12 h-12 mx-auto text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    No active party
+                  </p>
+                  <Button onClick={createParty} className="w-full">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Party
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Friends can join using this code from the dungeon lobby
-                </p>
-              </div>
+              )}
             </HabboPanel>
-          )}
-        </div>
+
+            {partyId && inviteCode && (
+              <HabboPanel title="Invite Friends">
+                <div className="space-y-4">
+                  <p className="text-sm">Share this code with your friends:</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={inviteCode}
+                      readOnly
+                      className="font-mono text-lg font-bold text-center"
+                    />
+                    <Button size="icon" variant="outline" onClick={copyInviteCode}>
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Friends can join using this code from the dungeon lobby
+                  </p>
+                </div>
+              </HabboPanel>
+            )}
+          </div>
+        )}
         <Button
           variant="outline"
           onClick={() => navigate("/dashboard")}
