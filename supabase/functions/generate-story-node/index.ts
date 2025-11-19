@@ -164,21 +164,26 @@ ${lastChoice ? `Last choice: ${lastChoice}` : ''}
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
 **DICE CHECKS ARE REQUIRED FOR:**
-1. ALL social interactions (talking, calling out, persuading, intimidating, deceiving, reasoning)
-2. ALL physical skill attempts (breaking through barriers, forcing doors, climbing, sneaking, searching for weaknesses)
-3. ALL magical manipulation attempts (dispelling barriers, disrupting magic, arcane analysis)
+1. ALL social interactions (talking, calling out, persuading, intimidating, deceiving, reasoning, negotiating)
+2. ALL investigation/search actions (searching for clues, hidden mechanisms, weaknesses, patterns, examining for secrets)
+3. ALL physical skill attempts (breaking through barriers, forcing doors, climbing, sneaking, acrobatics)
+4. ALL magical manipulation attempts (dispelling barriers, disrupting magic, arcane analysis, ritual manipulation)
+5. ALL knowledge checks (identifying creatures, recalling lore, understanding ancient texts)
 
 **DICE CHECKS ARE NOT REQUIRED FOR:**
-- Simple observations ("Look around", "Examine the area")
-- Direct combat initiation ("Attack immediately", "Prepare for combat")
-- Safe movements ("Continue forward", "Retreat cautiously")
+- Simple observations ("Look around casually", "Glance at the area")
+- Direct combat initiation ("Attack immediately", "Draw weapon and strike")
+- Safe movements ("Continue forward cautiously", "Retreat back")
+- Obvious actions with no skill ("Pick up the key", "Open the unlocked door")
+
+**IMPORTANT:** If an action involves "search", "examine", "investigate", "look for", "find", or "discover" something non-obvious, it REQUIRES a dice check!
 
 - Dice checks use 5 six-sided dice (Habbo holodice): totals range from 5 (all 1s) to 30 (all 6s)
 - Set appropriate DC (difficulty class) based on the challenge:
-  * Easy checks: DC 10-14 (e.g., intimidate weak goblin, search for obvious clues)
-  * Medium checks: DC 15-19 (e.g., persuade suspicious guard, break through wooden door, dispel minor magic)
-  * Hard checks: DC 20-24 (e.g., deceive powerful enemy, force through stone barrier, analyze complex runes)
-  * Very hard checks: DC 25-29 (e.g., reason with hostile boss, shatter magical ice barrier, master-level arcane manipulation)
+  * Easy checks: DC 10-14 (e.g., intimidate weak goblin, search for obvious clues, identify common creature)
+  * Medium checks: DC 15-19 (e.g., persuade suspicious guard, find hidden mechanism, dispel minor magic)
+  * Hard checks: DC 20-24 (e.g., deceive powerful enemy, discover well-hidden secret, analyze complex runes)
+  * Very hard checks: DC 25-29 (e.g., reason with hostile boss, uncover master-crafted trap, master-level arcane work)
 - Always provide 3-5 options including both dice-required and direct action choices
 
 ## DICE CHECK CHOICE FORMAT
