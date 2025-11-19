@@ -132,7 +132,7 @@ const ServerLobby = () => {
       // Navigate to dungeon lobby - this happens for everyone simultaneously
       navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
     } else {
-      console.log('⏳ No dungeon assigned yet');
+      console.log('No dungeon assigned yet');
     }
   };
 
@@ -208,7 +208,7 @@ const ServerLobby = () => {
   const handleStartAdventure = async () => {
     setStarting(true);
     try {
-      console.log('🎯 Starting adventure for server:', serverId);
+      console.log('Starting adventure for server:', serverId);
       const { data, error } = await supabase.functions.invoke("start-server-dungeon", {
         body: { serverId },
       });

@@ -123,12 +123,31 @@ serve(async (req) => {
 
     if (!battleState) throw new Error("Battle state not found");
 
-    // Get party stats
+    // For party/server battles, check if it's the player's turn
+    const isPartyBattle = !!battleState.party_id || !!battleState.server_id;
+    if (isPartyBattle) {
+      if (battleState.current_turn_user_id !== user.id) {
+        return new Response(
+          JSON.stringify({ error: "Not your turn to make a choice" }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+    }
+
+    // Get party stats and profile for battle log
     const { data: partyStats } = await supabaseClient
       .from("player_stats")
       .select("*")
       .eq("user_id", user.id)
       .single();
+
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single();
+
+    const playerName = profile?.habbo_username || profile?.username?.split('@')[0] || 'Player';
 
     console.log("Resolving choice:", choiceLabel);
 
@@ -267,9 +286,13 @@ What happens as a result of this choice?`,
       }
     }
 
-    // Update battle log with user_id
+    // Update battle log with user_id and player name
     const battleLog = battleState.battle_log || [];
-    battleLog.push({ user_id: user.id, message: `You chose: ${choiceLabel}` });
+    battleLog.push({ 
+      user_id: user.id, 
+      message: `${playerName} chose: ${choiceLabel}`,
+      type: 'choice' 
+    });
     battleLog.push({ user_id: user.id, message: outcome.consequenceText });
 
     // Advance room if needed, but check bounds
@@ -314,6 +337,15 @@ What happens as a result of this choice?`,
       battle_log: battleLog,
       current_room_index: newRoomIndex,
     };
+
+    // For party battles, advance to next player's turn
+    if (isPartyBattle && battleState.turn_order && Array.isArray(battleState.turn_order)) {
+      const turnOrder = battleState.turn_order as string[];
+      const currentIndex = turnOrder.indexOf(user.id);
+      const nextIndex = (currentIndex + 1) % turnOrder.length;
+      updateData.current_turn_user_id = turnOrder[nextIndex];
+      console.log(`Story choice: Advancing turn from ${user.id} to ${turnOrder[nextIndex]}`);
+    }
 
     // Clear story node if advancing to a new room (for multiplayer sync)
     if (outcome.progressRoom) {

@@ -1,3 +1,5 @@
+import { Swords } from "lucide-react";
+
 interface PartyMember {
   userId: string;
   username: string;
@@ -55,7 +57,7 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
             {/* Current turn indicator */}
             {isCurrentTurn && (
               <div className="absolute -top-1 -left-1 animate-bounce z-10">
-                <span className="text-xl">⚔️</span>
+                <Swords className="w-4 h-4 text-green-400" />
               </div>
             )}
 
