@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { VictoryLoot } from "@/components/VictoryLoot";
+import { PartyWipeDialog } from "@/components/PartyWipeDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
@@ -179,6 +180,7 @@ const Battle = () => {
   const [showEndQuestDialog, setShowEndQuestDialog] = useState(false);
   const [playerHit, setPlayerHit] = useState(false);
   const [enemyHit, setEnemyHit] = useState(false);
+  const [showPartyWipeDialog, setShowPartyWipeDialog] = useState(false);
   
   // Turn-based combat state
   const isMyTurn = !battleData?.isPartyBattle || battleData?.currentTurnUserId === currentUserId;
@@ -985,16 +987,8 @@ const Battle = () => {
             loadBattle();
           }, 2000);
         } else if (data.defeat) {
-          // Entire party wiped out
-          toast({ 
-            title: "Party Defeated!", 
-            description: "The entire party has been wiped out. Returning to town...",
-            variant: "destructive" 
-          });
-          // Redirect to dashboard after defeat
-          setTimeout(() => {
-            navigate("/dashboard");
-          }, 3000);
+          // Entire party wiped out - show dramatic dialog
+          setShowPartyWipeDialog(true);
         }
       }
     } catch (error: any) {
@@ -2284,6 +2278,15 @@ const Battle = () => {
         }}
         lootItems={victoryLootData.items}
         xpGained={victoryLootData.xp}
+      />
+
+      {/* Party Wipe Dialog */}
+      <PartyWipeDialog
+        open={showPartyWipeDialog}
+        onClose={() => {
+          setShowPartyWipeDialog(false);
+          navigate("/dashboard");
+        }}
       />
 
       {/* End Quest Confirmation Dialog */}

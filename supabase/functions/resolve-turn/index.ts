@@ -409,6 +409,9 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
                   .eq('user_id', playerId);
               }
             }
+            
+            // Clear dead players list since everyone is being revived
+            updatedDeadPlayers = [];
           }
         } else {
           // Solo battle - restore to 50% HP/MP and end battle
