@@ -1085,13 +1085,6 @@ const Battle = () => {
                             </div>
                           )}
                           
-                          {/* Active turn indicator */}
-                          {isCurrentTurn && (
-                            <div className="absolute -top-2 -left-2 z-20 animate-bounce">
-                              <Swords className="w-5 h-5 text-green-400" />
-                            </div>
-                          )}
-                          
                           {member.habboAvatar && (
                             <img
                               src={member.habboAvatar}
@@ -1132,12 +1125,10 @@ const Battle = () => {
                       >
                         {/* Turn status banner */}
                         {isCurrentTurn && (
-                          <div className="text-center py-2 bg-green-500/30 -mx-4 -mt-4 mb-3 border-b-2 border-green-400 flex items-center justify-center gap-2">
-                            <Swords className="w-4 h-4 text-green-400 animate-pulse" />
+                          <div className="text-center py-2 bg-green-500/30 -mx-4 -mt-4 mb-3 border-b-2 border-green-400">
                             <p className="font-black text-green-400 text-sm animate-pulse">
                               CURRENTLY ACTING
                             </p>
-                            <Swords className="w-4 h-4 text-green-400 animate-pulse" />
                           </div>
                         )}
 
@@ -1215,13 +1206,6 @@ const Battle = () => {
                               : 'bg-muted border-habbo-dark hover:border-primary'
                           }`}
                         >
-                          {/* Turn indicator */}
-                          {isCurrentTurn && (
-                            <div className="flex items-center justify-center">
-                              <Swords className="w-4 h-4 text-green-400 animate-bounce" />
-                            </div>
-                          )}
-                          
                           {member.habboAvatar && (
                             <div className="flex items-center justify-center w-12 border-2 border-habbo-dark rounded overflow-hidden bg-card p-1">
                               <img
