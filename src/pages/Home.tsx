@@ -13,6 +13,7 @@ import pixelSword from "@/assets/pixel-sword.png";
 import goblinTrio from "@/assets/goblin-trio.png";
 import victoryTrophy from "@/assets/victory-trophy.png";
 import pixelStar from "@/assets/pixel-star.png";
+import npcKnight from "@/assets/npc-knight.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -70,26 +71,52 @@ const Home = () => {
         </div>
         
         {/* Hero Section */}
-        <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30">
+        <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 overflow-hidden">
           <div className="space-y-6 py-8">
             <img 
               src={frostkeepBanner}
               alt="The Shattered Frostkeep"
-              className="mx-auto pixel-icon"
+              className="mx-auto pixel-icon animate-fade-in"
               style={{ imageRendering: 'pixelated' }}
             />
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto text-left">
-              Deep within the frozen wastes lies the Shattered Frostkeep, an ancient fortress consumed by eternal winter. 
-              Once a beacon of civilization, it now harbors unspeakable horrors and forgotten treasures. 
-              Form a party with fellow adventurers, battle through hordes of frozen enemies, and collect legendary loot. 
-              The Ice Knight and his cursed legion await those brave enough to venture into the depths. 
-              Will you survive the bitter cold and claim victory?
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+            
+            <div className="grid md:grid-cols-[auto_1fr] gap-6 items-start max-w-4xl mx-auto">
+              {/* NPC Knight Guide */}
+              <div className="flex justify-center md:justify-start animate-scale-in">
+                <div className="relative">
+                  <img 
+                    src={npcKnight} 
+                    alt="Royal Guard" 
+                    className="w-24 h-24 md:w-32 md:h-32 pixel-icon hover-scale"
+                    style={{ imageRendering: 'pixelated' }}
+                  />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary/90 text-primary-foreground px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap border-2 border-habbo-dark">
+                    Royal Guard
+                  </div>
+                </div>
+              </div>
+              
+              {/* Story Content */}
+              <div className="space-y-4 text-left animate-fade-in">
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                  <span className="text-primary font-bold">"Greetings, brave adventurer!"</span>
+                  {" "}Beneath the grandeur of the Habbo Hotel lies a dark secret—the Shattered Frostkeep, 
+                  an ancient dungeon consumed by eternal winter. What was once the hotel's magnificent basement 
+                  has been overtaken by an evil curse, transforming it into a frozen realm of terror.
+                </p>
+                <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+                  The Ice Knight and his cursed legion have claimed these depths as their domain. 
+                  Form a party with fellow Habbos, battle through waves of frozen enemies, and collect legendary loot. 
+                  Only the bravest will survive the bitter cold and restore peace to the hotel above!
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
               <Button
                 onClick={() => navigate("/auth")}
                 size="lg"
-                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark bg-primary hover:bg-primary/90 shadow-md"
+                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark bg-primary hover:bg-primary/90 shadow-lg hover-scale"
               >
                 Start Your Adventure
               </Button>
@@ -97,7 +124,7 @@ const Home = () => {
                 onClick={() => navigate("/dungeon-list")}
                 size="lg"
                 variant="outline"
-                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark shadow-md"
+                className="h-14 px-8 text-lg font-bold border-2 border-habbo-dark shadow-lg hover-scale"
               >
                 Browse Dungeons
               </Button>
