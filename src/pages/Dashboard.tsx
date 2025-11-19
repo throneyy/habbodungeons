@@ -111,7 +111,7 @@ const Dashboard = () => {
 
         toast({ 
           title: "Avatar refreshed!", 
-          description: "Your Habbo outfit has been updated." 
+          description: "Your Habbo Origins outfit has been updated." 
         });
       }
     } catch (error: any) {
@@ -168,7 +168,7 @@ const Dashboard = () => {
               {profile?.habbo_username ? (
                 <>
                   <div>
-                    <p className="text-sm text-muted-foreground">Habbo Name</p>
+                    <p className="text-sm text-muted-foreground">Habbo Origins Name</p>
                     <p className="text-xl font-bold">{profile.habbo_username}</p>
                   </div>
                   {profile.habbo_profile_json?.motto && (
@@ -194,7 +194,7 @@ const Dashboard = () => {
                   className="font-bold border-4 border-habbo-dark"
                 >
                   <Link className="w-4 h-4 mr-2" />
-                  Link Habbo Account
+                  Link Habbo Origins Account
                 </Button>
               )}
             </div>
