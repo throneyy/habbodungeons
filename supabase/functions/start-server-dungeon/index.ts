@@ -54,97 +54,45 @@ serve(async (req) => {
       );
     }
 
-    // Generate a new dungeon
-    const theme = "Classic";
+    // Generate a new dungeon using the shared generate-dungeon function
+    const npcIds = [
+      "warrior",
+      "merchant",
+      "scholar",
+      "maiden",
+      "guard",
+      "mage",
+      "knight",
+    ];
+
+    const npcId = npcIds[Math.floor(Math.random() * npcIds.length)];
     const encounters = 3;
-    const difficulty = server.difficulty;
+    const difficulty = server.difficulty || 'Normal';
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error("LOVABLE_API_KEY not configured");
+    console.log("Generating dungeon with NPC quest giver:", npcId);
+
+    const { data: dungeonResult, error: dungeonError } = await supabase
+      .functions
+      .invoke('generate-dungeon', {
+        body: {
+          npcId,
+          encounters,
+          difficulty,
+        },
+      });
+
+    if (dungeonError) {
+      console.error('Failed to generate dungeon via generate-dungeon:', dungeonError);
+      throw new Error(dungeonError.message || 'Failed to generate dungeon');
     }
 
-    console.log("Generating dungeon with AI...");
-
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a dungeon master creating exciting adventure content. Always respond with valid JSON only.'
-          },
-          {
-            role: 'user',
-            content: `Generate a ${difficulty} difficulty dungeon with ${encounters} encounters themed as "${theme}".
-
-Return ONLY valid JSON in this exact format:
-{
-  "name": "Epic dungeon name",
-  "introText": "Story introduction (2-3 sentences)",
-  "questObjective": "What players need to do",
-  "rooms": [
-    {
-      "description": "Room description",
-      "enemy": {
-        "name": "Enemy name",
-        "hp": ${difficulty === 'Hardcore' ? 150 : 100},
-        "atk": ${difficulty === 'Hardcore' ? 25 : 15},
-        "def": ${difficulty === 'Hardcore' ? 15 : 10},
-        "spd": ${difficulty === 'Hardcore' ? 15 : 10}
-      },
-      "reward": {"gold": ${difficulty === 'Hardcore' ? 150 : 100}, "xp": ${difficulty === 'Hardcore' ? 100 : 50}}
-    }
-  ]
-}`
-          }
-        ]
-      })
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI generation failed:", errorText);
-      throw new Error("Failed to generate dungeon content");
+    const dungeonId = (dungeonResult as any)?.dungeonId;
+    if (!dungeonId) {
+      console.error('generate-dungeon response missing dungeonId:', dungeonResult);
+      throw new Error('Invalid response from generate-dungeon');
     }
 
-    const aiData = await aiResponse.json();
-    console.log("AI response received:", JSON.stringify(aiData));
-
-    let dungeonContent;
-    try {
-      const content = aiData.choices?.[0]?.message?.content;
-      if (!content) {
-        throw new Error("No content in AI response");
-      }
-      const cleanedContent = extractJSON(content);
-      dungeonContent = JSON.parse(cleanedContent);
-    } catch (parseError) {
-      console.error("Failed to parse AI response:", parseError);
-      throw new Error("Invalid dungeon content format");
-    }
-
-    // Create dungeon record
-    const { data: dungeon, error: dungeonError } = await supabase
-      .from('dungeons')
-      .insert({
-        name: dungeonContent.name,
-        difficulty: difficulty,
-        theme: theme,
-        owner_user_id: user.id,
-        dungeon_json: dungeonContent,
-      })
-      .select()
-      .single();
-
-    if (dungeonError) throw dungeonError;
-
-    console.log("Dungeon created:", dungeon.id);
+    console.log('Dungeon created via generate-dungeon:', dungeonId);
 
     // Link dungeon to server using service role to bypass RLS
     const supabaseAdmin = createClient(
@@ -154,22 +102,22 @@ Return ONLY valid JSON in this exact format:
     
     const { error: updateError } = await supabaseAdmin
       .from('servers')
-      .update({ dungeon_id: dungeon.id })
+      .update({ dungeon_id: dungeonId })
       .eq('id', serverId);
 
     if (updateError) {
-      console.error("Failed to link server to dungeon:", updateError);
+      console.error('Failed to link server to dungeon:', updateError);
       throw updateError;
     }
 
-    console.log("Server linked to dungeon successfully");
+    console.log('Server linked to dungeon successfully');
 
     // Now initialize the battle state for the server
-    console.log("Initializing battle state for server dungeon...");
+    console.log('Initializing battle state for server dungeon...');
     const initBattleResponse = await supabaseAdmin.functions.invoke('start-dungeon-battle', {
       body: {
-        dungeonId: dungeon.id,
-        difficulty: difficulty,
+        dungeonId,
+        difficulty,
       },
       headers: {
         Authorization: authHeader,
@@ -177,14 +125,14 @@ Return ONLY valid JSON in this exact format:
     });
 
     if (initBattleResponse.error) {
-      console.error("Failed to initialize battle state:", initBattleResponse.error);
-      throw new Error("Failed to initialize battle state");
+      console.error('Failed to initialize battle state:', initBattleResponse.error);
+      throw new Error('Failed to initialize battle state');
     }
 
-    console.log("Battle state initialized successfully");
+    console.log('Battle state initialized successfully');
 
     return new Response(
-      JSON.stringify({ dungeonId: dungeon.id }),
+      JSON.stringify({ dungeonId }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
