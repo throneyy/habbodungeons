@@ -85,13 +85,27 @@ serve(async (req) => {
         }
       }
     } else {
-      console.log('Solo player - looking for any battle by user_id');
-      // Solo player - get their battle (could be solo or orphaned from a server)
+      console.log('Solo player - looking for solo battle (no server_id)');
+      
+      // First, deactivate any orphaned server battles for this user/dungeon
+      // (battles where user is no longer in the server)
+      await supabase
+        .from('battle_states')
+        .update({ is_active: false })
+        .eq('dungeon_id', battleId)
+        .eq('user_id', user.id)
+        .not('server_id', 'is', null)
+        .eq('is_active', true);
+      
+      console.log('Deactivated orphaned server battles');
+      
+      // Solo player - get their solo battle only (exclude server battles)
       const { data: userBattle } = await supabase
         .from('battle_states')
         .select('*, dungeons(*)')
         .eq('dungeon_id', battleId)
         .eq('user_id', user.id)
+        .is('server_id', null)
         .eq('is_active', true)
         .maybeSingle();
       
