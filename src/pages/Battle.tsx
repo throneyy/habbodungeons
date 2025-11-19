@@ -2393,7 +2393,7 @@ const Battle = () => {
                         height: 'auto', 
                         maxWidth: '200px', 
                         maxHeight: '200px',
-                        transform: 'scaleX(-1)'
+                        transform: battleData.enemy.sprite === 'ice-guardian.png' ? 'none' : 'scaleX(-1)'
                       }}
                     />
                     {enemyHit && (
