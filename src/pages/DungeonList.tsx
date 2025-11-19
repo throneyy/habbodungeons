@@ -23,7 +23,21 @@ const DungeonList = () => {
   const [initializing, setInitializing] = useState(false);
 
   useEffect(() => {
-    initializeGlobalServers();
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to join servers",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+      initializeGlobalServers();
+    };
+    
+    checkAuth();
 
     // Subscribe to changes
     const channel = supabase
