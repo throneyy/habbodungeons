@@ -23,7 +23,7 @@ export const MainNav = () => {
   }, []);
 
   return (
-    <nav className="bg-card border-4 border-habbo-dark rounded-xl p-4 mb-6">
+    <nav className="bg-card border-4 border-habbo-dark rounded-xl p-4 mb-6 shadow-lg">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <img 
           src={habboDungeonsBanner}
@@ -35,21 +35,21 @@ export const MainNav = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="secondary"
-            className="border-2 border-habbo-dark font-bold"
+            className="border-2 border-habbo-dark font-bold shadow-md"
             onClick={() => navigate("/")}
           >
             Home
           </Button>
           <Button
             variant="secondary"
-            className="border-2 border-habbo-dark font-bold"
+            className="border-2 border-habbo-dark font-bold shadow-md"
             onClick={() => navigate("/dungeon-list")}
           >
             Dungeons
           </Button>
           <Button
             variant="secondary"
-            className="border-2 border-habbo-dark font-bold"
+            className="border-2 border-habbo-dark font-bold shadow-md"
             onClick={() => navigate("/inventory")}
           >
             Inventory
@@ -57,7 +57,7 @@ export const MainNav = () => {
           {user ? (
             <Button
               variant="outline"
-              className="border-2 border-habbo-dark"
+              className="border-2 border-habbo-dark shadow-md"
               onClick={() => navigate("/dashboard")}
             >
               <User className="w-4 h-4 mr-2" />
@@ -66,7 +66,7 @@ export const MainNav = () => {
           ) : (
             <Button
               variant="default"
-              className="border-2 border-habbo-dark bg-primary hover:bg-primary/90"
+              className="border-2 border-habbo-dark bg-primary hover:bg-primary/90 shadow-md"
               onClick={() => navigate("/auth")}
             >
               <LogIn className="w-4 h-4 mr-2" />
