@@ -191,7 +191,7 @@ const Battle = () => {
   const [storyLoading, setStoryLoading] = useState(false);
   const [treasureClaimed, setTreasureClaimed] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<StoryNode['choices'][0] | null>(null);
-  const [diceValues, setDiceValues] = useState<string>("");
+  const [storyDice, setStoryDice] = useState<number[]>([1, 1, 1, 1, 1]);
   
   // Party states
   const [partyMembers, setPartyMembers] = useState<any[]>([]);
@@ -919,7 +919,7 @@ const Battle = () => {
           choiceId: choice.id,
           choiceLabel: choice.label,
           storyText: storyNode.storyText,
-          diceRoll: diceValues ? parseInt(diceValues) : undefined,
+          diceRoll: choice.diceRequired ? storyDice.reduce((a, b) => a + b, 0) : undefined,
         },
       });
 
@@ -954,7 +954,7 @@ const Battle = () => {
     setStoryLoading(false);
     // Reset dice input state
     setSelectedChoice(null);
-    setDiceValues("");
+    setStoryDice([1, 1, 1, 1, 1]);
   };
 
   const handleClaimTreasure = async () => {
@@ -1635,35 +1635,50 @@ const Battle = () => {
                         {/* Dice input dialog */}
                         {selectedChoice && selectedChoice.diceRequired && (
                           <div className="mb-6 p-6 bg-muted border-4 border-habbo-dark rounded-lg space-y-4">
-                            <div className="flex items-center justify-center gap-3 mb-2">
-                              <img src={diceSprite} alt="Dice" className="w-12 h-12 pixelated" />
-                              <h4 className="text-lg font-black">
-                                Roll Your Dice!
-                              </h4>
-                              <img src={diceSprite} alt="Dice" className="w-12 h-12 pixelated" />
+                            <div className="flex items-start gap-3 mb-2">
+                              <img src={diceSprite} alt="Dice" className="w-auto pixelated" />
+                              <div className="flex-1">
+                                <h4 className="text-lg font-black">
+                                  Roll Your Dice!
+                                </h4>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {selectedChoice.label}
+                                </p>
+                              </div>
                             </div>
-                            <p className="text-sm text-center text-muted-foreground">
-                              {selectedChoice.label}
-                            </p>
                             <p className="text-center font-bold text-primary">
                               Target: {selectedChoice.diceDC}+ (Roll 5 dice in Habbo)
                             </p>
                             <div className="space-y-2">
                               <label className="text-sm font-bold">
-                                Enter your 5 dice results (e.g., "3 5 2 6 4"):
+                                Enter your 5 dice results:
                               </label>
-                              <Input
-                                value={diceValues}
-                                onChange={(e) => setDiceValues(e.target.value)}
-                                placeholder="1 2 3 4 5"
-                                className="text-center text-lg font-bold border-4 border-habbo-dark"
-                                disabled={storyLoading}
-                              />
+                              <div className="grid grid-cols-5 gap-2">
+                                {storyDice.map((val, i) => (
+                                  <Input
+                                    key={i}
+                                    type="number"
+                                    min="1"
+                                    max="6"
+                                    value={val}
+                                    onChange={(e) => {
+                                      const newDice = [...storyDice];
+                                      newDice[i] = Math.min(6, Math.max(1, parseInt(e.target.value) || 1));
+                                      setStoryDice(newDice);
+                                    }}
+                                    className="text-center text-xl font-black border-4 border-habbo-dark"
+                                    disabled={storyLoading}
+                                  />
+                                ))}
+                              </div>
+                              <p className="text-center text-sm">
+                                Total: <span className="font-black text-xl">{storyDice.reduce((a, b) => a + b, 0)}</span>
+                              </p>
                             </div>
                             <div className="flex gap-3">
                               <Button
                                 onClick={() => handleStoryChoice(selectedChoice.id, true)}
-                                disabled={storyLoading || !diceValues.trim()}
+                                disabled={storyLoading}
                                 className="flex-1 font-black border-4 border-habbo-dark"
                                 size="lg"
                               >
@@ -1673,7 +1688,7 @@ const Battle = () => {
                               <Button
                                 onClick={() => {
                                   setSelectedChoice(null);
-                                  setDiceValues("");
+                                  setStoryDice([1, 1, 1, 1, 1]);
                                 }}
                                 disabled={storyLoading}
                                 variant="outline"
@@ -2271,10 +2286,9 @@ const Battle = () => {
               )}
 
               <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <img src={diceSprite} alt="Dice" className="w-8 h-8 pixelated" />
-                  <p className="font-bold text-sm">Enter your Dice results from Habbo:</p>
-                  <img src={diceSprite} alt="Dice" className="w-8 h-8 pixelated" />
+                <div className="flex items-start gap-2 mb-2">
+                  <img src={diceSprite} alt="Dice" className="w-auto pixelated" />
+                  <p className="font-bold text-sm flex-1">Enter your Dice results from Habbo:</p>
                 </div>
                 <div className="grid grid-cols-5 gap-2">
                   {dice.map((val, i) => (
