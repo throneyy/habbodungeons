@@ -97,6 +97,15 @@ const ENEMY_POOL = [
     baseAtk: 10,
     baseDef: 4,
     baseSpd: 11
+  },
+  {
+    name: "Goblin Trio",
+    description: "Three mischievous goblins working together in chaotic harmony",
+    sprite: "goblin-trio.png",
+    baseHp: 55,
+    baseAtk: 12,
+    baseDef: 6,
+    baseSpd: 8
   }
 ];
 
