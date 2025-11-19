@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
+import { NPCS, NPC } from "@/lib/npcData";
+import { cn } from "@/lib/utils";
 
 const CreateDungeon = () => {
   const navigate = useNavigate();
@@ -15,27 +16,36 @@ const CreateDungeon = () => {
   const [loading, setLoading] = useState(false);
   
   const [difficulty, setDifficulty] = useState("Normal");
-  const [theme, setTheme] = useState("Classic");
+  const [selectedNPC, setSelectedNPC] = useState<NPC | null>(null);
   const [encounters, setEncounters] = useState(3);
 
   const handleGenerate = async () => {
+    if (!selectedNPC) {
+      toast({
+        title: "Please select a quest giver",
+        description: "Choose an NPC to receive a quest from",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-dungeon", {
         body: {
           difficulty,
-          theme,
+          npcId: selectedNPC.id,
           encounters,
         },
       });
 
       if (error) throw error;
 
-      toast({ title: "Dungeon generated!" });
+      toast({ title: "Quest received from " + selectedNPC.name + "!" });
       navigate("/dashboard");
     } catch (error: any) {
       toast({
-        title: "Failed to generate dungeon",
+        title: "Failed to generate quest",
         description: error.message,
         variant: "destructive",
       });
@@ -45,65 +55,95 @@ const CreateDungeon = () => {
 
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <HabboPanel title="Create a Dungeon">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <HabboPanel title="Quest Board - Select Your Quest Giver">
           <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="difficulty">Difficulty</Label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger className="border-2 border-habbo-dark">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Easy">Easy</SelectItem>
-                  <SelectItem value="Normal">Normal</SelectItem>
-                  <SelectItem value="Hard">Hard</SelectItem>
-                  <SelectItem value="Brutal">Brutal</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-3">
+              <Label className="text-lg font-bold">Choose a Quest Giver</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {NPCS.map((npc) => (
+                  <button
+                    key={npc.id}
+                    onClick={() => setSelectedNPC(npc)}
+                    className={cn(
+                      "flex flex-col items-center p-4 rounded-lg border-4 transition-all hover:scale-105",
+                      selectedNPC?.id === npc.id
+                        ? "border-primary bg-primary/20 shadow-lg"
+                        : "border-habbo-dark bg-card hover:border-primary/50"
+                    )}
+                  >
+                    <img 
+                      src={npc.sprite} 
+                      alt={npc.name} 
+                      className="w-16 h-16 pixel-icon mb-2"
+                    />
+                    <p className="font-bold text-sm text-center">{npc.name}</p>
+                    <p className="text-xs text-muted-foreground text-center">{npc.title}</p>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="theme">Theme</Label>
-              <Select value={theme} onValueChange={setTheme}>
-                <SelectTrigger className="border-2 border-habbo-dark">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Classic">Classic</SelectItem>
-                  <SelectItem value="Horror">Horror</SelectItem>
-                  <SelectItem value="Magical">Magical</SelectItem>
-                  <SelectItem value="Nature">Nature</SelectItem>
-                  <SelectItem value="Chaos">Chaos</SelectItem>
-                  <SelectItem value="Random">Random</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {selectedNPC && (
+              <div className="p-4 bg-primary/10 border-2 border-primary rounded-lg space-y-2">
+                <div className="flex items-start gap-3">
+                  <img 
+                    src={selectedNPC.sprite} 
+                    alt={selectedNPC.name} 
+                    className="w-12 h-12 pixel-icon"
+                  />
+                  <div className="flex-1">
+                    <p className="font-bold text-lg">{selectedNPC.name}</p>
+                    <p className="text-sm text-muted-foreground italic">"{selectedNPC.greeting}"</p>
+                  </div>
+                </div>
+                <div className="text-sm space-y-1">
+                  <p><span className="font-bold text-primary">Quest Type:</span> {selectedNPC.questTheme}</p>
+                </div>
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="encounters">Number of Encounters</Label>
-              <Select 
-                value={encounters.toString()} 
-                onValueChange={(val) => setEncounters(parseInt(val))}
-              >
-                <SelectTrigger className="border-2 border-habbo-dark">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3 encounters</SelectItem>
-                  <SelectItem value="4">4 encounters</SelectItem>
-                  <SelectItem value="5">5 encounters</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="difficulty">Difficulty</Label>
+                <Select value={difficulty} onValueChange={setDifficulty}>
+                  <SelectTrigger className="border-2 border-habbo-dark">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Easy">Easy</SelectItem>
+                    <SelectItem value="Normal">Normal</SelectItem>
+                    <SelectItem value="Hard">Hard</SelectItem>
+                    <SelectItem value="Brutal">Brutal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="encounters">Number of Encounters</Label>
+                <Select 
+                  value={encounters.toString()} 
+                  onValueChange={(val) => setEncounters(parseInt(val))}
+                >
+                  <SelectTrigger className="border-2 border-habbo-dark">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 encounters</SelectItem>
+                    <SelectItem value="4">4 encounters</SelectItem>
+                    <SelectItem value="5">5 encounters</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <Button
               onClick={handleGenerate}
-              disabled={loading}
+              disabled={loading || !selectedNPC}
               size="lg"
               className="w-full font-bold border-4 border-habbo-dark text-lg py-6"
             >
-              {loading ? "Generating Dungeon..." : "Generate Dungeon"}
+              {loading ? "Receiving Quest..." : "Accept Quest"}
             </Button>
 
             <Button

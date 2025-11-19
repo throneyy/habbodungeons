@@ -29,6 +29,7 @@ import frostWraith from "@/assets/frost-wraith.png";
 import frostUndead from "@/assets/frost-undead.gif";
 import frostbiteSpider from "@/assets/frostbite-spider.webp";
 import giantRat from "@/assets/giant-rat.png";
+import { getNPCById } from "@/lib/npcData";
 
 // Enemy sprite mapping
 const ENEMY_SPRITES: Record<string, string> = {
@@ -1307,29 +1308,48 @@ const Battle = () => {
             <HabboPanel title="Chronicle of Events">
               <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {/* Quest Information - Always at top */}
-              {battleData.dungeon_name && (
-                <div className="mb-4 p-4 bg-primary/10 border-2 border-primary rounded-lg">
-                  <h3 className="text-xl font-black text-primary mb-3">
-                    Quest: {battleData.dungeon_name}
-                  </h3>
-                  {battleData.intro_text && (
-                    <div className="text-sm text-foreground mb-3 space-y-1">
-                      {battleData.intro_text.split('. ').filter(s => s.trim()).map((sentence, i) => (
-                        <div key={i} className="flex gap-2">
-                          <span className="text-primary">&gt;</span>
-                          <span>{sentence.trim()}{sentence.includes('.') ? '' : '.'}</span>
-                        </div>
-                      ))}
+              {battleData.dungeon_name && (() => {
+                const questNPC = getNPCById(battleData.dungeon_theme || '');
+                return (
+                  <div className="mb-4 p-4 bg-primary/10 border-2 border-primary rounded-lg">
+                    <div className="flex items-start gap-3 mb-3">
+                      {questNPC && (
+                        <img 
+                          src={questNPC.sprite} 
+                          alt={questNPC.name}
+                          className="w-12 h-12 pixel-icon"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <h3 className="text-xl font-black text-primary">
+                          Quest: {battleData.dungeon_name}
+                        </h3>
+                        {questNPC && (
+                          <p className="text-xs text-muted-foreground">
+                            From {questNPC.name}, {questNPC.title}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
-                  {battleData.quest_objective && (
-                    <div className="text-sm text-foreground flex gap-2 pt-2 border-t border-primary/20">
-                      <span className="text-primary">&gt;</span>
-                      <span><span className="font-bold text-primary">Objective:</span> {battleData.quest_objective}</span>
-                    </div>
-                  )}
-                </div>
-              )}
+                    {battleData.intro_text && (
+                      <div className="text-sm text-foreground mb-3 space-y-1">
+                        {battleData.intro_text.split('. ').filter(s => s.trim()).map((sentence, i) => (
+                          <div key={i} className="flex gap-2">
+                            <span className="text-primary">&gt;</span>
+                            <span>{sentence.trim()}{sentence.includes('.') ? '' : '.'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {battleData.quest_objective && (
+                      <div className="text-sm text-foreground flex gap-2 pt-2 border-t border-primary/20">
+                        <span className="text-primary">&gt;</span>
+                        <span><span className="font-bold text-primary">Objective:</span> {battleData.quest_objective}</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
               
               {battleData.battle_log.length > 0 ? (
                   battleData.battle_log.map((entry: any, i) => {
