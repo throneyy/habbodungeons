@@ -226,7 +226,7 @@ const Battle = () => {
     }
   }, [battleData, serverId, partyId, currentUserId, profile]);
 
-  const loadBattle = async () => {
+  const loadBattle = async (isRetry = false) => {
     if (!id) {
       console.error("Cannot load battle: battleId is undefined");
       navigate("/dashboard");
@@ -374,10 +374,37 @@ const Battle = () => {
         fullError: JSON.stringify(error) 
       });
       
-      // Check multiple error formats from edge functions
+      // Normalize error message
       const errorMessage = error.message || error.error || JSON.stringify(error);
       const isBattleNotFound = errorMessage.includes("Battle not found") || 
                                errorMessage.includes("not found for dungeon");
+      const isBattleNotStarted = errorMessage.includes("Battle Not Started") ||
+                                 errorMessage.includes("hasn't been started yet");
+
+      // Legacy "battle not started" fallback – try once to auto-start then reload
+      if (isBattleNotStarted && !isRetry && id) {
+        console.log("Battle reported as not started, attempting auto-start then reload...");
+        try {
+          const { error: initError } = await supabase.functions.invoke("start-dungeon-battle", {
+            body: {
+              dungeonId: id,
+              difficulty: "Normal",
+            },
+          });
+
+          if (initError) {
+            console.error("Fallback battle init failed:", initError);
+          } else {
+            console.log("Fallback battle init succeeded, retrying load...");
+          }
+        } catch (initError) {
+          console.error("Error during fallback battle init:", initError);
+        }
+
+        // Retry load once after attempting init
+        await loadBattle(true);
+        return;
+      }
       
       setBattleLoadError(errorMessage);
       
