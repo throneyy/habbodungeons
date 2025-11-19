@@ -223,8 +223,22 @@ serve(async (req) => {
       });
       
       if (insertError) {
-        console.error('Insert error:', insertError);
-        throw insertError;
+        // Check if it's a duplicate key error (another player just created the battle)
+        if (insertError.code === '23505') {
+          console.log('Battle already exists (concurrent creation) - this is normal for server battles');
+          // Fetch the existing battle and return success
+          const { data: createdBattle } = await supabaseAdmin
+            .from('battle_states')
+            .select('id')
+            .eq('dungeon_id', dungeonId)
+            .eq('server_id', serverId)
+            .single();
+          
+          console.log('Found existing battle:', createdBattle?.id);
+        } else {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
       }
     }
     
