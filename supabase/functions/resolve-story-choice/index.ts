@@ -327,9 +327,17 @@ What happens as a result of this choice?`,
       message: `${playerName} chose: ${choiceLabel}`,
       type: 'choice' 
     });
+    
+    // Format consequence text with items in brackets
+    let consequenceWithItems = sanitizedOutcome.consequenceText;
+    if (sanitizedOutcome.itemsGained && sanitizedOutcome.itemsGained.length > 0) {
+      const itemsList = sanitizedOutcome.itemsGained.map((item: any) => `[${item.name}]`).join(', ');
+      consequenceWithItems += ` You received: ${itemsList}!`;
+    }
+    
     cleanedBattleLog.push({ 
       user_id: user.id, 
-      message: sanitizedOutcome.consequenceText 
+      message: consequenceWithItems 
     });
 
     // Advance room if needed, but check bounds

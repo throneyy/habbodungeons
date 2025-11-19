@@ -28,9 +28,16 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Gold Coins": goldCoins,
   "Gold": goldCoins,
   "Stick Pile": stickPile,
+  "Sticks": stickPile,
+  "Wood": stickPile,
   "Cloth Squares": clothSquares,
+  "Cloth": clothSquares,
   "Metal Ingot": metalIngot,
+  "Metal": metalIngot,
   "Silver": metalIngot,
+  "Silver Key": metalIngot,
+  "Iron": metalIngot,
+  "Bronze": metalIngot,
   "Potion": potion,
   "Ether": elixer,
   "Elixer": elixer,
@@ -51,6 +58,13 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Potion of Minor Healing": potion,
   "Rune of Frostsight": runestones,
   "Frostbloom Herb": herb,
+  // Generic fallbacks for common item types
+  "Key": metalIngot,
+  "Gem": crystalShards,
+  "Crystal": crystalShards,
+  "Coins": goldCoins,
+  "Food": sweetcakes,
+  "Drink": frothyPint,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {
