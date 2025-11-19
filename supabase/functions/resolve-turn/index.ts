@@ -510,13 +510,33 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
         // Load next room's enemy
         console.log(`Loading next room ${newRoomIndex}`);
         const nextRoom = dungeonData.rooms[newRoomIndex];
-        updatedEnemy = {
-          ...nextRoom.enemy,
-          current_hp: nextRoom.enemy.hp,
-          max_hp: nextRoom.enemy.hp,
-          mode: "story",
-          status_effects: [],
-        };
+        
+        // Check if next room has an enemy
+        if (nextRoom?.enemy && nextRoom.enemy.hp) {
+          updatedEnemy = {
+            ...nextRoom.enemy,
+            current_hp: nextRoom.enemy.hp,
+            max_hp: nextRoom.enemy.hp,
+            mode: "story",
+            status_effects: [],
+          };
+        } else {
+          // No enemy in next room - set to story mode with placeholder
+          console.log(`Next room has no enemy, entering story mode`);
+          updatedEnemy = {
+            name: "",
+            description: "",
+            sprite: "",
+            hp: 0,
+            current_hp: 0,
+            max_hp: 0,
+            atk: 0,
+            def: 0,
+            spd: 0,
+            mode: "story",
+            status_effects: [],
+          };
+        }
       } else {
         // Quest complete - mark battle as inactive
         console.log(`Quest complete! Final room reached. Battle will be marked inactive.`);
