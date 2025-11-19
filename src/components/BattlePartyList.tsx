@@ -67,26 +67,39 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
           ? getHabboAvatarWithExpression(figureString, hpPercentage, isCurrentTurn)
           : member.habboAvatar;
         
+        const isDead = hpPercentage <= 0;
+        
         return (
           <div
             key={member.userId}
-            className={`relative flex-1 p-2 rounded-lg border-2 ${
-              isCurrentTurn
+            className={`relative flex-1 p-2 rounded-lg border-2 transition-all duration-300 ${
+              isDead
+                ? 'bg-red-950/40 border-red-900/60 opacity-60 grayscale'
+                : isCurrentTurn
                 ? 'bg-green-500/30 border-green-400 ring-2 ring-green-400/50 animate-pulse'
                 : isCurrentUser
                 ? 'bg-primary/20 border-primary'
                 : 'bg-muted/50 border-habbo-dark'
             }`}
           >
+            {/* Dead indicator */}
+            {isDead && (
+              <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                <div className="bg-red-900/80 text-white text-xs font-black px-3 py-1 rounded-full border-2 border-red-700 shadow-lg animate-pulse">
+                  K.O.
+                </div>
+              </div>
+            )}
+            
             {/* Turn order badge */}
             {turnOrder && turnIndex !== undefined && turnIndex >= 0 && (
-              <div className="absolute -top-3 -right-3 w-7 h-7 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10 shadow-lg">
+              <div className={`absolute -top-3 -right-3 w-7 h-7 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10 shadow-lg ${isDead ? 'opacity-50' : ''}`}>
                 {turnIndex + 1}
               </div>
             )}
             
             {/* Current turn indicator */}
-            {isCurrentTurn && (
+            {isCurrentTurn && !isDead && (
               <div className="absolute -top-2 -left-2 animate-bounce z-10">
                 <Swords className="w-5 h-5 text-green-400 drop-shadow-lg" />
               </div>
@@ -97,15 +110,15 @@ export const BattlePartyList = ({ members, currentUserId, currentTurnUserId, tur
                 <img 
                   src={avatarUrl} 
                   alt={member.username}
-                  className="w-12 h-12 pixelated"
+                  className={`w-12 h-12 pixelated transition-all duration-300 ${isDead ? 'animate-pulse' : ''}`}
                 />
               )}
-              <div className="text-xs font-bold text-center truncate w-full px-1">
+              <div className={`text-xs font-bold text-center truncate w-full px-1 ${isDead ? 'line-through opacity-70' : ''}`}>
                 {member.username}
               </div>
               <div className="w-full bg-muted border border-habbo-dark rounded-sm h-2 overflow-hidden">
                 <div 
-                  className="h-full bg-hp transition-all duration-300"
+                  className={`h-full transition-all duration-300 ${isDead ? 'bg-red-900' : 'bg-hp'}`}
                   style={{ width: `${hpPercentage}%` }}
                 />
               </div>
