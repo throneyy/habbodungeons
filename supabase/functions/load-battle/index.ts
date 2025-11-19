@@ -266,7 +266,7 @@ serve(async (req) => {
       room_description: currentRoom.description || '',
       battle_log: battleLog,
       mode: mode,
-      isPartyBattle: !!battle.server_id,
+      isPartyBattle: !!(battle.server_id || battle.party_id),
       currentTurnUserId: battle.current_turn_user_id,
       turnOrder: battle.turn_order || []
     };
