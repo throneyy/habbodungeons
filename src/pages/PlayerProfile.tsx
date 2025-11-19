@@ -44,7 +44,7 @@ export default function PlayerProfile() {
 
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("username, habbo_username, habbo_profile_json")
+        .select("id, username, habbo_username, habbo_profile_json")
         .ilike("habbo_username", habboUsername)
         .maybeSingle();
 
@@ -56,22 +56,10 @@ export default function PlayerProfile() {
         return;
       }
 
-      const { data: profileIdData } = await supabase
-        .from("profiles")
-        .select("id")
-        .ilike("habbo_username", habboUsername)
-        .maybeSingle();
-
-      if (!profileIdData) {
-        toast.error("Player not found");
-        navigate("/");
-        return;
-      }
-
       const { data: statsData, error: statsError } = await supabase
         .from("player_stats")
         .select("level, max_hp, current_hp, max_mp, current_mp, atk, def, spd")
-        .eq("user_id", profileIdData.id)
+        .eq("user_id", profileData.id)
         .maybeSingle();
 
       if (statsError) throw statsError;
