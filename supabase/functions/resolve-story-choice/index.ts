@@ -170,12 +170,46 @@ serve(async (req) => {
       console.log("Dice check result:", diceCheckResult);
     }
 
-    const aiPrompt = `Resolve: ${choiceLabel}
-Dungeon: ${battleState.dungeons.name}
-${diceCheckResult ? `\nDICE: ${diceCheckResult.total} vs DC ${diceCheckResult.dc} = ${diceCheckResult.success ? 'SUCCESS' : 'FAIL'} (${diceCheckResult.margin >= 0 ? '+' : ''}${diceCheckResult.margin})` : ''}${enemyContext}
+    const aiPrompt = `You are resolving a player's story choice in a dungeon crawler game.
 
-Return JSON: {narrativeText: "what happens", hpChange: 0, mpChange: 0, shouldStartBattle: false, shouldAdvanceRoom: true, itemsGained: [], enemyModifier: null}
-${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
+PLAYER CHOICE: "${choiceLabel}"
+DUNGEON: ${battleState.dungeons.name}
+CURRENT ROOM: ${currentRoom?.description || 'Unknown'}
+${diceCheckResult ? `
+DICE CHECK RESULT: ${diceCheckResult.total} vs DC ${diceCheckResult.dc} = ${diceCheckResult.success ? 'SUCCESS' : 'FAILURE'}
+Margin: ${diceCheckResult.margin >= 0 ? '+' : ''}${diceCheckResult.margin}
+Skill Type: ${diceCheckResult.skillType}
+` : ''}${enemyContext}
+
+CRITICAL RULES:
+${diceCheckResult && !diceCheckResult.success ? `
+❌ DICE CHECK FAILED - You MUST follow these rules:
+1. NO treasure or items can be gained from a failed check (itemsGained MUST be empty [])
+2. A failed check leads to negative consequences: combat, trap damage, setback, etc.
+3. shouldAdvanceRoom MUST be false (player doesn't progress)
+4. Describe the failure and its consequences in narrativeText
+` : diceCheckResult && diceCheckResult.success ? `
+✅ DICE CHECK PASSED - You MAY give rewards:
+1. Player can find treasure/items if it makes sense (itemsGained can have items)
+2. Success may allow bypassing combat or advancing (shouldAdvanceRoom can be true)
+3. Describe the success and benefits in narrativeText
+` : `
+📖 NO DICE CHECK - Free choice:
+1. Only give items/treasure if the choice explicitly involves finding/looting
+2. shouldAdvanceRoom determines if player moves to next room
+3. Describe what happens based on the player's choice
+`}
+
+Return ONLY valid JSON (no markdown):
+{
+  "narrativeText": "describe what happens in 2-3 sentences",
+  "hpChange": 0,
+  "mpChange": 0,
+  "shouldStartBattle": false,
+  "shouldAdvanceRoom": true,
+  "itemsGained": [],
+  "enemyModifier": null
+}`;
 
     // Call Lovable AI to determine outcome
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

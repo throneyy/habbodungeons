@@ -1525,6 +1525,8 @@ const Battle = () => {
                     const userProfile = userId ? partyProfiles.get(userId) : null;
                     const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
                     const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
+                    const isDiceSuccess = entryType === 'dice_success' || message.includes('PASSING') || message.toUpperCase().includes('SUCCESS');
+                    const isDiceFailure = entryType === 'dice_failure' || message.includes('FAILING') || message.toUpperCase().includes('FAIL');
                     
                     // Replace "You" with actual username for other players' messages
                     let displayMessage = message;
@@ -1543,7 +1545,11 @@ const Battle = () => {
                     }
                     
                     return (
-                      <p key={i} className={`text-sm animate-fade-in ${isDiceRoll ? 'text-[#FFD700] font-bold' : ''}`}>
+                      <p key={i} className={`text-sm animate-fade-in ${
+                        isDiceSuccess ? 'text-green-500 font-bold' : 
+                        isDiceFailure ? 'text-red-500 font-bold' : 
+                        isDiceRoll ? 'text-[#FFD700] font-bold' : ''
+                      }`}>
                         <span className="text-primary font-bold">›</span>{" "}
                         {isCurrentUser || !userId ? (
                           renderTextWithWeapons(displayMessage)
@@ -2135,8 +2141,8 @@ const Battle = () => {
                   const userProfile = userId ? partyProfiles.get(userId) : null;
                   const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
                   const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
-                  const isDiceSuccess = entryType === 'dice_success';
-                  const isDiceFailure = entryType === 'dice_failure';
+                  const isDiceSuccess = entryType === 'dice_success' || message.includes('PASSING') || message.toUpperCase().includes('SUCCESS');
+                  const isDiceFailure = entryType === 'dice_failure' || message.includes('FAILING') || message.toUpperCase().includes('FAIL');
                   
                   // Replace "You" with actual username for other players' messages
                   let displayMessage = message;
