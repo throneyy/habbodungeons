@@ -87,8 +87,8 @@ const Home = () => {
                   <img 
                     src={npcKnight} 
                     alt="Royal Guard" 
-                    className="w-24 h-24 md:w-32 md:h-32 pixel-icon hover-scale"
-                    style={{ imageRendering: 'pixelated' }}
+                    className="w-24 md:w-32 h-auto pixel-icon hover-scale"
+                    style={{ imageRendering: 'pixelated', objectFit: 'contain' }}
                   />
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary/90 text-primary-foreground px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap border-2 border-habbo-dark">
                     Royal Guard
@@ -135,7 +135,7 @@ const Home = () => {
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <HabboPanel className="bg-gradient-to-br from-red-500/20 to-orange-500/20 text-center">
-            <img src={pixelSword} alt="Epic Battles" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
+            <img src={pixelSword} alt="Epic Battles" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Epic Battles</h3>
             <p className="text-muted-foreground">
               Face challenging enemies in turn-based combat with strategic depth
@@ -143,7 +143,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-center">
-            <img src={goblinTrio} alt="Party System" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
+            <img src={goblinTrio} alt="Party System" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Party System</h3>
             <p className="text-muted-foreground">
               Team up with friends or join public servers to conquer dungeons together
@@ -151,7 +151,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-yellow-500/20 to-amber-500/20 text-center">
-            <img src={victoryTrophy} alt="Legendary Loot" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
+            <img src={victoryTrophy} alt="Legendary Loot" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Legendary Loot</h3>
             <p className="text-muted-foreground">
               Discover powerful weapons, armor, and consumables to enhance your character
@@ -159,7 +159,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-center">
-            <img src={pixelStar} alt="Level Up" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated' }} />
+            <img src={pixelStar} alt="Level Up" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Level Up</h3>
             <p className="text-muted-foreground">
               Gain experience, increase your stats, and become an unstoppable warrior
