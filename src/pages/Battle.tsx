@@ -1989,7 +1989,7 @@ const Battle = () => {
               <div className={battleData.mode !== "story" ? "md:col-span-3" : "md:col-span-1"}>
                 <HabboPanel title={battleData.mode !== "story" ? "Battle Party" : "Your Party"}>
                   {/* Turn Order Info */}
-                  {battleData.isPartyBattle && battleData.turnOrder && battleData.turnOrder.length > 1 && (
+                  {battleData.isPartyBattle && battleData.turnOrder && battleData.turnOrder.length > 1 && partyMembers && partyMembers.length > 0 && (
                     <div className="mb-4 p-2 bg-muted/50 border-2 border-habbo-dark rounded text-center">
                       <p className="text-xs font-bold text-muted-foreground">
                         Turn Order: {battleData.turnOrder.map((id, idx) => {
