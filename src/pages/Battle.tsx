@@ -1318,7 +1318,7 @@ const Battle = () => {
                         <img 
                           src={questNPC.sprite} 
                           alt={questNPC.name}
-                          className="w-12 h-12 pixel-icon"
+                          className="h-12 pixel-icon"
                         />
                       )}
                       <div className="flex-1">
