@@ -278,6 +278,11 @@ serve(async (req) => {
     // Find the current user's stats in the players array
     const currentPlayer = players.find(p => p.userId === user.id) || players[0];
     
+    // If no player data available (empty server), throw error
+    if (!currentPlayer) {
+      throw new Error('No players found in this battle. The server may be empty or battle state is invalid.');
+    }
+    
     const battleData = {
       enemy: enemyState,
       players: players, // Array of all players (party or solo)
