@@ -1,5 +1,4 @@
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Skull } from "lucide-react";
 
 interface PartyWipeDialogProps {
   open: boolean;
@@ -13,7 +12,7 @@ export const PartyWipeDialog = ({ open, onClose }: PartyWipeDialogProps) => {
         <AlertDialogHeader>
           <div className="flex justify-center mb-4">
             <div className="relative">
-              <Skull className="w-24 h-24 text-red-500 animate-pulse" />
+              <span className="text-[96px] text-red-500 animate-pulse font-['Volter'] leading-none block">ª</span>
               <div className="absolute inset-0 w-24 h-24 bg-red-500/20 blur-xl animate-pulse" />
             </div>
           </div>
