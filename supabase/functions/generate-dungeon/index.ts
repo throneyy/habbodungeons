@@ -220,43 +220,50 @@ const FIRE_DRAKE = {
 // NPC Data for quest generation
 const NPC_DATA: Record<string, any> = {
   warrior: {
-    name: "Bjorn the Brave",
-    personality: "A gruff but honorable warrior who values strength and courage. He speaks directly and has little patience for cowardice.",
-    questTheme: "Combat-focused dungeons with challenging enemy encounters and boss battles",
-    questTypes: ["Defeat powerful enemies", "Clear monster nests", "Hunt legendary beasts"]
+    name: "Bjorn the Bard",
+    title: "Traveling Minstrel",
+    personality: "A charismatic bard who weaves tales through song and lute. He's jovial and dramatic, believing every quest deserves an epic ballad.",
+    questTheme: "Story-rich dungeons with memorable encounters and dramatic moments worth singing about",
+    questTypes: ["Uncover legendary tales", "Meet interesting characters", "Create memorable stories"]
   },
   merchant: {
     name: "Goldwyn the Prosperous",
+    title: "Master Trader",
     personality: "A shrewd merchant with an eye for profit. Friendly but always calculating value. Loves treasure and rare items.",
     questTheme: "Treasure hunting and loot-focused dungeons with valuable rewards",
     questTypes: ["Recover lost treasures", "Find rare artifacts", "Explore abandoned vaults"]
   },
   scholar: {
     name: "Aldric the Wise",
+    title: "Ancient Historian",
     personality: "A learned scholar fascinated by ancient history and forgotten lore. Speaks in a measured, thoughtful manner.",
     questTheme: "Exploration and mystery-focused dungeons with puzzles and lore",
     questTypes: ["Investigate ancient ruins", "Uncover forgotten knowledge", "Solve ancient mysteries"]
   },
   maiden: {
     name: "Elara the Kind",
+    title: "Village Healer",
     personality: "A compassionate healer who cares deeply for others. Gentle and encouraging, but determined to help those in need.",
     questTheme: "Rescue and protection-focused dungeons with civilians to save",
     questTypes: ["Rescue captured villagers", "Protect the innocent", "Cleanse corrupted lands"]
   },
   guard: {
     name: "Captain Roderick",
+    title: "City Guard Captain",
     personality: "A disciplined military officer who values order and justice. Professional and strategic in approach.",
     questTheme: "Strategic combat dungeons with tactical challenges and defense scenarios",
     questTypes: ["Defend strategic locations", "Eliminate bandit camps", "Secure dangerous areas"]
   },
   mage: {
     name: "Mystara the Arcane",
+    title: "Archmage",
     personality: "A powerful mage obsessed with magical phenomena. Eccentric and intense, speaks of magic with reverence.",
     questTheme: "Magic-focused dungeons with elemental challenges and arcane mysteries",
     questTypes: ["Investigate magical anomalies", "Contain wild magic", "Recover mystical artifacts"]
   },
   knight: {
     name: "Sir Gareth the Just",
+    title: "Paladin Commander",
     personality: "A noble paladin devoted to righteousness and honor. Speaks with conviction and expects moral conduct.",
     questTheme: "Holy crusade dungeons fighting darkness and undead threats",
     questTypes: ["Purge undead corruption", "Reclaim holy sites", "Vanquish dark forces"]
