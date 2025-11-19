@@ -67,7 +67,7 @@ const Home = () => {
         </div>
         
         {/* Hero Section */}
-        <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 text-center">
+        <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30">
           <div className="space-y-6 py-8">
             <img 
               src={frostkeepBanner}
@@ -75,11 +75,12 @@ const Home = () => {
               className="mx-auto pixel-icon"
               style={{ imageRendering: 'pixelated' }}
             />
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto text-left">
               Deep within the frozen wastes lies the Shattered Frostkeep, an ancient fortress consumed by eternal winter. 
               Once a beacon of civilization, it now harbors unspeakable horrors and forgotten treasures. 
-              The Ice Knight and his cursed legion await those brave enough to venture into the frozen depths. 
-              Will you survive the bitter cold and claim the legendary artifacts within?
+              Form a party with fellow adventurers, battle through hordes of frozen enemies, and collect legendary loot. 
+              The Ice Knight and his cursed legion await those brave enough to venture into the depths. 
+              Will you survive the bitter cold and claim victory?
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
               <Button
