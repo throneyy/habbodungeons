@@ -1158,8 +1158,8 @@ const Battle = () => {
                 </HabboPanel>
               </div>
 
-              {/* Party Panel - Wider in battle mode */}
-              <div className={battleData.mode !== "story" ? "md:col-span-2" : "md:col-span-1"}>
+              {/* Party Panel - Full width in battle mode for horizontal display */}
+              <div className={battleData.mode !== "story" ? "md:col-span-3" : "md:col-span-1"}>
                 <HabboPanel title={battleData.mode !== "story" ? "Battle Party" : "Your Party"}>
                   {/* Turn Order Info */}
                   {battleData.isPartyBattle && battleData.turnOrder && battleData.turnOrder.length > 1 && (
@@ -1791,8 +1791,9 @@ const Battle = () => {
           </HabboPanel>
         </div>
 
-        {/* Party Members Section - Always show for visibility of turn indicators */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Party Members Section - Only show in story mode */}
+        {battleData.mode !== "battle" && (
+          <div className="grid md:grid-cols-2 gap-6">
             <HabboPanel title={serverId ? "Server Players" : "Party Members"}>
               {serverId ? (
                 <PartyMembers serverId={serverId} />
@@ -1833,7 +1834,7 @@ const Battle = () => {
               </HabboPanel>
             )}
           </div>
-        </div>
+        )}
         <Button
           variant="outline"
           onClick={() => navigate("/dashboard")}
@@ -1841,6 +1842,7 @@ const Battle = () => {
         >
           Return to Dashboard
         </Button>
+        </div>
       </div>
 
       {/* Victory Loot Modal */}
