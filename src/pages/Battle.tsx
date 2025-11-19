@@ -52,6 +52,7 @@ interface PlayerStats {
   userId: string;
   username: string;
   habboAvatar?: string;
+  figureString?: string;
   level: number;
   current_hp: number;
   max_hp: number;
@@ -99,6 +100,39 @@ interface StoryNode {
   storyText: string;
   choices: Array<{ id: string; label: string }>;
 }
+
+// Helper function to get dynamic Habbo avatar based on state
+const getHabboAvatar = (
+  figureString: string | undefined,
+  hpPercentage: number,
+  isCurrentTurn: boolean,
+  size: 's' | 'm' | 'b' = 's'
+): string => {
+  if (!figureString) return '';
+  
+  let gesture = 'std';
+  let action = 'std';
+  
+  if (hpPercentage <= 0) {
+    // Dead
+    action = 'lay';
+    gesture = 'std';
+  } else if (hpPercentage < 30) {
+    // Hurt
+    gesture = 'sad';
+    action = 'std';
+  } else if (isCurrentTurn) {
+    // Fighting
+    gesture = 'agr';
+    action = 'std';
+  } else {
+    // Normal/Victory
+    gesture = 'sml';
+    action = 'std';
+  }
+  
+  return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${figureString}&hotel=COM&size=${size}&action=${action}&gesture=${gesture}&direction=2&head_direction=2&service=official`;
+};
 
 const Battle = () => {
   const { id } = useParams();
@@ -240,9 +274,10 @@ const Battle = () => {
         {
           userId: currentUserId,
           username: profile.habbo_username || profile.username?.split("@")[0] || "Player",
+          figureString: profile.habbo_profile_json?.figureString || undefined,
           habboAvatar:
             profile.habbo_username && profile.habbo_profile_json
-              ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`
+              ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=std&gesture=std&direction=2&head_direction=2&service=official`
               : null,
           level: battleData.player.level,
           currentHp: battleData.player.current_hp,
@@ -961,15 +996,18 @@ const Battle = () => {
 
       // Use habboAvatar from backend if available, otherwise construct for current user
       let habboAvatar = (p as any).habboAvatar || null;
+      let figureString = (p as any).figureString || null;
       
       if (!habboAvatar && isCurrentUser && profile?.habbo_username && profile.habbo_profile_json) {
-        habboAvatar = `https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=s&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`;
+        figureString = profile.habbo_profile_json.figureString;
+        habboAvatar = `https://www.habbo.com/habbo-imaging/avatarimage?figure=${figureString}&hotel=COM&size=s&action=std&gesture=std&direction=2&head_direction=2&service=official`;
       }
 
       return {
         userId: (p as any).userId,
         username: playerUsername,
         habboAvatar,
+        figureString,
         level: (p as any).level,
         currentHp: (p as any).current_hp,
         maxHp: (p as any).max_hp,
@@ -1800,6 +1838,12 @@ const Battle = () => {
                 const isCurrentTurn = battleData.currentTurnUserId === player.userId;
                 const turnIndex = battleData.turnOrder?.indexOf(player.userId);
                 const isCurrentUser = player.userId === currentUserId;
+                const hpPercentage = (player.current_hp / player.max_hp) * 100;
+                
+                // Get dynamic avatar based on state
+                const dynamicAvatar = player.figureString 
+                  ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, 's')
+                  : player.habboAvatar;
                 
                 return (
                   <button
@@ -1830,7 +1874,7 @@ const Battle = () => {
                     {/* Avatar */}
                     <div className="w-16 h-20 relative flex items-center justify-center">
                       <img
-                        src={player.habboAvatar || ''}
+                        src={dynamicAvatar || ''}
                         alt={player.username}
                         className="max-w-full max-h-full object-contain pixelated"
                       />
@@ -1858,12 +1902,20 @@ const Battle = () => {
               <div className="mt-4 p-4 bg-muted/50 border-2 border-habbo-dark rounded-lg">
                 {(() => {
                   const player = battleData.players.find(p => p.userId === selectedMemberId)!;
+                  const hpPercentage = (player.current_hp / player.max_hp) * 100;
+                  const isCurrentTurn = battleData.currentTurnUserId === player.userId;
+                  
+                  // Get dynamic medium avatar
+                  const dynamicAvatar = player.figureString 
+                    ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, 'm')
+                    : player.habboAvatar?.replace('size=s', 'size=m');
+                  
                   return (
                     <div className="flex gap-4 items-start">
                       {/* Medium Avatar */}
                       <div className="w-32 h-40 relative flex items-center justify-center flex-shrink-0 bg-muted/50 border border-habbo-dark rounded-lg p-2">
                         <img
-                          src={player.habboAvatar?.replace('size=s', 'size=m') || ''}
+                          src={dynamicAvatar || ''}
                           alt={player.username}
                           className="max-w-full max-h-full object-contain pixelated"
                         />
