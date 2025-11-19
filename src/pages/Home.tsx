@@ -28,7 +28,7 @@ const Home = () => {
     const { data, error } = await supabase
       .from('profiles')
       .select('habbo_username')
-      .ilike('habbo_username', searchTerm)
+      .eq('habbo_username', searchTerm.trim())
       .not('habbo_username', 'is', null)
       .limit(1)
       .maybeSingle();
