@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { VictoryLoot } from "@/components/VictoryLoot";
 import { PartyWipeDialog } from "@/components/PartyWipeDialog";
+import { ItemTooltip } from "@/components/ItemTooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
@@ -186,9 +187,10 @@ const Battle = () => {
   const isMyTurn = !battleData?.isPartyBattle || battleData?.currentTurnUserId === currentUserId;
   const currentTurnPlayer = battleData?.players?.find(p => p.userId === battleData?.currentTurnUserId);
 
-  // Helper function to render text with weapon names highlighted in purple
+  // Helper function to render text with weapon/item names highlighted in purple
   const renderTextWithWeapons = (text: string) => {
-    const parts = text.split(/(\[WEAPON:.*?\])/g);
+    // Match both [WEAPON:...] and regular item names in brackets like [Silver Key]
+    const parts = text.split(/(\[WEAPON:.*?\]|\[[^\]]+\])/g);
     return parts.map((part, idx) => {
       const weaponMatch = part.match(/\[WEAPON:(.*?)\]/);
       if (weaponMatch) {
@@ -198,6 +200,20 @@ const Battle = () => {
           </span>
         );
       }
+      
+      // Check if it's an item in brackets
+      const itemMatch = part.match(/\[([^\]]+)\]/);
+      if (itemMatch) {
+        const itemName = itemMatch[1];
+        return (
+          <ItemTooltip key={idx} itemName={itemName}>
+            <span className="text-purple-500 font-bold cursor-help">
+              [{itemName}]
+            </span>
+          </ItemTooltip>
+        );
+      }
+      
       return <span key={idx}>{part}</span>;
     });
   };
@@ -859,8 +875,28 @@ const Battle = () => {
       
       toast({
         title: "Treasure Found!",
-        description: `You received: ${treasureLoot.map(l => `${l.quantity}x ${l.item_name}`).join(', ')}`,
+        description: `You received: ${treasureLoot.map(l => `${l.quantity}x [${l.item_name}]`).join(', ')}`,
       });
+      
+      // Add to battle log
+      const { data: battleState } = await supabase
+        .from('battle_states')
+        .select('battle_log')
+        .eq('dungeon_id', id)
+        .eq('user_id', user.id)
+        .single();
+      
+      if (battleState) {
+        const currentLog = (battleState.battle_log as any[]) || [];
+        const lootMessage = `Found treasure: ${treasureLoot.map(l => `${l.quantity}x [${l.item_name}]`).join(', ')}`;
+        await supabase
+          .from('battle_states')
+          .update({
+            battle_log: [...currentLog, { user_id: user.id, message: lootMessage }]
+          })
+          .eq('dungeon_id', id)
+          .eq('user_id', user.id);
+      }
       
       // Move to next room
       await loadBattle();

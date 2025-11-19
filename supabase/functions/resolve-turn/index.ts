@@ -501,11 +501,20 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
     const diceSum = dice.reduce((sum: number, d: number) => sum + d, 0);
     const diceRollMessage = `${profile?.habbo_username || profile?.username || 'You'} rolled ${dice.join(' + ')} = ${diceSum} for ${action}!`;
 
+    // Format loot messages with items in brackets
+    const lootMessages: string[] = [];
+    if (result.victory && lootItems.length > 0) {
+      for (const loot of lootItems) {
+        lootMessages.push(`Received ${loot.quantity}x [${loot.item_name}]`);
+      }
+    }
+
     const updatedLog = [
       ...(battle.battle_log || []),
       { user_id: user.id, message: diceRollMessage, type: 'dice_roll' },
       ...result.narration.map((msg: string) => ({ user_id: user.id, message: msg })),
-      ...xpMessages.map((msg: string) => ({ user_id: user.id, message: msg }))
+      ...xpMessages.map((msg: string) => ({ user_id: user.id, message: msg })),
+      ...lootMessages.map((msg: string) => ({ user_id: user.id, message: msg }))
     ];
 
     // Calculate next turn for party/server battles
