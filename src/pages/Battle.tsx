@@ -120,11 +120,13 @@ const getHabboAvatar = (
   
   let gesture = 'std';
   let action = 'std';
+  let direction = '2';
   
   if (hpPercentage <= 0) {
     // Dead
     action = 'lay';
     gesture = 'std';
+    direction = '4';
   } else if (isVictory) {
     // Victory - smiling
     gesture = 'sml';
@@ -140,7 +142,7 @@ const getHabboAvatar = (
   }
   // Default is std/std for normal idle state
   
-  return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${figureString}&hotel=COM&size=${size}&action=${action}&gesture=${gesture}&direction=2&head_direction=2&service=official`;
+  return `https://www.habbo.com/habbo-imaging/avatarimage?figure=${figureString}&hotel=COM&size=${size}&action=${action}&gesture=${gesture}&direction=${direction}&head_direction=2&service=official`;
 };
 
 const Battle = () => {
@@ -2072,9 +2074,12 @@ const Battle = () => {
                 const hpPercentage = (player.current_hp / player.max_hp) * 100;
                 const isVictory = false; // Victory is shown in separate screen
                 
+                // Prefer explicit figureString, but fall back to parsing from avatar URL if needed
+                const effectiveFigureString = player.figureString || player.habboAvatar?.match(/figure=([^&]+)/)?.[1];
+                
                 // Get dynamic avatar based on state
-                const dynamicAvatar = player.figureString 
-                  ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, isVictory, 's')
+                const dynamicAvatar = effectiveFigureString
+                  ? getHabboAvatar(effectiveFigureString, hpPercentage, isCurrentTurn, isVictory, 's')
                   : player.habboAvatar;
                 
                 return (
@@ -2138,9 +2143,12 @@ const Battle = () => {
                   const isCurrentTurn = battleData.currentTurnUserId === player.userId;
                   const isVictory = false; // Victory is shown in separate screen
                   
+                  // Prefer explicit figureString, but fall back to parsing from avatar URL if needed
+                  const effectiveFigureString = player.figureString || player.habboAvatar?.match(/figure=([^&]+)/)?.[1];
+                  
                   // Get dynamic medium avatar
-                  const dynamicAvatar = player.figureString 
-                    ? getHabboAvatar(player.figureString, hpPercentage, isCurrentTurn, isVictory, 'm')
+                  const dynamicAvatar = effectiveFigureString
+                    ? getHabboAvatar(effectiveFigureString, hpPercentage, isCurrentTurn, isVictory, 'm')
                     : player.habboAvatar?.replace('size=s', 'size=m');
                   
                   return (
