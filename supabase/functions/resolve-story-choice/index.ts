@@ -240,14 +240,28 @@ What happens as a result of this choice?`,
 
     console.log("Outcome:", outcome);
 
+    // Sanitize outcome to ensure all fields are proper types
+    const sanitizedOutcome = {
+      consequenceText: typeof outcome.consequenceText === 'string' 
+        ? outcome.consequenceText 
+        : (outcome.consequenceText?.message || "Something happens..."),
+      hpChange: typeof outcome.hpChange === 'number' ? outcome.hpChange : 0,
+      mpChange: typeof outcome.mpChange === 'number' ? outcome.mpChange : 0,
+      itemsGained: Array.isArray(outcome.itemsGained) ? outcome.itemsGained : [],
+      triggersBattle: outcome.triggersBattle === true,
+      progressRoom: outcome.progressRoom === true,
+    };
+
+    console.log("Sanitized outcome:", sanitizedOutcome);
+
     // Apply HP/MP changes
     const newHp = Math.max(0, Math.min(
       partyStats.max_hp,
-      partyStats.current_hp + (outcome.hpChange || 0)
+      partyStats.current_hp + sanitizedOutcome.hpChange
     ));
     const newMp = Math.max(0, Math.min(
       partyStats.max_mp,
-      partyStats.current_mp + (outcome.mpChange || 0)
+      partyStats.current_mp + sanitizedOutcome.mpChange
     ));
 
     await supabaseClient
@@ -259,8 +273,8 @@ What happens as a result of this choice?`,
       .eq("user_id", battleState.user_id);
 
     // Add items if any
-    if (outcome.itemsGained && outcome.itemsGained.length > 0) {
-      for (const item of outcome.itemsGained) {
+    if (sanitizedOutcome.itemsGained && sanitizedOutcome.itemsGained.length > 0) {
+      for (const item of sanitizedOutcome.itemsGained) {
         const { data: existingItem } = await supabaseClient
           .from("inventory")
           .select("*")
@@ -288,19 +302,36 @@ What happens as a result of this choice?`,
 
     // Update battle log with user_id and player name
     const battleLog = battleState.battle_log || [];
-    battleLog.push({ 
+    
+    // Sanitize existing battle log entries - remove any malformed nested objects
+    const cleanedBattleLog = battleLog.map((entry: any) => {
+      if (typeof entry.message === 'string') {
+        return entry;
+      }
+      // If message is an object, try to extract a string from it
+      const extractedMessage = entry.message?.message || entry.message?.consequenceText || JSON.stringify(entry.message);
+      return {
+        ...entry,
+        message: typeof extractedMessage === 'string' ? extractedMessage : "An event occurred."
+      };
+    });
+    
+    cleanedBattleLog.push({ 
       user_id: user.id, 
       message: `${playerName} chose: ${choiceLabel}`,
       type: 'choice' 
     });
-    battleLog.push({ user_id: user.id, message: outcome.consequenceText });
+    cleanedBattleLog.push({ 
+      user_id: user.id, 
+      message: sanitizedOutcome.consequenceText 
+    });
 
     // Advance room if needed, but check bounds
     const dungeonData = battleState.dungeons.dungeon_json;
     const maxRoomIndex = dungeonData.rooms.length - 1;
     let newRoomIndex = battleState.current_room_index;
     
-    if (outcome.progressRoom) {
+    if (sanitizedOutcome.progressRoom) {
       newRoomIndex = Math.min(battleState.current_room_index + 1, maxRoomIndex);
       
       // If we've reached the end of the dungeon
@@ -334,7 +365,7 @@ What happens as a result of this choice?`,
 
     // Prepare update object
     const updateData: any = {
-      battle_log: battleLog,
+      battle_log: cleanedBattleLog,
       current_room_index: newRoomIndex,
     };
 
@@ -348,13 +379,13 @@ What happens as a result of this choice?`,
     }
 
     // Clear story node if advancing to a new room (for multiplayer sync)
-    if (outcome.progressRoom) {
+    if (sanitizedOutcome.progressRoom) {
       updateData.current_story_node = null;
       console.log("Clearing story node for new room");
     }
 
     // Set up enemy if battle is triggered
-    if (outcome.triggersBattle) {
+    if (sanitizedOutcome.triggersBattle) {
       // Battle the enemy from the current room (the one AI was told about)
       const battleRoom = dungeonData.rooms[newRoomIndex];
       
@@ -413,7 +444,7 @@ What happens as a result of this choice?`,
 
     return new Response(
       JSON.stringify({
-        outcome,
+        outcome: sanitizedOutcome,
         newHp,
         newMp,
       }),
