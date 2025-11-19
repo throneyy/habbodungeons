@@ -29,6 +29,7 @@ const ServerLobby = () => {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [dungeonReady, setDungeonReady] = useState<string | null>(null);
 
   useEffect(() => {
     // Clean up abandoned servers first
@@ -131,6 +132,9 @@ const ServerLobby = () => {
       if (serverData?.dungeon_id) {
         console.log('✅ Dungeon found! Navigating to:', serverData.dungeon_id);
         
+        // Set dungeon as ready (for manual join button)
+        setDungeonReady(serverData.dungeon_id);
+        
         // Show notification for ALL players (host and non-host)
         toast({
           title: "Adventure ready!",
@@ -141,6 +145,7 @@ const ServerLobby = () => {
         navigate(`/battle/${serverData.dungeon_id}`, { replace: true });
       } else {
         console.log('No dungeon assigned yet');
+        setDungeonReady(null);
       }
     } catch (err) {
       console.error('❌ Error in checkForDungeon:', err);
@@ -362,40 +367,57 @@ const ServerLobby = () => {
 
             {/* Actions */}
             <div className="flex gap-3 justify-center pt-4 border-t-4 border-habbo-dark">
-              <Button
-                size="lg"
-                onClick={handleStartAdventure}
-                disabled={starting || players.length === 0}
-                className={`font-bold text-lg py-6 px-8 ${
-                  isHardcore 
-                    ? 'bg-[hsl(0,84%,50%)] hover:bg-[hsl(0,84%,45%)] border-0'
-                    : 'border-4 border-habbo-dark'
-                }`}
-              >
-                {starting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Generating Adventure...
-                  </>
-                ) : (
-                  <>
-                    <Swords className="w-5 h-5 mr-2" />
-                    Start Adventure
-                  </>
-                )}
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={handleLeaveServer}
-                disabled={starting}
-                className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
-              >
-                Leave Server
-              </Button>
+              {dungeonReady ? (
+                <Button
+                  size="lg"
+                  onClick={() => navigate(`/battle/${dungeonReady}`, { replace: true })}
+                  className="font-bold text-lg py-6 px-8 border-4 border-habbo-dark bg-green-600 hover:bg-green-700 animate-pulse"
+                >
+                  <Swords className="w-5 h-5 mr-2" />
+                  Join Battle Now!
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    size="lg"
+                    onClick={handleStartAdventure}
+                    disabled={starting || players.length === 0}
+                    className={`font-bold text-lg py-6 px-8 ${
+                      isHardcore 
+                        ? 'bg-[hsl(0,84%,50%)] hover:bg-[hsl(0,84%,45%)] border-0'
+                        : 'border-4 border-habbo-dark'
+                    }`}
+                  >
+                    {starting ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Generating Adventure...
+                      </>
+                    ) : (
+                      <>
+                        <Swords className="w-5 h-5 mr-2" />
+                        Start Adventure
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={handleLeaveServer}
+                    disabled={starting}
+                    className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
+                  >
+                    Leave Server
+                  </Button>
+                </>
+              )}
             </div>
 
-            {players.length > 0 && (
+            {dungeonReady ? (
+              <p className="text-center text-sm text-green-400 font-bold animate-pulse">
+                🎮 Battle is ready! Click the button above to join!
+              </p>
+            ) : players.length > 0 && (
               <p className="text-center text-sm text-muted-foreground">
                 Any player can start the adventure when ready
               </p>
