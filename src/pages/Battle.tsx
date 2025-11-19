@@ -973,10 +973,7 @@ const Battle = () => {
             title: toastTitle,
             description: toastDescription,
           });
-          
-          // Advance to next room
-          await handleContinueToNextRoom();
-          shouldReloadBattle = false;
+          // Let the backend's room advancement logic handle progression; just reload below
         } else {
           // Calculate and show dice result if this was a dice check
           let toastTitle = data.outcome.triggersBattle ? "Battle!" : "The path unfolds";
