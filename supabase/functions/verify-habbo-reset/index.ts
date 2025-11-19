@@ -19,15 +19,15 @@ serve(async (req) => {
     
     console.log("Verifying Habbo account:", habboUsername, "with code:", verificationCode);
 
-    // Fetch the Habbo profile to check motto
-    const habboResponse = await fetch(`https://www.habbo.com/api/public/users?name=${habboUsername}`);
+    // Fetch the Habbo Origins profile to check motto
+    const habboResponse = await fetch(`https://origins.habbo.com/api/public/users?name=${encodeURIComponent(habboUsername)}`);
     
     if (!habboResponse.ok) {
-      throw new Error("Failed to fetch Habbo profile. Please check the username.");
+      throw new Error("Failed to fetch Habbo Origins profile. Please check the username.");
     }
 
     const habboData = await habboResponse.json();
-    console.log("Habbo motto:", habboData.motto);
+    console.log("Habbo Origins motto:", habboData.motto);
 
     // Check if verification code is in the motto
     const verified = habboData.motto && habboData.motto.includes(verificationCode);
