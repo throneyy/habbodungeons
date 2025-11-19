@@ -202,7 +202,7 @@ serve(async (req) => {
         .update({
           current_room_index: 0,
           current_enemy_state: initialEnemyState,
-          battle_log: [dungeonJson.introText, modifiedRooms[0].description],
+          battle_log: [modifiedRooms[0].description],
           is_active: true,
         })
         .eq('id', existingBattle.id);
@@ -220,7 +220,7 @@ serve(async (req) => {
         server_id: serverId,
         current_room_index: 0,
         current_enemy_state: initialEnemyState,
-        battle_log: [dungeonJson.introText, modifiedRooms[0].description],
+        battle_log: [modifiedRooms[0].description],
         is_active: true,
       });
       

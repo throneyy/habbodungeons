@@ -1332,13 +1332,11 @@ const Battle = () => {
                       </div>
                     </div>
                     {battleData.intro_text && (
-                      <div className="text-sm text-foreground mb-3 space-y-1">
-                        {battleData.intro_text.split('. ').filter(s => s.trim()).map((sentence, i) => (
-                          <div key={i} className="flex gap-2">
-                            <span className="text-primary">&gt;</span>
-                            <span>{sentence.trim()}{sentence.includes('.') ? '' : '.'}</span>
-                          </div>
-                        ))}
+                      <div className="text-sm text-foreground mb-3">
+                        <div className="flex gap-2">
+                          <span className="text-primary">&gt;</span>
+                          <span>{battleData.intro_text}</span>
+                        </div>
                       </div>
                     )}
                     {battleData.quest_objective && (
