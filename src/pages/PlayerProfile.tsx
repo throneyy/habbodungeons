@@ -47,12 +47,12 @@ export default function PlayerProfile() {
         .from("profiles")
         .select("username, habbo_username, habbo_profile_json")
         .ilike("habbo_username", habboUsername)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
 
       if (!profileData) {
-        toast.error("Player not found");
+        toast.error("Player not found - no one with that Habbo Origins username has linked their account yet");
         navigate("/");
         return;
       }
@@ -61,7 +61,7 @@ export default function PlayerProfile() {
         .from("profiles")
         .select("id")
         .ilike("habbo_username", habboUsername)
-        .single();
+        .maybeSingle();
 
       if (!profileIdData) {
         toast.error("Player not found");
@@ -73,7 +73,7 @@ export default function PlayerProfile() {
         .from("player_stats")
         .select("level, max_hp, current_hp, max_mp, current_mp, atk, def, spd")
         .eq("user_id", profileIdData.id)
-        .single();
+        .maybeSingle();
 
       if (statsError) throw statsError;
 
