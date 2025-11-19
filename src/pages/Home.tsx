@@ -10,8 +10,8 @@ import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import SnowFall from "@/components/SnowFall";
 import { toast } from "sonner";
 import pixelSword from "@/assets/pixel-sword.png";
-import goblinTrio from "@/assets/goblin-trio.png";
-import victoryTrophy from "@/assets/victory-trophy.png";
+import npcWarrior from "@/assets/npc-warrior.png";
+import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import pixelStar from "@/assets/pixel-star.png";
 import npcKnight from "@/assets/npc-knight.png";
 
@@ -100,7 +100,7 @@ const Home = () => {
               <div className="space-y-4 text-left animate-fade-in">
                 <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
                   <span className="text-primary font-bold">"Greetings, brave adventurer!"</span>
-                  {" "}Beneath the grandeur of the Habbo Hotel lies a dark secret—the Shattered Frostkeep, 
+                  {" "}Beneath the grandeur of the Habbo Hotel lies a dark secret - the Shattered Frostkeep, 
                   an ancient dungeon consumed by eternal winter. What was once the hotel's magnificent basement 
                   has been overtaken by an evil curse, transforming it into a frozen realm of terror.
                 </p>
@@ -135,7 +135,7 @@ const Home = () => {
         {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <HabboPanel className="bg-gradient-to-br from-red-500/20 to-orange-500/20 text-center">
-            <img src={pixelSword} alt="Epic Battles" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
+            <img src={pixelSword} alt="Epic Battles" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Epic Battles</h3>
             <p className="text-muted-foreground">
               Face challenging enemies in turn-based combat with strategic depth
@@ -143,7 +143,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 text-center">
-            <img src={goblinTrio} alt="Party System" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
+            <img src={npcWarrior} alt="Party System" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Party System</h3>
             <p className="text-muted-foreground">
               Team up with friends or join public servers to conquer dungeons together
@@ -151,7 +151,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-yellow-500/20 to-amber-500/20 text-center">
-            <img src={victoryTrophy} alt="Legendary Loot" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
+            <img src={treasureChestOpen} alt="Legendary Loot" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Legendary Loot</h3>
             <p className="text-muted-foreground">
               Discover powerful weapons, armor, and consumables to enhance your character
@@ -159,7 +159,7 @@ const Home = () => {
           </HabboPanel>
 
           <HabboPanel className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 text-center">
-            <img src={pixelStar} alt="Level Up" className="w-16 h-auto mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
+            <img src={pixelStar} alt="Level Up" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
             <h3 className="text-xl font-bold text-foreground mb-2">Level Up</h3>
             <p className="text-muted-foreground">
               Gain experience, increase your stats, and become an unstoppable warrior
