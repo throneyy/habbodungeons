@@ -21,6 +21,8 @@ const ENEMY_SPRITE_MAP: Record<string, string> = {
   "imp": "glacial-imp.png",
   "frozen goblin": "frozen-goblin.png",
   "goblin": "frozen-goblin.png",
+  "goblin trio": "goblin-trio.png",
+  "trio": "goblin-trio.png",
   "frost mutant": "frost-mutant.png",
   "mutant": "frost-mutant.png",
   "frost wraith": "frost-wraith.png",
