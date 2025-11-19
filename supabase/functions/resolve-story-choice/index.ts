@@ -276,11 +276,24 @@ Return ONLY valid JSON (no markdown):
       progressRoom,
     };
 
-    // If a battle is requested but this room has no enemy configured in the dungeon,
-    // cancel the battle to avoid desynced fights with a generic Ice Shade.
+    // If a battle is requested, check if current room has an enemy
+    // If there's an enemy in the room, always trigger the battle even if AI mentioned wrong enemy name
+    // This ensures boss rooms and battle rooms actually trigger combat
     if (sanitizedOutcome.triggersBattle && (!currentRoom || !currentRoom.enemy)) {
       console.log("Story choice requested a battle, but current room has no enemy. Keeping this as a story event only.");
       sanitizedOutcome.triggersBattle = false;
+    } else if (sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy) {
+      console.log(`Battle triggered! Room has enemy: ${currentRoom.enemy.name}`);
+      // Ensure we're battling the actual room enemy, not what the AI might have mentioned
+    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && choiceLabel && 
+               (choiceLabel.toLowerCase().includes('attack') || 
+                choiceLabel.toLowerCase().includes('fight') ||
+                choiceLabel.toLowerCase().includes('strike') ||
+                choiceLabel.toLowerCase().includes('combat'))) {
+      // If user chose to attack but AI didn't trigger battle, force it if room has enemy
+      console.log(`Forcing battle because user chose combat action and room has enemy: ${currentRoom.enemy.name}`);
+      sanitizedOutcome.triggersBattle = true;
+      sanitizedOutcome.progressRoom = false; // Stay in current room for battle
     }
 
     console.log("Sanitized outcome:", sanitizedOutcome);
