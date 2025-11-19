@@ -236,15 +236,18 @@ ${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
     console.log("Outcome:", outcome);
 
     // Sanitize outcome to ensure all fields are proper types
+    // Support both old field names (narrativeText, shouldStartBattle) and new ones (consequenceText, triggersBattle)
     const sanitizedOutcome = {
       consequenceText: typeof outcome.consequenceText === 'string' 
         ? outcome.consequenceText 
+        : typeof outcome.narrativeText === 'string'
+        ? outcome.narrativeText
         : (outcome.consequenceText?.message || "Something happens..."),
       hpChange: typeof outcome.hpChange === 'number' ? outcome.hpChange : 0,
       mpChange: typeof outcome.mpChange === 'number' ? outcome.mpChange : 0,
       itemsGained: Array.isArray(outcome.itemsGained) ? outcome.itemsGained : [],
-      triggersBattle: outcome.triggersBattle === true,
-      progressRoom: outcome.progressRoom === true,
+      triggersBattle: outcome.triggersBattle === true || outcome.shouldStartBattle === true,
+      progressRoom: outcome.progressRoom === true || outcome.shouldAdvanceRoom === true,
     };
 
     console.log("Sanitized outcome:", sanitizedOutcome);
