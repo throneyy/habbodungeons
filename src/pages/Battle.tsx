@@ -29,6 +29,7 @@ import frostWraith from "@/assets/frost-wraith.png";
 import undeadHabbo from "@/assets/undead-habbo.png";
 import frostbiteSpider from "@/assets/frostbite-spider.webp";
 import giantRat from "@/assets/giant-rat.png";
+import iceShade from "@/assets/ice-shade.png";
 import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import diceSprite from "@/assets/dice-sprite.gif";
 import { getNPCById } from "@/lib/npcData";
@@ -48,6 +49,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "undead-habbo.png": undeadHabbo,
   "frostbite-spider.webp": frostbiteSpider,
   "giant-rat.png": giantRat,
+  "ice-shade.png": iceShade,
 };
 
 interface BattleLogEntry {
