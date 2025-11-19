@@ -40,17 +40,18 @@ const Home = () => {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('habbo_username')
+      .select('habbo_username, created_at')
       .ilike('habbo_username', searchTerm.trim())
       .not('habbo_username', 'is', null)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(1);
 
-    if (error || !data) {
+    if (error || !data || data.length === 0) {
       toast.error("No player found with that Habbo username");
       return;
     }
 
-    navigate(`/player/${data.habbo_username}`);
+    navigate(`/player/${data[0].habbo_username}`);
   };
 
   return (

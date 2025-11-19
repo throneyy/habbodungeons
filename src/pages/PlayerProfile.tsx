@@ -42,13 +42,16 @@ export default function PlayerProfile() {
     try {
       setLoading(true);
 
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from("profiles")
-        .select("id, username, habbo_username, habbo_profile_json")
+        .select("id, username, habbo_username, habbo_profile_json, created_at")
         .ilike("habbo_username", habboUsername)
-        .maybeSingle();
+        .order("created_at", { ascending: false })
+        .limit(1);
 
       if (profileError) throw profileError;
+
+      const profileData = profiles?.[0];
 
       if (!profileData) {
         toast.error("Player not found - no one with that Habbo Origins username has linked their account yet");
