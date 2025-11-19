@@ -19,11 +19,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the user profile to get the user ID
+    // Find the user profile to get the user ID (case-insensitive, handle email format)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id, username')
-      .eq('username', username)
+      .ilike('username', `${username.toLowerCase()}%`)
       .single();
 
     if (profileError || !profile) {
