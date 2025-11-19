@@ -309,16 +309,42 @@ What happens as a result of this choice?`,
     // Update battle log with user_id and player name
     const battleLog = battleState.battle_log || [];
     
-    // Sanitize existing battle log entries - remove any malformed nested objects
+    // Sanitize existing battle log entries - ensure all messages are proper strings
     const cleanedBattleLog = battleLog.map((entry: any) => {
-      if (typeof entry.message === 'string') {
+      // If entry is already clean with a string message, keep it
+      if (entry && typeof entry === 'object' && typeof entry.message === 'string') {
         return entry;
       }
-      // If message is an object, try to extract a string from it
-      const extractedMessage = entry.message?.message || entry.message?.consequenceText || JSON.stringify(entry.message);
+      
+      // Extract message from various possible formats
+      let extractedMessage = '';
+      
+      if (typeof entry === 'string') {
+        extractedMessage = entry;
+      } else if (entry && typeof entry === 'object') {
+        if (typeof entry.message === 'string') {
+          extractedMessage = entry.message;
+        } else if (entry.message && typeof entry.message === 'object') {
+          // Message is nested object, try to get the actual message
+          extractedMessage = entry.message.message || entry.message.consequenceText || '';
+        } else if (entry.consequenceText) {
+          extractedMessage = entry.consequenceText;
+        }
+        
+        // If we still don't have a message, try to reconstruct from character map
+        if (!extractedMessage && entry.message && typeof entry.message === 'object') {
+          // Check if it's a character-indexed object (0: 'a', 1: 'b', etc.)
+          const keys = Object.keys(entry.message).filter(k => !isNaN(Number(k))).sort((a, b) => Number(a) - Number(b));
+          if (keys.length > 0) {
+            extractedMessage = keys.map(k => entry.message[k]).join('');
+          }
+        }
+      }
+      
       return {
-        ...entry,
-        message: typeof extractedMessage === 'string' ? extractedMessage : "An event occurred."
+        user_id: entry?.user_id || null,
+        message: extractedMessage || "An event occurred.",
+        type: entry?.type
       };
     });
     
@@ -328,16 +354,17 @@ What happens as a result of this choice?`,
       type: 'choice' 
     });
     
-    // Format consequence text with items in brackets
-    let consequenceWithItems = sanitizedOutcome.consequenceText;
+    // Format consequence text with items in brackets - ensure it's a string
+    let consequenceWithItems = String(sanitizedOutcome.consequenceText || '');
     if (sanitizedOutcome.itemsGained && sanitizedOutcome.itemsGained.length > 0) {
       const itemsList = sanitizedOutcome.itemsGained.map((item: any) => `[${item.name}]`).join(', ');
       consequenceWithItems += ` You received: ${itemsList}!`;
     }
     
+    // Ensure the message is a proper string before adding to log
     cleanedBattleLog.push({ 
       user_id: user.id, 
-      message: consequenceWithItems 
+      message: consequenceWithItems
     });
 
     // Advance room if needed, but check bounds
