@@ -395,12 +395,31 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
       ...xpMessages.map((msg: string) => ({ user_id: user.id, message: msg }))
     ];
 
+    // Calculate next turn for party/server battles
+    let nextTurnUserId = battle.current_turn_user_id;
+    if (isPartyBattle && battle.turn_order && !result.defeat) {
+      const turnOrder = battle.turn_order as string[];
+      
+      if (result.victory && newRoomIndex < totalRooms) {
+        // Reset to first player for new room
+        nextTurnUserId = turnOrder[0];
+        console.log(`Victory! Resetting turn to first player: ${nextTurnUserId}`);
+      } else if (!result.victory) {
+        // Normal turn rotation during combat
+        const currentIndex = turnOrder.indexOf(user.id);
+        const nextIndex = (currentIndex + 1) % turnOrder.length;
+        nextTurnUserId = turnOrder[nextIndex];
+        console.log(`Advancing turn from ${user.id} to ${nextTurnUserId}`);
+      }
+    }
+
     await supabase
       .from('battle_states')
       .update({
         current_enemy_state: updatedEnemy,
         battle_log: updatedLog,
         current_room_index: newRoomIndex,
+        current_turn_user_id: nextTurnUserId,
         is_active: !result.defeat && newRoomIndex < totalRooms, // Mark inactive if defeated or quest complete
       })
       .eq('id', battle.id);
