@@ -25,6 +25,7 @@ const Auth = () => {
   // Password Reset States
   const [resetStep, setResetStep] = useState<"username" | "verify" | "newpassword">("username");
   const [resetUsername, setResetUsername] = useState("");
+  const [resetHabboUsername, setResetHabboUsername] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
@@ -100,7 +101,10 @@ const Auth = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('request-password-reset', {
-        body: { username: resetUsername }
+        body: { 
+          username: resetUsername,
+          habboUsername: resetHabboUsername 
+        }
       });
 
       if (error) throw error;
@@ -225,7 +229,7 @@ const Auth = () => {
                 {resetStep === "username" && (
                   <form onSubmit={handleRequestReset} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="reset-username">Username</Label>
+                      <Label htmlFor="reset-username">HabboDungeons Username</Label>
                       <Input
                         id="reset-username"
                         type="text"
@@ -233,12 +237,25 @@ const Auth = () => {
                         onChange={(e) => setResetUsername(e.target.value)}
                         required
                         className="border-2 border-habbo-dark"
+                        placeholder="Your game username"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-habbo-username">Habbo Username</Label>
+                      <Input
+                        id="reset-habbo-username"
+                        type="text"
+                        value={resetHabboUsername}
+                        onChange={(e) => setResetHabboUsername(e.target.value)}
+                        required
+                        className="border-2 border-habbo-dark"
+                        placeholder="Your Habbo.com username"
                       />
                     </div>
                     <div className="bg-blue-500/10 border-2 border-blue-500 p-3 rounded">
                       <p className="text-sm text-foreground">
                         <AlertCircle className="inline w-4 h-4 mr-2" />
-                        You must have a linked Habbo account to reset your password
+                        You'll need to verify your Habbo account by adding a code to your motto
                       </p>
                     </div>
                     <Button
@@ -246,7 +263,7 @@ const Auth = () => {
                       className="w-full font-bold border-4 border-habbo-dark"
                       disabled={loading}
                     >
-                      {loading ? "Checking..." : "Request Reset"}
+                      {loading ? "Generating Code..." : "Request Reset"}
                     </Button>
                   </form>
                 )}

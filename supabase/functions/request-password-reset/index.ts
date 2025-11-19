@@ -12,38 +12,38 @@ serve(async (req) => {
   }
 
   try {
-    const { username } = await req.json();
-    console.log("Password reset requested for:", username);
+    const { username, habboUsername } = await req.json();
+    console.log("Password reset requested for:", username, "with Habbo username:", habboUsername);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the user profile
+    // Find the user profile (case-insensitive)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id, habbo_username')
-      .eq('username', username)
+      .ilike('username', `${username.toLowerCase()}%`)
       .single();
 
     if (profileError || !profile) {
       throw new Error("User not found");
     }
 
-    if (!profile.habbo_username) {
-      throw new Error("No Habbo account linked. Please link your Habbo account first.");
+    // Generate a 6 uppercase letter verification code
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let verificationCode = '';
+    for (let i = 0; i < 6; i++) {
+      verificationCode += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    // Generate a 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    console.log("Generated verification code:", verificationCode, "for Habbo user:", profile.habbo_username);
+    console.log("Generated verification code:", verificationCode, "for Habbo user:", habboUsername);
 
     return new Response(
       JSON.stringify({
         success: true,
         verificationCode,
-        habboUsername: profile.habbo_username,
+        habboUsername: habboUsername,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
