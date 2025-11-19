@@ -272,8 +272,14 @@ const Battle = () => {
           async (payload) => {
             console.log('🔄 Battle state updated via realtime:', payload);
             
+            // Don't reload if victory dialog is showing - let user close it first
+            if (showVictoryLoot) {
+              console.log('Victory dialog is showing, skipping reload');
+              return;
+            }
+            
             // Force a fresh reload to ensure we get latest data
-            await loadBattle();
+            await loadBattle(true); // Preserve victory state in case it just got set
           }
         )
         .subscribe((status) => {
@@ -332,16 +338,18 @@ const Battle = () => {
     }
   }, [battleData, serverId, partyId, currentUserId, profile]);
 
-  const loadBattle = async (isRetry = false) => {
+  const loadBattle = async (isRetry = false, preserveVictoryState = false) => {
     if (!id) {
       console.error("Cannot load battle: battleId is undefined");
       navigate("/dashboard");
       return;
     }
     
-    // Reset victory loot state when loading new battle
-    setShowVictoryLoot(false);
-    setVictoryLootData({ items: [], xp: 0 });
+    // Reset victory loot state when loading new battle (unless preserving for victory dialog)
+    if (!preserveVictoryState) {
+      setShowVictoryLoot(false);
+      setVictoryLootData({ items: [], xp: 0 });
+    }
     
     try {
       // Pre-check: Verify battle exists and is active before calling edge function
