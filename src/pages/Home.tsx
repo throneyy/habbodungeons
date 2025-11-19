@@ -1,30 +1,116 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { MainNav } from "@/components/MainNav";
 import dungeonBg from "@/assets/dungeon-bg.png";
-import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
-import pixelDice from "@/assets/pixel-dice.png";
-import pixelStar from "@/assets/pixel-star.png";
-import pixelSword from "@/assets/pixel-sword.png";
 import SnowFall from "@/components/SnowFall";
+import { toast } from "sonner";
+
+interface PlayerStats {
+  username: string;
+  habbo_username: string;
+  level: number;
+  max_hp: number;
+  atk: number;
+  def: number;
+}
 
 const Home = () => {
-  const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [players, setPlayers] = useState<PlayerStats[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setIsLoggedIn(!!session);
-    });
-
-    return () => subscription.unsubscribe();
+    loadPlayers();
   }, []);
+
+  const loadPlayers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        username,
+        habbo_username,
+        player_stats (
+          level,
+          max_hp,
+          atk,
+          def
+        )
+      `)
+      .not('habbo_username', 'is', null)
+      .order('player_stats(level)', { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error('Error loading players:', error);
+      setLoading(false);
+      return;
+    }
+
+    const formattedPlayers = data.map((player: any) => ({
+      username: player.username,
+      habbo_username: player.habbo_username,
+      level: player.player_stats?.[0]?.level || 1,
+      max_hp: player.player_stats?.[0]?.max_hp || 100,
+      atk: player.player_stats?.[0]?.atk || 10,
+      def: player.player_stats?.[0]?.def || 10,
+    }));
+
+    setPlayers(formattedPlayers);
+    setLoading(false);
+  };
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      toast.error("Please enter a Habbo username");
+      return;
+    }
+
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        username,
+        habbo_username,
+        player_stats (
+          level,
+          max_hp,
+          atk,
+          def
+        )
+      `)
+      .ilike('habbo_username', `%${searchTerm}%`)
+      .not('habbo_username', 'is', null);
+
+    if (error) {
+      console.error('Error searching:', error);
+      toast.error("Error searching for player");
+      setLoading(false);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      toast.error("No players found with that Habbo username");
+      setLoading(false);
+      return;
+    }
+
+    const formattedPlayers = data.map((player: any) => ({
+      username: player.username,
+      habbo_username: player.habbo_username,
+      level: player.player_stats?.[0]?.level || 1,
+      max_hp: player.player_stats?.[0]?.max_hp || 100,
+      atk: player.player_stats?.[0]?.atk || 10,
+      def: player.player_stats?.[0]?.def || 10,
+    }));
+
+    setPlayers(formattedPlayers);
+    setLoading(false);
+    toast.success(`Found ${data.length} player(s)`);
+  };
 
   return (
     <div className="min-h-screen bg-background p-8 relative">
@@ -33,82 +119,77 @@ const Home = () => {
         className="absolute inset-0 opacity-20 bg-center bg-cover"
         style={{ backgroundImage: `url(${dungeonBg})` }}
       />
-      <div className="max-w-6xl mx-auto space-y-8 relative z-10">
-        {/* Hero Header */}
-        <HabboPanel className="text-center">
+      <div className="max-w-6xl mx-auto space-y-6 relative z-10">
+        <MainNav />
+        
+        {/* Hero Search */}
+        <HabboPanel className="bg-gradient-to-br from-primary/20 to-secondary/20">
           <div className="space-y-4">
-            <div className="flex justify-center">
-              <img 
-                src={habboDungeonsBanner} 
-                alt="Habbo Dungeons" 
-                className="w-auto pixel-icon"
-                style={{ height: "auto", maxWidth: "500px" }}
+            <h1 className="text-3xl font-bold text-center text-foreground">
+              Enter your Habboname and find your stats
+            </h1>
+            <div className="flex gap-2 max-w-2xl mx-auto">
+              <Input
+                placeholder="Enter your Habboname and find your stats"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="h-12 text-lg border-2 border-habbo-dark"
               />
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              AI-powered JRPG battles for Habbo roleplayers
-            </p>
-            <p className="text-lg text-muted-foreground">
-              Roll dice in Habbo. Fight monsters on Habbo Dungeons.
-            </p>
-          </div>
-        </HabboPanel>
-
-        {/* How It Works */}
-        <HabboPanel title="How It Works">
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-primary rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark p-2">
-                <img src={pixelDice} alt="Dice" className="w-full h-full object-contain pixel-icon" />
-              </div>
-              <h3 className="font-bold text-lg">1. Roll the Dice</h3>
-              <p className="text-muted-foreground">Roll 5 holodice in a Habbo room</p>
-            </div>
-            
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-secondary rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark p-2">
-                <img src={pixelStar} alt="Star" className="w-full h-full object-contain pixel-icon" />
-              </div>
-              <h3 className="font-bold text-lg">2. Input Your Dice</h3>
-              <p className="text-muted-foreground">Enter your dice results into Habbo Dungeons</p>
-            </div>
-            
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-accent rounded-lg mx-auto flex items-center justify-center border-4 border-habbo-dark p-2">
-                <img src={pixelSword} alt="Sword" className="w-full h-full object-contain pixel-icon" />
-              </div>
-              <h3 className="font-bold text-lg">3. Watch the Battle</h3>
-              <p className="text-muted-foreground">See your JRPG battle unfold with AI narration</p>
-            </div>
-          </div>
-        </HabboPanel>
-
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          {isLoggedIn ? (
-            <Button 
-              size="lg"
-              className="text-lg font-bold px-8 py-6 border-4 border-habbo-dark"
-              onClick={() => navigate("/dashboard")}
-            >
-              Go to My Dashboard
-            </Button>
-          ) : (
-            <>
-              <Button 
-                size="lg"
-                className="text-lg font-bold px-8 py-6 border-4 border-habbo-dark"
-                onClick={() => navigate("/auth")}
+              <Button
+                onClick={handleSearch}
+                className="h-12 px-8 font-bold border-2 border-habbo-dark bg-green-600 hover:bg-green-700"
               >
-                Sign Up / Log In
+                Search
               </Button>
-            </>
+            </div>
+          </div>
+        </HabboPanel>
+
+        {/* Player Stats */}
+        <HabboPanel title="Habbo Dungeons Players">
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Loading players...</p>
+            </div>
+          ) : players.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No players found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-habbo-dark">
+                    <th className="text-left py-3 px-4 font-bold">Habbo Username</th>
+                    <th className="text-center py-3 px-4 font-bold">Level</th>
+                    <th className="text-center py-3 px-4 font-bold">HP</th>
+                    <th className="text-center py-3 px-4 font-bold">ATK</th>
+                    <th className="text-center py-3 px-4 font-bold">DEF</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {players.map((player, index) => (
+                    <tr 
+                      key={index}
+                      className="border-b border-border hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="py-3 px-4 font-medium">{player.habbo_username}</td>
+                      <td className="text-center py-3 px-4">{player.level}</td>
+                      <td className="text-center py-3 px-4 text-habbo-hp">{player.max_hp}</td>
+                      <td className="text-center py-3 px-4 text-habbo-orange">{player.atk}</td>
+                      <td className="text-center py-3 px-4 text-blue-400">{player.def}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-        </div>
+        </HabboPanel>
 
         {/* Footer */}
-        <p className="text-center text-sm text-muted-foreground">
-          Habbo Dungeons is a fan-made project and is not affiliated with Habbo or Sulake Corporation.
+        <p className="text-center text-sm text-muted-foreground border-t-2 border-border pt-6">
+          Habbo Dungeons is a fan-made project and is not affiliated with Sulake Corporation Oy.
         </p>
       </div>
     </div>
