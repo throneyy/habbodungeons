@@ -26,7 +26,7 @@ import glacialImp from "@/assets/glacial-imp.png";
 import frozenGoblin from "@/assets/frozen-goblin.png";
 import frostMutant from "@/assets/frost-mutant.png";
 import frostWraith from "@/assets/frost-wraith.png";
-import frostUndead from "@/assets/frost-undead.gif";
+import undeadHabbo from "@/assets/undead-habbo.png";
 import frostbiteSpider from "@/assets/frostbite-spider.webp";
 import giantRat from "@/assets/giant-rat.png";
 import { getNPCById } from "@/lib/npcData";
@@ -42,7 +42,8 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frozen-goblin.png": frozenGoblin,
   "frost-mutant.png": frostMutant,
   "frost-wraith.png": frostWraith,
-  "frost-undead.gif": frostUndead,
+  "frost-undead.gif": undeadHabbo,
+  "undead-habbo.png": undeadHabbo,
   "frostbite-spider.webp": frostbiteSpider,
   "giant-rat.png": giantRat,
 };
