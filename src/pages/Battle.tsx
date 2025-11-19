@@ -2349,7 +2349,7 @@ const Battle = () => {
                       src={ENEMY_SPRITES[battleData.enemy.sprite]}
                       alt={battleData.enemy.name}
                       className={`pixel-icon ${enemyHit ? 'animate-bump-right' : ''}`}
-                      style={{ width: 'auto', height: 'auto', maxWidth: '120px' }}
+                      style={{ width: 'auto', height: 'auto', maxWidth: '200px', maxHeight: '200px' }}
                     />
                     {enemyHit && (
                       <>
