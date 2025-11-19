@@ -165,9 +165,10 @@ const ServerLobby = () => {
 
       if (serverError) throw serverError;
       
-      // If server has a dungeon, navigate there
+      // If server has a dungeon already assigned, this means battle was started
+      // Navigate directly to battle
       if (serverData.dungeon_id) {
-        navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
+        navigate(`/battle/${serverData.dungeon_id}`, { replace: true });
         return;
       }
 

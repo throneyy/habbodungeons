@@ -32,7 +32,7 @@ const CreateDungeon = () => {
       if (error) throw error;
 
       toast({ title: "Dungeon generated!" });
-      navigate(`/dungeon-lobby/${data.dungeonId}`);
+      navigate("/dashboard");
     } catch (error: any) {
       toast({
         title: "Failed to generate dungeon",

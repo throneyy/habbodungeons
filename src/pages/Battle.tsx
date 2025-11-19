@@ -254,7 +254,7 @@ const Battle = () => {
         console.log("No battle found for this dungeon - redirecting to dashboard");
         toast({
           title: "Battle Not Started",
-          description: "This dungeon hasn't been started yet. Select a difficulty from the lobby.",
+          description: "This dungeon battle hasn't been started yet.",
           variant: "destructive",
         });
         navigate("/dashboard", { replace: true });
@@ -341,7 +341,6 @@ const Battle = () => {
       // Check multiple error formats from edge functions
       const errorMessage = error.message || error.error || JSON.stringify(error);
       const isBattleNotFound = errorMessage.includes("Battle not found") || 
-                               errorMessage.includes("Make sure to select a difficulty") ||
                                errorMessage.includes("not found for dungeon");
       
       setBattleLoadError(errorMessage);
@@ -719,7 +718,6 @@ const Battle = () => {
   // Show error screen if battle load failed
   if (battleLoadError) {
     const isBattleNotFound = battleLoadError.includes("Battle not found") || 
-                             battleLoadError.includes("Make sure to select a difficulty") ||
                              battleLoadError.includes("not found for dungeon");
     
     return (
