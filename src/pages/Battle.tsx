@@ -882,6 +882,13 @@ const Battle = () => {
   const loadStoryNode = async () => {
     if (!id) {
       console.error("Cannot load story node: battleId is undefined");
+      setStoryLoading(false);
+      return;
+    }
+    
+    // Prevent concurrent loads
+    if (storyLoading) {
+      console.log("Story node already loading, skipping duplicate call");
       return;
     }
     
@@ -893,6 +900,7 @@ const Battle = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         console.error("No active session");
+        setStoryLoading(false);
         toast({
           title: "Session expired",
           description: "Please log in again",
@@ -906,19 +914,28 @@ const Battle = () => {
         body: { battleId: id },
       });
 
-      if (error) throw error;
-      if (data.storyNode) {
+      if (error) {
+        console.error("Story node generation error:", error);
+        throw error;
+      }
+      
+      if (data?.storyNode) {
+        console.log("Story node loaded successfully");
         setStoryNode(data.storyNode);
+      } else {
+        console.error("No story node in response:", data);
+        throw new Error("No story node returned from server");
       }
     } catch (error: any) {
       console.error("Story node error:", error);
       toast({
         title: "Failed to load story",
-        description: error.message,
+        description: error.message || "Unable to generate story content",
         variant: "destructive",
       });
+    } finally {
+      setStoryLoading(false);
     }
-    setStoryLoading(false);
   };
 
   const handleStoryChoice = async (choiceId: string, skipDiceCheck = false) => {
@@ -1024,11 +1041,13 @@ const Battle = () => {
           variant: "destructive",
         });
       }
+    } finally {
+      // Ensure loading state is ALWAYS cleared
+      setStoryLoading(false);
+      // Reset dice input state
+      setSelectedChoice(null);
+      setStoryDice([1, 1, 1, 1, 1]);
     }
-    setStoryLoading(false);
-    // Reset dice input state
-    setSelectedChoice(null);
-    setStoryDice([1, 1, 1, 1, 1]);
   };
 
   const handleClaimTreasure = async () => {
