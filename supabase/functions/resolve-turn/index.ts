@@ -36,27 +36,56 @@ serve(async (req) => {
 
     console.log(`Resolving turn for user: ${user.id}, action: ${action}, itemName: ${itemName || 'none'}`);
 
-    // Get battle, player stats, and equipped weapon
-    const [battleRes, statsRes] = await Promise.all([
-      supabase
+    // Check if user is in a server for this dungeon
+    const { data: serverMember } = await supabase
+      .from('server_players')
+      .select('server_id, servers!inner(dungeon_id)')
+      .eq('user_id', user.id)
+      .eq('servers.dungeon_id', battleId)
+      .maybeSingle();
+
+    const serverId = serverMember?.server_id || null;
+    console.log('User server status:', { serverId, hasServer: !!serverId });
+
+    // Get battle state - check server battles first
+    let battleRes;
+    if (serverId) {
+      // Server battle - query by server_id
+      console.log('Looking for server battle with server_id:', serverId);
+      battleRes = await supabase
+        .from('battle_states')
+        .select('*')
+        .eq('dungeon_id', battleId)
+        .eq('server_id', serverId)
+        .eq('is_active', true)
+        .maybeSingle();
+    } else {
+      // Solo battle - query by user_id
+      console.log('Looking for solo battle with user_id:', user.id);
+      battleRes = await supabase
         .from('battle_states')
         .select('*')
         .eq('dungeon_id', battleId)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single(),
-      supabase
-        .from('player_stats')
-        .select('*')
-        .eq('user_id', user.id)
-        .single(),
-    ]);
+        .maybeSingle();
+    }
+
+    // Get player stats
+    const statsRes = await supabase
+      .from('player_stats')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
     const battle = battleRes.data;
     const stats = statsRes.data;
 
-    if (!battle || !stats) throw new Error("Battle or stats not found");
+    if (!battle || !stats) {
+      console.error('Battle or stats not found:', { battle: !!battle, stats: !!stats, serverId, userId: user.id });
+      throw new Error("Battle or stats not found");
+    }
 
     // For party/server battles, check if it's the player's turn
     const isPartyBattle = !!battle.party_id || !!battle.server_id;
