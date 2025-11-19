@@ -47,20 +47,22 @@ const Home = () => {
         <MainNav />
         
         {/* Search Habbo Players */}
-        <div className="flex gap-2 max-w-3xl mx-auto">
-          <Input
-            placeholder="Enter your Habboname and find your fishy info"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            className="flex-1 h-12 text-base bg-card border-2 border-habbo-dark"
-          />
-          <Button
-            onClick={handleSearch}
-            className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white font-bold border-2 border-habbo-dark"
-          >
-            Search
-          </Button>
+        <div className="bg-primary/80 border-4 border-habbo-dark rounded-xl p-6 shadow-lg max-w-4xl mx-auto">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Enter your Habboname and find your fishy info"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              className="flex-1 h-12 text-base bg-card border-2 border-habbo-dark"
+            />
+            <Button
+              onClick={handleSearch}
+              className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white font-bold border-2 border-habbo-dark"
+            >
+              Search
+            </Button>
+          </div>
         </div>
         
         {/* Hero Section */}
