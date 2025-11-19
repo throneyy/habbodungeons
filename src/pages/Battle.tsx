@@ -1071,7 +1071,7 @@ const Battle = () => {
                         <button
                           key={`avatar-${member.userId}`}
                           onClick={() => setSelectedMemberId(member.userId)}
-                          className={`relative w-12 h-12 border-2 rounded overflow-hidden transition-all cursor-pointer ${
+                          className={`relative flex items-center justify-center w-16 min-h-[64px] border-2 rounded overflow-hidden transition-all cursor-pointer ${
                             isCurrentTurn 
                               ? 'border-green-400 ring-4 ring-green-400/50 bg-green-500/20 animate-pulse' 
                               : 'border-habbo-dark bg-card hover:border-primary'
@@ -1096,7 +1096,7 @@ const Battle = () => {
                             <img
                               src={member.habboAvatar}
                               alt={member.username}
-                              className="pixel-icon w-full h-full object-cover"
+                              className="pixelated max-w-full max-h-[60px] w-auto h-auto"
                             />
                           )}
                         </button>
@@ -1144,12 +1144,11 @@ const Battle = () => {
                         {/* Avatar */}
                         {member.habboAvatar && (
                           <div className="flex justify-center">
-                            <div className="border-2 border-habbo-dark rounded overflow-hidden bg-card">
+                            <div className="border-2 border-habbo-dark rounded overflow-hidden bg-card p-2">
                               <img
                                 src={member.habboAvatar.replace('size=s', 'size=m')}
                                 alt={member.username}
-                                className="pixel-icon"
-                                style={{ width: "auto", height: "auto", maxWidth: "80px" }}
+                                className="pixelated w-auto h-auto max-w-[80px]"
                               />
                             </div>
                           </div>
@@ -1219,16 +1218,18 @@ const Battle = () => {
                           {/* Turn indicator */}
                           {isCurrentTurn && (
                             <div className="flex items-center justify-center">
-                              <span className="text-xl animate-bounce">⚔️</span>
+                              <Swords className="w-4 h-4 text-green-400 animate-bounce" />
                             </div>
                           )}
                           
                           {member.habboAvatar && (
-                            <img
-                              src={member.habboAvatar}
-                              alt={member.username}
-                              className="pixel-icon w-10 h-10 border-2 border-habbo-dark rounded"
-                            />
+                            <div className="flex items-center justify-center w-12 border-2 border-habbo-dark rounded overflow-hidden bg-card p-1">
+                              <img
+                                src={member.habboAvatar}
+                                alt={member.username}
+                                className="pixelated w-auto h-auto max-h-[40px]"
+                              />
+                            </div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className={`font-bold text-sm truncate ${isCurrentTurn ? 'text-green-400' : ''}`}>
