@@ -1767,7 +1767,7 @@ const Battle = () => {
                       )}
                       
                       {/* Regular Story Content */}
-                      {(!battleData.room_type || battleData.room_type === 'story') && (
+                      {battleData.mode === "story" && (!battleData.room_type || battleData.room_type === 'story' || battleData.room_type === 'battle') && (
                         <>
                           {storyLoading && !storyNode ? (
                             <div className="flex items-center justify-center h-40">
@@ -1789,7 +1789,7 @@ const Battle = () => {
                     </div>
 
                     {/* Choices - Only show for regular story rooms */}
-                    {(!battleData.room_type || battleData.room_type === 'story') && storyNode && storyNode.choices.length > 0 && (
+                    {battleData.mode === "story" && (!battleData.room_type || battleData.room_type === 'story' || battleData.room_type === 'battle') && storyNode && storyNode.choices.length > 0 && (
                       <div className="space-y-3">
                         {/* Turn-based choice header */}
                         {battleData.isPartyBattle && (
