@@ -1791,9 +1791,8 @@ const Battle = () => {
           </HabboPanel>
         </div>
 
-        {/* Party Members Section - Only show in story mode */}
-        {battleData.mode !== "battle" && (
-          <div className="grid md:grid-cols-2 gap-6">
+        {/* Party Members Section - Show in all modes */}
+        <div className="grid md:grid-cols-2 gap-6">
             <HabboPanel title={serverId ? "Server Players" : "Party Members"}>
               {serverId ? (
                 <PartyMembers serverId={serverId} />
@@ -1834,7 +1833,6 @@ const Battle = () => {
               </HabboPanel>
             )}
           </div>
-        )}
         <Button
           variant="outline"
           onClick={() => navigate("/dashboard")}
