@@ -158,7 +158,7 @@ serve(async (req) => {
 Party stats: ${JSON.stringify(partyStats)}
 Dungeon: ${battleState.dungeons.name} (${battleState.dungeons.difficulty})
 Theme: ${battleState.dungeons.theme}
-Current room: ${currentRoomIndex + 1}/${rooms.length}
+Current room: ${context.roomIndex + 1}/${dungeonJson.rooms?.length || 10}
 Room type: ${currentRoom.room_type}
 ${lastChoice ? `Last choice: ${lastChoice}` : ''}
 
@@ -298,104 +298,9 @@ Return ONLY a valid JSON object:
     });
   } catch (error) {
     console.error("Error in generate-story-node:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  }
-});
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI API error:", aiResponse.status, errorText);
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    console.log("AI response:", aiData);
-
-    const content = aiData.choices[0].message.content;
-    
-    // Try to parse JSON, handling various formats
-    let storyNode;
-    try {
-      // First, try direct parsing
-      storyNode = JSON.parse(content);
-    } catch (e1) {
-      try {
-        // Remove markdown code blocks if present
-        const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
-        storyNode = JSON.parse(cleanContent);
-      } catch (e2) {
-        try {
-          // Try to extract JSON object from text
-          const jsonMatch = content.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            storyNode = JSON.parse(jsonMatch[0]);
-          } else {
-            throw new Error("No JSON found in response");
-          }
-        } catch (e3) {
-          console.error("Failed to parse AI response after all attempts:", content);
-          // Return a fallback generic story node instead of failing
-          const dungeon = battleState.dungeons;
-          storyNode = {
-            storyText: `You find yourself in ${dungeon.name}. The atmosphere is thick with mystery and danger. Ancient passages stretch out before you, each promising adventure and peril in equal measure.`,
-            choices: [
-              { id: "explore_ahead", label: "Venture deeper into the dungeon" },
-              { id: "search_area", label: "Search the immediate area" },
-              { id: "rest_here", label: "Take a moment to rest" },
-              { id: "be_cautious", label: "Proceed with extreme caution" }
-            ]
-          };
-          console.log("Using fallback story node due to AI parsing failure");
-        }
-      }
-    }
-
-    // Validate structure
-    if (!storyNode.storyText || !Array.isArray(storyNode.choices)) {
-      throw new Error("Invalid story node structure");
-    }
-
-    // Store the story node in battle_states for multiplayer sync
-    if (serverId) {
-      // Only write the first story node for this room, then always read back
-      const { error: updateError } = await supabaseAdmin
-        .from("battle_states")
-        .update({ current_story_node: storyNode })
-        .eq("id", battleState.id)
-        .is("current_story_node", null);
-
-      if (updateError) {
-        console.error("Failed to store story node:", updateError);
-      } else {
-        console.log("Stored story node for multiplayer sync");
-      }
-
-      // Always load the canonical story node to avoid race conditions
-      const { data: refreshedBattle, error: refreshError } = await supabaseAdmin
-        .from("battle_states")
-        .select("current_story_node")
-        .eq("id", battleState.id)
-        .maybeSingle();
-
-      if (!refreshError && refreshedBattle?.current_story_node) {
-        storyNode = refreshedBattle.current_story_node;
-      }
-    }
-
-    return new Response(JSON.stringify({ storyNode }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
   }
 });
