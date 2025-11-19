@@ -468,7 +468,7 @@ ${diceCheckResult ? `\nSuccess = advantage. Failure = setback/combat.` : ''}`;
         updateData.current_enemy_state = {
           name: "Ice Shade",
           description: "A mysterious creature emerges from the shadows!",
-          sprite: "skeleton.png",
+          sprite: "ice-shade.png",
           hp: 30,
           current_hp: 30,
           max_hp: 30,
