@@ -125,7 +125,7 @@ const Auth = () => {
         setResetStep("verify");
         toast({
           title: "Verification Code Generated",
-          description: `Go to habbo.com and change your motto to include: ${data.verificationCode}`,
+          description: `Go to origins.habbo.com and change your motto to include: ${data.verificationCode}`,
         });
       }
     } catch (error: any) {
@@ -259,13 +259,13 @@ const Auth = () => {
                         onChange={(e) => setResetHabboUsername(e.target.value)}
                         required
                         className="border-2 border-habbo-dark"
-                        placeholder="Your Habbo.com username"
+                        placeholder="Your Habbo Origins username"
                       />
                     </div>
                     <div className="bg-blue-500/10 border-2 border-blue-500 p-3 rounded">
                       <p className="text-sm text-foreground">
                         <AlertCircle className="inline w-4 h-4 mr-2" />
-                        You'll need to verify your Habbo account by adding a code to your motto
+                        You'll need to verify your Habbo Origins account by adding a code to your motto
                       </p>
                     </div>
                     <Button
@@ -282,7 +282,7 @@ const Auth = () => {
                   <form onSubmit={handleVerifyReset} className="space-y-4">
                     <div className="bg-yellow-500/10 border-2 border-yellow-500 p-4 rounded space-y-2">
                       <p className="font-bold text-foreground">Verification Required:</p>
-                      <p className="text-sm text-foreground">1. Go to habbo.com and login as <span className="font-bold">{habboUsername}</span></p>
+                      <p className="text-sm text-foreground">1. Go to origins.habbo.com and login as <span className="font-bold">{habboUsername}</span></p>
                       <p className="text-sm text-foreground">2. Change your motto to include this code:</p>
                       <p className="text-lg font-mono font-bold text-primary bg-background p-2 rounded text-center">{verificationCode}</p>
                       <p className="text-sm text-foreground">3. Click "Verify" below</p>
