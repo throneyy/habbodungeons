@@ -182,9 +182,13 @@ serve(async (req) => {
 CRITICAL RULES:
 - Narrate the outcome dramatically but concisely (2-3 sentences)
 - **MANDATORY**: When triggersBattle is true, your consequenceText MUST include the exact enemy name provided in the context. Never write "drawing unwanted attention" or "something emerges" - always name the specific enemy!
-- Choices that seem aggressive should often trigger battles
-- Choices that seem cautious should be safer but might still have risks
-- Mix rewards and penalties to keep things interesting
+- **ANALYZE THE CHOICE TEXT CAREFULLY**: The outcome should directly reflect the tone and nature of what the player chose:
+  * If the choice describes something chaotic, reckless, or wild → Make the outcome chaotic with high risk/reward
+  * If the choice describes something careful, cautious, or defensive → Make the outcome safer and more predictable
+  * If the choice describes something neutral or investigative → Make the outcome balanced and fair
+  * If the choice involves aggression or combat → Very likely to trigger battles
+  * If the choice involves stealth or avoidance → Less likely to trigger battles but might have other consequences
+- Don't just use percentages - let the actual wording of the choice guide your response
 - Stay in character as dungeon master
 - Output ONLY valid JSON, no markdown
 
@@ -198,12 +202,11 @@ Output format:
   "progressRoom": true/false (whether to advance to next room)
 }
 
-Guidelines:
-- Be fair but unpredictable
-- Aggressive choices have 60-80% battle chance
-- Safe choices have 10-30% battle chance
-- Exploration choices sometimes give items
-- Rest choices often restore HP/MP but rarely trigger battles`,
+Example interpretations:
+- "Charge in recklessly" → High damage risk, likely battle, maybe items from aggression
+- "Carefully search the area" → Small HP cost from effort, might find items, low battle chance
+- "Rest by the fire" → Restore HP/MP, very low battle chance
+- "Investigate the strange noise" → Neutral outcome, moderate battle chance based on what's found`,
           },
           {
             role: "user",
