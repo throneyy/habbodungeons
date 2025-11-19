@@ -171,6 +171,9 @@ Return ONLY valid JSON in this exact format:
         dungeonId: dungeon.id,
         difficulty: difficulty,
       },
+      headers: {
+        Authorization: authHeader,
+      },
     });
 
     if (initBattleResponse.error) {
