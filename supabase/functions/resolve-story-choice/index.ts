@@ -38,7 +38,8 @@ const ENEMY_SPRITE_MAP: Record<string, string> = {
   "ghoul": "undead-habbo.png",
   "ancient": "skeleton.png",
   "warrior": "skeleton.png",
-  "shade": "frost-wraith.png",
+  "shade": "ice-shade.png",
+  "ice shade": "ice-shade.png",
 };
 
 // Function to find matching sprite based on enemy name
