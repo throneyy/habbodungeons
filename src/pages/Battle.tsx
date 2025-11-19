@@ -89,6 +89,8 @@ interface BattleData {
   dungeon_name?: string;
   dungeon_theme?: string;
   dungeon_difficulty?: string;
+  quest_objective?: string;
+  intro_text?: string;
   room_description: string;
   room_type?: string;
   treasure_description?: string | null;
@@ -1310,12 +1312,16 @@ const Battle = () => {
                   <h3 className="text-xl font-black text-primary mb-2">
                     Quest: {battleData.dungeon_name}
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    <span className="font-bold">Description:</span> {battleData.dungeon_theme}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    <span className="font-bold">Objective:</span> Clear all rooms and defeat the final boss
-                  </p>
+                  {battleData.intro_text && (
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {battleData.intro_text}
+                    </p>
+                  )}
+                  {battleData.quest_objective && (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="font-bold">Objective:</span> {battleData.quest_objective}
+                    </p>
+                  )}
                 </div>
               )}
               
