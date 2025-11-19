@@ -51,6 +51,7 @@ interface BattleLogEntry {
 interface PlayerStats {
   userId: string;
   username: string;
+  habboAvatar?: string;
   level: number;
   current_hp: number;
   max_hp: number;
@@ -1791,8 +1792,96 @@ const Battle = () => {
           </HabboPanel>
         </div>
 
-        {/* Party Members Section - Horizontal in battle mode, grid in story mode */}
-        <div className={battleData.mode === "battle" ? "flex gap-6" : "grid md:grid-cols-2 gap-6"}>
+        {/* Party Turn Indicator - Minimal horizontal display in battle mode */}
+        {battleData.mode === "battle" ? (
+          <HabboPanel title="Battle Party" className="w-full">
+            <div className="flex gap-3 justify-center">
+              {battleData.players?.slice(0, 6).map((player) => {
+                const isCurrentTurn = battleData.currentTurnUserId === player.userId;
+                const turnIndex = battleData.turnOrder?.indexOf(player.userId);
+                const isCurrentUser = player.userId === currentUserId;
+                
+                return (
+                  <button
+                    key={player.userId}
+                    onClick={() => setSelectedMemberId(selectedMemberId === player.userId ? null : player.userId)}
+                    className={`relative flex flex-col items-center gap-2 p-3 border-2 rounded-lg transition-all ${
+                      isCurrentTurn
+                        ? 'border-green-400 bg-green-500/20 ring-2 ring-green-400/50 animate-pulse'
+                        : isCurrentUser
+                        ? 'border-primary bg-primary/10'
+                        : 'border-habbo-dark bg-card hover:border-primary'
+                    }`}
+                  >
+                    {/* Turn order badge */}
+                    {turnIndex !== undefined && turnIndex >= 0 && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-habbo-dark border-2 border-foreground flex items-center justify-center text-xs font-bold z-10">
+                        {turnIndex + 1}
+                      </div>
+                    )}
+                    
+                    {/* Current turn indicator */}
+                    {isCurrentTurn && (
+                      <div className="absolute -top-2 -left-2 z-10">
+                        <Swords className="w-5 h-5 text-green-400 animate-bounce" />
+                      </div>
+                    )}
+                    
+                    {/* Avatar */}
+                    <img
+                      src={player.habboAvatar || ''}
+                      alt={player.username}
+                      className="w-16 h-16 pixelated"
+                    />
+                    
+                    {/* Username */}
+                    <div className="text-xs font-bold text-center max-w-[80px] truncate">
+                      {player.username}
+                    </div>
+                    
+                    {/* HP bar */}
+                    <div className="w-full bg-muted border border-habbo-dark rounded-sm h-1.5 overflow-hidden">
+                      <div
+                        className="h-full bg-hp transition-all duration-300"
+                        style={{ width: `${(player.current_hp / player.max_hp) * 100}%` }}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Selected player details */}
+            {selectedMemberId && battleData.players?.find(p => p.userId === selectedMemberId) && (
+              <div className="mt-4 p-4 bg-muted/50 border-2 border-habbo-dark rounded-lg">
+                {(() => {
+                  const player = battleData.players.find(p => p.userId === selectedMemberId)!;
+                  return (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">HP</p>
+                        <p className="text-lg font-bold">{player.current_hp}/{player.max_hp}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">MP</p>
+                        <p className="text-lg font-bold">{player.current_mp}/{player.max_mp}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">ATK</p>
+                        <p className="text-lg font-bold">{player.atk}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-muted-foreground">DEF</p>
+                        <p className="text-lg font-bold">{player.def}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </HabboPanel>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
             <HabboPanel title={serverId ? "Server Players" : "Party Members"} className={battleData.mode === "battle" ? "flex-1" : ""}>
               {serverId ? (
                 <PartyMembers serverId={serverId} />
@@ -1812,7 +1901,7 @@ const Battle = () => {
               )}
             </HabboPanel>
 
-            {partyId && inviteCode && battleData.mode !== "battle" && (
+            {partyId && inviteCode && (
               <HabboPanel title="Invite Friends">
                 <div className="space-y-4">
                   <p className="text-sm">Share this code with your friends:</p>
@@ -1833,6 +1922,7 @@ const Battle = () => {
               </HabboPanel>
             )}
           </div>
+        )}
         <Button
           variant="outline"
           onClick={() => navigate("/dashboard")}
