@@ -83,7 +83,7 @@ const ENEMY_POOL = [
   {
     name: "Frost Undead",
     description: "A cursed spirit trapped in eternal frost, seeking warmth from the living",
-    sprite: "frost-undead.gif",
+    sprite: "undead-habbo.png",
     baseHp: 44,
     baseAtk: 9,
     baseDef: 6,
