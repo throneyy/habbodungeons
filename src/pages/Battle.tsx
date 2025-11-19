@@ -251,14 +251,35 @@ const Battle = () => {
       }
       
       if (!battleCheck) {
-        console.log("No battle found for this dungeon - redirecting to dashboard");
-        toast({
-          title: "Battle Not Started",
-          description: "This dungeon battle hasn't been started yet.",
-          variant: "destructive",
-        });
-        navigate("/dashboard", { replace: true });
-        return;
+        console.log("No battle found for this dungeon - initializing battle state");
+        
+        // Automatically start the battle for this dungeon
+        try {
+          const { data: initData, error: initError } = await supabase.functions.invoke("start-dungeon-battle", {
+            body: { 
+              dungeonId: id,
+              difficulty: "Normal" // Will be read from dungeon settings
+            },
+          });
+
+          if (initError) {
+            console.error("Failed to initialize battle:", initError);
+            toast({
+              title: "Failed to Start Battle",
+              description: "Could not initialize the battle. Please try again.",
+              variant: "destructive",
+            });
+            navigate("/dashboard", { replace: true });
+            return;
+          }
+
+          console.log("Battle initialized, reloading...");
+          // Continue loading after initialization
+        } catch (initError) {
+          console.error("Error initializing battle:", initError);
+          navigate("/dashboard", { replace: true });
+          return;
+        }
       }
       
       if (!battleCheck.is_active) {
