@@ -281,6 +281,32 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
         }
       }
 
+      // Boss-specific loot (Ice Knight Commander and Blood Dragon only)
+      const enemyName = battle.current_enemy_state.name;
+      const bossLootTables: Record<string, Array<{name: string, quantity: number, type: string}>> = {
+        "Ice Knight Commander": [
+          { name: "Spiked Chest Armour", quantity: 1, type: "armor" },
+          { name: "Horned Helmet", quantity: 1, type: "armor" },
+          { name: "Iron Leg Armour", quantity: 1, type: "armor" }
+        ],
+        "Blood Dragon": [
+          { name: "Iron Chest Armour", quantity: 1, type: "armor" },
+          { name: "Iron Helmet", quantity: 1, type: "armor" },
+          { name: "Iron Sabatons", quantity: 1, type: "armor" }
+        ]
+      };
+
+      if (bossLootTables[enemyName]) {
+        console.log(`🎁 Boss defeated! Adding exclusive loot for ${enemyName}`);
+        for (const bossLoot of bossLootTables[enemyName]) {
+          lootItems.push({
+            item_name: bossLoot.name,
+            quantity: bossLoot.quantity,
+            item_type: bossLoot.type,
+          });
+        }
+      }
+
       // Add loot to player inventory
       for (const loot of lootItems) {
         // Check if item already exists in inventory

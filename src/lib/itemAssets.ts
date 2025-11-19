@@ -32,6 +32,12 @@ import flamingPhantom from "@/assets/flaming-phantom.png";
 import spiritOwl from "@/assets/spirit-owl.png";
 import victoryTrophy from "@/assets/victory-trophy.png";
 import rareTreasureChest from "@/assets/rare-treasure-chest.png";
+import spikedChestArmour from "@/assets/spiked-chest-armour.png";
+import ironChestArmour from "@/assets/iron-chest-armour.png";
+import ironSabatons from "@/assets/iron-sabatons.png";
+import hornedHelmet from "@/assets/horned-helmet.png";
+import ironHelmet from "@/assets/iron-helmet.png";
+import ironLegArmour from "@/assets/iron-leg-armour.png";
 
 export const ITEM_ASSETS: Record<string, string> = {
   "Rusty Sword": rustySword,
@@ -127,6 +133,13 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Ingot": metalIngot,
   "Stone": runestones,
   "Rock": runestones,
+  // Boss Armor
+  "Spiked Chest Armour": spikedChestArmour,
+  "Iron Chest Armour": ironChestArmour,
+  "Iron Sabatons": ironSabatons,
+  "Horned Helmet": hornedHelmet,
+  "Iron Helmet": ironHelmet,
+  "Iron Leg Armour": ironLegArmour,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {

@@ -181,8 +181,31 @@ const BOSS_POOL = [
     baseAtk: 20,
     baseDef: 12,
     baseSpd: 9
+  },
+  {
+    name: "Fire Drake",
+    description: "A legendary dragon wreathed in flames, one of the most fearsome creatures in existence",
+    sprite: "fire-drake.png",
+    baseHp: 300,
+    baseAtk: 25,
+    baseDef: 18,
+    baseSpd: 11
   }
 ];
+
+// Boss-specific loot tables
+export const BOSS_LOOT: Record<string, Array<{name: string, quantity: number, type: string}>> = {
+  "Ice Knight Commander": [
+    { name: "Spiked Chest Armour", quantity: 1, type: "armor" },
+    { name: "Horned Helmet", quantity: 1, type: "armor" },
+    { name: "Iron Leg Armour", quantity: 1, type: "armor" }
+  ],
+  "Blood Dragon": [
+    { name: "Iron Chest Armour", quantity: 1, type: "armor" },
+    { name: "Iron Helmet", quantity: 1, type: "armor" },
+    { name: "Iron Sabatons", quantity: 1, type: "armor" }
+  ]
+};
 
 const FIRE_DRAKE = {
   name: "Fire Drake",
