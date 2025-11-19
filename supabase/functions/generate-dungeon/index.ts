@@ -262,26 +262,26 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a JRPG dungeon generator for The Shattered Frostkeep. Generate unique ice-themed dungeon quests with compelling narratives. Keep all descriptions brief and atmospheric.
+            content: `You write dungeon quests for The Shattered Frostkeep. Your style is direct, gritty, and atmospheric. No flowery language, no clichés. Just raw, punchy descriptions that set the mood fast.
 
-CRITICAL: You MUST write EVERYTHING in English only. Do not use Arabic, Chinese, Japanese, or any other language. All dungeon names, descriptions, and text must be in English.`
+CRITICAL: Write EVERYTHING in English. All text must be in English.`
           },
           {
             role: 'user',
-            content: `You are ${npc.name}. ${npc.personality}
+            content: `You're ${npc.name}, speaking to an adventurer. ${npc.personality}
 
-Generate a ${difficulty} difficulty dungeon quest with ${encounters} rooms for a level ${playerLevel} adventurer.
+The job: ${difficulty} dungeon, ${encounters} rooms. Player's level ${playerLevel}.
 
-Quest Type: ${npc.questTheme}
-Possible objectives: ${npc.questTypes.join(', ')}
+Your specialty: ${npc.questTheme}
+Your usual work: ${npc.questTypes.join(', ')}
 
-Create:
-- An epic dungeon name that fits your quest type and the ${difficulty} challenge
-- A clear quest objective (what the player must accomplish)
-- A brief intro (2-3 sentences) spoken by you as ${npc.name}, addressing the adventurer
-- Brief descriptions for ${encounters} rooms (2 sentences each)
+Give me:
+- A dungeon name (short and punchy, not "The Epic Quest of...")
+- What needs doing (one clear goal)
+- Your pitch to the adventurer (1-2 sentences max. Talk like a real person would, not a fantasy novel)
+- ${encounters} room descriptions (1-2 sentences each. Set the scene, skip the adjectives)
 
-First room should be exploration/story. Last room is the BOSS room. Make it dramatic and match the ${difficulty} difficulty level and your quest theme.`
+First room: atmosphere and entry. Last room: boss fight. Make it feel dangerous, not dramatic.`
           }
         ],
         tools: [
@@ -295,15 +295,15 @@ First room should be exploration/story. Last room is the BOSS room. Make it dram
                 properties: {
                   dungeonName: {
                     type: "string",
-                    description: "Epic quest name (e.g. The Frozen Crown Heist)"
+                    description: "Short, punchy dungeon name"
                   },
                   questObjective: {
                     type: "string",
-                    description: "Clear goal for the player"
+                    description: "One clear goal"
                   },
                   introText: {
                     type: "string",
-                    description: "Brief quest hook (2-3 sentences max)"
+                    description: "Your pitch. 1-2 sentences. Talk natural."
                   },
                   rooms: {
                     type: "array",
@@ -313,7 +313,7 @@ First room should be exploration/story. Last room is the BOSS room. Make it dram
                         roomIndex: { type: "number" },
                         description: {
                           type: "string",
-                          description: "Brief room description (2 sentences max)"
+                          description: "Room description. 1-2 sentences. Set the scene."
                         }
                       },
                       required: ["roomIndex", "description"]
