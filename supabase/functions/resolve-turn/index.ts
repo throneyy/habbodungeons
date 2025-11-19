@@ -468,9 +468,11 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       }
       
       newRoomIndex = battle.current_room_index + 1;
+      console.log(`Victory! Room progression: ${battle.current_room_index} -> ${newRoomIndex} (totalRooms: ${totalRooms})`);
       
       if (newRoomIndex < totalRooms) {
         // Load next room's enemy
+        console.log(`Loading next room ${newRoomIndex}`);
         const nextRoom = dungeonData.rooms[newRoomIndex];
         updatedEnemy = {
           ...nextRoom.enemy,
@@ -481,7 +483,8 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
         };
       } else {
         // Quest complete - mark battle as inactive
-        newRoomIndex = totalRooms; // Stay at last room for quest complete screen
+        console.log(`Quest complete! Final room reached. Battle will be marked inactive.`);
+        newRoomIndex = totalRooms - 1; // Stay at last valid room index
       }
     }
 
