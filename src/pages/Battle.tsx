@@ -38,6 +38,7 @@ import iceKnightBoss from "@/assets/ice-knight-boss.png";
 import spiritOwl from "@/assets/spirit-owl.png";
 import werewolf from "@/assets/werewolf.png";
 import treasureChestOpen from "@/assets/treasure-chest-open.png";
+import mysticalIcon from "@/assets/mystical-icon.png";
 import diceSprite from "@/assets/dice-sprite.gif";
 import { getNPCById } from "@/lib/npcData";
 
@@ -1762,7 +1763,10 @@ const Battle = () => {
                       {/* Event Room */}
                       {battleData.room_type === 'event' && (
                         <div className="space-y-4">
-                          <h3 className="text-2xl font-black text-center mb-4">✨ Mystical Encounter</h3>
+                          <h3 className="text-2xl font-black text-center mb-4 flex items-center justify-center gap-2">
+                            <img src={mysticalIcon} alt="Mystical" className="w-8 h-8 pixel-icon" />
+                            Mystical Encounter
+                          </h3>
                           <p className="text-lg leading-relaxed">
                             {battleData.event_description || 'Strange energies fill the air...'}
                           </p>
