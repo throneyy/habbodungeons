@@ -83,16 +83,23 @@ const ServerLobby = () => {
         console.log('🔍 New dungeon_id:', payload.new?.dungeon_id);
         checkForDungeon();
       })
-      .subscribe((status) => {
+      .subscribe((status, err) => {
         console.log('📡 ServerLobby subscription status:', status);
+        if (err) {
+          console.error('❌ Subscription error:', err);
+        }
+        // If subscription fails or closes, rely on polling
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          console.log('⚠️ Subscription not active, relying on polling fallback');
+        }
       });
 
-    // Fallback: Poll for dungeon assignment every 2 seconds
+    // Fallback: Poll for dungeon assignment every 1 second
     // This ensures navigation happens even if real-time fails
     const pollInterval = setInterval(async () => {
       console.log('🔄 Polling for dungeon assignment...');
       await checkForDungeon();
-    }, 2000);
+    }, 1000);
 
     return () => {
       console.log('Cleaning up server subscription');
@@ -104,35 +111,39 @@ const ServerLobby = () => {
   const checkForDungeon = async () => {
     if (!serverId) return;
 
-    console.log('🔍 Checking for dungeon assignment for server:', serverId);
+    try {
+      console.log('🔍 Checking for dungeon assignment for server:', serverId);
 
-    // Check if a dungeon has been assigned to this server
-    const { data: serverData, error } = await supabase
-      .from('servers')
-      .select('dungeon_id')
-      .eq('id', serverId)
-      .maybeSingle();
+      // Check if a dungeon has been assigned to this server
+      const { data: serverData, error } = await supabase
+        .from('servers')
+        .select('dungeon_id')
+        .eq('id', serverId)
+        .single();
 
-    console.log('📋 Server query result:', { data: serverData, error });
+      console.log('📋 Server query result:', { data: serverData, error });
 
-    if (error) {
-      console.error('❌ Error checking for dungeon:', error);
-      return;
-    }
+      if (error) {
+        console.error('❌ Error checking for dungeon:', error);
+        return;
+      }
 
-    if (serverData?.dungeon_id) {
-      console.log('✅ Dungeon found! Navigating to:', serverData.dungeon_id);
-      
-      // Show notification for ALL players (host and non-host)
-      toast({ 
-        title: "Adventure ready!",
-        description: "Entering dungeon now..."
-      });
-      
-      // Navigate to dungeon lobby - this happens for everyone simultaneously
-      navigate(`/dungeon-lobby/${serverData.dungeon_id}`);
-    } else {
-      console.log('No dungeon assigned yet');
+      if (serverData?.dungeon_id) {
+        console.log('✅ Dungeon found! Navigating to:', serverData.dungeon_id);
+        
+        // Show notification for ALL players (host and non-host)
+        toast({
+          title: "Adventure ready!",
+          description: "Entering dungeon now..."
+        });
+        
+        // Navigate to battle - this happens for everyone simultaneously
+        navigate(`/battle/${serverData.dungeon_id}`, { replace: true });
+      } else {
+        console.log('No dungeon assigned yet');
+      }
+    } catch (err) {
+      console.error('❌ Error in checkForDungeon:', err);
     }
   };
 
