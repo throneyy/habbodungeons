@@ -569,9 +569,19 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       ? result.narration.map((msg: any) => String(msg || ''))
       : [];
 
+    // Create damage messages to show exact numbers
+    const damageMessages: string[] = [];
+    if (result.playerDamageDealt > 0) {
+      damageMessages.push(`💥 Dealt ${result.playerDamageDealt} damage to ${battle.current_enemy_state.name}!`);
+    }
+    if (result.playerDamageTaken > 0) {
+      damageMessages.push(`💔 Took ${result.playerDamageTaken} damage from ${battle.current_enemy_state.name}!`);
+    }
+
     const updatedLog = [
       ...(battle.battle_log || []),
       { user_id: user.id, message: String(diceRollMessage), type: 'dice_roll' },
+      ...damageMessages.map((msg: string) => ({ user_id: user.id, message: msg, type: 'damage' })),
       ...safeNarration.map((msg: string) => ({ user_id: user.id, message: msg })),
       ...xpMessages.map((msg: string) => ({ user_id: user.id, message: String(msg) })),
       ...lootMessages.map((msg: string) => ({ user_id: user.id, message: String(msg) }))
