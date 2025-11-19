@@ -1178,39 +1178,69 @@ const Battle = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
+      // Determine if this is a server battle or solo battle
+      const { data: serverMember, error: serverError } = await supabase
+        .from("server_players")
+        .select("server_id, servers!inner(dungeon_id)")
+        .eq("user_id", user.id)
+        .eq("servers.dungeon_id", id)
+        .maybeSingle();
+
+      if (serverError) {
+        console.error("Error fetching server membership:", serverError);
+      }
+
+      const userServerId = serverMember?.server_id ?? null;
+      
       // Get current battle state to increment room index
-      const { data: battleState } = await supabase
-        .from('battle_states')
-        .select('current_room_index, server_id')
-        .eq('dungeon_id', id)
-        .eq('user_id', user.id)
-        .single();
+      let stateQuery = supabase
+        .from("battle_states")
+        .select("current_room_index, server_id")
+        .eq("dungeon_id", id)
+        .eq("is_active", true);
+
+      if (userServerId) {
+        stateQuery = stateQuery.eq("server_id", userServerId);
+      } else {
+        stateQuery = stateQuery.eq("user_id", user.id).is("server_id", null);
+      }
+
+      const { data: battleState, error: stateError } = await stateQuery.maybeSingle();
+
+      if (stateError) {
+        throw stateError;
+      }
       
       if (battleState) {
-        // Increment room index and clear story node
-        await supabase
-          .from('battle_states')
+        const { current_room_index, server_id } = battleState as any;
+
+        const { error: updateError } = await supabase
+          .from("battle_states")
           .update({ 
-            current_room_index: battleState.current_room_index + 1,
-            current_story_node: null
+            current_room_index: current_room_index + 1,
+            current_story_node: null,
           })
-          .eq('dungeon_id', id)
-          .eq(battleState.server_id ? 'server_id' : 'user_id', battleState.server_id || user.id);
+          .eq("dungeon_id", id)
+          .eq(server_id ? "server_id" : "user_id", server_id || user.id);
+
+        if (updateError) {
+          throw updateError;
+        }
       }
       
       // Reload battle with new room
       await loadBattle();
       setTreasureClaimed(false);
     } catch (error: any) {
+      console.error("Error advancing room:", error);
       toast({
         title: "Error advancing room",
-        description: error.message,
+        description: error.message || "Something went wrong moving to the next room.",
         variant: "destructive",
       });
     }
     setLoading(false);
   };
-
   const handleApplyEventBoost = async () => {
     if (!id || !battleData?.event_type) return;
     
