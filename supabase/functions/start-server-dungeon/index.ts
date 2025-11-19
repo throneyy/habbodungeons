@@ -164,6 +164,22 @@ Return ONLY valid JSON in this exact format:
 
     console.log("Server linked to dungeon successfully");
 
+    // Now initialize the battle state for the server
+    console.log("Initializing battle state for server dungeon...");
+    const initBattleResponse = await supabaseAdmin.functions.invoke('start-dungeon-battle', {
+      body: {
+        dungeonId: dungeon.id,
+        difficulty: difficulty,
+      },
+    });
+
+    if (initBattleResponse.error) {
+      console.error("Failed to initialize battle state:", initBattleResponse.error);
+      throw new Error("Failed to initialize battle state");
+    }
+
+    console.log("Battle state initialized successfully");
+
     return new Response(
       JSON.stringify({ dungeonId: dungeon.id }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
