@@ -46,6 +46,23 @@ const Home = () => {
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         <MainNav />
         
+        {/* Search Habbo Players */}
+        <div className="flex gap-2 max-w-3xl mx-auto">
+          <Input
+            placeholder="Enter your Habboname and find your fishy info"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="flex-1 h-12 text-base bg-card border-2 border-habbo-dark"
+          />
+          <Button
+            onClick={handleSearch}
+            className="h-12 px-6 bg-green-600 hover:bg-green-700 text-white font-bold border-2 border-habbo-dark"
+          >
+            Search
+          </Button>
+        </div>
+        
         {/* Hero Section */}
         <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 text-center">
           <div className="space-y-6 py-8">
