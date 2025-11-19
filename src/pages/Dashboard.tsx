@@ -7,7 +7,7 @@ import { getItemImage } from "@/lib/itemAssets";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Link, Users, Gift, RefreshCw } from "lucide-react";
+import { LogOut, Link, Users, Gift, RefreshCw, Shield } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 
 interface Profile {
@@ -43,6 +43,7 @@ const Dashboard = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -56,15 +57,17 @@ const Dashboard = () => {
         return;
       }
 
-      const [profileRes, statsRes, inventoryRes] = await Promise.all([
+      const [profileRes, statsRes, inventoryRes, rolesRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
         supabase.from("player_stats").select("*").eq("user_id", user.id).single(),
         supabase.from("inventory").select("*").eq("user_id", user.id),
+        supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
       ]);
 
       if (profileRes.data) setProfile(profileRes.data);
       if (statsRes.data) setStats(statsRes.data);
       if (inventoryRes.data) setInventory(inventoryRes.data);
+      if (rolesRes.data) setIsAdmin(true);
     } catch (error: any) {
       toast({
         title: "Failed to load data",
@@ -176,14 +179,26 @@ const Dashboard = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-black text-primary">Player Dashboard</h1>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="font-bold border-4 border-habbo-dark"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin")}
+                className="font-bold border-4 border-habbo-dark"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin Panel
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="font-bold border-4 border-habbo-dark"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Player Identity */}
