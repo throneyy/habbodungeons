@@ -5,7 +5,6 @@ import { AppLayout } from "@/components/AppLayout";
 import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
 import { toast } from "sonner";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -109,7 +108,7 @@ export default function PlayerProfile() {
   }
 
   const avatarUrl = player.figureString
-    ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=l&direction=2&head_direction=3`
+    ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=b&direction=2&head_direction=3&action=wav&gesture=sml`
     : undefined;
 
   return (
@@ -125,15 +124,28 @@ export default function PlayerProfile() {
         </Button>
 
         <HabboPanel className="bg-gradient-to-br from-primary/20 to-secondary/20">
-          <div className="flex flex-col items-center gap-6 md:flex-row">
-            <Avatar className="w-32 h-32 border-4 border-habbo-dark">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt={player.habbo_username} />}
-              <AvatarFallback className="text-4xl">{player.habbo_username[0]}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-2">
-              <h1 className="text-4xl font-bold text-foreground">{player.habbo_username}</h1>
-              <p className="text-xl text-muted-foreground">@{player.username}</p>
-              <div className="text-2xl font-bold text-primary">Level {player.level}</div>
+          <div className="flex flex-col items-center gap-8 md:flex-row">
+            <div className="border-4 border-habbo-dark rounded-lg overflow-hidden bg-card p-4">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={player.habbo_username}
+                  className="pixel-icon"
+                  style={{ width: 'auto', height: 'auto', maxWidth: '200px' }}
+                />
+              ) : (
+                <div className="w-48 h-48 flex items-center justify-center text-6xl font-bold">
+                  {player.habbo_username[0]}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 space-y-3">
+              <h1 className="text-5xl font-bold text-foreground">{player.habbo_username}</h1>
+              <p className="text-xl text-muted-foreground">Habbo Dungeons: {player.username.split('@')[0]}</p>
+              <div className="inline-block px-4 py-2 bg-primary/20 border-2 border-primary rounded-lg">
+                <span className="text-sm text-muted-foreground mr-2">Level</span>
+                <span className="text-3xl font-bold text-primary">{player.level}</span>
+              </div>
             </div>
           </div>
         </HabboPanel>
