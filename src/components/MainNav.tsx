@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
 
 export const MainNav = () => {
   const navigate = useNavigate();
@@ -19,13 +20,12 @@ export const MainNav = () => {
   return (
     <nav className="bg-card border-4 border-habbo-dark rounded-xl p-4 mb-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div 
-          className="text-2xl font-bold text-primary cursor-pointer pixel-icon"
+        <img 
+          src={habboDungeonsBanner}
+          alt="Habbo Dungeons"
+          className="cursor-pointer pixel-icon h-12"
           onClick={() => navigate("/")}
-          style={{ fontFamily: 'Volter, monospace', letterSpacing: '2px' }}
-        >
-          HABBO-DUNGEONS
-        </div>
+        />
         
         <div className="flex items-center gap-2">
           <Button
