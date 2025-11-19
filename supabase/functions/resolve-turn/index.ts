@@ -340,12 +340,43 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
       }
     }
 
-    // Update battle state
-    const updatedEnemy = {
+    // Get dungeon info to check for room progression
+    const { data: dungeon } = await supabase
+      .from('dungeons')
+      .select('dungeon_json')
+      .eq('id', battleId)
+      .single();
+
+    const dungeonData = dungeon?.dungeon_json as any;
+    const totalRooms = dungeonData?.rooms?.length || 0;
+    let newRoomIndex = battle.current_room_index;
+
+    // Update battle state - handle room progression on victory
+    let updatedEnemy = {
       ...battle.current_enemy_state,
       current_hp: result.enemyNewHp,
       mode: result.victory ? "story" : "battle", // Switch to story mode after victory
     };
+
+    // If victory, check if we should progress to the next room
+    if (result.victory) {
+      newRoomIndex = battle.current_room_index + 1;
+      
+      if (newRoomIndex < totalRooms) {
+        // Load next room's enemy
+        const nextRoom = dungeonData.rooms[newRoomIndex];
+        updatedEnemy = {
+          ...nextRoom.enemy,
+          current_hp: nextRoom.enemy.hp,
+          max_hp: nextRoom.enemy.hp,
+          mode: "story",
+          status_effects: [],
+        };
+      } else {
+        // Quest complete - mark battle as inactive
+        newRoomIndex = totalRooms; // Stay at last room for quest complete screen
+      }
+    }
 
     // Get user profile for dice roll log
     const { data: profile } = await supabase
@@ -369,7 +400,8 @@ Use dice sum for attack variance. Keep narration exciting but brief. Always incl
       .update({
         current_enemy_state: updatedEnemy,
         battle_log: updatedLog,
-        is_active: !result.defeat, // Only end on defeat, not victory
+        current_room_index: newRoomIndex,
+        is_active: !result.defeat && newRoomIndex < totalRooms, // Mark inactive if defeated or quest complete
       })
       .eq('id', battle.id);
 
