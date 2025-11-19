@@ -1293,21 +1293,49 @@ const Battle = () => {
       
       if (stats) {
         const updates: any = {};
+        let boostMessage = '';
         
         if (battleData.event_type === 'hp') {
-          updates.current_hp = Math.min(stats.max_hp, stats.current_hp + (battleData.event_amount || 0));
+          const hpGained = battleData.event_amount || 0;
+          updates.current_hp = Math.min(stats.max_hp, stats.current_hp + hpGained);
+          boostMessage = `You received a spiritual blessing! HP restored by ${hpGained}!`;
         } else if (battleData.event_type === 'mp') {
-          updates.current_mp = Math.min(stats.max_mp, stats.current_mp + (battleData.event_amount || 0));
+          const mpGained = battleData.event_amount || 0;
+          updates.current_mp = Math.min(stats.max_mp, stats.current_mp + mpGained);
+          boostMessage = `You received a spiritual blessing! MP restored by ${mpGained}!`;
         } else if (battleData.event_type === 'atk') {
-          updates.atk = stats.atk + (battleData.event_amount || 0);
+          const atkGained = battleData.event_amount || 0;
+          updates.atk = stats.atk + atkGained;
+          boostMessage = `You received a spiritual blessing! ATK increased by +${atkGained}!`;
         } else if (battleData.event_type === 'def') {
-          updates.def = stats.def + (battleData.event_amount || 0);
+          const defGained = battleData.event_amount || 0;
+          updates.def = stats.def + defGained;
+          boostMessage = `You received a spiritual blessing! DEF increased by +${defGained}!`;
         }
         
         await supabase
           .from('player_stats')
           .update(updates)
           .eq('user_id', user.id);
+        
+        // Add to battle log
+        const { data: battleState } = await supabase
+          .from('battle_states')
+          .select('battle_log')
+          .eq('dungeon_id', id)
+          .eq('user_id', user.id)
+          .single();
+        
+        if (battleState) {
+          const currentLog = (battleState.battle_log as any[]) || [];
+          await supabase
+            .from('battle_states')
+            .update({
+              battle_log: [...currentLog, { user_id: user.id, message: boostMessage, type: 'spiritual_boost' }]
+            })
+            .eq('dungeon_id', id)
+            .eq('user_id', user.id);
+        }
         
         toast({
           title: "Power Surge!",
@@ -1661,6 +1689,7 @@ const Battle = () => {
                     const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                     const isDiceSuccess = entryType === 'dice_success' || message.includes('PASSING') || message.toUpperCase().includes('SUCCESS');
                     const isDiceFailure = entryType === 'dice_failure' || message.includes('FAILING') || message.toUpperCase().includes('FAIL');
+                    const isSpiritualBoost = entryType === 'spiritual_boost';
                     
                     // Replace "You" with actual username for other players' messages
                     let displayMessage = message;
@@ -1680,6 +1709,7 @@ const Battle = () => {
                     
                     return (
                       <p key={i} className={`text-sm animate-fade-in ${
+                        isSpiritualBoost ? 'text-green-500 font-bold' :
                         isDiceSuccess ? 'text-green-500 font-bold' : 
                         isDiceFailure ? 'text-red-500 font-bold' : 
                         isDiceRoll ? 'text-[#FFD700] font-bold' : ''
@@ -2293,6 +2323,7 @@ const Battle = () => {
                   const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
                   const isDiceSuccess = entryType === 'dice_success' || message.includes('PASSING') || message.toUpperCase().includes('SUCCESS');
                   const isDiceFailure = entryType === 'dice_failure' || message.includes('FAILING') || message.toUpperCase().includes('FAIL');
+                  const isSpiritualBoost = entryType === 'spiritual_boost';
                   
                   // Replace "You" with actual username for other players' messages
                   let displayMessage = message;
@@ -2312,6 +2343,7 @@ const Battle = () => {
                   
                   return (
                     <p key={i} className={`text-sm animate-fade-in ${
+                      isSpiritualBoost ? 'text-green-500 font-bold' :
                       isDiceSuccess ? 'text-green-500 font-bold' : 
                       isDiceFailure ? 'text-red-500 font-bold' : 
                       isDiceRoll ? 'text-[#FFD700] font-bold' : ''
