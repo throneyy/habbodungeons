@@ -98,8 +98,8 @@ serve(async (req) => {
 
     console.log("Battle state loaded:", battleState.id, "Room:", battleState.current_room_index);
 
-    // Check if there's already a story node for this room (for multiplayer sync)
-    if (battleState.current_story_node && serverId) {
+    // Check if there's already a story node for this room (prevent regeneration)
+    if (battleState.current_story_node) {
       console.log("Returning existing story node for room", battleState.current_room_index);
       return new Response(JSON.stringify({ storyNode: battleState.current_story_node }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -160,6 +160,8 @@ Dungeon: ${battleState.dungeons.name} (${battleState.dungeons.difficulty})
 Theme: ${battleState.dungeons.theme}
 Current room: ${context.roomIndex + 1}/${dungeonJson.rooms?.length || 10}
 Room type: ${currentRoom.room_type}
+Room description: ${roomDescription}
+${currentRoom.enemy ? `\n**CRITICAL: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\nYou MUST incorporate this EXACT enemy into your story if creating an encounter that could lead to combat. Do NOT invent different enemies.` : ''}
 ${lastChoice ? `Last choice: ${lastChoice}` : ''}
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
@@ -313,17 +315,22 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
       throw new Error(`Invalid AI response format: ${errorMsg}`);
     }
 
-    // Store story node in battle state for multiplayer sync
+    // Store story node in battle state to prevent regeneration
+    let updateQuery = supabaseClient
+      .from("battle_states")
+      .update({ current_story_node: storyNode })
+      .eq("dungeon_id", battleId);
+    
     if (serverId) {
-      const { error: updateError } = await supabaseClient
-        .from("battle_states")
-        .update({ current_story_node: storyNode })
-        .eq("dungeon_id", battleId)
-        .eq("server_id", serverId);
+      updateQuery = updateQuery.eq("server_id", serverId);
+    } else {
+      updateQuery = updateQuery.eq("user_id", user.id);
+    }
+    
+    const { error: updateError } = await updateQuery;
 
-      if (updateError) {
-        console.error("Failed to update story node:", updateError);
-      }
+    if (updateError) {
+      console.error("Failed to update story node:", updateError);
     }
 
 
