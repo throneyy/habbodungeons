@@ -16,7 +16,7 @@ import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-rea
 import dungeonBg from "@/assets/dungeon-bg.png";
 import explosionHit from "@/assets/explosion-hit.gif";
 import hitBump from "@/assets/hit-bump.gif";
-import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
+
 import skeleton from "@/assets/skeleton.png";
 import iceTiger from "@/assets/ice-tiger.gif";
 import iceElemental from "@/assets/ice-elemental.png";
@@ -1381,15 +1381,6 @@ const Battle = () => {
         
         <div className="relative z-10 p-8">
           <div className="max-w-7xl mx-auto space-y-6">
-          {/* Frostkeep Banner */}
-          <div className="flex justify-center mb-6">
-            <img 
-              src={frostkeepBanner} 
-              alt="The Shattered Frostkeep" 
-              className="pixel-icon"
-              style={{ width: "auto", height: "auto" }}
-            />
-          </div>
 
             {/* Battle Log - Main Focus */}
             <HabboPanel title="Chronicle of Events">
@@ -2023,15 +2014,6 @@ const Battle = () => {
       
       <div className="relative z-10 p-8">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Frostkeep Banner */}
-          <div className="flex justify-center mb-6">
-            <img 
-              src={frostkeepBanner} 
-              alt="The Shattered Frostkeep" 
-              className="pixel-icon"
-              style={{ width: "auto", height: "auto" }}
-            />
-          </div>
 
           {/* Battle Log - Main Focus */}
           <HabboPanel title="Battle Log">
