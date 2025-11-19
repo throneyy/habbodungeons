@@ -75,7 +75,7 @@ const CreateDungeon = () => {
                     <img 
                       src={npc.sprite} 
                       alt={npc.name} 
-                      className="w-16 h-16 pixel-icon mb-2"
+                      className="h-16 pixel-icon mb-2"
                     />
                     <p className="font-bold text-sm text-center">{npc.name}</p>
                     <p className="text-xs text-muted-foreground text-center">{npc.title}</p>
@@ -90,7 +90,7 @@ const CreateDungeon = () => {
                   <img 
                     src={selectedNPC.sprite} 
                     alt={selectedNPC.name} 
-                    className="w-12 h-12 pixel-icon"
+                    className="h-12 pixel-icon"
                   />
                   <div className="flex-1">
                     <p className="font-bold text-lg">{selectedNPC.name}</p>
