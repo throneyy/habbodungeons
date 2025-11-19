@@ -294,6 +294,21 @@ Return ONLY valid JSON (no markdown):
       console.log(`Forcing battle because user chose combat action and room has enemy: ${currentRoom.enemy.name}`);
       sanitizedOutcome.triggersBattle = true;
       sanitizedOutcome.progressRoom = false; // Stay in current room for battle
+    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && sanitizedOutcome.consequenceText) {
+      // Check if the AI narrative describes combat starting even if it didn't flag it
+      const combatPhrases = [
+        'descend upon', 'attack', 'charge', 'lunge', 'strike', 'assault',
+        'ambush', 'swarm', 'rush at', 'pounce', 'leap at', 'burst open',
+        'emerge and attack', 'turn hostile', 'aggressive', 'confront you'
+      ];
+      const textLower = sanitizedOutcome.consequenceText.toLowerCase();
+      const hasCombatNarrative = combatPhrases.some(phrase => textLower.includes(phrase));
+      
+      if (hasCombatNarrative) {
+        console.log(`Forcing battle because AI narrative describes combat and room has enemy: ${currentRoom.enemy.name}`);
+        sanitizedOutcome.triggersBattle = true;
+        sanitizedOutcome.progressRoom = false; // Stay in current room for battle
+      }
     }
 
     console.log("Sanitized outcome:", sanitizedOutcome);
