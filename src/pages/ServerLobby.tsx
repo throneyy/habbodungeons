@@ -119,7 +119,7 @@ const ServerLobby = () => {
         .from('servers')
         .select('dungeon_id')
         .eq('id', serverId)
-        .single();
+        .maybeSingle();
 
       console.log('📋 Server query result:', { data: serverData, error });
 
