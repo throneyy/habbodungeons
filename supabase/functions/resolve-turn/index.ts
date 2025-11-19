@@ -240,7 +240,7 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       // Generate loot drops
       const enemyLevel = battle.current_enemy_state.level || 1;
       const lootTableBasic = [
-        { name: 'Gold', type: 'currency', weight: 40 },
+        { name: 'Gold Coins', type: 'currency', weight: 40 },
         { name: 'Silver', type: 'currency', weight: 30 },
         { name: 'Potion', type: 'consumable', weight: 20 },
         { name: 'Ether', type: 'consumable', weight: 15 },
