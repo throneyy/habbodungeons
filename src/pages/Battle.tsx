@@ -108,6 +108,14 @@ interface BattleData {
   isPartyBattle?: boolean;
   currentTurnUserId?: string;
   turnOrder?: string[];
+  current_story_node?: {
+    storyText: string;
+    choices?: Array<{
+      id: string;
+      label: string;
+      diceCheck?: { dc: number; skillType: string };
+    }>;
+  } | null;
 }
 
 interface Profile {
@@ -2250,7 +2258,9 @@ const Battle = () => {
           {/* Action Panel */}
           <HabboPanel title="Current Turn" className="md:col-span-1">
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">{battleData.room_description}</p>
+              <p className="text-sm text-muted-foreground">
+                {battleData.current_story_node?.storyText || battleData.room_description}
+              </p>
               
               <div className="grid grid-cols-2 gap-2">
                 <Button

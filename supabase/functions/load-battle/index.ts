@@ -283,7 +283,8 @@ serve(async (req) => {
       mode: mode,
       isPartyBattle: !!(battle.server_id || battle.party_id),
       currentTurnUserId: battle.current_turn_user_id,
-      turnOrder: battle.turn_order || []
+      turnOrder: battle.turn_order || [],
+      current_story_node: battle.current_story_node || null
     };
 
     return new Response(
