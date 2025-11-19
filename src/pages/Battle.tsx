@@ -1310,14 +1310,12 @@ const Battle = () => {
                   <h3 className="text-xl font-black text-primary mb-2">
                     Quest: {battleData.dungeon_name}
                   </h3>
-                  <div className="flex gap-4 text-sm">
-                    <span className="text-muted-foreground">
-                      <span className="font-bold">Theme:</span> {battleData.dungeon_theme}
-                    </span>
-                    <span className="text-muted-foreground">
-                      <span className="font-bold">Difficulty:</span> {battleData.dungeon_difficulty}
-                    </span>
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    <span className="font-bold">Description:</span> {battleData.dungeon_theme}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    <span className="font-bold">Objective:</span> Clear all rooms and defeat the final boss
+                  </p>
                 </div>
               )}
               
