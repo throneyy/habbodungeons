@@ -194,10 +194,13 @@ const Battle = () => {
     return parts.map((part, idx) => {
       const weaponMatch = part.match(/\[WEAPON:(.*?)\]/);
       if (weaponMatch) {
+        const weaponName = weaponMatch[1];
         return (
-          <span key={idx} className="text-purple-500 font-bold">
-            {weaponMatch[1]}
-          </span>
+          <ItemTooltip key={idx} itemName={weaponName}>
+            <span className="text-purple-500 font-bold cursor-help">
+              [{weaponName}]
+            </span>
+          </ItemTooltip>
         );
       }
       
