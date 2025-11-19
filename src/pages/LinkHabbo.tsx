@@ -49,12 +49,12 @@ const LinkHabbo = () => {
         setShowVerification(true);
         toast({ 
           title: "Profile found!", 
-          description: `Please add the code ${code} to your Habbo motto and click Verify.` 
+          description: `Please add the code ${code} to your Habbo Origins motto and click Verify.` 
         });
       }
     } catch (error: any) {
-      toast({
-        title: "Failed to fetch Habbo profile",
+        toast({
+          title: "Failed to fetch Habbo Origins profile",
         description: error.message,
         variant: "destructive",
       });
@@ -78,7 +78,7 @@ const LinkHabbo = () => {
       if (error) throw error;
 
       if (!data.profile || !data.profile.motto.includes(verificationCode)) {
-        throw new Error("Verification code not found in Habbo motto. Please add the code to your motto and try again.");
+        throw new Error("Verification code not found in Habbo Origins motto. Please add the code to your motto and try again.");
       }
 
       // Link the account
@@ -95,7 +95,7 @@ const LinkHabbo = () => {
 
       if (updateError) throw updateError;
 
-      toast({ title: "Habbo account verified and linked successfully!" });
+      toast({ title: "Habbo Origins account verified and linked successfully!" });
       navigate("/dashboard");
     } catch (error: any) {
       toast({
@@ -110,7 +110,7 @@ const LinkHabbo = () => {
   return (
     <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
-        <HabboPanel title="Link Your Habbo Account">
+        <HabboPanel title="Link Your Habbo Origins Account">
           <div className="space-y-6">
             {!showVerification ? (
               <div className="space-y-2">
