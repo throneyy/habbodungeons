@@ -30,6 +30,7 @@ import undeadHabbo from "@/assets/undead-habbo.png";
 import frostbiteSpider from "@/assets/frostbite-spider.webp";
 import giantRat from "@/assets/giant-rat.png";
 import treasureChestOpen from "@/assets/treasure-chest-open.png";
+import diceSprite from "@/assets/dice-sprite.gif";
 import { getNPCById } from "@/lib/npcData";
 
 // Enemy sprite mapping
@@ -1634,9 +1635,13 @@ const Battle = () => {
                         {/* Dice input dialog */}
                         {selectedChoice && selectedChoice.diceRequired && (
                           <div className="mb-6 p-6 bg-muted border-4 border-habbo-dark rounded-lg space-y-4">
-                            <h4 className="text-lg font-black text-center">
-                              Roll Your Holodice!
-                            </h4>
+                            <div className="flex items-center justify-center gap-3 mb-2">
+                              <img src={diceSprite} alt="Dice" className="w-12 h-12 pixelated" />
+                              <h4 className="text-lg font-black">
+                                Roll Your Dice!
+                              </h4>
+                              <img src={diceSprite} alt="Dice" className="w-12 h-12 pixelated" />
+                            </div>
                             <p className="text-sm text-center text-muted-foreground">
                               {selectedChoice.label}
                             </p>
@@ -2266,7 +2271,11 @@ const Battle = () => {
               )}
 
               <div className="space-y-2">
-                <p className="font-bold text-sm">Enter your Holodice results from Habbo:</p>
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <img src={diceSprite} alt="Dice" className="w-8 h-8 pixelated" />
+                  <p className="font-bold text-sm">Enter your Dice results from Habbo:</p>
+                  <img src={diceSprite} alt="Dice" className="w-8 h-8 pixelated" />
+                </div>
                 <div className="grid grid-cols-5 gap-2">
                   {dice.map((val, i) => (
                     <Input
