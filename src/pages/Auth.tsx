@@ -36,8 +36,8 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Convert username to email format for Supabase Auth
-    const email = `${loginUsername.toLowerCase()}@habbo-dungeons.local`;
+    // Convert username to email format for Supabase Auth, encoding special characters
+    const email = `${encodeURIComponent(loginUsername.toLowerCase())}@habbo-dungeons.local`;
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -60,17 +60,6 @@ const Auth = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate username format (alphanumeric, underscores, hyphens only)
-    const usernameRegex = /^[a-zA-Z0-9_-]+$/;
-    if (!usernameRegex.test(signupUsername)) {
-      toast({
-        title: "Invalid Username",
-        description: "Username can only contain letters, numbers, underscores, and hyphens",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     if (signupPassword !== signupConfirm) {
       toast({
         title: "Passwords don't match",
@@ -81,8 +70,8 @@ const Auth = () => {
 
     setLoading(true);
 
-    // Convert username to email format for Supabase Auth
-    const email = `${signupUsername.toLowerCase()}@habbo-dungeons.local`;
+    // Convert username to email format for Supabase Auth, encoding special characters
+    const email = `${encodeURIComponent(signupUsername.toLowerCase())}@habbo-dungeons.local`;
 
     const { error } = await supabase.auth.signUp({
       email,
