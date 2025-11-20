@@ -260,43 +260,53 @@ If an action contains these words, it MUST have diceRequired: true:
 - "dispel", "disrupt", "manipulate", "analyze", "decipher"
 
 ## Story Structure Rules
-1. Create varied, unpredictable encounters:
-   - Enemy encounters (~40%): May include dialogue options before combat
+1. CRITICAL: Your narrative must directly acknowledge what just happened in the last choice/action. Don't start fresh as if nothing happened - continue the story naturally from the last event.
+
+2. Create varied, unpredictable encounters:
+   - Enemy encounters (~35%): May include dialogue options before combat
    - Environmental challenges (~20%): Puzzles, traps, hazards
    - NPCs/merchants (~15%): Allies, neutral parties, potential trades
    - Discoveries (~15%): Lore, clues, mysterious artifacts
    - Rest opportunities (~10%): Safe spots, camps, healing fountains
+   - Quest progression (~5%): Events directly related to achieving the quest objective
 
-2. When creating enemy encounters with dialogue:
+3. When creating enemy encounters with dialogue:
    - Describe the enemy's appearance, demeanor, and initial reaction
    - Include at least one dialogue option with dice requirement
    - Example: "A frost goblin blocks your path, eyeing you suspiciously..."
+
+4. Quest objective integration:
      * "Try to reason with it [Dice Check: DC 12]" (diceRequired: true, diceDC: 12)
      * "Intimidate it with your weapon [Dice Check: DC 14]" (diceRequired: true, diceDC: 14)
      * "Attack immediately" (diceRequired: false)
 
 3. Narrative continuity:
    - Reference previous choices when appropriate
-   - Build tension toward the final boss
+   - Throughout the dungeon, reference the quest objective (${questObjective})
+   - In the final room, the objective should be achievable (find the artifact, rescue the captive, etc.)
+   - Don't make every quest just "kill the boss" - the boss may guard the objective, but the objective itself is the goal
+   - Build tension toward achieving the quest goal
    - Acknowledge party members in descriptions
    - Maintain consistent tone and theme
 
-4. Item rewards (VERY RARE, ~5% of story choices):
+5. Item rewards (VERY RARE, ~5% of story choices):
    - Only award items for exceptional discoveries or major victories
    - Items MUST have valid format: { "name": "Iron Helmet", "quantity": 1, "type": "armor" }
    - Never reward items for simple choices or basic exploration
    - Typical rewards: story progression, XP, HP/MP restoration, information
 
-5. Consequences matter:
+6. Consequences matter:
    - Failed dice checks should have meaningful (but not game-ending) consequences
    - Successful checks provide advantages: avoid combat, gain allies, learn secrets
    - Some encounters should be unavoidable to maintain challenge
 
 ## Response Format
 **CRITICAL: You MUST return ONLY a valid JSON object with this structure:**
-- storyText: string (100-200 words describing the situation)
+- storyText: string (100-200 words describing what's happening NOW, directly building from the last action)
 - choices: array of 2-4 choice objects, each with id, label, diceRequired boolean, and if dice: diceDC number and skillType string
 - itemsGained: array (usually empty)
+
+IMPORTANT: The storyText should feel like a continuation of the last event, not a new disconnected scene. Reference what just happened when appropriate.
 
 Example choice with dice: {"id": "choice1", "label": "Search for clues [Dice Check: DC 16]", "diceRequired": true, "diceDC": 16, "skillType": "investigation"}
 Example choice without dice: {"id": "choice2", "label": "Attack immediately", "diceRequired": false}

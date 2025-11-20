@@ -10,9 +10,10 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { VictoryLoot } from "@/components/VictoryLoot";
 import { PartyWipeDialog } from "@/components/PartyWipeDialog";
 import { ItemTooltip } from "@/components/ItemTooltip";
+import { QuestDetailsDialog } from "@/components/QuestDetailsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Swords, Shield, Sparkles, Package, Users, Plus, Copy } from "lucide-react";
+import { Swords, Shield, Sparkles, Package, Users, Plus, Copy, ScrollText } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import explosionHit from "@/assets/explosion-hit.gif";
 import hitBump from "@/assets/hit-bump.gif";
@@ -226,6 +227,7 @@ const Battle = () => {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showEndQuestDialog, setShowEndQuestDialog] = useState(false);
+  const [showQuestDetailsDialog, setShowQuestDetailsDialog] = useState(false);
   const [playerHit, setPlayerHit] = useState(false);
   const [enemyHit, setEnemyHit] = useState(false);
   const [showPartyWipeDialog, setShowPartyWipeDialog] = useState(false);
@@ -2034,8 +2036,16 @@ const Battle = () => {
                           })}
                         </div>
                         
-                        {/* End Quest Button */}
-                        <div className="pt-4 border-t-2 border-habbo-dark/30">
+                        {/* Quest Actions */}
+                        <div className="pt-4 border-t-2 border-habbo-dark/30 space-y-2">
+                          <Button
+                            onClick={() => setShowQuestDetailsDialog(true)}
+                            variant="outline"
+                            className="w-full text-sm font-bold border-2 border-habbo-dark"
+                          >
+                            <ScrollText className="w-4 h-4 mr-2" />
+                            View Quest Details
+                          </Button>
                           <Button
                             onClick={() => setShowEndQuestDialog(true)}
                             variant="ghost"
@@ -2647,8 +2657,16 @@ const Battle = () => {
                 {loading ? "Resolving..." : isMyTurn ? "Resolve Turn" : "Waiting for turn..."}
               </Button>
               
-              {/* End Quest Button */}
-              <div className="pt-4 border-t-2 border-habbo-dark/30">
+              {/* Quest Actions */}
+              <div className="pt-4 border-t-2 border-habbo-dark/30 space-y-2">
+                <Button
+                  onClick={() => setShowQuestDetailsDialog(true)}
+                  variant="outline"
+                  className="w-full text-sm font-bold border-2 border-habbo-dark"
+                >
+                  <ScrollText className="w-4 h-4 mr-2" />
+                  View Quest Details
+                </Button>
                 <Button
                   onClick={() => setShowEndQuestDialog(true)}
                   variant="ghost"
@@ -3006,6 +3024,17 @@ const Battle = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Quest Details Dialog */}
+      {battleData && (
+        <QuestDetailsDialog
+          open={showQuestDetailsDialog}
+          onOpenChange={setShowQuestDetailsDialog}
+          dungeonName={battleData.dungeon_name || "Unknown Quest"}
+          questObjective={battleData.quest_objective || "Complete the dungeon"}
+          introText={battleData.intro_text || "Embark on this quest to face the challenges ahead."}
+        />
+      )}
     </div>
   );
 };

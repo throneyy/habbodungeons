@@ -272,19 +272,21 @@ const NPC_DATA: Record<string, any> = {
 
 // Helper function to get random enemy
 function getRandomEnemy(playerLevel: number, isBoss: boolean = false) {
-  // 5% chance to encounter Fire Drake (only for regular enemies, not bosses)
-  if (!isBoss && Math.random() < 0.05) {
-    console.log('🐉 RARE ENCOUNTER: Fire Drake spawned!');
-    return {
-      ...FIRE_DRAKE,
-      hp: FIRE_DRAKE.baseHp,
-      atk: FIRE_DRAKE.baseAtk + Math.floor(playerLevel * 2),
-      def: FIRE_DRAKE.baseDef + Math.floor(playerLevel * 1.5),
-      spd: FIRE_DRAKE.baseSpd + Math.floor(playerLevel * 1)
-    };
-  }
-  
+  // Rare spawns only for boss encounters
   if (isBoss) {
+    const rareRoll = Math.random();
+    if (rareRoll < 0.15) {  // 15% chance for Fire Drake as boss
+      console.log("Rare boss spawn: Fire Drake!");
+      return {
+        ...FIRE_DRAKE,
+        hp: FIRE_DRAKE.baseHp + (playerLevel * 8),
+        maxHp: FIRE_DRAKE.baseHp + (playerLevel * 8),
+        atk: FIRE_DRAKE.baseAtk + Math.floor(playerLevel * 1.2),
+        def: FIRE_DRAKE.baseDef + Math.floor(playerLevel * 0.8),
+        spd: FIRE_DRAKE.baseSpd + Math.floor(playerLevel * 0.5),
+      };
+    }
+    
     const boss = BOSS_POOL[Math.floor(Math.random() * BOSS_POOL.length)];
     return {
       ...boss,
@@ -371,13 +373,20 @@ The job: ${difficulty} dungeon, ${encounters} rooms. Player's level ${playerLeve
 Your specialty: ${npc.questTheme}
 Your usual work: ${npc.questTypes.join(', ')}
 
+CRITICAL: The quest objective should be specific and tied to the story, NOT just "defeat the boss" or "clear the dungeon". Examples:
+- Recover the stolen artifact from the Ice Lord
+- Rescue the kidnapped merchant from goblin captors
+- Retrieve the ancient scroll before it's destroyed
+- Seal the corrupted portal in the throne room
+- Find evidence of the traitor's identity
+
 Give me:
 - A dungeon name (short and punchy, not "The Epic Quest of...")
-- What needs doing (one clear goal)
+- What needs doing (ONE specific goal tied to story events, not generic boss killing)
 - Your pitch to the adventurer (1-2 sentences max. Talk like a real person would, not a fantasy novel)
 - ${encounters} room descriptions (1-2 sentences each. Set the scene, skip the adjectives)
 
-First room: atmosphere and entry. Last room: boss fight. Make it feel dangerous, not dramatic.`
+First room: atmosphere and entry. Middle rooms: varied encounters building toward the goal. Last room: where the objective is achieved (may include boss). Make it feel dangerous, not dramatic.`
           }
         ],
         tools: [
@@ -459,11 +468,11 @@ First room: atmosphere and entry. Last room: boss fight. Make it feel dangerous,
         };
       }
       
-      // For middle rooms, roll for room type
+      // For middle rooms, roll for room type with better distribution
       const roll = Math.random();
       
-      // 10% chance for treasure chest
-      if (roll < 0.10) {
+      // 8% chance for treasure chest
+      if (roll < 0.08) {
         return {
           ...room,
           enemy: null,
@@ -472,7 +481,7 @@ First room: atmosphere and entry. Last room: boss fight. Make it feel dangerous,
         };
       }
       
-      // 10% chance for stat boost event
+      // 12% chance for stat boost event (0.08-0.20)
       if (roll < 0.20) {
         const statEvents = [
           { stat: 'hp', description: 'A warm magical aura fills the room, healing your wounds!', amount: 20 },
@@ -491,8 +500,8 @@ First room: atmosphere and entry. Last room: boss fight. Make it feel dangerous,
         };
       }
       
-      // 40% chance for regular battle (0.20-0.60)
-      if (roll < 0.60) {
+      // 35% chance for regular battle (0.20-0.55)
+      if (roll < 0.55) {
         const enemy = getRandomEnemy(playerLevel, false);
         return {
           ...room,
@@ -501,7 +510,7 @@ First room: atmosphere and entry. Last room: boss fight. Make it feel dangerous,
         };
       }
       
-      // 40% remaining for story/exploration (0.60-1.00)
+      // 45% remaining for story/exploration (0.55-1.00)
       return {
         ...room,
         enemy: null,
