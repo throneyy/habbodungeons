@@ -245,14 +245,7 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'blood-dragon-boss.gif' ||
                                      monster.sprite_filename === 'glacial-imp.png' ||
                                      monster.sprite_filename === 'ice-knight-boss.png' ||
-                                     monster.sprite_filename === 'undead-habbo.png' ||
-                                     monster.sprite_filename === 'frost-undead.gif' ||
-                                     monster.sprite_filename === 'fire-drake.png' ||
-                                     monster.sprite_filename === 'frost-wolf.png' ||
-                                     monster.sprite_filename === 'frostbite-spider.webp' ||
-                                     monster.sprite_filename === 'frozen-goblin.png' ||
-                                     monster.sprite_filename === 'giant-rat.png' ||
-                                     monster.sprite_filename === 'ice-tiger.gif') ? 'none' : 'scaleX(-1)'
+                                     monster.sprite_filename === 'undead-habbo.png') ? 'none' : 'scaleX(-1)'
                         }}
                       />
                     ) : (
