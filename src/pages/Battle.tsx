@@ -30,7 +30,7 @@ import frozenGoblin from "@/assets/frozen-goblin.png";
 import frostMutant from "@/assets/frost-mutant.png";
 import frostWraith from "@/assets/frost-wraith.png";
 import undeadHabbo from "@/assets/undead-habbo.png";
-import frostbiteSpider from "@/assets/frostbite-spider.webp";
+import frostbiteSpider from "@/assets/frostbite-spider.png";
 import giantRat from "@/assets/giant-rat.png";
 import iceShade from "@/assets/ice-shade.png";
 import fireDrake from "@/assets/fire-drake.png";
@@ -59,7 +59,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frost-wraith.png": frostWraith,
   "frost-undead.gif": undeadHabbo,
   "undead-habbo.png": undeadHabbo,
-  "frostbite-spider.webp": frostbiteSpider,
+  "frostbite-spider.png": frostbiteSpider,
   "giant-rat.png": giantRat,
   "ice-shade.png": iceShade,
   "fire-drake.png": fireDrake,
