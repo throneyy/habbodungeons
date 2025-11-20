@@ -169,7 +169,9 @@ interface BattleData {
     choices?: Array<{
       id: string;
       label: string;
-      diceCheck?: { dc: number; skillType: string };
+      diceRequired?: boolean;
+      diceDC?: number;
+      skillType?: string;
     }>;
   } | null;
 }
@@ -1782,6 +1784,8 @@ const Battle = () => {
     });
 
     const currentStoryText = battleData ? getLatestNarrative(battleData) : storyNode?.storyText || "";
+    // CRITICAL: Use battleData.current_story_node directly for choices to stay in sync with narrative
+    const activeStoryNode = battleData?.current_story_node || null;
 
     return (
       <>
@@ -2052,7 +2056,7 @@ const Battle = () => {
                       </div>
 
                       {/* Choices - Only show for regular story rooms */}
-                      {(!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && storyNode && storyNode.choices && storyNode.choices.length > 0 && (
+                      {(!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && activeStoryNode && activeStoryNode.choices && activeStoryNode.choices.length > 0 && (
                       <div className="space-y-3">
                         {/* Turn-based choice header */}
                         {battleData.isPartyBattle && (
@@ -2145,7 +2149,7 @@ const Battle = () => {
                         )}
                         
                         <div className="space-y-3">
-                          {storyNode.choices.map((choice) => {
+                          {activeStoryNode.choices.map((choice) => {
                             // Remove the dice check text from the label if it exists
                             const cleanLabel = choice.label.replace(/\s*\[Dice Check:.*?\]\s*$/i, '');
                             
