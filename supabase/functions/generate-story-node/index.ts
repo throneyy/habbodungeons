@@ -372,27 +372,61 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
     console.log("AI response:", aiData);
 
     let storyContent = aiData.choices[0]?.message?.content || "";
+    console.log("Raw AI content:", storyContent.substring(0, 200) + "...");
     
     // Remove markdown code fences and any explanatory text
     storyContent = storyContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     
-    // Try to extract JSON if it's wrapped in text
+    // Try to extract JSON if it's wrapped in text - use greedy match to get the full object
     const jsonMatch = storyContent.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       storyContent = jsonMatch[0];
     }
 
+    // Clean up common JSON formatting issues
+    storyContent = storyContent
+      .replace(/,\s*\]/g, ']')  // Remove trailing commas before ]
+      .replace(/,\s*\}/g, '}')  // Remove trailing commas before }
+      .replace(/\n/g, ' ')       // Remove newlines that might break strings
+      .replace(/\r/g, '');       // Remove carriage returns
+
     let storyNode;
-    try {
-      storyNode = JSON.parse(storyContent);
-    } catch (parseError) {
-      console.error("Failed to parse AI response:", storyContent);
-      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
-      throw new Error(`Invalid AI response format: ${errorMsg}`);
+    let parseAttempts = 0;
+    const maxAttempts = 3;
+
+    while (parseAttempts < maxAttempts) {
+      try {
+        storyNode = JSON.parse(storyContent);
+        break; // Success!
+      } catch (parseError) {
+        parseAttempts++;
+        console.error(`Parse attempt ${parseAttempts} failed:`, parseError);
+        
+        if (parseAttempts === maxAttempts) {
+          // Final attempt failed - log full content and throw
+          console.error("Failed to parse AI response after all attempts. Content:", storyContent);
+          const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+          throw new Error(`Invalid AI response format: ${errorMsg}`);
+        }
+        
+        // Try progressively more aggressive cleaning
+        if (parseAttempts === 1) {
+          // Attempt 2: Try to fix escaped quotes
+          storyContent = storyContent.replace(/\\"/g, '"').replace(/\\'/g, "'");
+        } else if (parseAttempts === 2) {
+          // Attempt 3: Extract just the outermost braces more carefully
+          const firstBrace = storyContent.indexOf('{');
+          const lastBrace = storyContent.lastIndexOf('}');
+          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+            storyContent = storyContent.substring(firstBrace, lastBrace + 1);
+          }
+        }
+      }
     }
 
     // Store story node in battle state to prevent regeneration
-    let updateQuery = supabaseClient
+    // Use the same client that was used to fetch the battle state (admin for servers, regular for solo)
+    let updateQuery = clientToUse
       .from("battle_states")
       .update({ current_story_node: storyNode })
       .eq("dungeon_id", battleId);
