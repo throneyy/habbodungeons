@@ -17,7 +17,7 @@ const CreateDungeon = () => {
   
   const [difficulty, setDifficulty] = useState("Normal");
   const [selectedNPC, setSelectedNPC] = useState<NPC | null>(null);
-  const [encounters, setEncounters] = useState(7);
+  const [encounters, setEncounters] = useState(10);
 
   const handleGenerate = async () => {
     if (!selectedNPC) {
@@ -129,10 +129,10 @@ const CreateDungeon = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5">5 encounters (Short)</SelectItem>
-                    <SelectItem value="7">7 encounters (Normal)</SelectItem>
-                    <SelectItem value="9">9 encounters (Long)</SelectItem>
-                    <SelectItem value="12">12 encounters (Epic)</SelectItem>
+                    <SelectItem value="7">7 encounters (Short)</SelectItem>
+                    <SelectItem value="10">10 encounters (Normal)</SelectItem>
+                    <SelectItem value="13">13 encounters (Long)</SelectItem>
+                    <SelectItem value="15">15 encounters (Epic)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
