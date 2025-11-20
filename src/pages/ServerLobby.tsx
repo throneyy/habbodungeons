@@ -170,6 +170,16 @@ const ServerLobby = () => {
 
       if (serverError) throw serverError;
       
+      if (!serverData) {
+        toast({
+          title: "Server not found",
+          description: "This server no longer exists.",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+      
       // If server has a dungeon already assigned, this means battle was started
       // Navigate directly to battle
       if (serverData.dungeon_id) {
