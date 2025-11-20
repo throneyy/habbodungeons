@@ -61,7 +61,18 @@ serve(async (req) => {
     if (!response.ok) {
       const error = await response.text();
       console.error('ElevenLabs API error:', error);
-      throw new Error(`Failed to generate speech: ${error}`);
+      
+      // Return a graceful error response instead of throwing
+      return new Response(
+        JSON.stringify({ 
+          error: 'Text-to-speech temporarily unavailable',
+          details: error 
+        }),
+        {
+          status: 200, // Return 200 so it doesn't crash the UI
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Get audio data

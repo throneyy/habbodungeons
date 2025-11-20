@@ -24,10 +24,14 @@ export const useTextToSpeech = () => {
         body: { text, voice }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('TTS unavailable:', error);
+        return; // Silently fail - don't block UI
+      }
 
       if (!data.audioContent) {
-        throw new Error('No audio content received');
+        console.warn('No audio content received from TTS');
+        return; // Silently fail - don't block UI
       }
 
       // Convert base64 to audio
@@ -59,12 +63,8 @@ export const useTextToSpeech = () => {
 
       await audio.play();
     } catch (error) {
-      console.error('Text-to-speech error:', error);
-      toast({
-        title: "Voice Error",
-        description: error instanceof Error ? error.message : "Failed to generate speech",
-        variant: "destructive"
-      });
+      console.warn('Text-to-speech error:', error);
+      // Silently fail - TTS is a nice-to-have feature, not critical
     } finally {
       setIsLoading(false);
     }
