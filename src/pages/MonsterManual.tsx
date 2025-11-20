@@ -286,7 +286,7 @@ export default function MonsterManual() {
                         className="pixel-icon max-h-full max-w-full object-contain"
                         style={{ 
                           imageRendering: 'pixelated',
-                          transform: (monster.sprite_filename === 'ice-guardian.png' || 
+                          transform: `${(monster.sprite_filename === 'ice-guardian.png' || 
                                      monster.sprite_filename === 'blood-dragon-boss.gif' ||
                                      monster.sprite_filename === 'glacial-imp.png' ||
                                      monster.sprite_filename === 'ice-knight-boss.png' ||
@@ -300,9 +300,8 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'frost-brute.png' ||
                                      monster.sprite_filename === 'void-stalker.png' ||
                                      monster.sprite_filename === 'swamp-lurker.png' ||
-                                     monster.sprite_filename === 'infernal-hound.png') ? 'none' : 'scaleX(-1)',
-                          scale: monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
-                                 monster.sprite_filename === 'giant-rat.png' ? '7.5' : '1'
+                                     monster.sprite_filename === 'infernal-hound.png') ? '' : 'scaleX(-1) '}scale(${monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
+                                 monster.sprite_filename === 'giant-rat.png' ? '7.5' : '1'})`
                         }}
                       />
                     ) : (
