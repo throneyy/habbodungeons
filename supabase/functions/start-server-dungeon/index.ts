@@ -66,7 +66,8 @@ serve(async (req) => {
     ];
 
     const npcId = npcIds[Math.floor(Math.random() * npcIds.length)];
-    const encounters = 3;
+    // Generate dungeons with 7-10 encounters for better pacing
+    const encounters = 7 + Math.floor(Math.random() * 4); // Random between 7-10
     const difficulty = server.difficulty || 'Normal';
 
     console.log("Generating dungeon with NPC quest giver:", npcId);
