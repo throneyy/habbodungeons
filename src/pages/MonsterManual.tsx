@@ -30,6 +30,11 @@ import bloodDragonBoss from "@/assets/blood-dragon-boss.gif";
 import iceKnightBoss from "@/assets/ice-knight-boss.png";
 import icedStoneDragon from "@/assets/iced-stone-dragon.png";
 import mysticShaman from "@/assets/mystic-shaman-boss.png";
+import frostBrute from "@/assets/frost-brute.png";
+import voidStalker from "@/assets/void-stalker.png";
+import swampLurker from "@/assets/swamp-lurker.png";
+import infernalHound from "@/assets/infernal-hound.png";
+import corruptedGuard from "@/assets/corrupted-guard.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -54,6 +59,11 @@ const ENEMY_SPRITES: Record<string, string> = {
   "ice-knight-boss.png": iceKnightBoss,
   "iced-stone-dragon.png": icedStoneDragon,
   "mystic-shaman-boss.png": mysticShaman,
+  "frost-brute.png": frostBrute,
+  "void-stalker.png": voidStalker,
+  "swamp-lurker.png": swampLurker,
+  "infernal-hound.png": infernalHound,
+  "corrupted-guard.png": corruptedGuard,
 };
 
 interface Monster {
@@ -172,6 +182,31 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
     type: "Boss - Elemental Mystic",
     description: "A powerful shaman channeling primal elemental forces. Commands both fire and ice magic, summoning ancestral spirits to overwhelm foes with raw elemental fury.",
     difficulty: "Legendary"
+  },
+  "Frost Brute": {
+    type: "Giant",
+    description: "A massive blue-skinned brute empowered by ancient frost magic. Its tremendous strength and icy resilience make it a formidable opponent.",
+    difficulty: "Uncommon"
+  },
+  "Void Stalker": {
+    type: "Aberration",
+    description: "A creature from the dark void between worlds, its shadowy form absorbs light and drains life energy from those who dare approach.",
+    difficulty: "Uncommon"
+  },
+  "Swamp Lurker": {
+    type: "Troll",
+    description: "A vicious green-skinned troll that dwells in the frozen marshlands. Despite the cold, it regenerates quickly and fights with savage ferocity.",
+    difficulty: "Uncommon"
+  },
+  "Infernal Hound": {
+    type: "Fiend",
+    description: "A demonic beast wreathed in dark flames. These hounds hunt in packs and their bites carry both fire and shadow magic.",
+    difficulty: "Uncommon"
+  },
+  "Corrupted Guard": {
+    type: "Humanoid",
+    description: "Once a noble guard, now twisted by dark magic into a corrupted warrior. Still wielding their original equipment with deadly skill.",
+    difficulty: "Uncommon"
   }
 };
 
