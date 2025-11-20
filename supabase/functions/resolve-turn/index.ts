@@ -155,6 +155,24 @@ serve(async (req) => {
 
     console.log(`Equipped weapon: ${equippedWeapon?.item_name || 'none'}`);
 
+    // Define weapon bonuses
+    const WEAPON_BONUSES: Record<string, number> = {
+      "Rusty Sword": 5,
+      "Fighters Sword": 5,
+      "Warriors Sword": 5,
+      "Mage Staff": 5,
+      "Powerful Mage Staff": 10,
+      "Bow & Arrow": 5,
+      "Ornate Dagger": 5,
+      "Dagger": 5,
+      "Longsword": 5,
+      "Shortsword": 5,
+      "Greatsword": 10,
+      "Blade": 5,
+    };
+
+    const weaponBonus = equippedWeapon ? (WEAPON_BONUSES[equippedWeapon.item_name] || 5) : 0;
+
     // Call AI for combat resolution with equipped weapon info
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -183,7 +201,7 @@ DAMAGE FORMULA (USE THIS EXACTLY):
 - Player damage = (playerATK + weaponBonus) × (diceSum / 3) - (enemyDEF / 4)
 - Enemy damage = enemyATK × 1.2 - (playerDEF / 4)
 - Minimum damage is always 1
-- weaponBonus: Basic weapons = 5, Powerful weapons = 10, No weapon = 0
+- weaponBonus is provided in the input (${weaponBonus})
 
 When the player attacks with a weapon, ALWAYS mention the weapon name in the narration by wrapping it like this: [WEAPON:weapon_name]
 
@@ -208,6 +226,7 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
             content: JSON.stringify({
               action,
               dice,
+              weaponBonus,
               equippedWeapon: equippedWeapon ? {
                 name: equippedWeapon.item_name,
                 type: equippedWeapon.item_type
