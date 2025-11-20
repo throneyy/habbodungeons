@@ -60,6 +60,7 @@ export default {
         },
         hp: "hsl(var(--hp-bar))",
         mp: "hsl(var(--mp-bar))",
+        xp: "hsl(var(--xp-bar))",
       },
       borderRadius: {
         lg: "var(--radius)",

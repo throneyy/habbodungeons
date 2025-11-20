@@ -60,6 +60,7 @@ All colors MUST be HSL.
     /* HP/MP bar colors */
     --hp-bar: 0 75% 45%;
     --mp-bar: 200 70% 55%;
+    --xp-bar: 45 100% 55%;
   }
 
   .dark {

@@ -25,6 +25,8 @@ interface PlayerStats {
   max_hp: number;
   current_mp: number;
   max_mp: number;
+  current_xp: number;
+  xp_to_next_level: number;
   atk: number;
   def: number;
   spd: number;
@@ -341,6 +343,7 @@ const Dashboard = () => {
                 </div>
                 <StatBar label="HP" current={stats.current_hp} max={stats.max_hp} color="hp" />
                 <StatBar label="MP" current={stats.current_mp} max={stats.max_mp} color="mp" />
+                <StatBar label="XP" current={stats.current_xp} max={stats.xp_to_next_level} color="xp" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-accent rounded-lg border-4 border-habbo-dark">
