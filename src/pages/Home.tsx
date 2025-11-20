@@ -14,6 +14,7 @@ import npcWarrior from "@/assets/npc-warrior.png";
 import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import pixelStar from "@/assets/pixel-star.png";
 import npcKnight from "@/assets/npc-knight.png";
+import { DailyLeaderboard } from "@/components/DailyLeaderboard";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -82,6 +83,9 @@ const Home = () => {
             </Button>
           </div>
         </div>
+
+        {/* Daily Leaderboard */}
+        <DailyLeaderboard />
         
         {/* Hero Section */}
         <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 overflow-hidden">
