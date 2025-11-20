@@ -18,6 +18,7 @@ interface PlayerData {
   current_mp: number;
   current_xp: number;
   xp_to_next_level: number;
+  xp_gained_today: number;
   atk: number;
   def: number;
   spd: number;
@@ -75,6 +76,14 @@ export default function PlayerProfile() {
         return;
       }
 
+      // Fetch today's XP gains
+      const { data: dailyStats } = await supabase
+        .from("daily_stats")
+        .select("xp_gained")
+        .eq("user_id", profileData.id)
+        .eq("stat_date", new Date().toISOString().split('T')[0])
+        .maybeSingle();
+
       const habboProfile = profileData.habbo_profile_json as { figureString?: string } | null;
       
       setPlayer({
@@ -88,6 +97,7 @@ export default function PlayerProfile() {
         current_mp: statsData.current_mp || 50,
         current_xp: statsData.current_xp || 0,
         xp_to_next_level: statsData.xp_to_next_level || 100,
+        xp_gained_today: dailyStats?.xp_gained || 0,
         atk: statsData.atk || 10,
         def: statsData.def || 10,
         spd: statsData.spd || 10,
@@ -150,9 +160,15 @@ export default function PlayerProfile() {
             <div className="flex-1 space-y-3">
               <h1 className="text-5xl font-bold text-foreground">{player.habbo_username}</h1>
               <p className="text-xl text-muted-foreground">Habbo Dungeons: {player.username.split('@')[0]}</p>
-              <div className="inline-block px-4 py-2 bg-primary/20 border-2 border-primary rounded-lg">
-                <span className="text-sm text-muted-foreground mr-2">Level</span>
-                <span className="text-3xl font-bold text-primary">{player.level}</span>
+              <div className="flex gap-3 flex-wrap">
+                <div className="inline-block px-4 py-2 bg-primary/20 border-2 border-primary rounded-lg">
+                  <span className="text-sm text-muted-foreground mr-2">Level</span>
+                  <span className="text-3xl font-bold text-primary">{player.level}</span>
+                </div>
+                <div className="inline-block px-4 py-2 bg-xp/20 border-2 border-xp rounded-lg">
+                  <span className="text-sm text-muted-foreground mr-2">XP Today</span>
+                  <span className="text-3xl font-bold text-xp">✨ {player.xp_gained_today}</span>
+                </div>
               </div>
             </div>
           </div>
