@@ -196,7 +196,11 @@ Current room: ${context.roomIndex + 1}/${dungeonJson.rooms?.length || 10}
 Room type: ${currentRoom.room_type}
 Room description: ${roomDescription}
 ${currentRoom.enemy ? `\n**CRITICAL: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\nYou MUST incorporate this EXACT enemy into your story if creating an encounter that could lead to combat. Do NOT invent different enemies.` : ''}
-${lastChoice ? `Last choice: ${lastChoice}` : ''}
+${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
+${context.recentEvents && context.recentEvents.length > 0 ? `\n## RECENT NARRATIVE EVENTS (YOU MUST CONTINUE FROM HERE):
+${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'string').map((e: any, idx: number) => `${idx + 1}. ${e.message}`).join('\n')}
+
+⚠️ MANDATORY: Your storyText MUST pick up EXACTLY where the last event left off. If the last event describes "you're now in a darker section with knee-deep water", your story MUST begin in that SAME darker section with that SAME knee-deep water. DO NOT jump to a completely different location (like "a narrow ledge") unless the player explicitly chose to move there!` : ''}
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
 **DICE CHECKS ARE REQUIRED FOR:**
@@ -260,7 +264,12 @@ If an action contains these words, it MUST have diceRequired: true:
 - "dispel", "disrupt", "manipulate", "analyze", "decipher"
 
 ## Story Structure Rules
-1. CRITICAL: Your narrative must directly acknowledge what just happened in the last choice/action. Don't start fresh as if nothing happened - continue the story naturally from the last event.
+1. CRITICAL NARRATIVE CONTINUITY: 
+   - If lastChoice exists, you MUST begin your storyText by directly continuing from that action's consequence
+   - Reference what the player just did and where they are NOW as a result
+   - DO NOT describe a completely new location unless the last choice explicitly moved them
+   - Build upon the previous scene rather than starting fresh
+   - Example: If they just "pushed through waterlogged debris into a darker section", your story should start in that darker section, not a completely different ledge
 
 2. Create varied, unpredictable encounters:
    - Enemy encounters (~35%): May include dialogue options before combat
