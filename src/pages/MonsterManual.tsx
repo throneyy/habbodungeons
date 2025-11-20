@@ -21,7 +21,7 @@ import iceShade from "@/assets/ice-shade.png";
 import undeadHabbo from "@/assets/undead-habbo.png";
 import giantRat from "@/assets/giant-rat.png";
 import goblinTrio from "@/assets/goblin-trio.png";
-import frostbiteSpider from "@/assets/frostbite-spider.webp";
+import frostbiteSpider from "@/assets/frostbite-spider.png";
 import frostUndead from "@/assets/frost-undead.gif";
 import flamingPhantom from "@/assets/flaming-phantom.png";
 import fireDrake from "@/assets/fire-drake.png";
@@ -49,7 +49,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "undead-habbo.png": undeadHabbo,
   "giant-rat.png": giantRat,
   "goblin-trio.png": goblinTrio,
-  "frostbite-spider.webp": frostbiteSpider,
+  "frostbite-spider.png": frostbiteSpider,
   "frost-undead.gif": frostUndead,
   "flaming-phantom.png": flamingPhantom,
   "fire-drake.png": fireDrake,
@@ -301,7 +301,8 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'frost-brute.png' ||
                                      monster.sprite_filename === 'void-stalker.png' ||
                                      monster.sprite_filename === 'swamp-lurker.png' ||
-                                     monster.sprite_filename === 'infernal-hound.png') ? 'none' : 'scaleX(-1)'
+                                     monster.sprite_filename === 'infernal-hound.png') ? 'none' : 'scaleX(-1)',
+                          scale: monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : '1'
                         }}
                       />
                     ) : (
