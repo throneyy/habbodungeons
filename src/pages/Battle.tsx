@@ -2574,8 +2574,8 @@ const Battle = () => {
             <div className="space-y-4">
               <div className="relative">
                 <Button
-                  onClick={() => speak(battleData.current_story_node?.storyText || battleData.room_description)}
-                  disabled={isPlaying || ttsLoading || !battleData.current_story_node?.storyText && !battleData.room_description}
+                  onClick={() => speak(storyNode?.storyText || battleData.room_description)}
+                  disabled={isPlaying || ttsLoading || !storyNode?.storyText && !battleData.room_description}
                   variant="ghost"
                   size="sm"
                   className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full bg-muted hover:bg-muted/80 border-2 border-habbo-dark z-10"
@@ -2584,7 +2584,7 @@ const Battle = () => {
                   <Volume2 className={`h-4 w-4 ${isPlaying ? 'animate-pulse text-primary' : ''}`} />
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  {battleData.current_story_node?.storyText || battleData.room_description}
+                  {storyNode?.storyText || battleData.room_description}
                 </p>
               </div>
               
