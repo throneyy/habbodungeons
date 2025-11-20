@@ -35,6 +35,7 @@ serve(async (req) => {
     const voiceId = voiceIds[voice] || voiceIds['Edward'];
 
     console.log('Generating speech for text:', text.substring(0, 50) + '...');
+    console.log('Using voice:', voice, 'Voice ID:', voiceId);
 
     // Call ElevenLabs API
     const response = await fetch(
