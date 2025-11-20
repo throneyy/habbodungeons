@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voice = "Liam" } = await req.json();
+    const { text, voice = "Edward" } = await req.json();
 
     if (!text) {
       throw new Error('Text is required');
@@ -24,14 +24,15 @@ serve(async (req) => {
 
     // Map voice names to ElevenLabs voice IDs
     const voiceIds: Record<string, string> = {
-      'Liam': 'TX3LPaxmHKxFdv7VOQHJ', // Deep, dramatic - perfect for fantasy
+      'Edward': 'goT3UYdM9bhm0n2lmKQx', // Deep British - perfect for fantasy narration
+      'Liam': 'TX3LPaxmHKxFdv7VOQHJ', // Deep, dramatic
       'George': 'JBFqnCBsd6RMkjVDRZzb', // Rich, authoritative
       'Callum': 'N2lVS1w4EtoT3dr4eOWO', // Strong, narrative
       'Aria': '9BWtsMINqrJLrRacOk9x',
       'Roger': 'CwhRBWXzGAHq8TQ4Fs17',
     };
 
-    const voiceId = voiceIds[voice] || voiceIds['Liam'];
+    const voiceId = voiceIds[voice] || voiceIds['Edward'];
 
     console.log('Generating speech for text:', text.substring(0, 50) + '...');
 
