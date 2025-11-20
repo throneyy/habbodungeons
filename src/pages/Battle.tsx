@@ -2500,7 +2500,12 @@ const Battle = () => {
                         height: 'auto', 
                         maxWidth: '200px', 
                         maxHeight: '200px',
-                        transform: (battleData.enemy.sprite === 'ice-guardian.png' || battleData.enemy.sprite === 'blood-dragon-boss.gif') ? 'none' : 'scaleX(-1)'
+                        transform: (battleData.enemy.sprite === 'ice-guardian.png' || 
+                                   battleData.enemy.sprite === 'blood-dragon-boss.gif' ||
+                                   battleData.enemy.sprite === 'glacial-imp.png' ||
+                                   battleData.enemy.sprite === 'ice-knight-boss.png' ||
+                                   battleData.enemy.sprite === 'undead-habbo.png' ||
+                                   battleData.enemy.sprite === 'frost-undead.gif') ? 'none' : 'scaleX(-1)'
                       }}
                     />
                     {enemyHit && (
