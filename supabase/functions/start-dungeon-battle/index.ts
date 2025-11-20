@@ -55,8 +55,12 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error("Missing Authorization header");
+    }
+
     const { dungeonId, difficulty } = await req.json();
-    const authHeader = req.headers.get('Authorization')!;
     
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
