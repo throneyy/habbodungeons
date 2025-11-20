@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { HabboPanel } from "@/components/HabboPanel";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { BookOpen, Skull } from "lucide-react";
+import { Skull } from "lucide-react";
 import { toast } from "sonner";
+import monsterManualTitle from "@/assets/monster-manual-title.png";
 
 // Import enemy sprites
 import skeleton from "@/assets/skeleton.png";
@@ -211,11 +212,14 @@ export default function MonsterManual() {
     <AppLayout>
       <div className="container mx-auto py-8 space-y-6">
         <HabboPanel className="bg-gradient-to-br from-destructive/20 to-primary/20">
-          <div className="flex items-center gap-4 mb-2">
-            <div>
-              <h1 className="text-5xl font-black text-foreground">Monster Manual</h1>
-              <p className="text-lg text-muted-foreground">A Comprehensive Guide to the Creatures of the Frozen Wastes</p>
-            </div>
+          <div className="flex flex-col items-center gap-2">
+            <img 
+              src={monsterManualTitle} 
+              alt="Monster Manual" 
+              className="pixel-icon max-w-2xl w-full h-auto"
+              style={{ imageRendering: 'pixelated' }}
+            />
+            <p className="text-lg text-muted-foreground text-center">A Comprehensive Guide to the Creatures of the Frozen Wastes</p>
           </div>
         </HabboPanel>
 
