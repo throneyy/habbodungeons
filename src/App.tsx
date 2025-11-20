@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import LootBox from "./pages/LootBox";
 import AdminPanel from "./pages/AdminPanel";
 import PlayerProfile from "./pages/PlayerProfile";
+import MonsterManual from "./pages/MonsterManual";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/loot-box" element={<LootBox />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/player/:habboUsername" element={<PlayerProfile />} />
+          <Route path="/monster-manual" element={<MonsterManual />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
