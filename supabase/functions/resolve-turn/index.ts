@@ -205,21 +205,27 @@ DAMAGE FORMULA (USE THIS EXACTLY):
 
 When the player attacks with a weapon, ALWAYS mention the weapon name in the narration by wrapping it like this: [WEAPON:weapon_name]
 
+CRITICAL COUNTERATTACK RULE:
+- If the enemy's HP drops to 0 or below from your attack, they are KILLED and CANNOT counterattack
+- Do NOT include ANY counterattack narration if the enemy dies
+- Only describe counterattacks if the enemy survives with HP > 0
+
 Output ONLY valid JSON (no markdown formatting) with: 
 {
   playerDamageDealt: number,
   playerDamageTaken: number,
-  enemyAction: string (describe what enemy did),
+  enemyAction: string (describe what enemy did - use "defeated" or "killed" if enemy HP <= 0),
   playerNewHp: number,
   enemyNewHp: number,
-  narration: string[] (2-4 lines describing both player action AND enemy counterattack, with weapon name wrapped as [WEAPON:name]),
+  narration: string[] (2-4 lines - describe player action, then ONLY include enemy counterattack if enemy survives, weapon name wrapped as [WEAPON:name]),
   victory: boolean,
   defeat: boolean
 }
 
 Example narration with weapon: "You strike with your [WEAPON:Rusty Sword], dealing 15 damage!"
+Example when enemy dies: "Your [WEAPON:Rusty Sword] cleaves through the enemy, dealing the final 15 damage!"
 
-Keep narration exciting but brief. Always include enemy counterattack in narration unless enemy is defeated.`
+IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing blow. Do NOT mention enemy counterattacks.`
           },
           {
             role: 'user',
@@ -731,9 +737,26 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
     }
 
     // Ensure narration is an array of strings
-    const safeNarration = Array.isArray(result.narration) 
+    let safeNarration = Array.isArray(result.narration) 
       ? result.narration.map((msg: any) => String(msg || ''))
       : [];
+    
+    // CRITICAL: If enemy was killed, filter out any counterattack narration
+    // This ensures no mention of counterattacks when the enemy is dead
+    if (enemyNewHp <= 0) {
+      safeNarration = safeNarration.filter((line: string) => {
+        const lowerLine = line.toLowerCase();
+        // Remove lines that mention counterattacks, strikes back, retaliates, etc.
+        return !(
+          lowerLine.includes('counterattack') ||
+          lowerLine.includes('strikes back') ||
+          lowerLine.includes('retaliates') ||
+          lowerLine.includes('lashes out') ||
+          lowerLine.includes('attacks you') ||
+          (lowerLine.includes('dealing') && lowerLine.includes('damage') && !lowerLine.includes('you'))
+        );
+      });
+    }
 
     // Create damage messages to show exact numbers
     const damageMessages: string[] = [];
