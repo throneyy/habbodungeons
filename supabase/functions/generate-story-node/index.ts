@@ -47,8 +47,8 @@ serve(async (req) => {
     const now = Date.now();
     if (rateLimit) {
       const timeSince = now - new Date(rateLimit.last_action_at).getTime();
-      if (timeSince < 5000) {
-        throw new Error('Please wait 5 seconds between story generations');
+      if (timeSince < 1000) { // 1 second - prevents double-clicks but allows smooth gameplay
+        throw new Error('Please wait a moment between story choices');
       }
     }
 
