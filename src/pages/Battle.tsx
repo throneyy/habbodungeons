@@ -91,12 +91,8 @@ interface BattleLogEntry {
 
 // Helper function to get the latest narrative from battle log or story node
 const getLatestNarrative = (battleData: BattleData): string => {
-  // First try current story node
-  if (battleData.current_story_node?.storyText) {
-    return battleData.current_story_node.storyText;
-  }
-  
-  // Extract most recent non-dice-check, non-choice message from battle log
+  // ALWAYS prioritize battle log over current_story_node to ensure consistency
+  // between "The Story Unfolds" and "Chronicle of Events"
   if (battleData.battle_log && battleData.battle_log.length > 0) {
     // Filter out choice and dice check messages, get the last narrative message
     const narrativeMessages = battleData.battle_log.filter(
@@ -108,7 +104,12 @@ const getLatestNarrative = (battleData: BattleData): string => {
     }
   }
   
-  // Fallback to static room description
+  // Fallback to current story node if battle log is empty
+  if (battleData.current_story_node?.storyText) {
+    return battleData.current_story_node.storyText;
+  }
+  
+  // Final fallback to static room description
   return battleData.room_description;
 };
 
