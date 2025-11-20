@@ -24,15 +24,35 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Find the user profile (case-insensitive)
-    const { data: profile, error: profileError } = await supabase
+    // Build email-style username for exact match
+    const emailUsername = username.toLowerCase().includes("@")
+      ? username.toLowerCase()
+      : `${username.toLowerCase()}@habbo-dungeons.local`;
+
+    // Find the user profile (exact match to prevent enumeration)
+    const { data: profile } = await supabase
       .from('profiles')
       .select('id, habbo_username')
-      .ilike('username', `${username.toLowerCase()}%`)
-      .single();
+      .eq('username', emailUsername)
+      .maybeSingle();
 
-    if (profileError || !profile) {
-      throw new Error("User not found");
+    // Always return success to prevent username enumeration
+    if (!profile) {
+      // Generate dummy code for non-existent users (prevents timing attacks)
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let dummyCode = '';
+      for (let i = 0; i < 6; i++) {
+        dummyCode += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'If your account exists, a verification code has been generated',
+          verificationCode: dummyCode
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Generate a 6 uppercase letter verification code
