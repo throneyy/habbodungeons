@@ -268,6 +268,11 @@ serve(async (req) => {
     const hasValidEnemy = enemyState.current_hp > 0 && enemyState.name !== "None" && enemyState.name !== "Unknown";
     const mode = hasValidEnemy ? (enemyState.mode || "battle") : "story";
 
+    // Derive a simple battle_status for UI synchronization
+    // "battle" = active combat, "won" = last battle was just won (enemy HP <= 0),
+    // "story" = non-combat story exploration
+    const battleStatus = enemyState.current_hp <= 0 ? "won" : (mode === "story" ? "story" : "battle");
+
     // Ensure battle_log is in the correct format
     let battleLog = battle.battle_log || [];
     // Convert old string format to new object format if needed
@@ -300,6 +305,7 @@ serve(async (req) => {
       event_description: currentRoom.eventDescription || null,
       battle_log: battleLog,
       mode: mode,
+      battle_status: battleStatus,
       isPartyBattle: !!(battle.server_id || battle.party_id),
       currentTurnUserId: battle.current_turn_user_id,
       turnOrder: battle.turn_order || [],

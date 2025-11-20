@@ -615,7 +615,10 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       mode: result.victory ? "story" : "battle", // Switch to story mode after victory
     };
 
-    // If victory, revive dead party members with 5 HP and check room progression
+    // Derive battle_status for the client UI
+    const battleStatus = result.victory
+      ? "won"
+      : (isPartyBattle ? (isEntirePartyDead ? "lost" : "battle") : (result.defeat ? "lost" : "battle"));
     if (result.victory) {
       // Revive dead party members with 5 HP
       if (isPartyBattle && updatedDeadPlayers.length > 0) {
@@ -769,6 +772,7 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       room_description: "Combat continues...",
       battle_log: updatedLog,
       mode: updatedEnemy.mode || "battle",
+      battle_status: battleStatus,
     };
 
     return new Response(
