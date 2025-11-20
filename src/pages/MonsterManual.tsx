@@ -303,7 +303,7 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'swamp-lurker.png' ||
                                      monster.sprite_filename === 'infernal-hound.png') ? 'none' : 'scaleX(-1)',
                           scale: monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
-                                 monster.sprite_filename === 'giant-rat.png' ? '2.5' : '1'
+                                 monster.sprite_filename === 'giant-rat.png' ? '7.5' : '1'
                         }}
                       />
                     ) : (
