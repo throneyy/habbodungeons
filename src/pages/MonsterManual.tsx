@@ -269,8 +269,7 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'frost-wraith.png' ||
                                      monster.sprite_filename === 'frost-mutant.png' ||
                                      monster.sprite_filename === 'flaming-phantom.png' ||
-                                     monster.sprite_filename === 'iced-stone-dragon.png' ||
-                                     monster.sprite_filename === 'mystic-shaman-boss.png') ? 'none' : 'scaleX(-1)'
+                                     monster.sprite_filename === 'iced-stone-dragon.png') ? 'none' : 'scaleX(-1)'
                         }}
                       />
                     ) : (
