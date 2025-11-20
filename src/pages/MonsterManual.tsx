@@ -212,14 +212,16 @@ export default function MonsterManual() {
     <AppLayout>
       <div className="container mx-auto py-8 space-y-6">
         <HabboPanel className="bg-gradient-to-br from-destructive/20 to-primary/20">
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center gap-4 mb-2">
             <img 
               src={monsterManualTitle} 
               alt="Monster Manual" 
-              className="pixel-icon max-w-2xl w-full h-auto"
+              className="pixel-icon"
               style={{ imageRendering: 'pixelated' }}
             />
-            <p className="text-lg text-muted-foreground text-center">A Comprehensive Guide to the Creatures of the Frozen Wastes</p>
+            <div>
+              <p className="text-lg text-muted-foreground">A Comprehensive Guide to the Creatures of the Frozen Wastes</p>
+            </div>
           </div>
         </HabboPanel>
 
