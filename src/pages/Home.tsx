@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { MainNav } from "@/components/MainNav";
-import dungeonBg from "@/assets/dungeon-bg.png";
+import tavernRoom from "@/assets/tavern-room.gif";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import SnowFall from "@/components/SnowFall";
 import { toast } from "sonner";
@@ -59,8 +59,13 @@ const Home = () => {
     <div className="min-h-screen bg-background p-8 relative">
       <SnowFall />
       <div 
-        className="absolute inset-0 opacity-20 bg-center bg-cover"
-        style={{ backgroundImage: `url(${dungeonBg})` }}
+        className="absolute inset-0 opacity-30 bg-center"
+        style={{ 
+          backgroundImage: `url(${tavernRoom})`,
+          backgroundSize: 'auto',
+          backgroundRepeat: 'repeat',
+          imageRendering: 'pixelated'
+        }}
       />
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         <MainNav />
