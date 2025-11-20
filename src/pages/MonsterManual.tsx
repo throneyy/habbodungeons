@@ -291,7 +291,6 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'glacial-imp.png' ||
                                      monster.sprite_filename === 'ice-knight-boss.png' ||
                                      monster.sprite_filename === 'undead-habbo.png' ||
-                                     monster.sprite_filename === 'werewolf.png' ||
                                      monster.sprite_filename === 'skeleton.png' ||
                                      monster.sprite_filename === 'goblin-trio.png' ||
                                      monster.sprite_filename === 'frost-wraith.png' ||
