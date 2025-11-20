@@ -190,6 +190,15 @@ const BOSS_POOL = [
     baseAtk: 25,
     baseDef: 18,
     baseSpd: 11
+  },
+  {
+    name: "Iced Stone Dragon",
+    description: "An ancient trickster dragon combining ice and stone elemental magic, tests adventurers with riddles",
+    sprite: "iced-stone-dragon.png",
+    baseHp: 320,
+    baseAtk: 24,
+    baseDef: 22,
+    baseSpd: 8
   }
 ];
 
@@ -204,6 +213,12 @@ export const BOSS_LOOT: Record<string, Array<{name: string, quantity: number, ty
     { name: "Iron Chest Armour", quantity: 1, type: "armor" },
     { name: "Iron Helmet", quantity: 1, type: "armor" },
     { name: "Iron Sabatons", quantity: 1, type: "armor" }
+  ],
+  "Iced Stone Dragon": [
+    { name: "Powerful Mage Staff", quantity: 1, type: "weapon" },
+    { name: "Crystals", quantity: 3, type: "material" },
+    { name: "Runestones", quantity: 5, type: "material" },
+    { name: "Gold Coins", quantity: 500, type: "currency" }
   ]
 };
 
