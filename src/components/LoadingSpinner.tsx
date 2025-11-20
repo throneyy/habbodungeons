@@ -6,7 +6,8 @@ export const LoadingSpinner = () => {
       <img 
         src={loadingHabbos} 
         alt="Loading" 
-        className="w-16 h-16 pixel-icon"
+        className="pixel-icon"
+        style={{ width: 'auto', height: 'auto' }}
       />
     </div>
   );
