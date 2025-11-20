@@ -23,3 +23,6 @@ verify_jwt = true
 
 [functions.start-dungeon-battle]
 verify_jwt = true
+
+[functions.text-to-speech]
+verify_jwt = true
