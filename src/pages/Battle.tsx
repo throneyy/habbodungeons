@@ -1784,6 +1784,7 @@ const Battle = () => {
     const currentStoryText = battleData ? getLatestNarrative(battleData) : storyNode?.storyText || "";
 
     return (
+      <>
       <div className="min-h-screen bg-background relative">
         <div 
           className="fixed inset-0 opacity-20 bg-center bg-cover"
@@ -2490,6 +2491,45 @@ const Battle = () => {
           </div>
         </div>
       </div>
+
+      {/* Victory Loot Modal - Story Mode */}
+      <VictoryLoot
+        isOpen={showVictoryLoot}
+        onClose={() => {
+          victoryDialogActiveRef.current = false;
+          setShowVictoryLoot(false);
+          setVictoryLootData({ items: [], xp: 0 });
+        }}
+        onContinue={async () => {
+          victoryDialogActiveRef.current = false;
+          setShowVictoryLoot(false);
+          setVictoryLootData({ items: [], xp: 0 });
+          
+          // Check if this was the final room by trying to load battle
+          try {
+            const { data: battleCheck } = await supabase
+              .from('battle_states')
+              .select('current_room_index, is_active, dungeons!inner(dungeon_json)')
+              .eq('dungeon_id', id)
+              .eq('is_active', true)
+              .maybeSingle();
+            
+            if (!battleCheck || !battleCheck.is_active) {
+              // Battle is complete - show completion screen
+              setQuestComplete(true);
+            } else {
+              // Continue to next room
+              await loadBattle();
+            }
+          } catch (error) {
+            // If any error, assume quest is complete
+            setQuestComplete(true);
+          }
+        }}
+        lootItems={victoryLootData.items}
+        xpGained={victoryLootData.xp}
+      />
+      </>
     );
   }
 
