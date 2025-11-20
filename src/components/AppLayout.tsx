@@ -16,12 +16,9 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
         style={{ backgroundImage: `url(${dungeonBg})` }}
       />
       
-      <div className="relative z-10">
-        <div className="p-4 max-w-6xl mx-auto">
+      <div className="relative z-10 p-4">
+        <div className="max-w-6xl mx-auto space-y-6">
           <MainNav />
-        </div>
-        
-        <div className="p-8 pt-4">
           {children}
         </div>
       </div>
