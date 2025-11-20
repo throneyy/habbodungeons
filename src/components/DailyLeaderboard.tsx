@@ -75,7 +75,20 @@ export const DailyLeaderboard = () => {
         };
       });
 
-      setTopPlayers(leaderboard);
+      // Remove duplicates by user_id (keep highest XP entry)
+      const uniqueLeaderboard = leaderboard.reduce((acc, current) => {
+        const existing = acc.find(item => item.user_id === current.user_id);
+        if (!existing) {
+          acc.push(current);
+        } else if (current.xp_gained > existing.xp_gained) {
+          // Replace with higher XP entry
+          const index = acc.indexOf(existing);
+          acc[index] = current;
+        }
+        return acc;
+      }, [] as LeaderboardEntry[]);
+
+      setTopPlayers(uniqueLeaderboard);
       setLoading(false);
     } catch (error) {
       console.error('Error loading leaderboard:', error);
@@ -134,14 +147,16 @@ export const DailyLeaderboard = () => {
                   #{rank}
                 </div>
 
-                {/* Habbo Avatar - Mini size with correct API format */}
+                {/* Habbo Avatar - Full resolution at natural size */}
                 {player.figureString ? (
-                  <img 
-                    src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&hotel=COM&size=s&action=std&gesture=agr&direction=2&head_direction=2&service=official`}
-                    alt={displayName}
-                    className="w-10 h-10 pixelated object-contain"
-                    style={{ imageRendering: 'pixelated' }}
-                  />
+                  <div className="w-auto h-12 flex items-center justify-center">
+                    <img 
+                      src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&hotel=COM&size=s&action=std&gesture=agr&direction=2&head_direction=2&service=official`}
+                      alt={displayName}
+                      className="h-full w-auto pixelated"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                  </div>
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                     <Trophy className="w-5 h-5 text-primary" />
