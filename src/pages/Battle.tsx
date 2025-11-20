@@ -52,7 +52,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "ice-tiger.gif": iceTiger,
   "ice-elemental.png": iceElemental,
   "ice-guardian.png": iceGuardian,
-  "frost-wolf.png": frostWolf,
+  "frost-wolf.png": werewolf,
   "glacial-imp.png": glacialImp,
   "frozen-goblin.png": frozenGoblin,
   "frost-mutant.png": frostMutant,
@@ -68,7 +68,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "goblin-trio.png": goblinTrio,
   "ice-knight-boss.png": iceKnightBoss,
   "spirit-owl.png": spiritOwl,
-  "werewolf.png": werewolf,
+  "werewolf.png": frostWolf,
 };
 
 interface BattleLogEntry {

@@ -40,7 +40,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "ice-tiger.gif": iceTiger,
   "ice-elemental.png": iceElemental,
   "ice-guardian.png": iceGuardian,
-  "frost-wolf.png": frostWolf,
+  "frost-wolf.png": werewolf,
   "glacial-imp.png": glacialImp,
   "frozen-goblin.png": frozenGoblin,
   "frost-mutant.png": frostMutant,
@@ -53,7 +53,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frost-undead.gif": frostUndead,
   "flaming-phantom.png": flamingPhantom,
   "fire-drake.png": fireDrake,
-  "werewolf.png": werewolf,
+  "werewolf.png": frostWolf,
   "blood-dragon-boss.gif": bloodDragonBoss,
   "ice-knight-boss.png": iceKnightBoss,
   "iced-stone-dragon.png": icedStoneDragon,
@@ -98,7 +98,7 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
   },
   "Frost Wolf": {
     type: "Beast",
-    description: "White-furred predators adapted to the icy wastes, their bite carries the chill of death.",
+    description: "Black-furred predators adapted to the icy wastes, their bite carries the chill of death.",
     difficulty: "Uncommon"
   },
   "Frostbite Spider": {
