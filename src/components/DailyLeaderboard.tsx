@@ -134,16 +134,17 @@ export const DailyLeaderboard = () => {
                   #{rank}
                 </div>
 
-                {/* Habbo Avatar or Placeholder - Full Resolution */}
+                {/* Habbo Avatar - Mini size (size=n for authentic mini look) */}
                 {player.figureString ? (
                   <img 
-                    src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=l&direction=2&head_direction=3`}
+                    src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=n&direction=2&head_direction=3`}
                     alt={displayName}
-                    className="w-12 h-12 pixelated"
+                    className="w-10 h-10 pixelated object-contain"
+                    style={{ imageRendering: 'pixelated' }}
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Trophy className="w-6 h-6 text-primary" />
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Trophy className="w-5 h-5 text-primary" />
                   </div>
                 )}
 
