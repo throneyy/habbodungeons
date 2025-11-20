@@ -23,6 +23,19 @@ serve(async (req) => {
 
   try {
     const { battleId, action, dice, itemName } = await req.json();
+
+    // Validate dice array
+    if (!Array.isArray(dice)) {
+      throw new Error('Dice must be an array');
+    }
+
+    if (dice.length !== 5) {
+      throw new Error('Must roll exactly 5 dice');
+    }
+
+    if (!dice.every(d => Number.isInteger(d) && d >= 1 && d <= 6)) {
+      throw new Error('Each die must be an integer between 1 and 6');
+    }
     const authHeader = req.headers.get('Authorization')!;
     
     const supabase = createClient(
@@ -33,6 +46,29 @@ serve(async (req) => {
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
+
+    // Rate limiting check
+    const { data: rateLimit } = await supabase
+      .from('rate_limits')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('action_type', 'combat_action')
+      .maybeSingle();
+
+    const now = Date.now();
+    if (rateLimit) {
+      const timeSince = now - new Date(rateLimit.last_action_at).getTime();
+      if (timeSince < 2000) {
+        throw new Error('Please wait 2 seconds between combat actions');
+      }
+    }
+
+    // Update rate limit
+    await supabase.from('rate_limits').upsert({
+      user_id: user.id,
+      action_type: 'combat_action',
+      last_action_at: new Date().toISOString(),
+    });
 
     console.log(`Resolving turn for user: ${user.id}, action: ${action}, itemName: ${itemName || 'none'}`);
 

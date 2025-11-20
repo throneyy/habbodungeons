@@ -378,6 +378,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action_count: number | null
+          action_type: string
+          created_at: string | null
+          id: string
+          last_action_at: string
+          user_id: string
+          window_start: string | null
+        }
+        Insert: {
+          action_count?: number | null
+          action_type: string
+          created_at?: string | null
+          id?: string
+          last_action_at?: string
+          user_id: string
+          window_start?: string | null
+        }
+        Update: {
+          action_count?: number | null
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          last_action_at?: string
+          user_id?: string
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       server_players: {
         Row: {
           id: string
@@ -469,6 +499,33 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      verification_attempts: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          id: string
+          locked_until: string | null
+          updated_at: string | null
+          username: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          locked_until?: string | null
+          updated_at?: string | null
+          username: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          id?: string
+          locked_until?: string | null
+          updated_at?: string | null
+          username?: string
         }
         Relationships: []
       }

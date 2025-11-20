@@ -3,6 +3,12 @@ project_id = "cswyarorrvzbunodiftf"
 [functions.cleanup-completed-servers]
 verify_jwt = false
 
+[functions.request-password-reset]
+verify_jwt = false
+
+[functions.verify-habbo-reset]
+verify_jwt = false
+
 [functions.fetch-habbo-profile]
 verify_jwt = true
 

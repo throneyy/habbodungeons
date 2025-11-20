@@ -334,6 +334,29 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
+    // Rate limiting check for dungeon generation
+    const { data: rateLimit } = await supabase
+      .from('rate_limits')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('action_type', 'dungeon_generation')
+      .maybeSingle();
+
+    const now = Date.now();
+    if (rateLimit) {
+      const timeSince = now - new Date(rateLimit.last_action_at).getTime();
+      if (timeSince < 30000) {
+        throw new Error('Please wait 30 seconds between dungeon generations');
+      }
+    }
+
+    // Update rate limit
+    await supabase.from('rate_limits').upsert({
+      user_id: user.id,
+      action_type: 'dungeon_generation',
+      last_action_at: new Date().toISOString(),
+    });
+
     // Get NPC data
     const npc = NPC_DATA[npcId];
     if (!npc) throw new Error("Invalid NPC selected");
