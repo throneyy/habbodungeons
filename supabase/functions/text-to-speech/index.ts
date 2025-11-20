@@ -17,47 +17,50 @@ serve(async (req) => {
       throw new Error('Text is required');
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured');
+    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error('ELEVENLABS_API_KEY not configured');
     }
 
-    // Map voice names to OpenAI voice IDs
+    // Map voice names to ElevenLabs voice IDs
     const voiceIds: Record<string, string> = {
-      'alloy': 'alloy',
-      'echo': 'echo',
-      'fable': 'fable',
-      'onyx': 'onyx',
-      'nova': 'nova',
-      'shimmer': 'shimmer',
+      'Edward': 'goT3UYdM9bhm0n2lmKQx', // Deep British - perfect for fantasy narration
+      'Liam': 'TX3LPaxmHKxFdv7VOQHJ', // Deep, dramatic
+      'George': 'JBFqnCBsd6RMkjVDRZzb', // Rich, authoritative
+      'Callum': 'N2lVS1w4EtoT3dr4eOWO', // Strong, narrative
+      'Aria': '9BWtsMINqrJLrRacOk9x',
+      'Roger': 'CwhRBWXzGAHq8TQ4Fs17',
     };
 
-    const voiceId = voiceIds[voice.toLowerCase()] || 'alloy';
+    const voiceId = voiceIds[voice] || voiceIds['Edward'];
 
     console.log('Generating speech for text:', text.substring(0, 50) + '...');
-    console.log('Using OpenAI TTS voice:', voiceId);
+    console.log('Using voice:', voice, 'Voice ID:', voiceId);
 
-    // Call OpenAI TTS API
+    // Call ElevenLabs API
     const response = await fetch(
-      'https://api.openai.com/v1/audio/speech',
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
+          'xi-api-key': ELEVENLABS_API_KEY,
         },
         body: JSON.stringify({
-          model: 'tts-1',
-          input: text,
-          voice: voiceId,
-          response_format: 'mp3',
+          text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
         }),
       }
     );
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenAI API error:', error);
+      console.error('ElevenLabs API error:', error);
       throw new Error(`Failed to generate speech: ${error}`);
     }
 
