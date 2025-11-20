@@ -11,6 +11,7 @@ import { VictoryLoot } from "@/components/VictoryLoot";
 import { PartyWipeDialog } from "@/components/PartyWipeDialog";
 import { ItemTooltip } from "@/components/ItemTooltip";
 import { QuestDetailsDialog } from "@/components/QuestDetailsDialog";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy, ScrollText } from "lucide-react";
@@ -1861,7 +1862,7 @@ const Battle = () => {
                                   size="lg"
                                   className="font-black text-lg px-8"
                                 >
-                                  {loading ? 'Loading...' : 'Continue'}
+                                  {loading ? <LoadingSpinner /> : 'Continue'}
                                 </Button>
                               </div>
                             )}
