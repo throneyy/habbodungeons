@@ -17,7 +17,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       />
       
       <div className="relative z-10">
-        <div className="p-4">
+        <div className="p-4 max-w-6xl mx-auto">
           <MainNav />
         </div>
         
