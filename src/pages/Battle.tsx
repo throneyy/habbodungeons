@@ -2509,7 +2509,8 @@ const Battle = () => {
                                    battleData.enemy.sprite === 'skeleton.png' ||
                                    battleData.enemy.sprite === 'goblin-trio.png' ||
                                    battleData.enemy.sprite === 'frost-wraith.png' ||
-                                   battleData.enemy.sprite === 'frost-mutant.png') ? 'none' : 'scaleX(-1)'
+                                   battleData.enemy.sprite === 'frost-mutant.png' ||
+                                   battleData.enemy.sprite === 'flaming-phantom.png') ? 'none' : 'scaleX(-1)'
                       }}
                     />
                     {enemyHit && (
