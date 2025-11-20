@@ -2580,12 +2580,18 @@ const Battle = () => {
                                    battleData.enemy.sprite === 'glacial-imp.png' ||
                                    battleData.enemy.sprite === 'ice-knight-boss.png' ||
                                    battleData.enemy.sprite === 'undead-habbo.png' ||
-                                   battleData.enemy.sprite === 'werewolf.png' ||
                                    battleData.enemy.sprite === 'skeleton.png' ||
                                    battleData.enemy.sprite === 'goblin-trio.png' ||
                                    battleData.enemy.sprite === 'frost-wraith.png' ||
                                    battleData.enemy.sprite === 'frost-mutant.png' ||
-                                   battleData.enemy.sprite === 'flaming-phantom.png') ? 'none' : 'scaleX(-1)'
+                                   battleData.enemy.sprite === 'flaming-phantom.png' ||
+                                   battleData.enemy.sprite === 'iced-stone-dragon.png' ||
+                                   battleData.enemy.sprite === 'frost-brute.png' ||
+                                   battleData.enemy.sprite === 'void-stalker.png' ||
+                                   battleData.enemy.sprite === 'swamp-lurker.png' ||
+                                   battleData.enemy.sprite === 'infernal-hound.png' ||
+                                   battleData.enemy.sprite === 'frost-wolf.png' ||
+                                   battleData.enemy.sprite === 'werewolf.png') ? 'none' : 'scaleX(-1)'
                       }}
                     />
                     {enemyHit && (
