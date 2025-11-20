@@ -254,6 +254,7 @@ const Battle = () => {
   const lastRoomIndexRef = useRef<number | null>(null);
   const turnAdvanceAttemptedRef = useRef(false);
   const battleLogRef = useRef<HTMLDivElement>(null);
+  const previousEnemyHpRef = useRef<number | null>(null);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -510,6 +511,57 @@ const Battle = () => {
     }
   }, [battleData?.battle_log]);
 
+  // Detect victory when enemy HP transitions to 0 - triggers regardless of mode
+  useEffect(() => {
+    if (!battleData || !battleData.enemy) return;
+    
+    const currentEnemyHp = battleData.enemy.current_hp;
+    const previousEnemyHp = previousEnemyHpRef.current;
+    
+    // Trigger victory modal when enemy HP transitions from >0 to 0
+    if (previousEnemyHp !== null && 
+        previousEnemyHp > 0 && 
+        currentEnemyHp === 0 && 
+        !victoryDialogActiveRef.current) {
+      
+      console.log("Victory detected - enemy HP transition:", previousEnemyHp, "→", currentEnemyHp);
+      victoryDialogActiveRef.current = true;
+      
+      // Extract loot and XP from the most recent battle log entries
+      const recentLog = (battleData.battle_log || []).slice(-10);
+      const lootItems: any[] = [];
+      let xpGained = 0;
+      
+      for (const entry of recentLog) {
+        const message = typeof entry === 'string' ? entry : entry.message || '';
+        
+        if (message.includes("received")) {
+          const match = message.match(/received (.+?)(?:\s+x(\d+))?$/);
+          if (match) {
+            lootItems.push({
+              item_name: match[1],
+              quantity: match[2] ? parseInt(match[2]) : 1,
+              item_type: "loot"
+            });
+          }
+        }
+        
+        if (message.includes("XP")) {
+          const xpMatch = message.match(/(\d+)\s*XP/);
+          if (xpMatch) {
+            xpGained = parseInt(xpMatch[1]);
+          }
+        }
+      }
+      
+      setVictoryLootData({ items: lootItems, xp: xpGained });
+      setShowVictoryLoot(true);
+    }
+    
+    // Update previous enemy HP
+    previousEnemyHpRef.current = currentEnemyHp;
+  }, [battleData]);
+
   const loadBattle = async (isRetry = false) => {
     if (!id) {
       console.error("Cannot load battle: battleId is undefined");
@@ -678,45 +730,6 @@ const Battle = () => {
         // Track room index for realtime updates
         if (data.battleData.room_index !== undefined) {
           lastRoomIndexRef.current = data.battleData.room_index;
-        }
-        
-        // Detect victory if enemy HP is 0 and we're transitioning from battle to story mode
-        // This catches victories that might have been missed by handleResolveTurn
-        if (!victoryDialogActiveRef.current && 
-            data.battleData.mode === "story" && 
-            data.battleData.enemy?.current_hp === 0 &&
-            battleData?.mode === "battle") {
-          
-          console.log("Victory detected in loadBattle - showing victory modal");
-          victoryDialogActiveRef.current = true;
-          
-          // Extract loot and XP from the most recent battle log entries
-          const recentLog = (data.battleData.battle_log || []).slice(-10);
-          const lootItems: any[] = [];
-          let xpGained = 0;
-          
-          for (const entry of recentLog) {
-            const message = typeof entry === 'string' ? entry : entry.message || '';
-            
-            // Parse loot messages like "Received 5x [Gold Coins]"
-            const lootMatch = message.match(/Received (\d+)x \[(.*?)\]/);
-            if (lootMatch) {
-              lootItems.push({
-                item_name: lootMatch[2],
-                quantity: parseInt(lootMatch[1]),
-                item_type: 'loot'
-              });
-            }
-            
-            // Parse XP messages like "+50 XP for victory!"
-            const xpMatch = message.match(/\+(\d+) XP/);
-            if (xpMatch) {
-              xpGained += parseInt(xpMatch[1]);
-            }
-          }
-          
-          setVictoryLootData({ items: lootItems, xp: xpGained });
-          setShowVictoryLoot(true);
         }
         
         // Auto-skip dead players' turns in party battles
