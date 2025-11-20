@@ -134,10 +134,10 @@ export const DailyLeaderboard = () => {
                   #{rank}
                 </div>
 
-                {/* Habbo Avatar - Mini size (size=n for authentic mini look) */}
+                {/* Habbo Avatar - Mini size with correct API format */}
                 {player.figureString ? (
                   <img 
-                    src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=n&direction=2&head_direction=3`}
+                    src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&hotel=COM&size=s&action=std&gesture=agr&direction=2&head_direction=2&service=official`}
                     alt={displayName}
                     className="w-10 h-10 pixelated object-contain"
                     style={{ imageRendering: 'pixelated' }}
