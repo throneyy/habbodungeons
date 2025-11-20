@@ -1715,6 +1715,8 @@ const Battle = () => {
       };
     });
 
+    const currentStoryText = battleData ? getLatestNarrative(battleData) : storyNode?.storyText || "";
+
     return (
       <div className="min-h-screen bg-background relative">
         <div 
@@ -1951,17 +1953,17 @@ const Battle = () => {
                         {/* Regular Story Content */}
                         {(!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && (
                           <>
-                            {storyLoading && !storyNode ? (
+                            {storyLoading && !currentStoryText ? (
                               <div className="flex items-center justify-center h-40">
                                 <p className="text-lg italic animate-pulse">
                                   The dungeon master consults the ancient tomes...
                                 </p>
                               </div>
-                            ) : storyNode ? (
+                            ) : currentStoryText ? (
                               <div className="relative">
                                 <Button
-                                  onClick={() => speak(storyNode.storyText)}
-                                  disabled={isPlaying || ttsLoading}
+                                  onClick={() => speak(currentStoryText)}
+                                  disabled={isPlaying || ttsLoading || !currentStoryText}
                                   variant="ghost"
                                   size="sm"
                                   className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full bg-muted hover:bg-muted/80 border-2 border-habbo-dark"
@@ -1970,7 +1972,7 @@ const Battle = () => {
                                   <Volume2 className={`h-4 w-4 ${isPlaying ? 'animate-pulse text-primary' : ''}`} />
                                 </Button>
                                 <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                                  {storyNode.storyText}
+                                  {currentStoryText}
                                 </p>
                               </div>
                             ) : (
