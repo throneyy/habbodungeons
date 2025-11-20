@@ -1101,7 +1101,12 @@ const Battle = () => {
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={() => speak(toastDescription)}
+                onClick={() => {
+                  // Read from current battle state, not cached description
+                  if (battleData) {
+                    speak(getLatestNarrative(battleData));
+                  }
+                }}
                 className="h-8 w-8"
               >
                 <Volume2 className="h-4 w-4" />
@@ -1131,7 +1136,12 @@ const Battle = () => {
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={() => speak(toastDescription)}
+                onClick={() => {
+                  // Read from current battle state, not cached description
+                  if (battleData) {
+                    speak(getLatestNarrative(battleData));
+                  }
+                }}
                 className="h-8 w-8"
               >
                 <Volume2 className="h-4 w-4" />
