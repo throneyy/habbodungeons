@@ -17,36 +17,97 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log("Checking for servers to clean up...");
+    console.log("🧹 Starting comprehensive server cleanup...");
 
-    // Find servers that have dungeons but no active battles and no players
-    const { data: serversToClean } = await supabaseAdmin
+    // Step 1: Get all active servers
+    const { data: allServers } = await supabaseAdmin
       .from('servers')
       .select(`
         id,
+        server_name,
+        difficulty,
         dungeon_id,
+        created_at,
+        host_user_id,
         server_players(count)
       `)
-      .not('dungeon_id', 'is', null);
+      .eq('is_active', true);
 
-    if (!serversToClean) {
+    if (!allServers) {
       return new Response(
         JSON.stringify({ message: "No servers found" }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    let cleanedCount = 0;
+    let deletedCount = 0;
+    let resetCount = 0;
+    const systemUserId = '00000000-0000-0000-0000-000000000000';
 
-    for (const server of serversToClean) {
+    // Step 2: Delete old user-created servers (non-system servers)
+    const userServers = allServers.filter(s => s.host_user_id !== systemUserId);
+    if (userServers.length > 0) {
+      console.log(`🗑️ Deleting ${userServers.length} old user-created servers`);
+      const { error: deleteUserError } = await supabaseAdmin
+        .from('servers')
+        .delete()
+        .in('id', userServers.map(s => s.id));
+      
+      if (!deleteUserError) {
+        deletedCount += userServers.length;
+      }
+    }
+
+    // Step 3: Group system servers by name
+    const systemServers = allServers.filter(s => s.host_user_id === systemUserId);
+    const serverGroups = new Map<string, typeof systemServers>();
+    
+    for (const server of systemServers) {
+      const existing = serverGroups.get(server.server_name) || [];
+      existing.push(server);
+      serverGroups.set(server.server_name, existing);
+    }
+
+    // Step 4: For each server name, keep only the oldest one and delete duplicates
+    for (const [serverName, servers] of serverGroups.entries()) {
+      if (servers.length > 1) {
+        // Sort by created_at to find oldest
+        servers.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        const keepServer = servers[0];
+        const duplicates = servers.slice(1);
+        
+        console.log(`🔄 Found ${duplicates.length} duplicate(s) of "${serverName}", keeping oldest`);
+        
+        const { error: deleteDupError } = await supabaseAdmin
+          .from('servers')
+          .delete()
+          .in('id', duplicates.map(s => s.id));
+        
+        if (!deleteDupError) {
+          deletedCount += duplicates.length;
+        }
+      }
+    }
+
+    // Step 5: Reset servers that have completed dungeons (no players, no active battle)
+    const { data: serversWithDungeons } = await supabaseAdmin
+      .from('servers')
+      .select(`
+        id,
+        dungeon_id,
+        server_name,
+        server_players(count)
+      `)
+      .eq('host_user_id', systemUserId)
+      .eq('is_active', true)
+      .not('dungeon_id', 'is', null);
+
+    for (const server of serversWithDungeons || []) {
       const playerCount = server.server_players[0]?.count || 0;
       
-      // Skip if server has players
-      if (playerCount > 0) {
-        continue;
-      }
+      if (playerCount > 0) continue;
 
-      // Check if there's an active battle for this dungeon
+      // Check for active battle
       const { data: activeBattle } = await supabaseAdmin
         .from('battle_states')
         .select('id')
@@ -55,26 +116,26 @@ serve(async (req) => {
         .eq('is_active', true)
         .maybeSingle();
 
-      // If no active battle and no players, reset the server
       if (!activeBattle) {
-        const { error: updateError } = await supabaseAdmin
+        const { error: resetError } = await supabaseAdmin
           .from('servers')
           .update({ dungeon_id: null })
           .eq('id', server.id);
 
-        if (!updateError) {
-          console.log(`✅ Cleaned server ${server.id}`);
-          cleanedCount++;
+        if (!resetError) {
+          console.log(`♻️ Reset server: ${server.server_name}`);
+          resetCount++;
         }
       }
     }
 
-    console.log(`🧹 Cleaned ${cleanedCount} servers`);
+    console.log(`✅ Cleanup complete: ${deletedCount} deleted, ${resetCount} reset`);
 
     return new Response(
       JSON.stringify({ 
-        message: `Cleaned ${cleanedCount} servers`,
-        cleaned: cleanedCount 
+        message: `Cleanup complete: ${deletedCount} deleted, ${resetCount} reset`,
+        deleted: deletedCount,
+        reset: resetCount
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
