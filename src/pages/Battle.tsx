@@ -1097,6 +1097,16 @@ const Battle = () => {
           toast({
             title: toastTitle,
             description: toastDescription,
+            action: toastDescription ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => speak(toastDescription)}
+                className="h-8 w-8"
+              >
+                <Volume2 className="h-4 w-4" />
+              </Button>
+            ) : undefined,
           });
           // Let the backend's room advancement logic handle progression; just reload below
         } else {
@@ -1117,6 +1127,16 @@ const Battle = () => {
           toast({
             title: toastTitle,
             description: toastDescription,
+            action: toastDescription ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => speak(toastDescription)}
+                className="h-8 w-8"
+              >
+                <Volume2 className="h-4 w-4" />
+              </Button>
+            ) : undefined,
           });
         }
       }
