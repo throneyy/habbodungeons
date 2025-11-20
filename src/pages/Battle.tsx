@@ -212,6 +212,7 @@ const Battle = () => {
   const [victoryLootData, setVictoryLootData] = useState<{ items: any[]; xp: number }>({ items: [], xp: 0 });
   const victoryDialogActiveRef = useRef(false);
   const lastRoomIndexRef = useRef<number | null>(null);
+  const turnAdvanceAttemptedRef = useRef(false);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -628,6 +629,52 @@ const Battle = () => {
         // Track room index for realtime updates
         if (data.battleData.room_index !== undefined) {
           lastRoomIndexRef.current = data.battleData.room_index;
+        }
+        
+        // Auto-skip dead players' turns in party battles
+        if (data.battleData.mode === 'battle' && 
+            data.battleData.isPartyBattle && 
+            data.battleData.currentTurnUserId === userId &&
+            data.battleData.deadPlayers?.includes(userId) &&
+            !turnAdvanceAttemptedRef.current) {
+          console.log('Current player is dead, automatically advancing turn');
+          turnAdvanceAttemptedRef.current = true;
+          // Wait a moment then advance to next alive player
+          setTimeout(async () => {
+            try {
+              const alivePlayers = (data.battleData.turnOrder || [])
+                .filter((id: string) => !data.battleData.deadPlayers?.includes(id));
+              
+              if (alivePlayers.length > 0) {
+                const currentIndex = data.battleData.turnOrder?.indexOf(userId) || 0;
+                let nextIndex = (currentIndex + 1) % data.battleData.turnOrder!.length;
+                let nextPlayerId = data.battleData.turnOrder![nextIndex];
+                
+                // Keep advancing until we find an alive player
+                let attempts = 0;
+                while (data.battleData.deadPlayers?.includes(nextPlayerId) && attempts < 10) {
+                  nextIndex = (nextIndex + 1) % data.battleData.turnOrder!.length;
+                  nextPlayerId = data.battleData.turnOrder![nextIndex];
+                  attempts++;
+                }
+                
+                // Update battle state with next alive player  
+                await supabase
+                  .from('battle_states')
+                  .update({ current_turn_user_id: nextPlayerId })
+                  .eq('id', data.battleData.battleStateId);
+                
+                console.log('Advanced turn from dead player to:', nextPlayerId);
+                await loadBattle();
+              }
+            } catch (error) {
+              console.error('Error auto-advancing turn:', error);
+            } finally {
+              turnAdvanceAttemptedRef.current = false;
+            }
+          }, 500);
+        } else {
+          turnAdvanceAttemptedRef.current = false;
         }
         
         // Load party profiles for battle log display
@@ -1765,107 +1812,108 @@ const Battle = () => {
               </div>
             </HabboPanel>
 
-            {/* Story Panel Below Log */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <div className="md:col-span-2">
-                <HabboPanel title="The Story Unfolds">
-                  <div className="space-y-6">
-                    {/* Story Text */}
-                    <div className="p-6 bg-muted/50 border-2 border-habbo-dark rounded-lg min-h-[200px]">
-                      {/* Treasure Room */}
-                      {battleData.room_type === 'treasure' && (
-                        <div className="space-y-4">
-                          <h3 className="text-2xl font-black text-center mb-4 flex items-center justify-center gap-2">
-                            <img src={treasureChestOpen} alt="Treasure" className="w-8 h-8 pixelated" />
-                            Treasure Found!
-                          </h3>
-                          <p className="text-lg leading-relaxed">
-                            {battleData.treasure_description || 'A frost-covered chest sits in the corner, its contents unknown...'}
-                          </p>
-                          {!treasureClaimed ? (
-                            <div className="flex justify-center gap-4 pt-4">
-                              <Button
-                                onClick={handleClaimTreasure}
-                                disabled={loading}
-                                size="lg"
-                                className="font-black text-lg px-8"
-                              >
-                                <Package className="mr-2 h-5 w-5" />
-                                {loading ? 'Opening...' : 'Open Chest'}
-                              </Button>
-                              <Button
-                                onClick={handleSaveChestForLater}
-                                disabled={loading}
-                                size="lg"
-                                variant="outline"
-                                className="font-black text-lg px-8 border-4 border-habbo-dark"
-                              >
-                                {loading ? 'Saving...' : 'Open Later'}
-                              </Button>
-                            </div>
-                          ) : (
+            {/* Story Panel Below Log - Only show in story mode */}
+            {battleData.mode === "story" && (
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="md:col-span-2">
+                  <HabboPanel title="The Story Unfolds">
+                    <div className="space-y-6">
+                      {/* Story Text */}
+                      <div className="p-6 bg-muted/50 border-2 border-habbo-dark rounded-lg min-h-[200px]">
+                        {/* Treasure Room */}
+                        {battleData.room_type === 'treasure' && (
+                          <div className="space-y-4">
+                            <h3 className="text-2xl font-black text-center mb-4 flex items-center justify-center gap-2">
+                              <img src={treasureChestOpen} alt="Treasure" className="w-8 h-8 pixelated" />
+                              Treasure Found!
+                            </h3>
+                            <p className="text-lg leading-relaxed">
+                              {battleData.treasure_description || 'A frost-covered chest sits in the corner, its contents unknown...'}
+                            </p>
+                            {!treasureClaimed ? (
+                              <div className="flex justify-center gap-4 pt-4">
+                                <Button
+                                  onClick={handleClaimTreasure}
+                                  disabled={loading}
+                                  size="lg"
+                                  className="font-black text-lg px-8"
+                                >
+                                  <Package className="mr-2 h-5 w-5" />
+                                  {loading ? 'Opening...' : 'Open Chest'}
+                                </Button>
+                                <Button
+                                  onClick={handleSaveChestForLater}
+                                  disabled={loading}
+                                  size="lg"
+                                  variant="outline"
+                                  className="font-black text-lg px-8 border-4 border-habbo-dark"
+                                >
+                                  {loading ? 'Saving...' : 'Open Later'}
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="flex justify-center pt-4">
+                                <Button
+                                  onClick={handleContinueToNextRoom}
+                                  disabled={loading}
+                                  size="lg"
+                                  className="font-black text-lg px-8"
+                                >
+                                  {loading ? 'Loading...' : 'Continue'}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Event Room */}
+                        {battleData.room_type === 'event' && (
+                          <div className="space-y-4">
+                            <h3 className="text-2xl font-black text-center mb-4 flex items-center justify-center gap-2">
+                              <img src={mysticalIcon} alt="Mystical" className="w-8 h-8 pixel-icon" />
+                              Mystical Encounter
+                            </h3>
+                            <p className="text-lg leading-relaxed">
+                              {battleData.event_description || 'Strange energies fill the air...'}
+                            </p>
                             <div className="flex justify-center pt-4">
                               <Button
-                                onClick={handleContinueToNextRoom}
+                                onClick={handleApplyEventBoost}
                                 disabled={loading}
                                 size="lg"
                                 className="font-black text-lg px-8"
                               >
-                                {loading ? 'Loading...' : 'Continue'}
+                                <Sparkles className="mr-2 h-5 w-5" />
+                                {loading ? 'Accepting...' : 'Accept Blessing'}
                               </Button>
                             </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Event Room */}
-                      {battleData.room_type === 'event' && (
-                        <div className="space-y-4">
-                          <h3 className="text-2xl font-black text-center mb-4 flex items-center justify-center gap-2">
-                            <img src={mysticalIcon} alt="Mystical" className="w-8 h-8 pixel-icon" />
-                            Mystical Encounter
-                          </h3>
-                          <p className="text-lg leading-relaxed">
-                            {battleData.event_description || 'Strange energies fill the air...'}
-                          </p>
-                          <div className="flex justify-center pt-4">
-                            <Button
-                              onClick={handleApplyEventBoost}
-                              disabled={loading}
-                              size="lg"
-                              className="font-black text-lg px-8"
-                            >
-                              <Sparkles className="mr-2 h-5 w-5" />
-                              {loading ? 'Accepting...' : 'Accept Blessing'}
-                            </Button>
                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Regular Story Content */}
-                      {battleData.mode === "story" && (!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && (
-                        <>
-                          {storyLoading && !storyNode ? (
-                            <div className="flex items-center justify-center h-40">
-                              <p className="text-lg italic animate-pulse">
-                                The dungeon master consults the ancient tomes...
+                        )}
+                        
+                        {/* Regular Story Content */}
+                        {(!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && (
+                          <>
+                            {storyLoading && !storyNode ? (
+                              <div className="flex items-center justify-center h-40">
+                                <p className="text-lg italic animate-pulse">
+                                  The dungeon master consults the ancient tomes...
+                                </p>
+                              </div>
+                            ) : storyNode ? (
+                              <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                                {storyNode.storyText}
                               </p>
-                            </div>
-                          ) : storyNode ? (
-                            <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                              {storyNode.storyText}
-                            </p>
-                          ) : (
-                            <p className="text-lg italic text-muted-foreground">
-                              Awaiting your next decision...
-                            </p>
-                          )}
-                        </>
-                      )}
-                    </div>
+                            ) : (
+                              <p className="text-lg italic text-muted-foreground">
+                                Awaiting your next decision...
+                              </p>
+                            )}
+                          </>
+                        )}
+                      </div>
 
-                    {/* Choices - Only show for regular story rooms */}
-                    {battleData.mode === "story" && (!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && storyNode && storyNode.choices && storyNode.choices.length > 0 && (
+                      {/* Choices - Only show for regular story rooms */}
+                      {(!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && storyNode && storyNode.choices && storyNode.choices.length > 0 && (
                       <div className="space-y-3">
                         {/* Turn-based choice header */}
                         {battleData.isPartyBattle && (
@@ -1997,18 +2045,18 @@ const Battle = () => {
                           </Button>
                         </div>
                       </div>
-                    )}
+                      )}
 
-                    {storyLoading && (
-                      <div className="text-center py-4">
-                        <p className="text-lg font-bold animate-pulse">
-                          Resolving your choice...
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </HabboPanel>
-              </div>
+                      {storyLoading && (
+                        <div className="text-center py-4">
+                          <p className="text-lg font-bold animate-pulse">
+                            Resolving your choice...
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </HabboPanel>
+                </div>
 
               {/* Party Panel - Full width in battle mode for horizontal display */}
               <div className={battleData.mode !== "story" ? "md:col-span-3" : "md:col-span-1"}>
@@ -2282,8 +2330,9 @@ const Battle = () => {
                     </DialogContent>
                   </Dialog>
                 </HabboPanel>
+                </div>
               </div>
-            </div>
+            )}
 
             <Button
               onClick={() => navigate("/dashboard")}
