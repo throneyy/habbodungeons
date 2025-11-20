@@ -239,7 +239,21 @@ export default function MonsterManual() {
                         src={sprite}
                         alt={monster.enemy_name}
                         className="pixel-icon max-h-full max-w-full object-contain"
-                        style={{ imageRendering: 'pixelated' }}
+                        style={{ 
+                          imageRendering: 'pixelated',
+                          transform: (monster.sprite_filename === 'ice-guardian.png' || 
+                                     monster.sprite_filename === 'blood-dragon-boss.gif' ||
+                                     monster.sprite_filename === 'glacial-imp.png' ||
+                                     monster.sprite_filename === 'ice-knight-boss.png' ||
+                                     monster.sprite_filename === 'undead-habbo.png' ||
+                                     monster.sprite_filename === 'frost-undead.gif' ||
+                                     monster.sprite_filename === 'fire-drake.png' ||
+                                     monster.sprite_filename === 'frost-wolf.png' ||
+                                     monster.sprite_filename === 'frostbite-spider.webp' ||
+                                     monster.sprite_filename === 'frozen-goblin.png' ||
+                                     monster.sprite_filename === 'giant-rat.png' ||
+                                     monster.sprite_filename === 'ice-tiger.gif') ? 'none' : 'scaleX(-1)'
+                        }}
                       />
                     ) : (
                       <Skull className="w-24 h-24 text-muted-foreground" />
