@@ -45,7 +45,6 @@ export const MainNav = () => {
             className="border-2 border-habbo-dark font-bold shadow-md"
             onClick={() => navigate("/monster-manual")}
           >
-            <BookOpen className="w-4 h-4 mr-2" />
             Monsters
           </Button>
           <Button
