@@ -85,7 +85,7 @@ export const DailyLeaderboard = () => {
 
   if (loading) {
     return (
-      <div className="w-full h-14 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center">
+      <div className="w-full h-20 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -93,18 +93,26 @@ export const DailyLeaderboard = () => {
 
   if (topPlayers.length === 0) {
     return (
-      <div className="w-full h-14 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center gap-2">
-        <Trophy className="w-4 h-4 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">No battles today yet!</p>
+      <div className="w-full h-20 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center gap-2">
+        <Trophy className="w-5 h-5 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">No battles today yet!</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-14 bg-card border-4 border-habbo-dark rounded-xl shadow-lg overflow-hidden relative">
+    <div className="w-full h-20 bg-card border-4 border-habbo-dark rounded-xl shadow-lg overflow-hidden relative">
+      {/* Header with descriptor */}
+      <div className="absolute top-0 left-0 right-0 px-3 py-1 bg-muted/40 backdrop-blur-sm border-b-2 border-habbo-dark/20 z-10">
+        <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
+          <Trophy className="w-3 h-3 text-yellow-500" />
+          Top adventurers by XP gained today
+        </p>
+      </div>
+
       {/* Sliding container with animation */}
-      <div className="absolute inset-0 flex items-center">
-        <div className="flex gap-4 px-4 animate-[slide-in-right_20s_linear_infinite]">
+      <div className="absolute inset-0 flex items-center pt-7">
+        <div className="flex gap-4 px-4 animate-[slide-in-right_25s_linear_infinite]">
           {/* Duplicate the list for seamless loop */}
           {[...topPlayers, ...topPlayers].map((player, index) => {
             const displayName = player.habbo_username || player.username.split('@')[0];
@@ -113,11 +121,11 @@ export const DailyLeaderboard = () => {
             return (
               <div 
                 key={`${player.user_id}-${index}`}
-                className="flex items-center gap-2 flex-shrink-0 bg-muted/30 rounded-lg px-3 py-1.5 border-2 border-habbo-dark/20"
+                className="flex items-center gap-3 flex-shrink-0 bg-muted/30 rounded-lg px-4 py-2 border-2 border-habbo-dark/20"
               >
                 {/* Rank Badge */}
                 <div className={`
-                  flex items-center justify-center w-6 h-6 rounded-full font-black text-xs
+                  flex items-center justify-center w-7 h-7 rounded-full font-black text-sm
                   ${rank === 1 ? 'bg-yellow-500/20 text-yellow-500 border-2 border-yellow-500' : ''}
                   ${rank === 2 ? 'bg-gray-400/20 text-gray-400 border-2 border-gray-400' : ''}
                   ${rank === 3 ? 'bg-amber-700/20 text-amber-700 border-2 border-amber-700' : ''}
@@ -126,23 +134,23 @@ export const DailyLeaderboard = () => {
                   #{rank}
                 </div>
 
-                {/* Habbo Avatar or Placeholder */}
+                {/* Habbo Avatar or Placeholder - Full Resolution */}
                 {player.figureString ? (
                   <img 
-                    src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=s&direction=2&head_direction=3`}
+                    src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=l&direction=2&head_direction=3`}
                     alt={displayName}
-                    className="w-8 h-8 pixelated"
+                    className="w-12 h-12 pixelated"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Trophy className="w-4 h-4 text-primary" />
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-primary" />
                   </div>
                 )}
 
                 {/* Player Info */}
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold leading-none">{displayName}</span>
-                  <span className="text-xs text-primary font-bold leading-none mt-0.5">
+                  <span className="text-base font-bold leading-tight">{displayName}</span>
+                  <span className="text-sm text-primary font-bold leading-tight">
                     ✨ {player.xp_gained} XP
                   </span>
                 </div>
@@ -150,14 +158,6 @@ export const DailyLeaderboard = () => {
             );
           })}
         </div>
-      </div>
-
-      {/* Descriptor overlay - top left */}
-      <div className="absolute top-0 left-0 px-2 py-1 bg-muted/90 backdrop-blur-sm border-b-2 border-r-2 border-habbo-dark/20 rounded-br-lg z-10">
-        <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
-          <Trophy className="w-2.5 h-2.5 text-yellow-500" />
-          Top adventurers by XP gained today
-        </p>
       </div>
     </div>
   );
