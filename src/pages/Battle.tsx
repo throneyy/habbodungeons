@@ -629,6 +629,19 @@ const Battle = () => {
 
           if (initError) {
             console.error("Failed to initialize battle:", initError);
+            
+            // Check if it's a dungeon not found error
+            const errorMessage = initError.message || '';
+            if (errorMessage.includes('Dungeon not found')) {
+              toast({
+                title: "Dungeon Not Found",
+                description: "This dungeon no longer exists. Returning to dashboard.",
+                variant: "destructive",
+              });
+              navigate("/dashboard", { replace: true });
+              return;
+            }
+            
             toast({
               title: "Failed to Start Battle",
               description: "Could not initialize the battle. Please try again.",
@@ -833,6 +846,18 @@ const Battle = () => {
 
           if (initError) {
             console.error("Fallback battle init failed:", initError);
+            
+            // Check if it's a dungeon not found error
+            const errorMsg = initError.message || '';
+            if (errorMsg.includes('Dungeon not found')) {
+              toast({
+                title: "Dungeon No Longer Exists",
+                description: "This dungeon has been removed. Returning to dashboard.",
+                variant: "destructive",
+              });
+              navigate("/dashboard", { replace: true });
+              return;
+            }
           } else {
             console.log("Fallback battle init succeeded, retrying load...");
           }

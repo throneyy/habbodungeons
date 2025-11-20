@@ -35,12 +35,17 @@ serve(async (req) => {
 
     console.log("Starting dungeon for server:", serverId);
 
-    // Get server info
-    const { data: server, error: serverError } = await supabase
+    // Use admin client to get server info with FOR UPDATE lock to prevent race conditions
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    const { data: server, error: serverError } = await supabaseAdmin
       .from('servers')
       .select('id, difficulty, dungeon_id')
       .eq('id', serverId)
-      .single();
+      .maybeSingle();
 
     if (serverError || !server) {
       throw new Error("Server not found");
@@ -48,6 +53,7 @@ serve(async (req) => {
 
     // Check if server already has a dungeon
     if (server.dungeon_id) {
+      console.log('Server already has dungeon:', server.dungeon_id);
       return new Response(
         JSON.stringify({ dungeonId: server.dungeon_id }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -94,12 +100,23 @@ serve(async (req) => {
     }
 
     console.log('Dungeon created via generate-dungeon:', dungeonId);
+    
+    // Double-check server still doesn't have a dungeon (race condition check)
+    const { data: recheckServer } = await supabaseAdmin
+      .from('servers')
+      .select('dungeon_id')
+      .eq('id', serverId)
+      .maybeSingle();
 
-    // Link dungeon to server using service role to bypass RLS
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    if (recheckServer?.dungeon_id) {
+      console.log('Race condition detected: server already has dungeon', recheckServer.dungeon_id);
+      // Clean up the dungeon we just created since we don't need it
+      await supabaseAdmin.from('dungeons').delete().eq('id', dungeonId);
+      return new Response(
+        JSON.stringify({ dungeonId: recheckServer.dungeon_id }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const { error: updateError } = await supabaseAdmin
       .from('servers')
