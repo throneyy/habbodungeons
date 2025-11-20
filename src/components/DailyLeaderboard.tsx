@@ -98,7 +98,7 @@ export const DailyLeaderboard = () => {
 
   if (loading) {
     return (
-      <div className="w-full h-20 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center">
+      <div className="w-full h-24 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -106,7 +106,7 @@ export const DailyLeaderboard = () => {
 
   if (topPlayers.length === 0) {
     return (
-      <div className="w-full h-20 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center gap-2">
+      <div className="w-full h-24 bg-card border-4 border-habbo-dark rounded-xl shadow-lg flex items-center justify-center gap-2">
         <Trophy className="w-5 h-5 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">No battles today yet!</p>
       </div>
@@ -114,7 +114,7 @@ export const DailyLeaderboard = () => {
   }
 
   return (
-    <div className="w-full h-20 bg-card border-4 border-habbo-dark rounded-xl shadow-lg overflow-hidden relative">
+    <div className="w-full h-24 bg-card border-4 border-habbo-dark rounded-xl shadow-lg overflow-hidden relative">
       {/* Header with descriptor */}
       <div className="absolute top-0 left-0 right-0 px-3 py-1 bg-muted/40 backdrop-blur-sm border-b-2 border-habbo-dark/20 z-10">
         <p className="text-[11px] text-muted-foreground font-medium flex items-center gap-1.5">
@@ -149,7 +149,7 @@ export const DailyLeaderboard = () => {
 
                 {/* Habbo Avatar - Full resolution at natural size */}
                 {player.figureString ? (
-                  <div className="w-auto h-12 flex items-center justify-center">
+                  <div className="w-auto h-14 flex items-center justify-center">
                     <img 
                       src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&hotel=COM&size=s&action=std&gesture=agr&direction=2&head_direction=2&service=official`}
                       alt={displayName}
@@ -158,8 +158,8 @@ export const DailyLeaderboard = () => {
                     />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Trophy className="w-5 h-5 text-primary" />
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-primary" />
                   </div>
                 )}
 
