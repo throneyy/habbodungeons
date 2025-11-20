@@ -40,6 +40,12 @@ import goblinTrio from "@/assets/goblin-trio.png";
 import iceKnightBoss from "@/assets/ice-knight-boss.png";
 import spiritOwl from "@/assets/spirit-owl.png";
 import werewolf from "@/assets/werewolf.png";
+import swampLurker from "@/assets/swamp-lurker.png";
+import voidStalker from "@/assets/void-stalker.png";
+import frostBrute from "@/assets/frost-brute.png";
+import icedStoneDragon from "@/assets/iced-stone-dragon.png";
+import infernalHound from "@/assets/infernal-hound.png";
+import mysticShamanBoss from "@/assets/mystic-shaman-boss.png";
 import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import mysticalIcon from "@/assets/mystical-icon.png";
 import diceSprite from "@/assets/dice-sprite.gif";
@@ -69,6 +75,12 @@ const ENEMY_SPRITES: Record<string, string> = {
   "ice-knight-boss.png": iceKnightBoss,
   "spirit-owl.png": spiritOwl,
   "werewolf.png": frostWolf,
+  "swamp-lurker.png": swampLurker,
+  "void-stalker.png": voidStalker,
+  "frost-brute.png": frostBrute,
+  "iced-stone-dragon.png": icedStoneDragon,
+  "infernal-hound.png": infernalHound,
+  "mystic-shaman-boss.png": mysticShamanBoss,
 };
 
 interface BattleLogEntry {
