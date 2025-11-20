@@ -368,7 +368,10 @@ CRITICAL: Write EVERYTHING in English. All text must be in English.`
             role: 'user',
             content: `You're ${npc.name}, speaking to an adventurer. ${npc.personality}
 
-The job: ${difficulty} dungeon, ${encounters} rooms. Player's level ${playerLevel}.
+DUNGEON REQUIREMENTS:
+- MUST create EXACTLY ${encounters} rooms (NOT 3, NOT 5, EXACTLY ${encounters})
+- Difficulty: ${difficulty}
+- Player level: ${playerLevel}
 
 Your specialty: ${npc.questTheme}
 Your usual work: ${npc.questTypes.join(', ')}
@@ -384,9 +387,14 @@ Give me:
 - A dungeon name (short and punchy, not "The Epic Quest of...")
 - What needs doing (ONE specific goal tied to story events, not generic boss killing)
 - Your pitch to the adventurer (1-2 sentences max. Talk like a real person would, not a fantasy novel)
-- ${encounters} room descriptions (1-2 sentences each. Set the scene, skip the adjectives)
+- EXACTLY ${encounters} room descriptions (counting from 0 to ${encounters - 1}. Each room: 1-2 sentences. Set the scene, skip the adjectives)
 
-First room: atmosphere and entry. Middle rooms: varied encounters building toward the goal. Last room: where the objective is achieved (may include boss). Make it feel dangerous, not dramatic.`
+Room structure:
+- First room (0): atmosphere and entry
+- Middle rooms (1 to ${encounters - 2}): varied encounters building toward the goal
+- Last room (${encounters - 1}): where the objective is achieved (may include boss)
+
+Make it feel dangerous, not dramatic.`
           }
         ],
         tools: [
@@ -412,10 +420,16 @@ First room: atmosphere and entry. Middle rooms: varied encounters building towar
                   },
                   rooms: {
                     type: "array",
+                    description: `MUST contain EXACTLY ${encounters} rooms, indexed from 0 to ${encounters - 1}`,
+                    minItems: encounters,
+                    maxItems: encounters,
                     items: {
                       type: "object",
                       properties: {
-                        roomIndex: { type: "number" },
+                        roomIndex: { 
+                          type: "number",
+                          description: `Room index from 0 to ${encounters - 1}`
+                        },
                         description: {
                           type: "string",
                           description: "Room description. 1-2 sentences. Set the scene."
