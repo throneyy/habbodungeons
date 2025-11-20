@@ -12,7 +12,12 @@ serve(async (req) => {
   }
 
   try {
-    const { username, newPassword } = await req.json();
+    const { username, newPassword, verificationCode } = await req.json();
+    
+    if (!username || !newPassword || !verificationCode) {
+      throw new Error("Username, password, and verification code are required");
+    }
+    
     const normalizedUsername = String(username).trim().toLowerCase();
     console.log("Resetting password for:", normalizedUsername);
 
@@ -28,7 +33,7 @@ serve(async (req) => {
     // Find the user profile to get the user ID (exact email match)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, username')
+      .select('id, username, habbo_username')
       .eq('username', emailUsername)
       .maybeSingle();
 
@@ -36,8 +41,24 @@ serve(async (req) => {
       throw new Error("User not found");
     }
 
-    // Convert username to email format
-    const email = `${username.toLowerCase()}@habbo-dungeons.local`;
+    if (!profile.habbo_username) {
+      throw new Error("No Habbo account linked");
+    }
+
+    // Verify the code is in the user's Habbo motto
+    const habboResponse = await fetch(
+      `https://origins.habbo.com/api/public/users?name=${encodeURIComponent(profile.habbo_username)}`
+    );
+    
+    if (!habboResponse.ok) {
+      throw new Error("Failed to verify Habbo account");
+    }
+
+    const habboData = await habboResponse.json();
+    
+    if (!habboData.motto || !habboData.motto.includes(verificationCode)) {
+      throw new Error("Verification code not found in Habbo motto. Please update your motto and try again.");
+    }
 
     // Update the user's password using admin API
     const { error: updateError } = await supabase.auth.admin.updateUserById(

@@ -36,6 +36,29 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
+    // Rate limiting check for story generation
+    const { data: rateLimit } = await supabaseClient
+      .from('rate_limits')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('action_type', 'story_generation')
+      .maybeSingle();
+
+    const now = Date.now();
+    if (rateLimit) {
+      const timeSince = now - new Date(rateLimit.last_action_at).getTime();
+      if (timeSince < 5000) {
+        throw new Error('Please wait 5 seconds between story generations');
+      }
+    }
+
+    // Update rate limit
+    await supabaseClient.from('rate_limits').upsert({
+      user_id: user.id,
+      action_type: 'story_generation',
+      last_action_at: new Date().toISOString(),
+    });
+
     // Validate battleId
     if (!battleId || battleId === "undefined" || battleId === "null" || typeof battleId !== 'string' || battleId.length === 0) {
       console.error("Invalid battleId received:", battleId);
