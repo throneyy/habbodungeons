@@ -1,5 +1,8 @@
 project_id = "cswyarorrvzbunodiftf"
 
+[functions.cleanup-completed-servers]
+verify_jwt = false
+
 [functions.fetch-habbo-profile]
 verify_jwt = true
 
