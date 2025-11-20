@@ -28,8 +28,8 @@ import fireDrake from "@/assets/fire-drake.png";
 import werewolf from "@/assets/werewolf.png";
 import bloodDragonBoss from "@/assets/blood-dragon-boss.gif";
 import iceKnightBoss from "@/assets/ice-knight-boss.png";
-import icedStoneDragon from "@/assets/iced-stone-dragon-flipped.png";
-import mysticShaman from "@/assets/mystic-shaman-boss-flipped.png";
+import icedStoneDragon from "@/assets/iced-stone-dragon.png";
+import mysticShaman from "@/assets/mystic-shaman-boss.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -52,8 +52,8 @@ const ENEMY_SPRITES: Record<string, string> = {
   "werewolf.png": werewolf,
   "blood-dragon-boss.gif": bloodDragonBoss,
   "ice-knight-boss.png": iceKnightBoss,
-  "iced-stone-dragon-flipped.png": icedStoneDragon,
-  "mystic-shaman-boss-flipped.png": mysticShaman,
+  "iced-stone-dragon.png": icedStoneDragon,
+  "mystic-shaman-boss.png": mysticShaman,
 };
 
 interface Monster {
@@ -268,7 +268,9 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'goblin-trio.png' ||
                                      monster.sprite_filename === 'frost-wraith.png' ||
                                      monster.sprite_filename === 'frost-mutant.png' ||
-                                     monster.sprite_filename === 'flaming-phantom.png') ? 'none' : 'scaleX(-1)'
+                                     monster.sprite_filename === 'flaming-phantom.png' ||
+                                     monster.sprite_filename === 'iced-stone-dragon.png' ||
+                                     monster.sprite_filename === 'mystic-shaman-boss.png') ? 'none' : 'scaleX(-1)'
                         }}
                       />
                     ) : (

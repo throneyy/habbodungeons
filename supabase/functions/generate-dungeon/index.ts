@@ -194,7 +194,7 @@ const BOSS_POOL = [
   {
     name: "Iced Stone Dragon",
     description: "An ancient trickster dragon combining ice and stone elemental magic, tests adventurers with riddles",
-    sprite: "iced-stone-dragon-flipped.png",
+    sprite: "iced-stone-dragon.png",
     baseHp: 320,
     baseAtk: 24,
     baseDef: 22,
@@ -203,7 +203,7 @@ const BOSS_POOL = [
   {
     name: "Mystic Shaman",
     description: "A powerful elemental shaman channeling primal forces of fire and ice, summoning ancestral spirits",
-    sprite: "mystic-shaman-boss-flipped.png",
+    sprite: "mystic-shaman-boss.png",
     baseHp: 280,
     baseAtk: 22,
     baseDef: 16,
