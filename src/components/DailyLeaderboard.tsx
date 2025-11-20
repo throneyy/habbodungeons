@@ -125,7 +125,8 @@ export const DailyLeaderboard = () => {
 
       {/* Sliding container with animation */}
       <div className="absolute inset-0 flex items-center pt-7 overflow-hidden">
-        <div className="flex gap-4 animate-marquee-left">
+        <div className="flex gap-4 animate-marquee-left whitespace-nowrap">
+          {/* First set of players */}
           {topPlayers.map((player, index) => {
             const displayName = player.habbo_username || player.username.split('@')[0];
             const rank = index + 1;
@@ -146,7 +147,55 @@ export const DailyLeaderboard = () => {
                   #{rank}
                 </div>
 
-                {/* Habbo Avatar - Full resolution at natural size */}
+                {/* Habbo Avatar */}
+                {player.figureString ? (
+                  <div className="w-auto h-14 flex items-center justify-center">
+                    <img 
+                      src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&hotel=COM&size=s&action=std&gesture=agr&direction=2&head_direction=2&service=official`}
+                      alt={displayName}
+                      className="h-full w-auto pixelated"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    <Trophy className="w-6 h-6 text-primary" />
+                  </div>
+                )}
+
+                {/* Player Info */}
+                <div className="flex flex-col">
+                  <span className="text-base font-bold leading-tight">{displayName}</span>
+                  <span className="text-sm text-primary font-bold leading-tight">
+                    ✨ {player.xp_gained} XP
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Duplicate set for seamless loop */}
+          {topPlayers.map((player, index) => {
+            const displayName = player.habbo_username || player.username.split('@')[0];
+            const rank = index + 1;
+            
+            return (
+              <div 
+                key={`${player.user_id}-${index}-dup`}
+                className="flex items-center gap-3 flex-shrink-0 bg-muted/30 rounded-lg px-4 py-2 border-2 border-habbo-dark/20"
+              >
+                {/* Rank Badge */}
+                <div className={`
+                  flex items-center justify-center w-7 h-7 rounded-full font-black text-sm
+                  ${rank === 1 ? 'bg-yellow-500/20 text-yellow-500 border-2 border-yellow-500' : ''}
+                  ${rank === 2 ? 'bg-gray-400/20 text-gray-400 border-2 border-gray-400' : ''}
+                  ${rank === 3 ? 'bg-amber-700/20 text-amber-700 border-2 border-amber-700' : ''}
+                  ${rank > 3 ? 'bg-muted text-muted-foreground' : ''}
+                `}>
+                  #{rank}
+                </div>
+
+                {/* Habbo Avatar */}
                 {player.figureString ? (
                   <div className="w-auto h-14 flex items-center justify-center">
                     <img 
