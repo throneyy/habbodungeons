@@ -90,6 +90,45 @@ export type Database = {
           },
         ]
       }
+      daily_stats: {
+        Row: {
+          bosses_defeated: number
+          created_at: string
+          damage_dealt: number
+          dice_rolls_made: number
+          enemies_killed: number
+          id: string
+          quests_completed: number
+          stat_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bosses_defeated?: number
+          created_at?: string
+          damage_dealt?: number
+          dice_rolls_made?: number
+          enemies_killed?: number
+          id?: string
+          quests_completed?: number
+          stat_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bosses_defeated?: number
+          created_at?: string
+          damage_dealt?: number
+          dice_rolls_made?: number
+          enemies_killed?: number
+          id?: string
+          quests_completed?: number
+          stat_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dungeons: {
         Row: {
           created_at: string
