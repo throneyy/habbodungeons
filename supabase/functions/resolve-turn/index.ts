@@ -250,6 +250,43 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
     const cleanedContent = extractJSON(rawContent);
     const result = JSON.parse(cleanedContent);
 
+    // Normalize combat outcome to prevent enemies from counterattacking after death
+    // and to avoid situations where both player and enemy die in the same turn.
+    const startingEnemyHp = battle.current_enemy_state.current_hp as number;
+    const startingPlayerHp = stats.current_hp as number;
+
+    // Clamp enemy HP and damage values to safe ranges
+    let enemyNewHp = typeof result.enemyNewHp === 'number'
+      ? Math.max(0, Math.min(startingEnemyHp, result.enemyNewHp))
+      : Math.max(0, startingEnemyHp - Math.max(1, result.playerDamageDealt || 0));
+
+    let playerDamageDealt = typeof result.playerDamageDealt === 'number'
+      ? Math.max(0, result.playerDamageDealt)
+      : 0;
+
+    let playerDamageTaken = typeof result.playerDamageTaken === 'number'
+      ? Math.max(0, result.playerDamageTaken)
+      : 0;
+
+    // If this attack killed the enemy, they CANNOT counterattack – cancel any damage to the player
+    if (enemyNewHp <= 0) {
+      playerDamageTaken = 0;
+    }
+
+    const playerNewHp = Math.max(0, startingPlayerHp - playerDamageTaken);
+
+    // Derive victory/defeat from final HP values
+    const victory = enemyNewHp <= 0;
+    const defeat = !victory && playerNewHp <= 0;
+
+    // Overwrite AI result so the rest of the function uses consistent values
+    result.playerDamageDealt = playerDamageDealt;
+    result.playerDamageTaken = playerDamageTaken;
+    result.playerNewHp = playerNewHp;
+    result.enemyNewHp = enemyNewHp;
+    result.victory = victory;
+    result.defeat = defeat;
+
     // If action was using an item, decrement it from inventory
     if (action === 'item' && itemName) {
       const { data: inventoryItem, error: inventoryError } = await supabase
