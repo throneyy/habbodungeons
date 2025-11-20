@@ -334,6 +334,77 @@ Return ONLY valid JSON (no markdown):
       })
       .eq("user_id", battleState.user_id);
 
+    // Calculate XP gains (classic JRPG style)
+    let xpGained = 0;
+    let xpMessages: string[] = [];
+    let leveledUp = false;
+    let newLevel = partyStats.level;
+    
+    // Award XP for successful dice checks
+    if (diceRoll && diceDC) {
+      const checkSuccess = diceRoll >= diceDC;
+      if (checkSuccess) {
+        // XP based on DC difficulty (5-20 XP)
+        const checkXP = Math.floor(diceDC / 2) + 5;
+        xpGained += checkXP;
+        xpMessages.push(`+${checkXP} XP for passing the check!`);
+      }
+    }
+    
+    // Award XP for room completion/progression
+    if (sanitizedOutcome.progressRoom) {
+      const roomXP = 15 + Math.floor(Math.random() * 10); // 15-25 XP
+      xpGained += roomXP;
+      xpMessages.push(`+${roomXP} XP for exploring!`);
+    }
+
+    // Check for level up if XP was gained
+    if (xpGained > 0) {
+      let currentXP = partyStats.current_xp + xpGained;
+      let currentLevel = partyStats.level;
+      let xpToNext = partyStats.xp_to_next_level;
+
+      if (currentXP >= xpToNext) {
+        leveledUp = true;
+        newLevel = currentLevel + 1;
+        const remainingXp = currentXP - xpToNext;
+        const newXpNeeded = Math.floor(Math.pow(newLevel, 3) * 10);
+        
+        // Stat increases on level up
+        const hpIncrease = Math.floor(8 + (newLevel * 0.5));
+        const mpIncrease = Math.floor(4 + (newLevel * 0.3));
+        const atkIncrease = Math.floor(1 + (newLevel % 3 === 0 ? 1 : 0));
+        const defIncrease = Math.floor(1 + (newLevel % 3 === 0 ? 1 : 0));
+        const spdIncrease = Math.floor(1 + (newLevel % 4 === 0 ? 1 : 0));
+        
+        await supabaseClient
+          .from("player_stats")
+          .update({
+            level: newLevel,
+            current_xp: remainingXp,
+            xp_to_next_level: newXpNeeded,
+            max_hp: partyStats.max_hp + hpIncrease,
+            current_hp: partyStats.max_hp + hpIncrease, // Full heal
+            max_mp: partyStats.max_mp + mpIncrease,
+            current_mp: partyStats.max_mp + mpIncrease, // Full restore
+            atk: partyStats.atk + atkIncrease,
+            def: partyStats.def + defIncrease,
+            spd: partyStats.spd + spdIncrease,
+          })
+          .eq("user_id", battleState.user_id);
+        
+        xpMessages.push(`Level up! Now level ${newLevel}`);
+      } else {
+        // Just update XP without level up
+        await supabaseClient
+          .from("player_stats")
+          .update({
+            current_xp: currentXP,
+          })
+          .eq("user_id", battleState.user_id);
+      }
+    }
+
     // Add items if any
     if (sanitizedOutcome.itemsGained && sanitizedOutcome.itemsGained.length > 0) {
       for (const item of sanitizedOutcome.itemsGained) {
@@ -553,6 +624,10 @@ Return ONLY valid JSON (no markdown):
         outcome: sanitizedOutcome,
         newHp,
         newMp,
+        xpGained,
+        xpMessages,
+        leveledUp,
+        newLevel,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

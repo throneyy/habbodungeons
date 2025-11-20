@@ -225,7 +225,7 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       }
     }
 
-    // Handle victory - award XP, loot, and check for level up
+    // Handle XP gains - award XP for hits and victories
     let xpGained = 0;
     let leveledUp = false;
     let newLevel = stats.level;
@@ -236,13 +236,22 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
     let updatedDeadPlayers = [...deadPlayers];
     let isEntirePartyDead = false;
 
+    // Award XP for successful hits (classic JRPG style)
+    if (result.playerDamageDealt > 0) {
+      const hitXP = Math.max(2, Math.floor(result.playerDamageDealt / 3)); // 2-5 XP per good hit
+      xpGained += hitXP;
+      xpMessages.push(`+${hitXP} XP for hitting!`);
+    }
+
     if (result.victory) {
-      // Calculate XP first (before updating daily stats)
+      // Calculate victory XP (before updating daily stats)
       const enemyLevel = battle.current_enemy_state.level || 1;
       const levelDiff = enemyLevel - stats.level;
-      const baseXP = Math.floor(enemyLevel * enemyLevel * 8); // Base formula: level^2 * 8
+      const baseXP = Math.floor(enemyLevel * enemyLevel * 10); // Base formula: level^2 * 10
       const diffMultiplier = Math.max(0.5, 1 + (levelDiff * 0.1)); // Bonus for higher level enemies
-      xpGained = Math.floor(baseXP * diffMultiplier);
+      const victoryXP = Math.floor(baseXP * diffMultiplier);
+      xpGained += victoryXP;
+      xpMessages.push(`+${victoryXP} XP for victory!`);
       
       // Update daily stats for leaderboard
       const isBoss = battle.current_enemy_state.is_boss || false;
@@ -378,8 +387,6 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
       
       const newXp = stats.current_xp + xpGained;
       const xpNeeded = stats.xp_to_next_level;
-      
-      xpMessages.push(`Gained ${xpGained} experience points.`);
       
       if (newXp >= xpNeeded) {
         // Level up!
