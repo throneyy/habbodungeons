@@ -28,7 +28,8 @@ import fireDrake from "@/assets/fire-drake.png";
 import werewolf from "@/assets/werewolf.png";
 import bloodDragonBoss from "@/assets/blood-dragon-boss.gif";
 import iceKnightBoss from "@/assets/ice-knight-boss.png";
-import icedStoneDragon from "@/assets/iced-stone-dragon.png";
+import icedStoneDragon from "@/assets/iced-stone-dragon-flipped.png";
+import mysticShaman from "@/assets/mystic-shaman-boss-flipped.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -51,7 +52,8 @@ const ENEMY_SPRITES: Record<string, string> = {
   "werewolf.png": werewolf,
   "blood-dragon-boss.gif": bloodDragonBoss,
   "ice-knight-boss.png": iceKnightBoss,
-  "iced-stone-dragon.png": icedStoneDragon,
+  "iced-stone-dragon-flipped.png": icedStoneDragon,
+  "mystic-shaman-boss-flipped.png": mysticShaman,
 };
 
 interface Monster {
@@ -164,6 +166,11 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
   "Iced Stone Dragon": {
     type: "Boss - Elemental Dragon",
     description: "An ancient trickster dragon combining ice and stone elemental magic. Known for testing adventurers with riddles before unleashing devastating frost attacks.",
+    difficulty: "Legendary"
+  },
+  "Mystic Shaman": {
+    type: "Boss - Elemental Mystic",
+    description: "A powerful shaman channeling primal elemental forces. Commands both fire and ice magic, summoning ancestral spirits to overwhelm foes with raw elemental fury.",
     difficulty: "Legendary"
   }
 };

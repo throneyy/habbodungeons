@@ -194,11 +194,20 @@ const BOSS_POOL = [
   {
     name: "Iced Stone Dragon",
     description: "An ancient trickster dragon combining ice and stone elemental magic, tests adventurers with riddles",
-    sprite: "iced-stone-dragon.png",
+    sprite: "iced-stone-dragon-flipped.png",
     baseHp: 320,
     baseAtk: 24,
     baseDef: 22,
     baseSpd: 8
+  },
+  {
+    name: "Mystic Shaman",
+    description: "A powerful elemental shaman channeling primal forces of fire and ice, summoning ancestral spirits",
+    sprite: "mystic-shaman-boss-flipped.png",
+    baseHp: 280,
+    baseAtk: 22,
+    baseDef: 16,
+    baseSpd: 10
   }
 ];
 
@@ -219,6 +228,13 @@ export const BOSS_LOOT: Record<string, Array<{name: string, quantity: number, ty
     { name: "Crystals", quantity: 3, type: "material" },
     { name: "Runestones", quantity: 5, type: "material" },
     { name: "Gold Coins", quantity: 500, type: "currency" }
+  ],
+  "Mystic Shaman": [
+    { name: "Mage Staff", quantity: 1, type: "weapon" },
+    { name: "Elixir", quantity: 2, type: "consumable" },
+    { name: "Crystals", quantity: 2, type: "material" },
+    { name: "Scroll", quantity: 3, type: "material" },
+    { name: "Gold Coins", quantity: 400, type: "currency" }
   ]
 };
 
