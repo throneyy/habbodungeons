@@ -102,11 +102,16 @@ serve(async (req) => {
       .from('dungeons')
       .select('*')
       .eq('id', dungeonId)
-      .single();
+      .maybeSingle();
 
     if (dungeonError) {
       console.error('Dungeon error:', dungeonError);
       throw dungeonError;
+    }
+
+    if (!dungeon) {
+      console.error('Dungeon not found:', dungeonId);
+      throw new Error(`Dungeon not found: ${dungeonId}`);
     }
 
     console.log('Dungeon loaded:', dungeon.id, dungeon.name);
