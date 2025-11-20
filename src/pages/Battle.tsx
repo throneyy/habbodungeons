@@ -91,8 +91,21 @@ interface BattleLogEntry {
 
 // Helper function to get the latest narrative from battle log or story node
 const getLatestNarrative = (battleData: BattleData): string => {
-  // ALWAYS prioritize battle log over current_story_node to ensure consistency
-  // between "The Story Unfolds" and "Chronicle of Events"
+  console.log('🔍 Story sync check:', {
+    hasStoryNode: !!battleData.current_story_node,
+    storyNodeText: battleData.current_story_node?.storyText?.substring(0, 50) + '...',
+    hasChoices: battleData.current_story_node?.choices?.length || 0,
+    battleLogLength: battleData.battle_log?.length || 0,
+    lastBattleLog: battleData.battle_log?.[battleData.battle_log.length - 1]?.message?.substring(0, 50) + '...'
+  });
+
+  // CRITICAL: When current_story_node exists, it's the source of truth for BOTH storyText AND choices
+  // This ensures narrative text and choices are always in sync (from the same story node)
+  if (battleData.current_story_node?.storyText) {
+    return battleData.current_story_node.storyText;
+  }
+  
+  // Otherwise fall back to battle log (for resolved choices/combat results)
   if (battleData.battle_log && battleData.battle_log.length > 0) {
     // Filter out choice and dice check messages, get the last narrative message
     const narrativeMessages = battleData.battle_log.filter(
@@ -102,11 +115,6 @@ const getLatestNarrative = (battleData: BattleData): string => {
     if (narrativeMessages.length > 0) {
       return narrativeMessages[narrativeMessages.length - 1].message;
     }
-  }
-  
-  // Fallback to current story node if battle log is empty
-  if (battleData.current_story_node?.storyText) {
-    return battleData.current_story_node.storyText;
   }
   
   // Final fallback to static room description
