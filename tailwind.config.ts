@@ -94,8 +94,8 @@ export default {
           "100%": { transform: "translateX(0) scale(1)" }
         },
         "marquee-left": {
-          "0%": { transform: "translateX(0)" },
-          "100%": { transform: "translateX(-50%)" }
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(-100%)" }
         },
       },
       animation: {

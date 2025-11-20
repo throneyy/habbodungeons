@@ -123,13 +123,12 @@ export const DailyLeaderboard = () => {
         </p>
       </div>
 
-      {/* Sliding container with animation - duplicate for seamless loop */}
+      {/* Sliding container with animation */}
       <div className="absolute inset-0 flex items-center pt-7 overflow-hidden">
         <div className="flex gap-4 animate-marquee-left">
-          {/* Render players twice for seamless infinite loop */}
-          {[...topPlayers, ...topPlayers].map((player, index) => {
+          {topPlayers.map((player, index) => {
             const displayName = player.habbo_username || player.username.split('@')[0];
-            const rank = (index % topPlayers.length) + 1;
+            const rank = index + 1;
             
             return (
               <div 
