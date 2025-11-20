@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { DailyLeaderboard } from "@/components/DailyLeaderboard";
 import { getItemImage, getItemDescription } from "@/lib/itemAssets";
 
 import { Button } from "@/components/ui/button";
@@ -324,6 +325,11 @@ const Dashboard = () => {
               Search
             </Button>
           </div>
+        </div>
+
+        {/* Daily Leaderboard */}
+        <div className="flex justify-center">
+          <DailyLeaderboard />
         </div>
 
         {/* Player Stats */}
