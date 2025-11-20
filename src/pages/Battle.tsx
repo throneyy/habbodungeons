@@ -77,6 +77,29 @@ interface BattleLogEntry {
   type?: string;
 }
 
+// Helper function to get the latest narrative from battle log or story node
+const getLatestNarrative = (battleData: BattleData): string => {
+  // First try current story node
+  if (battleData.current_story_node?.storyText) {
+    return battleData.current_story_node.storyText;
+  }
+  
+  // Extract most recent non-dice-check, non-choice message from battle log
+  if (battleData.battle_log && battleData.battle_log.length > 0) {
+    // Filter out choice and dice check messages, get the last narrative message
+    const narrativeMessages = battleData.battle_log.filter(
+      entry => entry.type !== 'choice' && entry.type !== 'dice_failure' && entry.type !== 'dice_success'
+    );
+    
+    if (narrativeMessages.length > 0) {
+      return narrativeMessages[narrativeMessages.length - 1].message;
+    }
+  }
+  
+  // Fallback to static room description
+  return battleData.room_description;
+};
+
 interface PlayerStats {
   userId: string;
   username: string;
@@ -2584,7 +2607,7 @@ const Battle = () => {
                   <Volume2 className={`h-4 w-4 ${isPlaying ? 'animate-pulse text-primary' : ''}`} />
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  {battleData.current_story_node?.storyText || battleData.room_description}
+                  {getLatestNarrative(battleData)}
                 </p>
               </div>
               
