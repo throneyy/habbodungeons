@@ -8,7 +8,7 @@ export const useTextToSpeech = () => {
   const { toast } = useToast();
   const audioRef = useState<HTMLAudioElement | null>(null)[0];
 
-  const speak = async (text: string, voice: string = 'Edward') => {
+  const speak = async (text: string, voice: string = 'alloy') => {
     if (!text) return;
 
     // Stop any currently playing audio
