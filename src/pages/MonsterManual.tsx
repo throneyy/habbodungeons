@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { HabboPanel } from "@/components/HabboPanel";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Skull } from "lucide-react";
 import { toast } from "sonner";
 import monsterManualTitle from "@/assets/monster-manual-title.png";
 
@@ -306,7 +305,7 @@ export default function MonsterManual() {
                         }}
                       />
                     ) : (
-                      <Skull className="w-24 h-24 text-muted-foreground" />
+                      <span className="text-[96px] text-muted-foreground font-['Volter'] leading-none">ª</span>
                     )}
                   </div>
 
@@ -335,7 +334,7 @@ export default function MonsterManual() {
 
         {monsters.length === 0 && (
           <HabboPanel className="text-center py-12">
-            <Skull className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <span className="text-[64px] text-muted-foreground font-['Volter'] leading-none block mb-4">ª</span>
             <p className="text-xl text-muted-foreground">No creatures documented yet...</p>
           </HabboPanel>
         )}
