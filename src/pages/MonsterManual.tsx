@@ -34,7 +34,6 @@ import frostBrute from "@/assets/frost-brute.png";
 import voidStalker from "@/assets/void-stalker.png";
 import swampLurker from "@/assets/swamp-lurker.png";
 import infernalHound from "@/assets/infernal-hound.png";
-import corruptedGuard from "@/assets/corrupted-guard.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -63,7 +62,6 @@ const ENEMY_SPRITES: Record<string, string> = {
   "void-stalker.png": voidStalker,
   "swamp-lurker.png": swampLurker,
   "infernal-hound.png": infernalHound,
-  "corrupted-guard.png": corruptedGuard,
 };
 
 interface Monster {
@@ -201,11 +199,6 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
   "Infernal Hound": {
     type: "Fiend",
     description: "A demonic beast wreathed in dark flames. These hounds hunt in packs and their bites carry both fire and shadow magic.",
-    difficulty: "Uncommon"
-  },
-  "Corrupted Guard": {
-    type: "Humanoid",
-    description: "Once a noble guard, now twisted by dark magic into a corrupted warrior. Still wielding their original equipment with deadly skill.",
     difficulty: "Uncommon"
   }
 };

@@ -153,15 +153,6 @@ const ENEMY_POOL = [
     baseSpd: 12
   },
   {
-    name: "Corrupted Guard",
-    description: "Once a noble guard, now twisted by dark magic",
-    sprite: "corrupted-guard.png",
-    baseHp: 56,
-    baseAtk: 12,
-    baseDef: 10,
-    baseSpd: 8
-  },
-  {
     name: "Giant Rat",
     description: "A massive rodent corrupted by the dungeon's dark magic",
     sprite: "giant-rat.png",
