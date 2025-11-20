@@ -4,7 +4,7 @@ interface StatBarProps {
   label: string;
   current: number;
   max: number;
-  color?: "hp" | "mp";
+  color?: "hp" | "mp" | "xp";
   className?: string;
 }
 
@@ -21,7 +21,7 @@ export const StatBar = ({ label, current, max, color = "hp", className }: StatBa
         <div 
           className={cn(
             "h-full transition-all duration-300",
-            color === "hp" ? "bg-hp" : "bg-mp"
+            color === "hp" ? "bg-hp" : color === "mp" ? "bg-mp" : "bg-xp"
           )}
           style={{ width: `${percentage}%` }}
         />
