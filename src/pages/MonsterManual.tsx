@@ -252,7 +252,7 @@ export default function MonsterManual() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto py-8 space-y-6">
+      <div className="py-8 space-y-6">
         <HabboPanel className="bg-gradient-to-br from-destructive/20 to-primary/20">
           <div className="space-y-3">
             <img 
