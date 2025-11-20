@@ -14,7 +14,8 @@ import { QuestDetailsDialog } from "@/components/QuestDetailsDialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Swords, Shield, Sparkles, Package, Users, Plus, Copy, ScrollText } from "lucide-react";
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
+import { Swords, Shield, Sparkles, Package, Users, Plus, Copy, ScrollText, Volume2 } from "lucide-react";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import explosionHit from "@/assets/explosion-hit.gif";
 import hitBump from "@/assets/hit-bump.gif";
@@ -194,6 +195,7 @@ const Battle = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { speak, isPlaying, isLoading: ttsLoading } = useTextToSpeech();
   
   const [battleData, setBattleData] = useState<BattleData | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -1903,9 +1905,21 @@ const Battle = () => {
                                 </p>
                               </div>
                             ) : storyNode ? (
-                              <p className="text-lg leading-relaxed whitespace-pre-wrap">
-                                {storyNode.storyText}
-                              </p>
+                              <div className="relative">
+                                <Button
+                                  onClick={() => speak(storyNode.storyText)}
+                                  disabled={isPlaying || ttsLoading}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full bg-muted hover:bg-muted/80 border-2 border-habbo-dark"
+                                  title="Read story aloud"
+                                >
+                                  <Volume2 className={`h-4 w-4 ${isPlaying ? 'animate-pulse text-primary' : ''}`} />
+                                </Button>
+                                <p className="text-lg leading-relaxed whitespace-pre-wrap">
+                                  {storyNode.storyText}
+                                </p>
+                              </div>
                             ) : (
                               <p className="text-lg italic text-muted-foreground">
                                 Awaiting your next decision...
@@ -2548,9 +2562,21 @@ const Battle = () => {
           {/* Action Panel */}
           <HabboPanel title="Current Turn" className="md:col-span-1">
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {battleData.current_story_node?.storyText || battleData.room_description}
-              </p>
+              <div className="relative">
+                <Button
+                  onClick={() => speak(battleData.current_story_node?.storyText || battleData.room_description)}
+                  disabled={isPlaying || ttsLoading || !battleData.current_story_node?.storyText && !battleData.room_description}
+                  variant="ghost"
+                  size="sm"
+                  className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full bg-muted hover:bg-muted/80 border-2 border-habbo-dark z-10"
+                  title="Read narration aloud"
+                >
+                  <Volume2 className={`h-4 w-4 ${isPlaying ? 'animate-pulse text-primary' : ''}`} />
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {battleData.current_story_node?.storyText || battleData.room_description}
+                </p>
+              </div>
               
               <div className="grid grid-cols-2 gap-2">
                 <Button
