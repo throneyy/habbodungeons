@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
-import { Users, ArrowLeft, Loader2 } from "lucide-react";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Users, ArrowLeft } from "lucide-react";
 
 interface Server {
   id: string;
@@ -253,7 +254,7 @@ const DungeonList = () => {
         <HabboPanel title="Available Servers">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin" />
+              <LoadingSpinner />
             </div>
           ) : (
             <div className="space-y-6">

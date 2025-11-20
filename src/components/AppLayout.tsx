@@ -1,17 +1,15 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import SnowFall from "./SnowFall";
-import { DailyLeaderboard } from "./DailyLeaderboard";
 import dungeonBg from "@/assets/dungeon-bg.png";
 import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
 
 interface AppLayoutProps {
   children: ReactNode;
   hideBanner?: boolean;
-  hideLeaderboard?: boolean;
 }
 
-export const AppLayout = ({ children, hideBanner = false, hideLeaderboard = false }: AppLayoutProps) => {
+export const AppLayout = ({ children, hideBanner = false }: AppLayoutProps) => {
   const navigate = useNavigate();
 
   return (
@@ -23,10 +21,7 @@ export const AppLayout = ({ children, hideBanner = false, hideLeaderboard = fals
       />
       
       <div className="relative z-10">
-        <div className="flex justify-between items-start p-4 gap-4">
-          {/* Banner */}
-          <div className="flex-1" />
-          
+        <div className="flex justify-center items-start p-4">
           {!hideBanner && (
             <div className="flex justify-center">
               <img 
@@ -37,15 +32,6 @@ export const AppLayout = ({ children, hideBanner = false, hideLeaderboard = fals
                 style={{ height: 'auto', width: 'auto', maxHeight: '96px' }}
               />
             </div>
-          )}
-          
-          {/* Leaderboard */}
-          {!hideLeaderboard ? (
-            <div className="flex-1 flex justify-end">
-              <DailyLeaderboard />
-            </div>
-          ) : (
-            <div className="flex-1" />
           )}
         </div>
         
