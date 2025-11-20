@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { HabboPanel } from "./HabboPanel";
 import { Trophy, Swords, Skull } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -93,9 +94,9 @@ export const DailyLeaderboard = () => {
   if (loading) {
     return (
       <div className="w-64 h-fit">
-        <HabboPanel title="⭐ Daily Leaders" className="animate-pulse">
+        <HabboPanel title="⭐ Daily Leaders">
           <div className="h-32 flex items-center justify-center">
-            <p className="text-muted-foreground">Loading...</p>
+            <LoadingSpinner />
           </div>
         </HabboPanel>
       </div>

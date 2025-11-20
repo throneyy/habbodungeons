@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,7 +130,7 @@ const LinkHabbo = () => {
                     disabled={loading || !habboUsername}
                     className="font-bold border-4 border-habbo-dark"
                   >
-                    {loading ? "Loading..." : "Next"}
+                    {loading ? <LoadingSpinner /> : "Next"}
                   </Button>
                 </div>
               </div>

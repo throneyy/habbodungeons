@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { getItemImage, getItemDescription } from "@/lib/itemAssets";
 
 import { Button } from "@/components/ui/button";
@@ -200,7 +201,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-2xl font-bold">Loading...</p>
+        <LoadingSpinner />
       </div>
     );
   }
