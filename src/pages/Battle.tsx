@@ -679,8 +679,47 @@ const Battle = () => {
           lastRoomIndexRef.current = data.battleData.room_index;
         }
         
+        // Detect victory if enemy HP is 0 and we're transitioning from battle to story mode
+        // This catches victories that might have been missed by handleResolveTurn
+        if (!victoryDialogActiveRef.current && 
+            data.battleData.mode === "story" && 
+            data.battleData.enemy?.current_hp === 0 &&
+            battleData?.mode === "battle") {
+          
+          console.log("Victory detected in loadBattle - showing victory modal");
+          victoryDialogActiveRef.current = true;
+          
+          // Extract loot and XP from the most recent battle log entries
+          const recentLog = (data.battleData.battle_log || []).slice(-10);
+          const lootItems: any[] = [];
+          let xpGained = 0;
+          
+          for (const entry of recentLog) {
+            const message = typeof entry === 'string' ? entry : entry.message || '';
+            
+            // Parse loot messages like "Received 5x [Gold Coins]"
+            const lootMatch = message.match(/Received (\d+)x \[(.*?)\]/);
+            if (lootMatch) {
+              lootItems.push({
+                item_name: lootMatch[2],
+                quantity: parseInt(lootMatch[1]),
+                item_type: 'loot'
+              });
+            }
+            
+            // Parse XP messages like "+50 XP for victory!"
+            const xpMatch = message.match(/\+(\d+) XP/);
+            if (xpMatch) {
+              xpGained += parseInt(xpMatch[1]);
+            }
+          }
+          
+          setVictoryLootData({ items: lootItems, xp: xpGained });
+          setShowVictoryLoot(true);
+        }
+        
         // Auto-skip dead players' turns in party battles
-        if (data.battleData.mode === 'battle' && 
+        if (data.battleData.mode === 'battle' &&
             data.battleData.isPartyBattle && 
             data.battleData.currentTurnUserId === userId &&
             data.battleData.deadPlayers?.includes(userId) &&
@@ -1555,11 +1594,9 @@ const Battle = () => {
           // Set victory dialog flag immediately to prevent realtime update from interfering
           victoryDialogActiveRef.current = true;
           
-          // Show victory loot modal with data after a brief delay to allow state to settle
-          setTimeout(() => {
-            setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
-            setShowVictoryLoot(true);
-          }, 100);
+          // Show victory loot modal with data immediately
+          setVictoryLootData({ items: data.lootItems || [], xp: data.xpGained || 0 });
+          setShowVictoryLoot(true);
           // Note: loadBattle will be called when user closes the modal
         } else if (data.playerDied && !data.defeat) {
           // This player died but party continues
