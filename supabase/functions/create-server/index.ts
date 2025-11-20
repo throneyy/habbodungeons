@@ -84,7 +84,33 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (serverError) throw serverError;
+    // Handle duplicate key error gracefully for system servers
+    if (serverError) {
+      // If it's a duplicate key error (unique constraint violation) for system servers, fetch the existing server
+      if (isSystemServer && serverError.code === '23505') {
+        console.log(`Server ${serverName} already exists, fetching existing server`);
+        const { data: existingServer, error: fetchError } = await supabaseClient
+          .from('servers')
+          .select()
+          .eq('server_name', serverName)
+          .eq('difficulty', difficulty)
+          .is('dungeon_id', null)
+          .eq('is_active', true)
+          .single();
+
+        if (fetchError) throw fetchError;
+        
+        console.log("Using existing server:", existingServer.id);
+        return new Response(
+          JSON.stringify({ 
+            serverId: existingServer.id,
+            serverName: existingServer.server_name
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw serverError;
+    }
 
     // Only add host as player if this is not a system server
     if (!isSystemServer) {
