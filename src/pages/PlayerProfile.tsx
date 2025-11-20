@@ -16,6 +16,8 @@ interface PlayerData {
   current_hp: number;
   max_mp: number;
   current_mp: number;
+  current_xp: number;
+  xp_to_next_level: number;
   atk: number;
   def: number;
   spd: number;
@@ -61,7 +63,7 @@ export default function PlayerProfile() {
 
       const { data: statsData, error: statsError } = await supabase
         .from("player_stats")
-        .select("level, max_hp, current_hp, max_mp, current_mp, atk, def, spd")
+        .select("level, max_hp, current_hp, max_mp, current_mp, current_xp, xp_to_next_level, atk, def, spd")
         .eq("user_id", profileData.id)
         .maybeSingle();
 
@@ -84,6 +86,8 @@ export default function PlayerProfile() {
         current_hp: statsData.current_hp || 100,
         max_mp: statsData.max_mp || 50,
         current_mp: statsData.current_mp || 50,
+        current_xp: statsData.current_xp || 0,
+        xp_to_next_level: statsData.xp_to_next_level || 100,
         atk: statsData.atk || 10,
         def: statsData.def || 10,
         spd: statsData.spd || 10,
@@ -168,6 +172,12 @@ export default function PlayerProfile() {
               current={player.current_mp}
               max={player.max_mp}
               color="mp"
+            />
+            <StatBar
+              label="XP"
+              current={player.current_xp}
+              max={player.xp_to_next_level}
+              color="xp"
             />
             <div className="grid grid-cols-3 gap-4 pt-4">
               <div className="text-center">
