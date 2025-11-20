@@ -237,6 +237,13 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
     let isEntirePartyDead = false;
 
     if (result.victory) {
+      // Calculate XP first (before updating daily stats)
+      const enemyLevel = battle.current_enemy_state.level || 1;
+      const levelDiff = enemyLevel - stats.level;
+      const baseXP = Math.floor(enemyLevel * enemyLevel * 8); // Base formula: level^2 * 8
+      const diffMultiplier = Math.max(0.5, 1 + (levelDiff * 0.1)); // Bonus for higher level enemies
+      xpGained = Math.floor(baseXP * diffMultiplier);
+      
       // Update daily stats for leaderboard
       const isBoss = battle.current_enemy_state.is_boss || false;
       const today = new Date().toISOString().split('T')[0];
@@ -255,6 +262,7 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
             damage_dealt: existingStats.damage_dealt + (result.playerDamageDealt || 0),
             enemies_killed: existingStats.enemies_killed + 1,
             bosses_defeated: isBoss ? existingStats.bosses_defeated + 1 : existingStats.bosses_defeated,
+            xp_gained: existingStats.xp_gained + xpGained,
           })
           .eq('id', existingStats.id);
       } else {
@@ -266,11 +274,11 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
             damage_dealt: result.playerDamageDealt || 0,
             enemies_killed: 1,
             bosses_defeated: isBoss ? 1 : 0,
+            xp_gained: xpGained,
           });
       }
       
       // Generate loot drops
-      const enemyLevel = battle.current_enemy_state.level || 1;
       const lootTableBasic = [
         { name: 'Gold Coins', type: 'currency', weight: 40 },
         { name: 'Silver', type: 'currency', weight: 30 },
@@ -367,11 +375,6 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
             });
         }
       }
-      // Calculate XP based on enemy level relative to player level (traditional JRPG formula)
-      const levelDiff = enemyLevel - stats.level;
-      const baseXP = Math.floor(enemyLevel * enemyLevel * 8); // Base formula: level^2 * 8
-      const diffMultiplier = Math.max(0.5, 1 + (levelDiff * 0.1)); // Bonus for higher level enemies
-      xpGained = Math.floor(baseXP * diffMultiplier);
       
       const newXp = stats.current_xp + xpGained;
       const xpNeeded = stats.xp_to_next_level;
