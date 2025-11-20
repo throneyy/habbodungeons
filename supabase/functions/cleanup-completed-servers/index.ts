@@ -69,6 +69,7 @@ serve(async (req) => {
     }
 
     // Step 4: For each server name, keep only the oldest one and delete duplicates
+    // BUT: Only delete duplicates that have no players
     for (const [serverName, servers] of serverGroups.entries()) {
       if (servers.length > 1) {
         // Sort by created_at to find oldest
@@ -76,15 +77,33 @@ serve(async (req) => {
         const keepServer = servers[0];
         const duplicates = servers.slice(1);
         
-        console.log(`🔄 Found ${duplicates.length} duplicate(s) of "${serverName}", keeping oldest`);
+        // Only delete duplicates that have no players
+        const emptyDuplicates = duplicates.filter(s => {
+          const playerCount = s.server_players[0]?.count || 0;
+          return playerCount === 0;
+        });
         
-        const { error: deleteDupError } = await supabaseAdmin
-          .from('servers')
-          .delete()
-          .in('id', duplicates.map(s => s.id));
+        if (emptyDuplicates.length > 0) {
+          console.log(`🔄 Found ${emptyDuplicates.length} empty duplicate(s) of "${serverName}", keeping oldest`);
+          
+          const { error: deleteDupError } = await supabaseAdmin
+            .from('servers')
+            .delete()
+            .in('id', emptyDuplicates.map(s => s.id));
+          
+          if (!deleteDupError) {
+            deletedCount += emptyDuplicates.length;
+          }
+        }
         
-        if (!deleteDupError) {
-          deletedCount += duplicates.length;
+        // Log if there are duplicates with players (don't delete them)
+        const populatedDuplicates = duplicates.filter(s => {
+          const playerCount = s.server_players[0]?.count || 0;
+          return playerCount > 0;
+        });
+        
+        if (populatedDuplicates.length > 0) {
+          console.log(`⚠️ Keeping ${populatedDuplicates.length} duplicate(s) of "${serverName}" with active players`);
         }
       }
     }
