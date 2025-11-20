@@ -117,6 +117,51 @@ const ENEMY_POOL = [
     baseSpd: 11
   },
   {
+    name: "Frost Brute",
+    description: "A massive blue-skinned brute empowered by ancient frost magic",
+    sprite: "frost-brute.png",
+    baseHp: 58,
+    baseAtk: 14,
+    baseDef: 9,
+    baseSpd: 6
+  },
+  {
+    name: "Void Stalker",
+    description: "A creature from the dark void between worlds that drains life energy",
+    sprite: "void-stalker.png",
+    baseHp: 48,
+    baseAtk: 12,
+    baseDef: 6,
+    baseSpd: 10
+  },
+  {
+    name: "Swamp Lurker",
+    description: "A vicious green-skinned troll that regenerates quickly",
+    sprite: "swamp-lurker.png",
+    baseHp: 54,
+    baseAtk: 11,
+    baseDef: 8,
+    baseSpd: 7
+  },
+  {
+    name: "Infernal Hound",
+    description: "A demonic beast wreathed in dark flames",
+    sprite: "infernal-hound.png",
+    baseHp: 50,
+    baseAtk: 13,
+    baseDef: 7,
+    baseSpd: 12
+  },
+  {
+    name: "Corrupted Guard",
+    description: "Once a noble guard, now twisted by dark magic",
+    sprite: "corrupted-guard.png",
+    baseHp: 56,
+    baseAtk: 12,
+    baseDef: 10,
+    baseSpd: 8
+  },
+  {
     name: "Giant Rat",
     description: "A massive rodent corrupted by the dungeon's dark magic",
     sprite: "giant-rat.png",
