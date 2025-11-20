@@ -217,7 +217,7 @@ export default function MonsterManual() {
               src={monsterManualTitle} 
               alt="Monster Manual" 
               className="pixel-icon"
-              style={{ imageRendering: 'pixelated' }}
+              style={{ imageRendering: 'pixelated', maxWidth: '400px', height: 'auto' }}
             />
             <div>
               <p className="text-lg text-muted-foreground">A Comprehensive Guide to the Creatures of the Frozen Wastes</p>
