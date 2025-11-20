@@ -237,6 +237,38 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
     let isEntirePartyDead = false;
 
     if (result.victory) {
+      // Update daily stats for leaderboard
+      const isBoss = battle.current_enemy_state.is_boss || false;
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: existingStats } = await supabase
+        .from('daily_stats')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('stat_date', today)
+        .maybeSingle();
+      
+      if (existingStats) {
+        await supabase
+          .from('daily_stats')
+          .update({
+            damage_dealt: existingStats.damage_dealt + (result.playerDamageDealt || 0),
+            enemies_killed: existingStats.enemies_killed + 1,
+            bosses_defeated: isBoss ? existingStats.bosses_defeated + 1 : existingStats.bosses_defeated,
+          })
+          .eq('id', existingStats.id);
+      } else {
+        await supabase
+          .from('daily_stats')
+          .insert({
+            user_id: user.id,
+            stat_date: today,
+            damage_dealt: result.playerDamageDealt || 0,
+            enemies_killed: 1,
+            bosses_defeated: isBoss ? 1 : 0,
+          });
+      }
+      
       // Generate loot drops
       const enemyLevel = battle.current_enemy_state.level || 1;
       const lootTableBasic = [
@@ -397,6 +429,35 @@ Keep narration exciting but brief. Always include enemy counterattack in narrati
         xpMessages.push(`${newXp} / ${xpNeeded} EXP to next level.`);
       }
     } else {
+      // Update daily stats even on non-victory (track damage dealt)
+      if (result.playerDamageDealt > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data: existingStats } = await supabase
+          .from('daily_stats')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('stat_date', today)
+          .maybeSingle();
+        
+        if (existingStats) {
+          await supabase
+            .from('daily_stats')
+            .update({
+              damage_dealt: existingStats.damage_dealt + result.playerDamageDealt,
+            })
+            .eq('id', existingStats.id);
+        } else {
+          await supabase
+            .from('daily_stats')
+            .insert({
+              user_id: user.id,
+              stat_date: today,
+              damage_dealt: result.playerDamageDealt,
+            });
+        }
+      }
+      
       // No victory - check for defeat and handle respawn
       if (result.defeat) {
         if (isPartyBattle) {
