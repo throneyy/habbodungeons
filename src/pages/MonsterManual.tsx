@@ -250,7 +250,8 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'skeleton.png' ||
                                      monster.sprite_filename === 'goblin-trio.png' ||
                                      monster.sprite_filename === 'frost-wraith.png' ||
-                                     monster.sprite_filename === 'frost-mutant.png') ? 'none' : 'scaleX(-1)'
+                                     monster.sprite_filename === 'frost-mutant.png' ||
+                                     monster.sprite_filename === 'flaming-phantom.png') ? 'none' : 'scaleX(-1)'
                         }}
                       />
                     ) : (
