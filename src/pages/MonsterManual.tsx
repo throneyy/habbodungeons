@@ -245,7 +245,12 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'blood-dragon-boss.gif' ||
                                      monster.sprite_filename === 'glacial-imp.png' ||
                                      monster.sprite_filename === 'ice-knight-boss.png' ||
-                                     monster.sprite_filename === 'undead-habbo.png') ? 'none' : 'scaleX(-1)'
+                                     monster.sprite_filename === 'undead-habbo.png' ||
+                                     monster.sprite_filename === 'werewolf.png' ||
+                                     monster.sprite_filename === 'skeleton.png' ||
+                                     monster.sprite_filename === 'goblin-trio.png' ||
+                                     monster.sprite_filename === 'frost-wraith.png' ||
+                                     monster.sprite_filename === 'frost-mutant.png') ? 'none' : 'scaleX(-1)'
                         }}
                       />
                     ) : (
