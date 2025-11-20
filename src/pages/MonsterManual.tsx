@@ -212,7 +212,6 @@ export default function MonsterManual() {
       <div className="container mx-auto py-8 space-y-6">
         <HabboPanel className="bg-gradient-to-br from-destructive/20 to-primary/20">
           <div className="flex items-center gap-4 mb-2">
-            <BookOpen className="w-12 h-12 text-destructive" />
             <div>
               <h1 className="text-5xl font-black text-foreground">Monster Manual</h1>
               <p className="text-lg text-muted-foreground">A Comprehensive Guide to the Creatures of the Frozen Wastes</p>
