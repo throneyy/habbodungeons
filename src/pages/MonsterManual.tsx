@@ -300,7 +300,8 @@ export default function MonsterManual() {
                                      monster.sprite_filename === 'frost-brute.png' ||
                                      monster.sprite_filename === 'void-stalker.png' ||
                                      monster.sprite_filename === 'swamp-lurker.png' ||
-                                     monster.sprite_filename === 'infernal-hound.png') ? '' : 'scaleX(-1) '}scale(${monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
+                                     monster.sprite_filename === 'infernal-hound.png' ||
+                                     monster.sprite_filename === 'frost-wolf.png') ? '' : 'scaleX(-1) '}scale(${monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
                                  monster.sprite_filename === 'giant-rat.png' ? '7.5' : '1'})`
                         }}
                       />
