@@ -252,6 +252,7 @@ const Battle = () => {
   const victoryDialogActiveRef = useRef(false);
   const lastRoomIndexRef = useRef<number | null>(null);
   const turnAdvanceAttemptedRef = useRef(false);
+  const battleLogRef = useRef<HTMLDivElement>(null);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -500,6 +501,13 @@ const Battle = () => {
   useEffect(() => {
     setTreasureClaimed(false);
   }, [battleData?.room_description, battleData?.room_type]);
+
+  // Auto-scroll battle log to bottom when new messages arrive
+  useEffect(() => {
+    if (battleLogRef.current) {
+      battleLogRef.current.scrollTop = battleLogRef.current.scrollHeight;
+    }
+  }, [battleData?.battle_log]);
 
   const loadBattle = async (isRetry = false) => {
     if (!id) {
@@ -1741,7 +1749,7 @@ const Battle = () => {
 
             {/* Battle Log - Main Focus */}
             <HabboPanel title="Chronicle of Events">
-              <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
+              <div ref={battleLogRef} className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {/* Quest Information - Always at top */}
               {battleData.dungeon_name && (() => {
                 const questNPC = getNPCById(battleData.dungeon_theme || '');
@@ -2452,7 +2460,7 @@ const Battle = () => {
 
           {/* Battle Log - Main Focus */}
           <HabboPanel title="Battle Log">
-            <div className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
+            <div ref={battleLogRef} className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
               {battleData.battle_log && battleData.battle_log.length > 0 ? (
                 battleData.battle_log.map((entry: any, i) => {
                   // Handle entry - can be string, object, or JSON string
