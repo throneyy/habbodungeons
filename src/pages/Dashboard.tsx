@@ -328,9 +328,7 @@ const Dashboard = () => {
         </div>
 
         {/* Daily Leaderboard */}
-        <div className="flex justify-center">
-          <DailyLeaderboard />
-        </div>
+        <DailyLeaderboard />
 
         {/* Player Stats */}
         {profile?.habbo_username && stats && (
