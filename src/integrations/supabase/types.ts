@@ -102,6 +102,7 @@ export type Database = {
           stat_date: string
           updated_at: string
           user_id: string
+          xp_gained: number
         }
         Insert: {
           bosses_defeated?: number
@@ -114,6 +115,7 @@ export type Database = {
           stat_date?: string
           updated_at?: string
           user_id: string
+          xp_gained?: number
         }
         Update: {
           bosses_defeated?: number
@@ -126,6 +128,7 @@ export type Database = {
           stat_date?: string
           updated_at?: string
           user_id?: string
+          xp_gained?: number
         }
         Relationships: []
       }

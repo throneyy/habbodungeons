@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy, Swords, Skull } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { LoadingSpinner } from "./LoadingSpinner";
 
@@ -9,9 +9,7 @@ interface LeaderboardEntry {
   username: string;
   habbo_username: string | null;
   figureString: string | null;
-  damage_dealt: number;
-  enemies_killed: number;
-  bosses_defeated: number;
+  xp_gained: number;
 }
 
 export const DailyLeaderboard = () => {
@@ -40,17 +38,15 @@ export const DailyLeaderboard = () => {
 
   const loadLeaderboard = async () => {
     try {
-      // Get today's top players by damage dealt
+      // Get today's top players by XP gained
       const { data: statsData, error } = await supabase
         .from('daily_stats')
         .select(`
           user_id,
-          damage_dealt,
-          enemies_killed,
-          bosses_defeated
+          xp_gained
         `)
         .eq('stat_date', new Date().toISOString().split('T')[0])
-        .order('damage_dealt', { ascending: false })
+        .order('xp_gained', { ascending: false })
         .limit(5);
 
       if (error) throw error;
@@ -76,9 +72,7 @@ export const DailyLeaderboard = () => {
           username: profile?.username || 'Unknown',
           habbo_username: profile?.habbo_username,
           figureString: habboData?.figureString || null,
-          damage_dealt: stat.damage_dealt,
-          enemies_killed: stat.enemies_killed,
-          bosses_defeated: stat.bosses_defeated,
+          xp_gained: stat.xp_gained,
         };
       });
 
@@ -117,7 +111,7 @@ export const DailyLeaderboard = () => {
       <div className="px-4 py-2 bg-muted/30 border-b-2 border-habbo-dark/20">
         <p className="text-xs text-muted-foreground/70 animate-pulse flex items-center gap-1.5">
           <Trophy className="w-3 h-3 text-yellow-500" style={{ width: 'auto', height: 'auto', maxWidth: '12px', maxHeight: '12px' }} />
-          Top adventurers by damage dealt today
+          Top adventurers by XP gained today
         </p>
       </div>
       
@@ -155,21 +149,11 @@ export const DailyLeaderboard = () => {
                 {/* Stats */}
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm truncate">{displayName}</p>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Swords className="w-3 h-3" />
-                      {player.damage_dealt.toLocaleString()}
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1 text-primary font-semibold">
+                      <Trophy className="w-3 h-3 text-yellow-500" />
+                      {player.xp_gained.toLocaleString()} XP
                     </span>
-                    <span className="flex items-center gap-1">
-                      <Skull className="w-3 h-3" />
-                      {player.enemies_killed}
-                    </span>
-                    {player.bosses_defeated > 0 && (
-                      <span className="flex items-center gap-1 text-primary">
-                        <Trophy className="w-3 h-3" />
-                        {player.bosses_defeated}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
