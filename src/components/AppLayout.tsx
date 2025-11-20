@@ -1,17 +1,13 @@
 import { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
 import SnowFall from "./SnowFall";
+import { MainNav } from "./MainNav";
 import dungeonBg from "@/assets/dungeon-bg.png";
-import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
 
 interface AppLayoutProps {
   children: ReactNode;
-  hideBanner?: boolean;
 }
 
-export const AppLayout = ({ children, hideBanner = false }: AppLayoutProps) => {
-  const navigate = useNavigate();
-
+export const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="min-h-screen bg-background relative">
       <SnowFall />
@@ -21,18 +17,8 @@ export const AppLayout = ({ children, hideBanner = false }: AppLayoutProps) => {
       />
       
       <div className="relative z-10">
-        <div className="flex justify-center items-start p-4">
-          {!hideBanner && (
-            <div className="flex justify-center">
-              <img 
-                src={habboDungeonsBanner} 
-                alt="Habbo Dungeons" 
-                className="cursor-pointer pixel-icon"
-                onClick={() => navigate("/")}
-                style={{ height: 'auto', width: 'auto', maxHeight: '96px' }}
-              />
-            </div>
-          )}
+        <div className="p-4">
+          <MainNav />
         </div>
         
         <div className="p-8 pt-4">
