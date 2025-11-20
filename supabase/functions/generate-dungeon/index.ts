@@ -482,11 +482,15 @@ Make it feel dangerous, not dramatic.`
         };
       }
       
-      // For middle rooms, roll for room type with better distribution
+      // For middle rooms, prioritize combat encounters
       const roll = Math.random();
       
-      // 8% chance for treasure chest
-      if (roll < 0.08) {
+      // Guarantee at least 70% combat in middle rooms
+      // Only first middle room can be non-combat for pacing
+      const isFirstMiddleRoom = index === 1;
+      
+      // 5% chance for treasure chest (only if first middle room)
+      if (isFirstMiddleRoom && roll < 0.05) {
         return {
           ...room,
           enemy: null,
@@ -495,8 +499,8 @@ Make it feel dangerous, not dramatic.`
         };
       }
       
-      // 12% chance for stat boost event (0.08-0.20)
-      if (roll < 0.20) {
+      // 10% chance for stat boost event (only if first middle room, 0.05-0.15)
+      if (isFirstMiddleRoom && roll < 0.15) {
         const statEvents = [
           { stat: 'hp', description: 'A warm magical aura fills the room, healing your wounds!', amount: 20 },
           { stat: 'mp', description: 'Ancient runes glow softly, restoring your magical energy!', amount: 15 },
@@ -514,21 +518,22 @@ Make it feel dangerous, not dramatic.`
         };
       }
       
-      // 35% chance for regular battle (0.20-0.55)
-      if (roll < 0.55) {
-        const enemy = getRandomEnemy(playerLevel, false);
+      // 15% chance for story/exploration (only if first middle room, 0.15-0.30)
+      if (isFirstMiddleRoom && roll < 0.30) {
         return {
           ...room,
-          enemy,
-          roomType: 'battle'
+          enemy: null,
+          roomType: 'story'
         };
       }
       
-      // 45% remaining for story/exploration (0.55-1.00)
+      // All other middle rooms: 100% combat
+      // First middle room: 70% combat (0.30-1.00)
+      const enemy = getRandomEnemy(playerLevel, false);
       return {
         ...room,
-        enemy: null,
-        roomType: 'story'
+        enemy,
+        roomType: 'battle'
       };
     });
 
