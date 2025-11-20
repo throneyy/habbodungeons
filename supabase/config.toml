@@ -32,3 +32,6 @@ verify_jwt = true
 
 [functions.text-to-speech]
 verify_jwt = true
+
+[functions.generate-featured-dungeons]
+verify_jwt = false

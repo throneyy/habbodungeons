@@ -138,27 +138,33 @@ export type Database = {
           difficulty: string
           dungeon_json: Json
           id: string
+          is_featured: boolean | null
           name: string
           owner_user_id: string
           theme: string
+          times_played: number | null
         }
         Insert: {
           created_at?: string
           difficulty: string
           dungeon_json: Json
           id?: string
+          is_featured?: boolean | null
           name: string
           owner_user_id: string
           theme: string
+          times_played?: number | null
         }
         Update: {
           created_at?: string
           difficulty?: string
           dungeon_json?: Json
           id?: string
+          is_featured?: boolean | null
           name?: string
           owner_user_id?: string
           theme?: string
+          times_played?: number | null
         }
         Relationships: []
       }
