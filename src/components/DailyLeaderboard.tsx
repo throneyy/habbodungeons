@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { HabboPanel } from "./HabboPanel";
 import { Trophy, Swords, Skull } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import { LoadingSpinner } from "./LoadingSpinner";
@@ -93,89 +92,90 @@ export const DailyLeaderboard = () => {
 
   if (loading) {
     return (
-      <div className="w-64 h-fit">
-        <HabboPanel title="⭐ Daily Leaders">
-          <div className="h-32 flex items-center justify-center">
-            <LoadingSpinner />
-          </div>
-        </HabboPanel>
+      <div className="w-full bg-card border-4 border-habbo-dark rounded-xl p-6 shadow-lg">
+        <div className="h-32 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }
 
   if (topPlayers.length === 0) {
     return (
-      <div className="w-64 h-fit">
-        <HabboPanel title="⭐ Daily Leaders">
-          <div className="text-center py-4">
-            <Trophy className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No battles today yet!</p>
-          </div>
-        </HabboPanel>
+      <div className="w-full bg-card border-4 border-habbo-dark rounded-xl p-6 shadow-lg">
+        <div className="text-center py-4">
+          <Trophy className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No battles today yet!</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-64 h-fit">
-      <HabboPanel title="⭐ Daily Leaders">
-        <ScrollArea className="h-[400px] pr-2">
-          <div className="space-y-3">
-            {topPlayers.map((player, index) => {
-              const displayName = player.habbo_username || player.username.split('@')[0];
-              const avatarUrl = player.figureString 
-                ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=s&direction=2&head_direction=2&gesture=std`
-                : null;
+    <div className="w-full bg-card border-4 border-habbo-dark rounded-xl shadow-lg overflow-hidden">
+      {/* Subtle descriptor */}
+      <div className="px-4 py-2 bg-muted/30 border-b-2 border-habbo-dark/20">
+        <p className="text-xs text-muted-foreground/70 animate-pulse">
+          ⭐ Top adventurers by damage dealt today
+        </p>
+      </div>
+      
+      <ScrollArea className="h-[360px]">
+        <div className="p-4 space-y-3">
+          {topPlayers.map((player, index) => {
+            const displayName = player.habbo_username || player.username.split('@')[0];
+            const avatarUrl = player.figureString 
+              ? `https://www.habbo.com/habbo-imaging/avatarimage?figure=${player.figureString}&size=s&direction=2&head_direction=2&gesture=std`
+              : null;
 
-              return (
-                <div
-                  key={player.user_id}
-                  className="flex items-center gap-3 p-2 bg-background/50 rounded-lg border-2 border-habbo-dark/30 hover:border-primary/50 transition-colors"
-                >
-                  {/* Rank Badge */}
-                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-primary/20 border-2 border-primary font-bold text-sm">
-                    #{index + 1}
-                  </div>
+            return (
+              <div
+                key={player.user_id}
+                className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border-2 border-habbo-dark/30 hover:border-primary/50 transition-colors"
+              >
+                {/* Rank Badge */}
+                <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-primary/20 border-2 border-primary font-bold text-sm">
+                  #{index + 1}
+                </div>
 
-                  {/* Avatar */}
-                  <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-background rounded border-2 border-habbo-dark">
-                    {avatarUrl ? (
-                      <img 
-                        src={avatarUrl} 
-                        alt={displayName}
-                        className="w-full h-full object-contain pixel-icon"
-                      />
-                    ) : (
-                      <div className="w-6 h-6 bg-muted rounded-full" />
+                {/* Avatar */}
+                <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-background rounded border-2 border-habbo-dark">
+                  {avatarUrl ? (
+                    <img 
+                      src={avatarUrl} 
+                      alt={displayName}
+                      className="w-full h-full object-contain pixel-icon"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 bg-muted rounded-full" />
+                  )}
+                </div>
+
+                {/* Stats */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm truncate">{displayName}</p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Swords className="w-3 h-3" />
+                      {player.damage_dealt.toLocaleString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Skull className="w-3 h-3" />
+                      {player.enemies_killed}
+                    </span>
+                    {player.bosses_defeated > 0 && (
+                      <span className="flex items-center gap-1 text-primary">
+                        <Trophy className="w-3 h-3" />
+                        {player.bosses_defeated}
+                      </span>
                     )}
                   </div>
-
-                  {/* Stats */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm truncate">{displayName}</p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Swords className="w-3 h-3" />
-                        {player.damage_dealt.toLocaleString()}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Skull className="w-3 h-3" />
-                        {player.enemies_killed}
-                      </span>
-                      {player.bosses_defeated > 0 && (
-                        <span className="flex items-center gap-1 text-primary">
-                          <Trophy className="w-3 h-3" />
-                          {player.bosses_defeated}
-                        </span>
-                      )}
-                    </div>
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      </HabboPanel>
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
     </div>
   );
 };
