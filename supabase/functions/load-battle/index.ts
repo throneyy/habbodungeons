@@ -286,8 +286,8 @@ serve(async (req) => {
     // Player slots in center-right area - pulled toward center of arena
     // Using moderate x (center-right) with LOW y values (keeps them high)
     // Front player at (4,2), creates diagonal toward center
-    const baseX = 4; // Center-right position (not far right edge)
-    const baseY = 2; // Low y = higher up on isometric floor
+    const baseX = 3; // Center-right position (not far right edge)
+    const baseY = 1; // Low y = higher up on isometric floor
     const playerSlots = players.map((_, index) => ({
       id: `P${index + 1}`,
       x: baseX - index, // Move left with each player
