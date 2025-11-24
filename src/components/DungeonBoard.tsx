@@ -64,24 +64,32 @@ export const DungeonBoard = ({
             transformStyle: 'preserve-3d',
           }}
         >
-        {dungeon.entities.map((entity) => (
-          <EntitySprite
-            key={entity.id}
-            id={entity.id}
-            type={entity.type}
-            x={entity.x}
-            y={entity.y}
-            sprite={entity.sprite}
-            habboAvatar={entity.habboAvatar}
-            username={entity.username}
-            name={entity.name}
-            isDead={entity.isDead}
-            isAttacking={attackingEntityId === entity.id}
-            damage={damageDealt?.entityId === entity.id ? damageDealt.amount : undefined}
-            targetX={attackingEntityId === entity.id ? targetX : undefined}
-            targetY={attackingEntityId === entity.id ? targetY : undefined}
-          />
-        ))}
+        {dungeon.entities.map((entity) => {
+          // Extract slot index from slotId (e.g., "P1" -> 0, "P2" -> 1)
+          const slotIndex = entity.slotId && entity.type === 'player' 
+            ? parseInt(entity.slotId.replace('P', '')) - 1 
+            : 0;
+          
+          return (
+            <EntitySprite
+              key={entity.id}
+              id={entity.id}
+              type={entity.type}
+              x={entity.x}
+              y={entity.y}
+              sprite={entity.sprite}
+              habboAvatar={entity.habboAvatar}
+              username={entity.username}
+              name={entity.name}
+              isDead={entity.isDead}
+              slotIndex={slotIndex}
+              isAttacking={attackingEntityId === entity.id}
+              damage={damageDealt?.entityId === entity.id ? damageDealt.amount : undefined}
+              targetX={attackingEntityId === entity.id ? targetX : undefined}
+              targetY={attackingEntityId === entity.id ? targetY : undefined}
+            />
+          );
+        })}
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Nameplate } from './Nameplate';
 
 interface EntitySpriteProps {
   id: string;
@@ -10,6 +11,7 @@ interface EntitySpriteProps {
   username?: string;
   name?: string;
   isDead?: boolean;
+  slotIndex?: number;
   isAttacking?: boolean;
   damage?: number;
   targetX?: number;
@@ -29,6 +31,7 @@ export const EntitySprite = ({
   username,
   name,
   isDead,
+  slotIndex = 0,
   isAttacking,
   damage,
   targetX,
@@ -140,14 +143,9 @@ export const EntitySprite = ({
         )}
       </div>
       
-      {/* Username label for players */}
+      {/* Username nameplate for players - floats above head */}
       {type === 'player' && username && (
-        <div 
-          className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-sm font-bold text-white bg-gradient-to-r from-primary/90 to-accent/90 px-3 py-1.5 rounded-full border-2 border-white/30 whitespace-nowrap shadow-lg"
-          style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9)' }}
-        >
-          {username}
-        </div>
+        <Nameplate name={username} slotIndex={slotIndex} />
       )}
 
       {/* Enemy name label */}
