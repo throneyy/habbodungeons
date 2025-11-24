@@ -25,6 +25,14 @@ interface EntitySpriteProps {
 const TILE_WIDTH = 64;
 const TILE_HEIGHT = 32;
 
+// Arena margin system to prevent entities from being cut off at edges
+const ARENA_MARGIN = {
+  bottom: 90,   // keeps players from touching the bottom edge
+  top: 60,      // prevents enemies from touching top border
+  left: 80,
+  right: 80
+};
+
 export const EntitySprite = ({
   id,
   type,
@@ -88,11 +96,14 @@ export const EntitySprite = ({
     }
   }, [isAttacking, type, x, y, targetX, targetY]);
 
-  // Convert grid coordinates to isometric screen position
-  // Scale up for better visibility
+  // Convert grid coordinates to isometric screen position with proper margins
   const SCALE = 2.5; // Make entities much larger
-  const isoX = (animatePosition.x - animatePosition.y) * (TILE_WIDTH / 2) * SCALE;
-  const isoY = (animatePosition.x + animatePosition.y) * (TILE_HEIGHT / 2) * SCALE;
+  const rawIsoX = (animatePosition.x - animatePosition.y) * (TILE_WIDTH / 2) * SCALE;
+  const rawIsoY = (animatePosition.x + animatePosition.y) * (TILE_HEIGHT / 2) * SCALE;
+  
+  // Apply margins to keep entities within safe arena bounds
+  const isoX = rawIsoX + ARENA_MARGIN.left;
+  const isoY = rawIsoY + ARENA_MARGIN.top;
   
   // Calculate z-index based on depth (entities further back have lower z-index)
   const zIndex = 100 + Math.floor(animatePosition.x + animatePosition.y);
