@@ -555,10 +555,10 @@ Return ONLY valid JSON (no markdown):
       console.log(`Story choice: Advancing turn from ${user.id} to ${turnOrder[nextIndex]}`);
     }
 
-    // Always clear story node after a choice is made so new choices generate
-    // This ensures the story progresses even when staying in the same room
-    updateData.current_story_node = null;
-    console.log("Clearing story node after story choice");
+    // Set story node to generating marker to prevent race conditions
+    // The actual story will be generated when the battle page loads
+    updateData.current_story_node = { generating: true, timestamp: Date.now() };
+    console.log("Set story node to generating marker after story choice");
 
     // Set up enemy if battle is triggered
     if (sanitizedOutcome.triggersBattle) {
