@@ -202,7 +202,7 @@ serve(async (req) => {
       roomIndex: battleState.current_room_index,
       party: partyStats,
       lastChoice: lastChoice || null,
-      recentEvents: (battleState.battle_log || []).slice(-3),
+      recentEvents: (battleState.battle_log || []).slice(-6), // Increased from 3 to 6 for better context
     };
 
     console.log("Generating story node with context:", context);
@@ -212,6 +212,15 @@ serve(async (req) => {
     const currentRoom = dungeonJson.rooms?.[context.roomIndex];
     const questObjective = dungeonJson.questObjective || "Complete the dungeon";
     const roomDescription = currentRoom?.description || "You enter a mysterious chamber.";
+    
+    // Extract the most recent narrative description (not choices or dice rolls)
+    const narrativeEvents = (battleState.battle_log || [])
+      .filter((e: any) => e?.message && typeof e.message === 'string' && e.type !== 'choice' && e.type !== 'dice_success' && e.type !== 'dice_failure')
+      .slice(-3);
+    
+    const currentLocationContext = narrativeEvents.length > 0 
+      ? narrativeEvents[narrativeEvents.length - 1].message 
+      : roomDescription;
 
     const aiPrompt = `You are a JRPG dungeon master for "The Shattered Frostkeep", creating exciting story encounters in a frozen dungeon.
 
@@ -223,10 +232,20 @@ Room type: ${currentRoom.room_type}
 Room description: ${roomDescription}
 ${currentRoom.enemy ? `\n**CRITICAL: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\nYou MUST incorporate this EXACT enemy into your story if creating an encounter that could lead to combat. Do NOT invent different enemies.` : ''}
 ${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
-${context.recentEvents && context.recentEvents.length > 0 ? `\n## RECENT NARRATIVE EVENTS (YOU MUST CONTINUE FROM HERE):
+
+## CURRENT EXACT LOCATION (PRESERVE ALL DETAILS):
+"${currentLocationContext}"
+
+## RECENT NARRATIVE EVENTS (YOU MUST CONTINUE FROM THE CURRENT LOCATION ABOVE):
 ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'string').map((e: any, idx: number) => `${idx + 1}. ${e.message}`).join('\n')}
 
-⚠️ MANDATORY: Your storyText MUST pick up EXACTLY where the last event left off. If the last event describes "you're now in a darker section with knee-deep water", your story MUST begin in that SAME darker section with that SAME knee-deep water. DO NOT jump to a completely different location (like "a narrow ledge") unless the player explicitly chose to move there!` : ''}
+⚠️ CRITICAL NARRATIVE CONTINUITY RULES:
+1. Your storyText MUST begin in the EXACT location described above: "${currentLocationContext.substring(0, 100)}..."
+2. DO NOT simplify, paraphrase, or change environmental descriptions (e.g., "narrow waterlogged passage" must stay "narrow waterlogged passage", not become "narrow passage")
+3. PRESERVE all adjectives, details, and atmospheric descriptions from the current location
+4. You can ADD new details or developments, but NEVER remove or simplify existing ones
+5. If the last description says "knee-deep water", your story MUST acknowledge that knee-deep water
+6. Environmental consistency is MORE important than creative variation - players notice when details change
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
 **DICE CHECKS ARE REQUIRED FOR:**
@@ -290,12 +309,13 @@ If an action contains these words, it MUST have diceRequired: true:
 - "dispel", "disrupt", "manipulate", "analyze", "decipher"
 
 ## Story Structure Rules
-1. CRITICAL NARRATIVE CONTINUITY: 
-   - If lastChoice exists, you MUST begin your storyText by directly continuing from that action's consequence
-   - Reference what the player just did and where they are NOW as a result
-   - DO NOT describe a completely new location unless the last choice explicitly moved them
-   - Build upon the previous scene rather than starting fresh
-   - Example: If they just "pushed through waterlogged debris into a darker section", your story should start in that darker section, not a completely different ledge
+1. CRITICAL NARRATIVE CONTINUITY (TOP PRIORITY): 
+   - Your storyText MUST maintain the EXACT environmental details from the current location
+   - NEVER simplify descriptions: "narrow waterlogged passage" cannot become "narrow passage"
+   - NEVER remove adjectives: keep "knee-deep", "waterlogged", "frost-covered", etc.
+   - You can ADD new details but NEVER remove or paraphrase existing ones
+   - Environmental consistency matters more than creative variation
+   - Players notice when "the icy chamber with frozen stalactites" becomes "the cold room"
 
 2. Create varied, unpredictable encounters:
    - Enemy encounters (~35%): May include dialogue options before combat
@@ -356,14 +376,14 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "claude-sonnet-4-5", // Using more capable model for better narrative continuity
         messages: [
           {
             role: "user",
             content: aiPrompt
           }
         ],
-        temperature: 0.8,
+        max_tokens: 2000,
       }),
     });
 
