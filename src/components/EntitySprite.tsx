@@ -130,13 +130,14 @@ export const EntitySprite = ({
           alt=""
           className="absolute pixelated select-none pointer-events-none"
           style={{
-            bottom: '-10px',
+            bottom: '-20px',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '80px',
+            width: '100px',
             height: 'auto',
             imageRendering: 'pixelated',
-            zIndex: -1,
+            zIndex: 1,
+            opacity: 0.9,
           }}
         />
       )}
@@ -177,12 +178,14 @@ export const EntitySprite = ({
             alt=""
             className="absolute pixelated select-none pointer-events-none"
             style={{
-              top: '50%',
+              top: '30%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '120px',
+              width: '140px',
               height: 'auto',
               imageRendering: 'pixelated',
+              zIndex: 10,
+              opacity: 0.95,
             }}
           />
         )}
