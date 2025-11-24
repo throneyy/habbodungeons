@@ -376,14 +376,14 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-5", // Using more capable model for better narrative continuity
+        model: "google/gemini-2.5-pro", // Using more capable Gemini model for better narrative continuity
         messages: [
           {
             role: "user",
             content: aiPrompt
           }
         ],
-        max_tokens: 2000,
+        temperature: 0.8,
       }),
     });
 
