@@ -30,6 +30,7 @@ export type Database = {
           server_id: string | null
           turn_order: Json | null
           updated_at: string
+          used_skills: string[] | null
           user_id: string
         }
         Insert: {
@@ -47,6 +48,7 @@ export type Database = {
           server_id?: string | null
           turn_order?: Json | null
           updated_at?: string
+          used_skills?: string[] | null
           user_id: string
         }
         Update: {
@@ -64,6 +66,7 @@ export type Database = {
           server_id?: string | null
           turn_order?: Json | null
           updated_at?: string
+          used_skills?: string[] | null
           user_id?: string
         }
         Relationships: [
@@ -363,25 +366,37 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          fishing_level: number | null
+          gardening_level: number | null
           habbo_profile_json: Json | null
           habbo_username: string | null
           id: string
+          last_habbo_skill_sync: string | null
+          unlocked_skills: string[] | null
           updated_at: string
           username: string
         }
         Insert: {
           created_at?: string
+          fishing_level?: number | null
+          gardening_level?: number | null
           habbo_profile_json?: Json | null
           habbo_username?: string | null
           id: string
+          last_habbo_skill_sync?: string | null
+          unlocked_skills?: string[] | null
           updated_at?: string
           username: string
         }
         Update: {
           created_at?: string
+          fishing_level?: number | null
+          gardening_level?: number | null
           habbo_profile_json?: Json | null
           habbo_username?: string | null
           id?: string
+          last_habbo_skill_sync?: string | null
+          unlocked_skills?: string[] | null
           updated_at?: string
           username?: string
         }
