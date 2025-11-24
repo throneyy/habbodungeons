@@ -103,8 +103,8 @@ export const EntitySprite = ({
   // Scale sprite size for prominence
   const spriteSize = type === 'player' ? 120 : 160;
   
-  // Flip enemies to face right toward players
-  const shouldFlipEnemy = type === 'enemy';
+  // Don't flip enemies - sprites face correct direction in assets
+  const shouldFlipEnemy = false;
 
   return (
     <div
