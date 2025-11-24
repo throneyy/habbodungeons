@@ -82,7 +82,7 @@ serve(async (req) => {
     
     // Create theme-appropriate prompt
     const themeText = theme.replace(/_/g, ' ');
-    const prompt = `isometric pixel art dungeon room, ${themeText} theme, habbo hotel style, game screenshot, empty center, 45 degree angle, crisp pixel art, no UI text`;
+    const prompt = `isometric pixel art dungeon room, ${themeText} theme, habbo hotel style, game screenshot, empty center, 45 degree angle, crisp pixel art, no UI text, black background, never white background`;
     
     console.log('Calling Banana Nano with:', { prompt, seed, width: 768, height: 512 });
 
