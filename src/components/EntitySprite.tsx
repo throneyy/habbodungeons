@@ -86,11 +86,13 @@ export const EntitySprite = ({
   const zIndex = 100 + Math.floor(animatePosition.x + animatePosition.y);
 
   // Generate player avatar URL with action and direction
-  // Direction 4 = facing left/back toward enemies, direction 2 = default
-  const playerDirection = type === 'player' && targetX !== undefined && targetX < x ? '4' : '2';
+  // Direction 6 = facing toward enemies at optimal angle, head_direction 5 for better facing
   const imageUrl = type === 'player' 
     ? (habboAvatar 
-        ? habboAvatar.replace(/action=[^&]*/, `action=${avatarAction}`).replace(/direction=\d/, `direction=${playerDirection}`)
+        ? habboAvatar
+            .replace(/action=[^&]*/, `action=${avatarAction}`)
+            .replace(/direction=\d/, `direction=6`)
+            .replace(/head_direction=\d/, `head_direction=5`)
         : '/placeholder.svg'
       )
     : (sprite || '/placeholder.svg');
