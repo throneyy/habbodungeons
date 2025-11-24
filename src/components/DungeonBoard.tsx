@@ -39,9 +39,9 @@ export const DungeonBoard = ({
   const targetX = targetEntity?.x;
   const targetY = targetEntity?.y;
   return (
-    <div className="absolute inset-0 w-full h-full flex items-center justify-center p-4">
-      {/* Contained dungeon box */}
-      <div className="relative w-full max-w-5xl aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl">
+    <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+      {/* Contained dungeon box - matches battle log width */}
+      <div className="relative w-full max-w-7xl mx-4 aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl">
         {/* Background image with cover */}
         <div 
           className="absolute inset-0 w-full h-full"
