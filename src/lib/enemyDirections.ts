@@ -31,13 +31,13 @@ export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
   "iced-stone-dragon.png": "right",
   "goblin-trio.png": "right",
   
-  // Boss enemies
+  // Boss enemies (front-facing)
   "ice-knight-boss.png": "left",
   "mystic-shaman-boss.png": "left",
   "blood-dragon-boss.gif": "left",
   
-  // Animated enemies
-  "frost-undead.gif": "left",
+  // Animated enemies (GIF sprites)
+  "frost-undead.gif": "left", // Updated: faces left naturally
   "ice-tiger.gif": "left",
 };
 
