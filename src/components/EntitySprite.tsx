@@ -10,6 +10,7 @@ interface EntitySpriteProps {
   x: number;
   y: number;
   sprite?: string;
+  spriteFilename?: string; // Original backend filename for direction lookup
   habboAvatar?: string | null;
   username?: string;
   name?: string;
@@ -30,6 +31,7 @@ export const EntitySprite = ({
   x,
   y,
   sprite,
+  spriteFilename, // Use this for direction lookup
   habboAvatar,
   username,
   name,
@@ -159,7 +161,7 @@ export const EntitySprite = ({
         ) : (
           <EnemySprite
             spriteUrl={imageUrl}
-            spriteFilename={sprite?.split('/').pop()}
+            spriteFilename={spriteFilename || sprite?.split('/').pop()}
             name={name}
             shouldFace="right"
             className="select-none pointer-events-none"
@@ -170,6 +172,7 @@ export const EntitySprite = ({
             }}
           />
         )}
+        
         
         {/* Damage effect on body */}
         {showDamage && damage && damage > 0 && (

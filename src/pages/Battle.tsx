@@ -505,6 +505,12 @@ const Battle = () => {
               return;
             }
             
+            // Skip reload if animations are active
+            if (attackingEntityId || targetEntityId || damageDealt) {
+              console.log('Combat animations active, skipping reload to prevent screen flash');
+              return;
+            }
+            
             // Check if this is a room progression (victory transition) - if so, skip reload
             // The handleResolveTurn function will handle showing the victory modal
             const newState = payload.new as any;
@@ -2696,6 +2702,7 @@ const Battle = () => {
                 ...battleData.dungeon,
                 entities: battleData.dungeon.entities.map(entity => ({
                   ...entity,
+                  spriteFilename: entity.sprite, // Preserve original filename for direction lookup
                   sprite: entity.type === 'enemy' && entity.sprite
                     ? (ENEMY_SPRITES[entity.sprite] || entity.sprite)
                     : entity.sprite
