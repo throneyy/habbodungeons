@@ -509,8 +509,15 @@ Return ONLY valid JSON (no markdown):
     // Format consequence text with items in brackets - ensure it's a string
     let consequenceWithItems = String(sanitizedOutcome.consequenceText || '');
     if (sanitizedOutcome.itemsGained && sanitizedOutcome.itemsGained.length > 0) {
-      const itemsList = sanitizedOutcome.itemsGained.map((item: any) => `[${item.name}]`).join(', ');
-      consequenceWithItems += ` You received: ${itemsList}!`;
+      // Filter out invalid items before adding to message (same validation as inventory)
+      const validItems = sanitizedOutcome.itemsGained.filter((item: any) => 
+        item && item.name && typeof item.name === 'string' && item.name.trim() !== ''
+      );
+      
+      if (validItems.length > 0) {
+        const itemsList = validItems.map((item: any) => `[${item.name}]`).join(', ');
+        consequenceWithItems += ` You received: ${itemsList}!`;
+      }
     }
     
     // Ensure the message is a proper string before adding to log
