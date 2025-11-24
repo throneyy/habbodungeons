@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { HabboPanel } from "@/components/HabboPanel";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { EnemySprite } from "@/components/EnemySprite";
 import { toast } from "sonner";
 import monsterManualTitle from "@/assets/monster-manual-title.png";
 
@@ -279,29 +280,17 @@ export default function MonsterManual() {
                   {/* Monster Sprite */}
                   <div className="flex justify-center items-center h-48 bg-background/50 rounded-lg border-2 border-habbo-dark p-4">
                     {sprite ? (
-                      <img
-                        src={sprite}
-                        alt={monster.enemy_name}
+                      <EnemySprite
+                        spriteUrl={sprite}
+                        spriteFilename={monster.sprite_filename}
+                        name={monster.enemy_name}
+                        shouldFace="left"
                         className="pixel-icon max-h-full max-w-full object-contain"
-                        style={{ 
-                          imageRendering: 'pixelated',
-                          transform: `${(monster.sprite_filename === 'ice-guardian.png' || 
-                                     monster.sprite_filename === 'blood-dragon-boss.gif' ||
-                                     monster.sprite_filename === 'glacial-imp.png' ||
-                                     monster.sprite_filename === 'ice-knight-boss.png' ||
-                                     monster.sprite_filename === 'undead-habbo.png' ||
-                                     monster.sprite_filename === 'skeleton.png' ||
-                                     monster.sprite_filename === 'goblin-trio.png' ||
-                                     monster.sprite_filename === 'frost-wraith.png' ||
-                                     monster.sprite_filename === 'frost-mutant.png' ||
-                                     monster.sprite_filename === 'flaming-phantom.png' ||
-                                     monster.sprite_filename === 'iced-stone-dragon.png' ||
-                                     monster.sprite_filename === 'frost-brute.png' ||
-                                     monster.sprite_filename === 'void-stalker.png' ||
-                                     monster.sprite_filename === 'swamp-lurker.png' ||
-                                     monster.sprite_filename === 'infernal-hound.png' ||
-                                     monster.sprite_filename === 'frost-wolf.png') ? '' : 'scaleX(-1) '}scale(${monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
-                                 monster.sprite_filename === 'giant-rat.png' ? '7.5' : '1'})`
+                        style={{
+                          transform: `scale(${
+                            monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
+                            monster.sprite_filename === 'giant-rat.png' ? '7.5' : '1'
+                          })`
                         }}
                       />
                     ) : (

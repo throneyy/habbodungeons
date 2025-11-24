@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Nameplate } from './Nameplate';
+import { EnemySprite } from './EnemySprite';
 
 interface EntitySpriteProps {
   id: string;
@@ -102,9 +103,6 @@ export const EntitySprite = ({
 
   // Scale sprite size for prominence
   const spriteSize = type === 'player' ? 120 : 160;
-  
-  // Don't flip enemies - sprites face correct direction in assets
-  const shouldFlipEnemy = false;
 
   return (
     <div
@@ -121,18 +119,32 @@ export const EntitySprite = ({
     >
       {/* Entity sprite with glow effect */}
       <div className="relative">
-        <img
-          src={imageUrl}
-          alt={username || name || 'Entity'}
-          className="pixelated select-none pointer-events-none"
-          style={{
-            imageRendering: 'pixelated',
-            width: `${spriteSize}px`,
-            height: 'auto',
-            filter: isAttacking ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255,255,255,0.8))' : 'brightness(1.1)',
-            transform: shouldFlipEnemy ? 'scaleX(-1)' : 'none',
-          }}
-        />
+        {type === 'player' ? (
+          <img
+            src={imageUrl}
+            alt={username || 'Player'}
+            className="pixelated select-none pointer-events-none"
+            style={{
+              imageRendering: 'pixelated',
+              width: `${spriteSize}px`,
+              height: 'auto',
+              filter: isAttacking ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255,255,255,0.8))' : 'brightness(1.1)',
+            }}
+          />
+        ) : (
+          <EnemySprite
+            spriteUrl={imageUrl}
+            spriteFilename={sprite?.split('/').pop()}
+            name={name}
+            shouldFace="right"
+            className="select-none pointer-events-none"
+            style={{
+              width: `${spriteSize}px`,
+              height: 'auto',
+              filter: isAttacking ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255,255,255,0.8))' : 'brightness(1.1)',
+            }}
+          />
+        )}
         
         {/* Attack flash effect */}
         {isAttacking && (
