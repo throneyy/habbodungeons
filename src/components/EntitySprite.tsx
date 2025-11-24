@@ -100,8 +100,8 @@ export const EntitySprite = ({
   // Scale sprite size for prominence
   const spriteSize = type === 'player' ? 120 : 160;
   
-  // Enemy flip if on right side (shouldn't happen normally, but future-proofing)
-  const shouldFlipEnemy = type === 'enemy' && x > 4;
+  // Flip enemies to face right toward players
+  const shouldFlipEnemy = type === 'enemy';
 
   return (
     <div
