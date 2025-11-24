@@ -2763,6 +2763,9 @@ const Battle = () => {
                   const isDiceSuccess = entryType === 'dice_success' || message.includes('PASSING') || message.toUpperCase().includes('SUCCESS');
                   const isDiceFailure = entryType === 'dice_failure' || message.includes('FAILING') || message.toUpperCase().includes('FAIL');
                   const isSpiritualBoost = entryType === 'spiritual_boost';
+                  const isDamage = entryType === 'damage';
+                  const isDamageDealt = isDamage && message.includes('Dealt');
+                  const isDamageTaken = isDamage && message.includes('Took');
                   
                   // Replace "You" with actual username for other players' messages
                   let displayMessage = message;
@@ -2785,7 +2788,9 @@ const Battle = () => {
                       isSpiritualBoost ? 'text-green-500 font-bold' :
                       isDiceSuccess ? 'text-green-500 font-bold' : 
                       isDiceFailure ? 'text-red-500 font-bold' : 
-                      isDiceRoll ? 'text-[#FFD700] font-bold' : ''
+                      isDiceRoll ? 'text-[#FFD700] font-bold' :
+                      isDamageDealt ? 'text-habbo-orange font-bold' :
+                      isDamageTaken ? 'text-red-400 font-bold' : ''
                     }`}>
                       <span className="text-primary font-bold">›</span>{" "}
                       {isCurrentUser || !userId ? (
