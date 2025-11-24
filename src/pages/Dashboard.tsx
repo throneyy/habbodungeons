@@ -60,6 +60,60 @@ const Dashboard = () => {
     loadData();
   }, []);
 
+  // Auto-sync skills on load and periodically
+  useEffect(() => {
+    const syncSkills = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        // Check if user has a linked Habbo account
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('habbo_username')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!profileData?.habbo_username) {
+          console.log('No Habbo account linked, skipping skill sync');
+          return;
+        }
+
+        console.log('Auto-syncing skills...');
+        const { error } = await supabase.functions.invoke('sync-habbo-skills', {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+
+        if (error) {
+          console.error('Skill sync error:', error);
+        } else {
+          console.log('Skills synced successfully');
+          // Reload data to get updated skills
+          loadData();
+        }
+      } catch (error) {
+        console.error('Auto-sync error:', error);
+      }
+    };
+
+    // Initial sync after a short delay
+    const initialTimeout = setTimeout(() => {
+      syncSkills();
+    }, 2000);
+
+    // Periodic sync every 5 minutes
+    const syncInterval = setInterval(() => {
+      syncSkills();
+    }, 5 * 60 * 1000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(syncInterval);
+    };
+  }, []);
+
   const loadData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
