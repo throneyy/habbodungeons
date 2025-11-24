@@ -9,6 +9,9 @@ verify_jwt = true
 [functions.request-password-reset]
 verify_jwt = false
 
+[functions.sync-habbo-skills]
+verify_jwt = true
+
 [functions.verify-habbo-reset]
 verify_jwt = false
 

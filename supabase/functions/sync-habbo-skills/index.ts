@@ -64,50 +64,58 @@ serve(async (req) => {
 
     console.log('Syncing skills for user:', user.id);
 
-    // Get user's profile to fetch habbo_name
+    // Get user's profile to fetch habbo_username
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('habbo_name')
+      .select('habbo_username')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile?.habbo_name) {
+    if (profileError || !profile?.habbo_username) {
       throw new Error('No Habbo account linked');
     }
 
-    const habboName = profile.habbo_name;
-    console.log('Fetching skills for Habbo user:', habboName);
+    const habboUsername = profile.habbo_username;
+    console.log('Fetching skills for Habbo user:', habboUsername);
 
-    // Fetch fishing level (placeholder API - replace with actual endpoint)
+    // Fetch skills from Habbo Origins API
     let fishingLevel = 0;
-    try {
-      const fishingApiUrl = Deno.env.get('HABBO_FISHING_API_URL');
-      if (fishingApiUrl) {
-        const fishingResponse = await fetch(`${fishingApiUrl}/player?name=${encodeURIComponent(habboName)}`);
-        if (fishingResponse.ok) {
-          const fishingData = await fishingResponse.json();
-          fishingLevel = fishingData.level || 0;
-          console.log('Fishing level:', fishingLevel);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch fishing level:', error);
-    }
-
-    // Fetch gardening level (placeholder API - replace with actual endpoint)
     let gardeningLevel = 0;
+
     try {
-      const gardeningApiUrl = Deno.env.get('HABBO_GARDENING_API_URL');
-      if (gardeningApiUrl) {
-        const gardeningResponse = await fetch(`${gardeningApiUrl}/player?name=${encodeURIComponent(habboName)}`);
-        if (gardeningResponse.ok) {
-          const gardeningData = await gardeningResponse.json();
-          gardeningLevel = gardeningData.level || 0;
-          console.log('Gardening level:', gardeningLevel);
-        }
+      const skillsResponse = await fetch(
+        `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboUsername)}`
+      );
+      
+      if (!skillsResponse.ok) {
+        throw new Error(`Habbo API returned status ${skillsResponse.status}`);
       }
-    } catch (error) {
-      console.error('Failed to fetch gardening level:', error);
+
+      const skillsData = await skillsResponse.json();
+      console.log('Skills data from Habbo Origins:', skillsData);
+
+      // Parse fishing and gardening levels from the response
+      // The structure may vary - adjust based on actual API response
+      if (skillsData.skills) {
+        const fishingSkill = skillsData.skills.find((s: any) => 
+          s.name?.toLowerCase() === 'fishing' || s.type?.toLowerCase() === 'fishing'
+        );
+        const gardeningSkill = skillsData.skills.find((s: any) => 
+          s.name?.toLowerCase() === 'gardening' || s.type?.toLowerCase() === 'gardening'
+        );
+
+        fishingLevel = fishingSkill?.level || 0;
+        gardeningLevel = gardeningSkill?.level || 0;
+      } else {
+        // If the response structure is different, try direct properties
+        fishingLevel = skillsData.fishing?.level || skillsData.fishingLevel || 0;
+        gardeningLevel = skillsData.gardening?.level || skillsData.gardeningLevel || 0;
+      }
+
+      console.log('Parsed levels - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
+    } catch (error: any) {
+      console.error('Failed to fetch skills from Habbo Origins:', error);
+      throw new Error(`Could not fetch skills from Habbo Origins: ${error.message || 'Unknown error'}`);
     }
 
     // Calculate unlocked skills

@@ -2,8 +2,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Droplet, Leaf, Lock, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Droplet, Leaf, Lock, CheckCircle2, RefreshCw } from "lucide-react";
 import { SKILL_DEFINITIONS } from "@/lib/skillDefinitions";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface SkillTreeDialogProps {
   open: boolean;
@@ -11,6 +15,7 @@ interface SkillTreeDialogProps {
   fishingLevel: number;
   gardeningLevel: number;
   unlockedSkills: string[];
+  onSkillsUpdated?: () => void;
 }
 
 export function SkillTreeDialog({
@@ -19,12 +24,45 @@ export function SkillTreeDialog({
   fishingLevel,
   gardeningLevel,
   unlockedSkills,
+  onSkillsUpdated,
 }: SkillTreeDialogProps) {
+  const [syncing, setSyncing] = useState(false);
+
   const fishingSkills = SKILL_DEFINITIONS.filter(s => s.source === "fishing")
     .sort((a, b) => (a.requiredFishingLevel || 0) - (b.requiredFishingLevel || 0));
   
   const gardeningSkills = SKILL_DEFINITIONS.filter(s => s.source === "gardening")
     .sort((a, b) => (a.requiredGardeningLevel || 0) - (b.requiredGardeningLevel || 0));
+
+  const handleSyncSkills = async () => {
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('sync-habbo-skills', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Skills synced! Fishing: ${data.fishingLevel}, Gardening: ${data.gardeningLevel}`);
+      
+      if (onSkillsUpdated) {
+        onSkillsUpdated();
+      }
+    } catch (error: any) {
+      console.error('Sync error:', error);
+      toast.error(error.message || "Failed to sync skills");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const renderSkillNode = (skill: typeof SKILL_DEFINITIONS[0], currentLevel: number) => {
     const requiredLevel = skill.requiredFishingLevel || skill.requiredGardeningLevel || 0;
@@ -92,10 +130,22 @@ export function SkillTreeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="text-2xl">🌟</span>
-            Skill Trees
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <span className="text-2xl">🌟</span>
+              Skill Trees
+            </DialogTitle>
+            <Button 
+              onClick={handleSyncSkills} 
+              disabled={syncing}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync from Habbo'}
+            </Button>
+          </div>
         </DialogHeader>
 
         <Tabs defaultValue="fishing" className="w-full">

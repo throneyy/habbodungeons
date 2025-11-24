@@ -493,6 +493,7 @@ const Dashboard = () => {
         fishingLevel={profile?.fishing_level || 0}
         gardeningLevel={profile?.gardening_level || 0}
         unlockedSkills={profile?.unlocked_skills || []}
+        onSkillsUpdated={loadData}
       />
     </AppLayout>
   );
