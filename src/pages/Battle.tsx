@@ -999,7 +999,11 @@ const Battle = () => {
       // Server battle takes priority
       if (battleState?.server_id) {
         setServerId(battleState.server_id);
-      } else if (battleState?.party_id) {
+      } else {
+        setServerId(null); // Clear serverId for solo/party battles
+      }
+      
+      if (battleState?.party_id) {
         // Get party info for this specific battle
         const { data: memberData } = await supabase
           .from("party_members")

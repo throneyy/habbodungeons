@@ -28,6 +28,12 @@ export const PartyMembers = ({ partyId, serverId }: PartyMembersProps) => {
   const id = serverId || partyId;
 
   const loadMembers = async () => {
+    // Don't attempt to load if no valid ID
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       const functionName = isServerMode ? "get-server-players" : "get-party-members";
       const bodyKey = isServerMode ? "serverId" : "partyId";
