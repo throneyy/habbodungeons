@@ -133,7 +133,7 @@ export function SkillTreeDialog({
                       STARTER (Lv 10)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-4 px-4 pt-4">
                       {fishingSkills.filter(s => s.requiredFishingLevel === 10).map(skill => 
                         renderSkillNode(skill, fishingLevel)
                       )}
@@ -147,7 +147,7 @@ export function SkillTreeDialog({
                       INTERMEDIATE (Lv 30-55)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 px-4 pt-4">
                       {fishingSkills.filter(s => s.requiredFishingLevel && s.requiredFishingLevel >= 30 && s.requiredFishingLevel <= 55).map(skill =>
                         renderSkillNode(skill, fishingLevel)
                       )}
@@ -161,7 +161,7 @@ export function SkillTreeDialog({
                       ADVANCED (Lv 70-85)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 px-4 pt-4">
                       {fishingSkills.filter(s => s.requiredFishingLevel && s.requiredFishingLevel >= 70 && s.requiredFishingLevel <= 85).map(skill =>
                         renderSkillNode(skill, fishingLevel)
                       )}
@@ -175,7 +175,7 @@ export function SkillTreeDialog({
                       MASTER (Lv 99-100)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 px-4 pt-4">
                       {fishingSkills.filter(s => s.requiredFishingLevel && s.requiredFishingLevel >= 99).map(skill =>
                         renderSkillNode(skill, fishingLevel)
                       )}
@@ -209,7 +209,7 @@ export function SkillTreeDialog({
                       STARTER (Lv 10)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-4 px-4 pt-4">
                       {gardeningSkills.filter(s => s.requiredGardeningLevel === 10).map(skill =>
                         renderSkillNode(skill, gardeningLevel)
                       )}
@@ -223,7 +223,7 @@ export function SkillTreeDialog({
                       INTERMEDIATE (Lv 30-55)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 px-4 pt-4">
                       {gardeningSkills.filter(s => s.requiredGardeningLevel && s.requiredGardeningLevel >= 30 && s.requiredGardeningLevel <= 55).map(skill =>
                         renderSkillNode(skill, gardeningLevel)
                       )}
@@ -237,7 +237,7 @@ export function SkillTreeDialog({
                       ADVANCED (Lv 70-85)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 px-4 pt-4">
                       {gardeningSkills.filter(s => s.requiredGardeningLevel && s.requiredGardeningLevel >= 70 && s.requiredGardeningLevel <= 85).map(skill =>
                         renderSkillNode(skill, gardeningLevel)
                       )}
@@ -251,7 +251,7 @@ export function SkillTreeDialog({
                       MASTER (Lv 99-100)
                       <div className="h-px bg-border flex-1" />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4 px-4 pt-4">
                       {gardeningSkills.filter(s => s.requiredGardeningLevel && s.requiredGardeningLevel >= 99).map(skill =>
                         renderSkillNode(skill, gardeningLevel)
                       )}
