@@ -22,11 +22,13 @@ export const EnemySprite = ({
   // Extract filename from URL if not provided
   const filename = spriteFilename || spriteUrl.split('/').pop() || '';
   
-  // Get the base direction from our lookup
+  // Get the base direction from our lookup table
   const baseDirection = getEnemyBaseDirection(filename);
   
   // Flip only if base direction differs from desired direction
   const needsFlip = baseDirection !== shouldFace;
+  
+  console.log('🔄 Enemy flip check:', { filename, baseDirection, shouldFace, needsFlip });
   
   return (
     <img
