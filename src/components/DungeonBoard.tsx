@@ -40,8 +40,8 @@ export const DungeonBoard = ({
   const targetY = targetEntity?.y;
   return (
     <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-      {/* Contained dungeon box - matches battle log width */}
-      <div className="relative w-full max-w-7xl mx-4 aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl">
+      {/* Contained dungeon box - wider to fill space */}
+      <div className="relative w-[95%] max-w-[1600px] mx-auto aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl">
         {/* Background image with cover */}
         <div 
           className="absolute inset-0 w-full h-full"
