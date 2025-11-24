@@ -2688,7 +2688,7 @@ const Battle = () => {
       {/* Main Battle Stage - Dungeon Board takes center stage */}
       <div className="relative h-screen flex flex-col">
         {/* Battle Stage Area - 60% of screen */}
-        <div className="relative h-[60vh] border-b-4 border-habbo-gold shadow-2xl">
+        <div className="relative h-[60vh]">
           {battleData?.dungeon && (
             <DungeonBoard 
               dungeon={{
