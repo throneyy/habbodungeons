@@ -196,7 +196,9 @@ const Dashboard = () => {
           .from("profiles")
           .update({
             habbo_profile_json: data.profile,
-            habbo_origins_id: data.profile.bouncerPlayerId || data.profile.uniqueId || null, // Update bouncer ID
+            habbo_origins_id: data.profile.bouncerPlayerId || data.profile.uniqueId || null,
+            fishing_level: data.profile.fishingLevel || 0,
+            gardening_level: data.profile.gardeningLevel || 0,
           })
           .eq("id", user.id);
 
