@@ -17,41 +17,43 @@ serve(async (req) => {
       throw new Error("Username is required");
     }
 
-    console.log(`Fetching Habbo Origins profile for username: ${username}`);
+    console.log(`Fetching Habbo profile for username: ${username}`);
     if (verificationCode) {
       console.log(`Verification code provided: ${verificationCode}`);
     }
 
-    // Fetch from Habbo Origins API
-    const response = await fetch(`https://origins.habbo.com/api/public/users?name=${encodeURIComponent(username)}`);
+    // Fetch from bobba.me API which includes skill levels
+    const response = await fetch(`https://api.bobba.me/habboGET?username=${encodeURIComponent(username)}`);
     
     console.log(`Habbo API response status: ${response.status}`);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Habbo Origins API error response: ${errorText}`);
+      console.error(`Habbo API error response: ${errorText}`);
       
       if (response.status === 404) {
-        throw new Error("Habbo Origins user not found");
+        throw new Error("Habbo user not found");
       }
-      throw new Error(`Habbo Origins API returned status ${response.status}`);
+      throw new Error(`Habbo API returned status ${response.status}`);
     }
 
     const data = await response.json();
-    console.log(`Habbo Origins API response data:`, data);
+    console.log(`Habbo API response data:`, data);
 
-    if (!data || !data.name) {
-      throw new Error("Invalid response from Habbo Origins API");
+    if (!data || !data.mainDetails || !data.mainDetails.name) {
+      throw new Error("Invalid response from Habbo API");
     }
 
     return new Response(
       JSON.stringify({
         profile: {
-          name: data.name,
-          figureString: data.figureString,
-          motto: data.motto || "",
-          uniqueId: data.uniqueId || null, // Habbo Origins player ID
-          bouncerPlayerId: data.bouncerPlayerId || null, // Alternative player ID that might be used for skills API
+          name: data.mainDetails.name,
+          figureString: data.mainDetails.figureString,
+          motto: data.mainDetails.motto || "",
+          uniqueId: data.uniqueIds?.uniqueId || null,
+          bouncerPlayerId: data.uniqueIds?.bouncerPlayerId || null,
+          fishingLevel: data.mainDetails.fishingLevel || 0,
+          gardeningLevel: data.mainDetails.gardeningLevel || 0,
         },
       }),
       {

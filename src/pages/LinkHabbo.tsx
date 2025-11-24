@@ -91,7 +91,9 @@ const LinkHabbo = () => {
         .update({
           habbo_username: habboProfile.name,
           habbo_profile_json: data.profile as any,
-          habbo_origins_id: data.profile.bouncerPlayerId || data.profile.uniqueId || null, // Store bouncer ID (preferred for skills API)
+          habbo_origins_id: data.profile.bouncerPlayerId || data.profile.uniqueId || null,
+          fishing_level: data.profile.fishingLevel || 0,
+          gardening_level: data.profile.gardeningLevel || 0,
         })
         .eq("id", user.id);
 
