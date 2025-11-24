@@ -784,7 +784,7 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
       
       if (result.victory && newRoomIndex < totalRooms) {
         // Reset to first alive player for new room
-        nextTurnUserId = alivePlayers[0] || turnOrder[0];
+        nextTurnUserId = alivePlayers[0] || turnOrder[0] || user.id;
         console.log(`Victory! Resetting turn to first alive player: ${nextTurnUserId}`);
       } else if (!result.victory && alivePlayers.length > 0) {
         // Normal turn rotation during combat - skip dead players
