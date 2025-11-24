@@ -2687,8 +2687,8 @@ const Battle = () => {
       
       {/* Main Battle Stage - Dungeon Board takes center stage */}
       <div className="relative h-screen flex flex-col">
-        {/* Battle Stage Area - 60% of screen */}
-        <div className="relative h-[60vh]">
+        {/* Battle Stage Area - 65% of screen */}
+        <div className="relative h-[65vh]">
           {battleData?.dungeon && (
             <DungeonBoard 
               dungeon={{
@@ -2708,9 +2708,9 @@ const Battle = () => {
           )}
         </div>
 
-        {/* UI Panel Area - 40% of screen with semi-transparent overlay */}
-        <div className="relative h-[40vh] bg-gradient-to-b from-habbo-dark/95 to-habbo-dark overflow-y-auto">
-          <div className="p-4 space-y-3">
+        {/* UI Panel Area - 35% of screen with shadow overlay */}
+        <div className="relative h-[35vh] bg-gradient-to-b from-black/40 via-habbo-dark/98 to-habbo-dark overflow-y-auto shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.8)]">
+          <div className="max-w-7xl mx-auto p-4 space-y-3">
 
           {/* Battle Log - Main Focus */}
           <HabboPanel title="Battle Log">
@@ -2817,66 +2817,14 @@ const Battle = () => {
           <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
             showCombatPanels ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
           }`}>
-          {/* Enemy Panel - Only show when in battle mode with valid enemy */}
+          {/* Enemy Panel - Stats Only */}
           {battleData.mode === "battle" && battleData.enemy.current_hp > 0 && (
             <HabboPanel title="NOW FIGHTING" className="md:col-span-1">
-            <div className="space-y-4">
-              {/* Enemy Sprite */}
-              {battleData.enemy.sprite && ENEMY_SPRITES[battleData.enemy.sprite] && (
-                <div className="flex justify-center">
-                  <div className="relative overflow-visible p-2">
-                    <img
-                      src={ENEMY_SPRITES[battleData.enemy.sprite]}
-                      alt={battleData.enemy.name}
-                      className={`pixel-icon ${enemyHit ? 'animate-bump-right' : ''}`}
-                      style={{ 
-                        width: 'auto', 
-                        height: 'auto', 
-                        maxWidth: '200px', 
-                        maxHeight: '200px',
-                        transform: (battleData.enemy.sprite === 'ice-guardian.png' || 
-                                   battleData.enemy.sprite === 'blood-dragon-boss.gif' ||
-                                   battleData.enemy.sprite === 'glacial-imp.png' ||
-                                   battleData.enemy.sprite === 'ice-knight-boss.png' ||
-                                   battleData.enemy.sprite === 'undead-habbo.png' ||
-                                   battleData.enemy.sprite === 'skeleton.png' ||
-                                   battleData.enemy.sprite === 'goblin-trio.png' ||
-                                   battleData.enemy.sprite === 'frost-wraith.png' ||
-                                   battleData.enemy.sprite === 'frost-mutant.png' ||
-                                   battleData.enemy.sprite === 'flaming-phantom.png' ||
-                                   battleData.enemy.sprite === 'iced-stone-dragon.png' ||
-                                   battleData.enemy.sprite === 'frost-brute.png' ||
-                                   battleData.enemy.sprite === 'void-stalker.png' ||
-                                   battleData.enemy.sprite === 'swamp-lurker.png' ||
-                                   battleData.enemy.sprite === 'infernal-hound.png' ||
-                                   battleData.enemy.sprite === 'frost-wolf.png' ||
-                                   battleData.enemy.sprite === 'werewolf.png') ? 'none' : 'scaleX(-1)'
-                      }}
-                    />
-                    {enemyHit && (
-                      <>
-                        <img
-                          src={explosionHit}
-                          alt="Hit"
-                          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-                          style={{ width: '80px', height: '80px' }}
-                        />
-                        <img
-                          src={hitBump}
-                          alt="Bump"
-                          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 pointer-events-none z-10 animate-fade-in"
-                          style={{ width: '60px', height: 'auto' }}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-              <div className="p-3 bg-destructive/10 border-2 border-destructive rounded-lg">
-                <p className="text-xs font-bold text-destructive mb-1">CURRENT ENEMY</p>
-                <h3 className="text-2xl font-black text-destructive">{battleData.enemy.name}</h3>
+            <div className="space-y-3">
+              <div className="text-center pb-2 border-b border-habbo-dark/50">
+                <p className="text-lg font-bold text-destructive">{battleData.enemy.name}</p>
+                <p className="text-xs text-muted-foreground italic mt-1">{battleData.enemy.description}</p>
               </div>
-              <p className="text-sm text-muted-foreground">{battleData.enemy.description}</p>
               <StatBar
                 label="HP"
                 current={battleData.enemy.current_hp}
@@ -2912,21 +2860,6 @@ const Battle = () => {
           {/* Action Panel */}
           <HabboPanel title="Current Turn" className="md:col-span-1">
             <div className="space-y-4">
-              <div className="relative">
-                <Button
-                  onClick={() => speak(battleData.current_story_node?.storyText || battleData.room_description)}
-                  disabled={isPlaying || ttsLoading || !battleData.current_story_node?.storyText && !battleData.room_description}
-                  variant="ghost"
-                  size="sm"
-                  className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full bg-muted hover:bg-muted/80 border-2 border-habbo-dark z-10"
-                  title="Read narration aloud"
-                >
-                  <Volume2 className={`h-4 w-4 ${isPlaying ? 'animate-pulse text-primary' : ''}`} />
-                </Button>
-                <p className="text-sm text-muted-foreground">
-                  {getLatestNarrative(battleData)}
-                </p>
-              </div>
               
               <div className="grid grid-cols-2 gap-2">
                 <Button
@@ -3055,45 +2988,16 @@ const Battle = () => {
             </div>
           </HabboPanel>
 
-          {/* Player Panel */}
+          {/* Player Panel - Stats Only */}
           <HabboPanel title="You" className="md:col-span-1">
-            <div className="space-y-4">
-              {/* Player Habbo Avatar */}
-              {profile?.habbo_username && profile.habbo_profile_json && (
-                <div className="flex justify-center">
-                  <div className="relative rounded-lg overflow-visible bg-card">
-                    <img
-                      src={`https://www.habbo.com/habbo-imaging/avatarimage?figure=${profile.habbo_profile_json.figureString}&hotel=COM&size=m&action=wlk&gesture=agr&direction=4&head_direction=1&service=official`}
-                      alt={profile.habbo_username}
-                      className={`pixel-icon ${playerHit ? 'animate-bump-left' : ''}`}
-                      style={{ width: 'auto', height: 'auto', maxWidth: '100px' }}
-                    />
-                    {playerHit && (
-                      <>
-                        <img
-                          src={explosionHit}
-                          alt="Hit"
-                          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10"
-                          style={{ width: '80px', height: '80px' }}
-                        />
-                        <img
-                          src={hitBump}
-                          alt="Bump"
-                          className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 pointer-events-none z-10 animate-fade-in"
-                          style={{ width: '60px', height: 'auto' }}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground">
+            <div className="space-y-3">
+              <div className="text-center pb-2 border-b border-habbo-dark/50">
+                <p className="text-lg font-bold">
                   {profile?.habbo_username || profile?.username.split('@')[0] || "Player"}
                 </p>
-              </div>
-              <div className="text-center p-2 bg-primary rounded border-4 border-habbo-dark">
-                <p className="text-sm font-bold text-primary-foreground">Level {battleData.player.level}</p>
+                <div className="inline-block mt-1 px-3 py-1 bg-primary rounded border-2 border-habbo-dark">
+                  <p className="text-sm font-bold text-primary-foreground">Level {battleData.player.level}</p>
+                </div>
               </div>
               {battleData.player.current_xp !== undefined && battleData.player.xp_to_next_level !== undefined && (
                 <div className="space-y-1">
