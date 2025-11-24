@@ -143,10 +143,6 @@ export const EntitySprite = ({
         )}
       </div>
       
-      {/* Username nameplate for players - floats above head */}
-      {type === 'player' && username && (
-        <Nameplate name={username} slotIndex={slotIndex} />
-      )}
 
       {/* Enemy name label */}
       {type === 'enemy' && name && !isDead && (
