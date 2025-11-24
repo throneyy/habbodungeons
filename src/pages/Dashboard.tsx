@@ -196,6 +196,7 @@ const Dashboard = () => {
           .from("profiles")
           .update({
             habbo_profile_json: data.profile,
+            habbo_origins_id: data.profile.uniqueId || null, // Update Origins player ID
           })
           .eq("id", user.id);
 
