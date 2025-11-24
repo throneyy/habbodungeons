@@ -13,6 +13,8 @@ import { ItemTooltip } from "@/components/ItemTooltip";
 import { QuestDetailsDialog } from "@/components/QuestDetailsDialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { DungeonBoard } from "@/components/DungeonBoard";
+import { SkillMenu } from "@/components/SkillMenu";
+import { SKILL_DEFINITIONS } from "@/lib/skillDefinitions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
@@ -1670,6 +1672,12 @@ const Battle = () => {
   const handleResolveTurn = async () => {
     if (!selectedAction) {
       toast({ title: "Please select an action", variant: "destructive" });
+      return;
+    }
+    
+    // Handle skill action
+    if (selectedAction === 'skill' && !selectedSkill) {
+      setShowSkillMenu(true);
       return;
     }
 

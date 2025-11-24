@@ -6,6 +6,47 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Skill definitions
+interface SkillDefinition {
+  id: string;
+  name: string;
+  description: string;
+  source: "fishing" | "gardening";
+  mpCost: number;
+  oncePerDungeon?: boolean;
+  requiredFishingLevel?: number;
+  requiredGardeningLevel?: number;
+}
+
+const SKILL_DEFINITIONS: SkillDefinition[] = [
+  { id: "hooked_strike", name: "Hooked Strike", description: "A swift strike that hooks the enemy.", source: "fishing", mpCost: 8, requiredFishingLevel: 10 },
+  { id: "net_toss", name: "Net Toss", description: "Toss a net to ensnare multiple enemies.", source: "fishing", mpCost: 15, requiredFishingLevel: 30 },
+  { id: "anglers_instinct", name: "Angler's Instinct", description: "Heighten your senses, increasing critical hit chance.", source: "fishing", mpCost: 12, requiredFishingLevel: 40 },
+  { id: "foam_barrier", name: "Foam Barrier", description: "Create a protective barrier of foam.", source: "fishing", mpCost: 14, requiredFishingLevel: 55 },
+  { id: "tidal_guard", name: "Tidal Guard", description: "Summon a tidal wave to shield all allies.", source: "fishing", mpCost: 20, requiredFishingLevel: 70 },
+  { id: "undertow", name: "Undertow", description: "Pull enemies into a whirlpool.", source: "fishing", mpCost: 16, requiredFishingLevel: 85 },
+  { id: "leviathan_lure", name: "Leviathan's Lure", description: "Call upon the deep sea beast.", source: "fishing", mpCost: 30, requiredFishingLevel: 99 },
+  { id: "depths_bounty", name: "Depth's Bounty", description: "ULTIMATE: Harvest the riches of the deep.", source: "fishing", mpCost: 40, oncePerDungeon: true, requiredFishingLevel: 100 },
+  { id: "herbal_salve", name: "Herbal Salve", description: "Apply healing herbs to restore health.", source: "gardening", mpCost: 10, requiredGardeningLevel: 10 },
+  { id: "spore_burst", name: "Spore Burst", description: "Release toxic spores that poison all enemies.", source: "gardening", mpCost: 15, requiredGardeningLevel: 30 },
+  { id: "sapling_shield", name: "Sapling Shield", description: "Grow a protective sapling barrier.", source: "gardening", mpCost: 12, requiredGardeningLevel: 40 },
+  { id: "verdant_pulse", name: "Verdant Pulse", description: "Send out a wave of life energy.", source: "gardening", mpCost: 18, requiredGardeningLevel: 55 },
+  { id: "evergreen_ward", name: "Evergreen Ward", description: "Bestow nature's blessing on all allies.", source: "gardening", mpCost: 20, requiredGardeningLevel: 70 },
+  { id: "rot_bloom", name: "Rot Bloom", description: "Summon decaying flowers that wither enemies.", source: "gardening", mpCost: 16, requiredGardeningLevel: 85 },
+  { id: "thorn_barrage", name: "Thorn Barrage", description: "Launch a devastating volley of thorns.", source: "gardening", mpCost: 30, requiredGardeningLevel: 99 },
+  { id: "bloom_of_life", name: "Bloom of Life", description: "ULTIMATE: Channel nature's full power to revive and heal.", source: "gardening", mpCost: 40, oncePerDungeon: true, requiredGardeningLevel: 100 }
+];
+
+function getAvailableSkills(unlockedSkillIds: string[], currentMp: number, usedSkills: string[]): any[] {
+  return SKILL_DEFINITIONS
+    .filter(skill => unlockedSkillIds.includes(skill.id))
+    .map(skill => ({
+      ...skill,
+      canUse: currentMp >= skill.mpCost && (!skill.oncePerDungeon || !usedSkills.includes(skill.id)),
+      onCooldown: skill.oncePerDungeon && usedSkills.includes(skill.id)
+    }));
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -338,6 +379,19 @@ serve(async (req) => {
       ],
     };
 
+    // Get skills for current player
+    const { data: currentUserProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("unlocked_skills, fishing_level, gardening_level, current_mp")
+      .eq("id", user.id)
+      .single();
+
+    const availableSkills = getAvailableSkills(
+      currentUserProfile?.unlocked_skills || [],
+      currentUserProfile?.current_mp || currentPlayer.current_mp,
+      battle.used_skills || []
+    );
+
     const battleData = {
       enemy: enemyState,
       players: players, // Array of all players (party or solo)
@@ -361,6 +415,9 @@ serve(async (req) => {
       turnOrder: battle.turn_order || [],
       current_story_node: battle.current_story_node || null,
       dungeon: dungeonGrid,
+      availableSkills: availableSkills,
+      fishingLevel: currentUserProfile?.fishing_level || 0,
+      gardeningLevel: currentUserProfile?.gardening_level || 0,
     };
 
     return new Response(JSON.stringify({ battleData }), {

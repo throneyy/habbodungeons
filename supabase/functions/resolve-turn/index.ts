@@ -6,6 +6,48 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Skill definitions
+interface SkillEffect {
+  amount?: number;
+  target?: "single" | "aoe" | "self" | "party";
+  statType?: string;
+  duration?: number;
+}
+
+interface SkillDefinition {
+  id: string;
+  name: string;
+  description: string;
+  source: "fishing" | "gardening";
+  mpCost: number;
+  oncePerDungeon?: boolean;
+  effectType: "damage" | "heal" | "buff" | "debuff" | "special";
+  effectValues: SkillEffect;
+}
+
+const SKILL_DEFINITIONS: SkillDefinition[] = [
+  { id: "hooked_strike", name: "Hooked Strike", description: "A swift strike that hooks the enemy.", source: "fishing", mpCost: 8, effectType: "damage", effectValues: { amount: 25, target: "single" } },
+  { id: "net_toss", name: "Net Toss", description: "Toss a net to ensnare multiple enemies.", source: "fishing", mpCost: 15, effectType: "damage", effectValues: { amount: 20, target: "aoe" } },
+  { id: "anglers_instinct", name: "Angler's Instinct", description: "Heighten your senses.", source: "fishing", mpCost: 12, effectType: "buff", effectValues: { target: "self", statType: "crit", amount: 15, duration: 3 } },
+  { id: "foam_barrier", name: "Foam Barrier", description: "Create a protective barrier.", source: "fishing", mpCost: 14, effectType: "buff", effectValues: { target: "self", statType: "def", amount: 20, duration: 3 } },
+  { id: "tidal_guard", name: "Tidal Guard", description: "Shield all allies.", source: "fishing", mpCost: 20, effectType: "buff", effectValues: { target: "party", statType: "def", amount: 15, duration: 3 } },
+  { id: "undertow", name: "Undertow", description: "Pull enemies into a whirlpool.", source: "fishing", mpCost: 16, effectType: "debuff", effectValues: { target: "aoe", statType: "spd", amount: -20, duration: 2 } },
+  { id: "leviathan_lure", name: "Leviathan's Lure", description: "Call upon the deep sea beast.", source: "fishing", mpCost: 30, effectType: "damage", effectValues: { amount: 80, target: "single" } },
+  { id: "depths_bounty", name: "Depth's Bounty", description: "ULTIMATE: Bonus loot and XP.", source: "fishing", mpCost: 40, oncePerDungeon: true, effectType: "special", effectValues: { target: "party" } },
+  { id: "herbal_salve", name: "Herbal Salve", description: "Apply healing herbs.", source: "gardening", mpCost: 10, effectType: "heal", effectValues: { amount: 30, target: "single" } },
+  { id: "spore_burst", name: "Spore Burst", description: "Release toxic spores.", source: "gardening", mpCost: 15, effectType: "debuff", effectValues: { target: "aoe", statType: "poison", amount: 10, duration: 3 } },
+  { id: "sapling_shield", name: "Sapling Shield", description: "Grow a protective barrier.", source: "gardening", mpCost: 12, effectType: "buff", effectValues: { target: "self", statType: "res", amount: 25, duration: 3 } },
+  { id: "verdant_pulse", name: "Verdant Pulse", description: "Wave of life energy.", source: "gardening", mpCost: 18, effectType: "heal", effectValues: { amount: 25, target: "party" } },
+  { id: "evergreen_ward", name: "Evergreen Ward", description: "Nature's blessing on allies.", source: "gardening", mpCost: 20, effectType: "buff", effectValues: { target: "party", statType: "res", amount: 20, duration: 3 } },
+  { id: "rot_bloom", name: "Rot Bloom", description: "Decaying flowers wither enemies.", source: "gardening", mpCost: 16, effectType: "debuff", effectValues: { target: "aoe", statType: "bleed", amount: 15, duration: 3 } },
+  { id: "thorn_barrage", name: "Thorn Barrage", description: "Devastating volley of thorns.", source: "gardening", mpCost: 30, effectType: "damage", effectValues: { amount: 75, target: "single" } },
+  { id: "bloom_of_life", name: "Bloom of Life", description: "ULTIMATE: Revive and heal party.", source: "gardening", mpCost: 40, oncePerDungeon: true, effectType: "heal", effectValues: { amount: 100, target: "party" } }
+];
+
+function getSkillById(skillId: string): SkillDefinition | undefined {
+  return SKILL_DEFINITIONS.find(s => s.id === skillId);
+}
+
 // Helper function to strip markdown code blocks from JSON
 function extractJSON(text: string): string {
   // Remove markdown code blocks if present
@@ -22,7 +64,7 @@ serve(async (req) => {
   }
 
   try {
-    const { battleId, action, dice, itemName } = await req.json();
+    const { battleId, action, dice, itemName, skillId } = await req.json();
 
     // Validate dice array
     if (!Array.isArray(dice)) {
@@ -70,7 +112,7 @@ serve(async (req) => {
       last_action_at: new Date().toISOString(),
     });
 
-    console.log(`Resolving turn for user: ${user.id}, action: ${action}, itemName: ${itemName || 'none'}`);
+    console.log(`Resolving turn for user: ${user.id}, action: ${action}, itemName: ${itemName || 'none'}, skillId: ${skillId || 'none'}`);
 
     // Check if user is in a server for this dungeon
     const { data: serverMember } = await supabase
@@ -155,6 +197,40 @@ serve(async (req) => {
 
     console.log(`Equipped weapon: ${equippedWeapon?.item_name || 'none'}`);
 
+    // Handle skill usage
+    let skillUsed = null;
+    if (action === 'skill' && skillId) {
+      skillUsed = getSkillById(skillId);
+      
+      if (!skillUsed) {
+        throw new Error('Invalid skill');
+      }
+
+      // Validate MP
+      if (stats.current_mp < skillUsed.mpCost) {
+        throw new Error('Not enough MP');
+      }
+
+      // Get user profile to check unlocked skills
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('unlocked_skills')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.unlocked_skills?.includes(skillId)) {
+        throw new Error('Skill not unlocked');
+      }
+
+      // Check if skill is once-per-dungeon and already used
+      const usedSkills = battle.used_skills || [];
+      if (skillUsed.oncePerDungeon && usedSkills.includes(skillId)) {
+        throw new Error('Skill already used this dungeon');
+      }
+
+      console.log(`Using skill: ${skillUsed.name} (${skillUsed.effectType})`);
+    }
+
     // Define weapon bonuses
     const WEAPON_BONUSES: Record<string, number> = {
       "Rusty Sword": 5,
@@ -173,20 +249,10 @@ serve(async (req) => {
 
     const weaponBonus = equippedWeapon ? (WEAPON_BONUSES[equippedWeapon.item_name] || 5) : 0;
 
-    // Call AI for combat resolution with equipped weapon info
+    // Call AI for combat resolution with equipped weapon and skill info
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a JRPG combat engine. Calculate BOTH player and enemy actions in the same turn.
+    
+    let systemPrompt = `You are a JRPG combat engine. Calculate BOTH player and enemy actions in the same turn.
             
 CRITICAL: The enemy ALWAYS counterattacks after the player acts (unless the enemy is defeated). 
 
@@ -225,7 +291,50 @@ Output ONLY valid JSON (no markdown formatting) with:
 Example narration with weapon: "You strike with your [WEAPON:Rusty Sword], dealing 15 damage!"
 Example when enemy dies: "Your [WEAPON:Rusty Sword] cleaves through the enemy, dealing the final 15 damage!"
 
-IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing blow. Do NOT mention enemy counterattacks.`
+IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing blow. Do NOT mention enemy counterattacks.`;
+
+    if (skillUsed) {
+      systemPrompt = `You are a JRPG combat engine. The player is using a SKILL.
+
+SKILL BEING USED: ${skillUsed.name}
+SKILL TYPE: ${skillUsed.effectType}
+SKILL EFFECT: ${skillUsed.description}
+SKILL DAMAGE/HEAL: ${skillUsed.effectValues.amount || 'N/A'}
+
+SKILL RESOLUTION:
+- Damage skills: Deal ${skillUsed.effectValues.amount} damage to enemy (modified by dice roll)
+- Heal skills: Heal player for ${skillUsed.effectValues.amount} HP (cannot exceed max HP)
+- Buff/Debuff skills: Apply status effect (describe the effect)
+- Special skills: Describe the special effect narratively
+
+After skill effect, enemy counterattacks (unless defeated).
+
+Output ONLY valid JSON (no markdown formatting) with:
+{
+  playerDamageDealt: number (0 if healing/buff skill),
+  playerDamageTaken: number (enemy counterattack damage if enemy survives),
+  healingReceived: number (if heal skill, otherwise 0),
+  enemyAction: string (describe counterattack or "defeated"),
+  playerNewHp: number (apply healing if any, then subtract damage),
+  enemyNewHp: number (subtract skill damage if damage skill),
+  narration: string[] (2-4 lines - describe skill use, effect, then enemy response),
+  victory: boolean,
+  defeat: boolean
+}`;
+    }
+
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
           },
           {
             role: 'user',
@@ -233,6 +342,12 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
               action,
               dice,
               weaponBonus,
+              skill: skillUsed ? {
+                name: skillUsed.name,
+                effectType: skillUsed.effectType,
+                effectAmount: skillUsed.effectValues.amount,
+                mpCost: skillUsed.mpCost
+              } : null,
               equippedWeapon: equippedWeapon ? {
                 name: equippedWeapon.item_name,
                 type: equippedWeapon.item_type
@@ -240,6 +355,7 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
               playerStats: {
                 hp: stats.current_hp,
                 mp: stats.current_mp,
+                maxHp: stats.max_hp,
                 atk: stats.atk,
                 def: stats.def,
                 spd: stats.spd,
@@ -292,6 +408,20 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
     result.enemyNewHp = enemyNewHp;
     result.victory = victory;
     result.defeat = defeat;
+
+    // Handle skill MP deduction and tracking
+    let newMp = stats.current_mp;
+    let usedSkills = battle.used_skills || [];
+    
+    if (skillUsed) {
+      newMp = Math.max(0, stats.current_mp - skillUsed.mpCost);
+      console.log(`Deducted ${skillUsed.mpCost} MP. New MP: ${newMp}`);
+      
+      if (skillUsed.oncePerDungeon && !usedSkills.includes(skillId)) {
+        usedSkills = [...usedSkills, skillId];
+        console.log(`Marked ${skillId} as used for this dungeon`);
+      }
+    }
 
     // If action was using an item, decrement it from inventory
     if (action === 'item' && itemName) {
@@ -525,12 +655,13 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
         if (spdIncrease > 0) xpMessages.push(`Speed increased by ${spdIncrease}.`);
         xpMessages.push(`HP and MP fully restored.`);
       } else {
-        // Just update XP, no level up
+        // Just update XP and MP, no level up
         await supabase
           .from('player_stats')
           .update({
             current_xp: newXp,
             current_hp: result.playerNewHp,
+            current_mp: newMp,
           })
           .eq('user_id', user.id);
         
@@ -576,7 +707,10 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
           
           await supabase
             .from('player_stats')
-            .update({ current_hp: 0 })
+            .update({ 
+              current_hp: 0,
+              current_mp: newMp 
+            })
             .eq('user_id', user.id);
           
           xpMessages.push(`You have been defeated!`);
@@ -632,10 +766,13 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
           xpMessages.push(`HP and MP restored to 50%.`);
         }
       } else {
-        // Just update HP if not defeated
+        // Just update HP and MP if not defeated
         await supabase
           .from('player_stats')
-          .update({ current_hp: result.playerNewHp })
+          .update({ 
+            current_hp: result.playerNewHp,
+            current_mp: newMp 
+          })
           .eq('user_id', user.id);
       }
     }
@@ -803,6 +940,7 @@ IMPORTANT: If enemyNewHp <= 0, narration must ONLY describe the player's killing
         current_room_index: newRoomIndex,
         current_turn_user_id: nextTurnUserId,
         dead_players: updatedDeadPlayers,
+        used_skills: usedSkills,
         is_active: !(isPartyBattle ? isEntirePartyDead : result.defeat) && newRoomIndex < totalRooms, // Mark inactive if entire party defeated or quest complete
       })
       .eq('id', battle.id);
