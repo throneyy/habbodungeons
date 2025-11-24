@@ -5,18 +5,22 @@ import { StatBar } from "@/components/StatBar";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { DailyLeaderboard } from "@/components/DailyLeaderboard";
 import { getItemImage, getItemDescription } from "@/lib/itemAssets";
+import { SkillTreeDialog } from "@/components/SkillTreeDialog";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Link, Users, Gift, RefreshCw, Shield } from "lucide-react";
+import { LogOut, Link, Users, Gift, RefreshCw, Shield, Sparkles } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 
 interface Profile {
   username: string;
   habbo_username: string | null;
   habbo_profile_json: any;
+  fishing_level?: number;
+  gardening_level?: number;
+  unlocked_skills?: string[];
 }
 
 interface PlayerStats {
@@ -50,6 +54,7 @@ const Dashboard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showSkillTree, setShowSkillTree] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -305,6 +310,14 @@ const Dashboard = () => {
                   <Gift className="w-4 h-4 mr-2" />
                   Open Chests
                 </Button>
+                <Button
+                  onClick={() => setShowSkillTree(true)}
+                  variant="outline"
+                  className="font-bold border-4 border-habbo-dark whitespace-nowrap"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  View Skills
+                </Button>
               </div>
             )}
           </div>
@@ -450,9 +463,37 @@ const Dashboard = () => {
                 </div>
               </div>
             </HabboPanel>
+            
+            <HabboPanel title="Skill Trees">
+              <div className="space-y-4">
+                <p className="text-center text-muted-foreground">
+                  View your Fishing and Gardening skill progression trees
+                </p>
+                <div className="flex justify-center">
+                  <Button
+                    size="lg"
+                    onClick={() => setShowSkillTree(true)}
+                    variant="outline"
+                    className="font-bold border-4 border-habbo-dark text-lg py-6 px-8"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    View Skills
+                  </Button>
+                </div>
+              </div>
+            </HabboPanel>
           </div>
         )}
       </div>
+
+      {/* Skill Tree Dialog */}
+      <SkillTreeDialog
+        open={showSkillTree}
+        onOpenChange={setShowSkillTree}
+        fishingLevel={profile?.fishing_level || 0}
+        gardeningLevel={profile?.gardening_level || 0}
+        unlockedSkills={profile?.unlocked_skills || []}
+      />
     </AppLayout>
   );
 };
