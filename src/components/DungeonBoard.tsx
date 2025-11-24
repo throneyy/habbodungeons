@@ -39,30 +39,31 @@ export const DungeonBoard = ({
   const targetX = targetEntity?.x;
   const targetY = targetEntity?.y;
   return (
-    <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-black/20">
-      {/* Dungeon image container with proper aspect ratio */}
-      {backgroundImageUrl && (
-        <div className="relative w-full h-full max-w-[1400px] max-h-[900px] mx-auto">
-          <img 
-            src={backgroundImageUrl} 
-            alt="Dungeon background"
-            className="absolute inset-0 w-full h-full object-contain drop-shadow-2xl"
-            style={{
-              imageRendering: 'pixelated',
-            }}
-          />
-          {/* Subtle vignette overlay */}
-          <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/30 pointer-events-none" />
+    <div className="absolute inset-0 w-full h-full flex items-center justify-center p-4">
+      {/* Contained dungeon box */}
+      <div className="relative w-full max-w-5xl aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl">
+        {/* Background image with cover */}
+        <div 
+          className="absolute inset-0 w-full h-full"
+          style={{
+            backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            imageRendering: 'pixelated',
+          }}
+        >
+          {/* Vignette overlay for depth */}
+          <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/30" />
         </div>
-      )}
-      
-      {/* Entity container - centered battle stage */}
-      <div 
-        className="absolute inset-0 w-full h-full flex items-center justify-center"
-        style={{
-          transformStyle: 'preserve-3d',
-        }}
-      >
+        
+        {/* Entity container - centered battle stage */}
+        <div 
+          className="relative w-full h-full flex items-center justify-center"
+          style={{
+            transformStyle: 'preserve-3d',
+          }}
+        >
         {dungeon.entities.map((entity) => (
           <EntitySprite
             key={entity.id}
@@ -81,6 +82,7 @@ export const DungeonBoard = ({
             targetY={attackingEntityId === entity.id ? targetY : undefined}
           />
         ))}
+        </div>
       </div>
     </div>
   );
