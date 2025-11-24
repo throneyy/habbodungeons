@@ -42,6 +42,28 @@ function getUnlockedSkills(fishingLevel: number, gardeningLevel: number): string
     .map(skill => skill.id);
 }
 
+// Helper function to parse skill level from API response
+function parseSkillLevel(skillsData: any, skillType: string): number {
+  if (Array.isArray(skillsData)) {
+    const skill = skillsData.find((s: any) => 
+      s.name?.toLowerCase() === skillType || 
+      s.skillType?.toLowerCase() === skillType ||
+      s.type?.toLowerCase() === skillType
+    );
+    return skill?.level || skill?.skillLevel || 0;
+  } else if (skillsData.skills) {
+    const skill = skillsData.skills.find((s: any) => 
+      s.name?.toLowerCase() === skillType || 
+      s.skillType?.toLowerCase() === skillType ||
+      s.type?.toLowerCase() === skillType
+    );
+    return skill?.level || skill?.skillLevel || 0;
+  } else if (skillsData[skillType]) {
+    return skillsData[skillType].level || skillsData[skillType].skillLevel || 0;
+  }
+  return 0;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -86,39 +108,48 @@ serve(async (req) => {
     // If we have the Origins ID, use it to fetch skills
     if (habboOriginsId) {
       try {
+        // Try bouncerPlayerId format first (without the "gp-" prefix if present)
+        let playerId = habboOriginsId;
+        if (playerId.startsWith('gp-')) {
+          playerId = playerId.substring(3); // Remove "gp-" prefix
+        }
+        
+        console.log(`Trying skills API with player ID: ${playerId}`);
+        
         const skillsResponse = await fetch(
-          `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboOriginsId)}`
+          `https://origins.habbo.com/api/public/skills/${encodeURIComponent(playerId)}`
         );
         
         if (!skillsResponse.ok) {
           console.error(`Habbo Origins API returned status ${skillsResponse.status}`);
-          throw new Error(`Habbo API returned status ${skillsResponse.status}`);
-        }
+          
+          // If failed, try with the original ID format
+          if (habboOriginsId !== playerId) {
+            console.log(`Retrying with full ID: ${habboOriginsId}`);
+            const retryResponse = await fetch(
+              `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboOriginsId)}`
+            );
+            
+            if (!retryResponse.ok) {
+              throw new Error(`Habbo API returned status ${retryResponse.status}`);
+            }
+            
+            const skillsData = await retryResponse.json();
+            console.log('Skills data from Habbo Origins (retry):', skillsData);
+            
+            // Parse skills from retry
+            fishingLevel = parseSkillLevel(skillsData, 'fishing');
+            gardeningLevel = parseSkillLevel(skillsData, 'gardening');
+          } else {
+            throw new Error(`Habbo API returned status ${skillsResponse.status}`);
+          }
+        } else {
+          const skillsData = await skillsResponse.json();
+          console.log('Skills data from Habbo Origins:', skillsData);
 
-        const skillsData = await skillsResponse.json();
-        console.log('Skills data from Habbo Origins:', skillsData);
-
-        // Parse fishing and gardening levels from the response
-        if (Array.isArray(skillsData)) {
-          const fishingSkill = skillsData.find((s: any) => 
-            s.name?.toLowerCase() === 'fishing' || s.skillType?.toLowerCase() === 'fishing'
-          );
-          const gardeningSkill = skillsData.find((s: any) => 
-            s.name?.toLowerCase() === 'gardening' || s.skillType?.toLowerCase() === 'gardening'
-          );
-
-          fishingLevel = fishingSkill?.level || fishingSkill?.skillLevel || 0;
-          gardeningLevel = gardeningSkill?.level || gardeningSkill?.skillLevel || 0;
-        } else if (skillsData.skills) {
-          const fishingSkill = skillsData.skills.find((s: any) => 
-            s.name?.toLowerCase() === 'fishing' || s.skillType?.toLowerCase() === 'fishing'
-          );
-          const gardeningSkill = skillsData.skills.find((s: any) => 
-            s.name?.toLowerCase() === 'gardening' || s.skillType?.toLowerCase() === 'gardening'
-          );
-
-          fishingLevel = fishingSkill?.level || fishingSkill?.skillLevel || 0;
-          gardeningLevel = gardeningSkill?.level || gardeningSkill?.skillLevel || 0;
+          // Parse fishing and gardening levels
+          fishingLevel = parseSkillLevel(skillsData, 'fishing');
+          gardeningLevel = parseSkillLevel(skillsData, 'gardening');
         }
 
         console.log('Parsed levels - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);

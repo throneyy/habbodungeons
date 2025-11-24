@@ -50,7 +50,8 @@ serve(async (req) => {
           name: data.name,
           figureString: data.figureString,
           motto: data.motto || "",
-          uniqueId: data.uniqueId || null, // Habbo Origins player ID for API calls
+          uniqueId: data.uniqueId || null, // Habbo Origins player ID
+          bouncerPlayerId: data.bouncerPlayerId || null, // Alternative player ID that might be used for skills API
         },
       }),
       {
