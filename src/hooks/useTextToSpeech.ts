@@ -25,13 +25,25 @@ export const useTextToSpeech = () => {
       });
 
       if (error) {
-        console.warn('TTS unavailable:', error);
-        return; // Silently fail - don't block UI
+        console.error('TTS error:', error);
+        toast({
+          title: "Text-to-speech unavailable",
+          description: error.message || "Please check your ElevenLabs credits or try a shorter text",
+          variant: "destructive"
+        });
+        return;
       }
 
       if (!data.audioContent) {
+        if (data.error) {
+          toast({
+            title: "Text-to-speech failed",
+            description: data.error,
+            variant: "destructive"
+          });
+        }
         console.warn('No audio content received from TTS');
-        return; // Silently fail - don't block UI
+        return;
       }
 
       // Convert base64 to audio
