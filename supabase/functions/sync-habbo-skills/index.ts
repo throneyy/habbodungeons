@@ -64,10 +64,10 @@ serve(async (req) => {
 
     console.log('Syncing skills for user:', user.id);
 
-    // Get user's profile to fetch habbo_username
+    // Get user's profile to fetch habbo info
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('habbo_username')
+      .select('habbo_username, habbo_origins_id')
       .eq('id', user.id)
       .single();
 
@@ -76,19 +76,61 @@ serve(async (req) => {
     }
 
     const habboUsername = profile.habbo_username;
-    console.log('Fetching skills for Habbo user:', habboUsername);
+    const habboOriginsId = profile.habbo_origins_id;
+    
+    console.log('Syncing skills for:', habboUsername, 'Origins ID:', habboOriginsId);
 
-    // For now, return mock data since the Habbo Origins API requires a player ID, not username
-    // TODO: Need to store and use the actual Habbo Origins uniquePlayerId during account linking
-    console.warn('Habbo Origins API integration not yet fully implemented - using mock data');
-    console.log('To implement: Need to obtain uniquePlayerId from Habbo Origins during account linking');
-    console.log('API endpoint requires: GET /api/public/skills/{uniquePlayerId}');
-    
-    // Return mock data for testing
-    const fishingLevel = 0;
-    const gardeningLevel = 0;
-    
-    console.log('Using mock levels - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
+    let fishingLevel = 0;
+    let gardeningLevel = 0;
+
+    // If we have the Origins ID, use it to fetch skills
+    if (habboOriginsId) {
+      try {
+        const skillsResponse = await fetch(
+          `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboOriginsId)}`
+        );
+        
+        if (!skillsResponse.ok) {
+          console.error(`Habbo Origins API returned status ${skillsResponse.status}`);
+          throw new Error(`Habbo API returned status ${skillsResponse.status}`);
+        }
+
+        const skillsData = await skillsResponse.json();
+        console.log('Skills data from Habbo Origins:', skillsData);
+
+        // Parse fishing and gardening levels from the response
+        if (Array.isArray(skillsData)) {
+          const fishingSkill = skillsData.find((s: any) => 
+            s.name?.toLowerCase() === 'fishing' || s.skillType?.toLowerCase() === 'fishing'
+          );
+          const gardeningSkill = skillsData.find((s: any) => 
+            s.name?.toLowerCase() === 'gardening' || s.skillType?.toLowerCase() === 'gardening'
+          );
+
+          fishingLevel = fishingSkill?.level || fishingSkill?.skillLevel || 0;
+          gardeningLevel = gardeningSkill?.level || gardeningSkill?.skillLevel || 0;
+        } else if (skillsData.skills) {
+          const fishingSkill = skillsData.skills.find((s: any) => 
+            s.name?.toLowerCase() === 'fishing' || s.skillType?.toLowerCase() === 'fishing'
+          );
+          const gardeningSkill = skillsData.skills.find((s: any) => 
+            s.name?.toLowerCase() === 'gardening' || s.skillType?.toLowerCase() === 'gardening'
+          );
+
+          fishingLevel = fishingSkill?.level || fishingSkill?.skillLevel || 0;
+          gardeningLevel = gardeningSkill?.level || gardeningSkill?.skillLevel || 0;
+        }
+
+        console.log('Parsed levels - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
+      } catch (error: any) {
+        console.error('Failed to fetch skills from Habbo Origins:', error);
+        // Don't throw - fall back to 0 levels
+        console.warn('Using default levels (0) due to API error');
+      }
+    } else {
+      console.warn('No Habbo Origins ID stored. Please re-link your Habbo account to enable skill sync.');
+      console.log('Using default levels (0) until Origins ID is captured');
+    }
 
     // Calculate unlocked skills
     const unlockedSkills = getUnlockedSkills(fishingLevel, gardeningLevel);

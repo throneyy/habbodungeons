@@ -91,6 +91,7 @@ const LinkHabbo = () => {
         .update({
           habbo_username: habboProfile.name,
           habbo_profile_json: data.profile as any,
+          habbo_origins_id: data.profile.uniqueId || null, // Store Origins player ID for skill sync
         })
         .eq("id", user.id);
 

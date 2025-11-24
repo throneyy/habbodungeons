@@ -368,6 +368,7 @@ export type Database = {
           created_at: string
           fishing_level: number | null
           gardening_level: number | null
+          habbo_origins_id: string | null
           habbo_profile_json: Json | null
           habbo_username: string | null
           id: string
@@ -380,6 +381,7 @@ export type Database = {
           created_at?: string
           fishing_level?: number | null
           gardening_level?: number | null
+          habbo_origins_id?: string | null
           habbo_profile_json?: Json | null
           habbo_username?: string | null
           id: string
@@ -392,6 +394,7 @@ export type Database = {
           created_at?: string
           fishing_level?: number | null
           gardening_level?: number | null
+          habbo_origins_id?: string | null
           habbo_profile_json?: Json | null
           habbo_username?: string | null
           id?: string
