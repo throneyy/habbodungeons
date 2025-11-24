@@ -22,7 +22,7 @@ export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
   "frost-mutant.png": "left",
   "frost-brute.png": "left",
   "ice-elemental.png": "left",
-  "flaming-phantom.png": "left",
+  "flaming-phantom.png": "right",
   "infernal-hound.png": "left",
   "fire-drake.png": "left",
   "spirit-owl.png": "left",
