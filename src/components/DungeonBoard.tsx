@@ -8,6 +8,7 @@ interface DungeonEntity {
   name?: string;
   habboAvatar?: string | null;
   sprite?: string;
+  spriteFilename?: string; // Original backend filename for direction lookup
   current_hp?: number;
   max_hp?: number;
   isDead?: boolean;
@@ -78,6 +79,7 @@ export const DungeonBoard = ({
               x={entity.x}
               y={entity.y}
               sprite={entity.sprite}
+              spriteFilename={entity.spriteFilename} // Pass original filename
               habboAvatar={entity.habboAvatar}
               username={entity.username}
               name={entity.name}

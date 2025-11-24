@@ -28,8 +28,6 @@ export const EnemySprite = ({
   // Flip only if base direction differs from desired direction
   const needsFlip = baseDirection !== shouldFace;
   
-  console.log('🔄 Enemy flip check:', { filename, baseDirection, shouldFace, needsFlip });
-  
   return (
     <img
       src={spriteUrl}
