@@ -202,6 +202,20 @@ interface BattleData {
       isDead?: boolean;
     }>;
   };
+  availableSkills?: Array<{
+    id: string;
+    name: string;
+    description: string;
+    source: "fishing" | "gardening";
+    mpCost: number;
+    canUse: boolean;
+    onCooldown: boolean;
+    oncePerDungeon?: boolean;
+    requiredFishingLevel?: number;
+    requiredGardeningLevel?: number;
+  }>;
+  fishingLevel?: number;
+  gardeningLevel?: number;
 }
 
 interface Profile {
@@ -310,6 +324,12 @@ const Battle = () => {
   const [attackingEntityId, setAttackingEntityId] = useState<string | undefined>();
   const [targetEntityId, setTargetEntityId] = useState<string | undefined>();
   const [damageDealt, setDamageDealt] = useState<{ entityId: string; amount: number } | undefined>();
+  
+  // Item and skill dialog states
+  const [showItemDialog, setShowItemDialog] = useState(false);
+  const [consumables, setConsumables] = useState<any[]>([]);
+  const [showSkillMenu, setShowSkillMenu] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
   
   // Turn-based combat state
   const isMyTurn = !battleData?.isPartyBattle || battleData?.currentTurnUserId === currentUserId;
@@ -1702,6 +1722,7 @@ const Battle = () => {
           action: selectedAction,
           dice,
           itemName: selectedItem,
+          skillId: selectedSkill,
         },
       });
 
@@ -1711,6 +1732,8 @@ const Battle = () => {
         setBattleData(data.battleData);
         setSelectedAction("");
         setSelectedItem(null);
+        setSelectedSkill(null);
+        setShowSkillMenu(false);
         
         // Load party profiles for battle log display (in case new entries were added)
         loadPartyProfiles(serverId || undefined);
@@ -2907,6 +2930,7 @@ const Battle = () => {
                   onClick={() => {
                     setSelectedAction("skill");
                     setSelectedItem(null);
+                    setShowSkillMenu(true);
                   }}
                   disabled={!isMyTurn}
                   className="font-bold border-4 border-habbo-dark disabled:opacity-50"
@@ -3314,6 +3338,20 @@ const Battle = () => {
         onClose={() => {
           setShowPartyWipeDialog(false);
           navigate("/dashboard");
+        }}
+      />
+
+      {/* Skill Menu Dialog */}
+      <SkillMenu
+        open={showSkillMenu}
+        onOpenChange={setShowSkillMenu}
+        skills={(battleData as any)?.availableSkills || []}
+        currentMp={battleData?.player?.current_mp || 0}
+        fishingLevel={(battleData as any)?.fishingLevel || 0}
+        gardeningLevel={(battleData as any)?.gardeningLevel || 0}
+        onSelectSkill={(skillId) => {
+          setSelectedSkill(skillId);
+          setShowSkillMenu(false);
         }}
       />
 
