@@ -25,7 +25,6 @@ export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
   "flaming-phantom.png": "right",
   "infernal-hound.png": "left",
   "fire-drake.png": "left",
-  "spirit-owl.png": "left",
   
   // Enemies facing RIGHT in their base sprites
   "ice-guardian.png": "right",
