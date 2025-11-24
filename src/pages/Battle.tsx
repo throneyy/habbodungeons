@@ -634,10 +634,22 @@ const Battle = () => {
       setShowVictoryLoot(true);
     }
 
-    // Update previous battle status
+  // Update previous battle status
     previousBattleStatusRef.current = currentStatus;
   }, [battleData?.battle_status, battleData?.battle_log]);
 
+  // Auto-generate next story node when story choice is resolved
+  useEffect(() => {
+    if (!battleData || !battleData.current_story_node) return;
+    
+    const storyNode = battleData.current_story_node as any;
+    
+    // Check if backend set generating marker after resolving a choice
+    if (storyNode.generating === true && !storyLoading) {
+      console.log('Detected story node generation marker, loading next story node...');
+      loadStoryNode();
+    }
+  }, [battleData?.current_story_node, storyLoading]);
   const loadBattle = async (isRetry = false) => {
     if (!id) {
       console.error("Cannot load battle: battleId is undefined");
