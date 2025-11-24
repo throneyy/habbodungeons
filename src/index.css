@@ -133,4 +133,16 @@ All colors MUST be HSL.
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
   }
+  
+  /* Floating damage animation */
+  @keyframes floatUp {
+    0% {
+      transform: translate(-50%, 0);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(-50%, -30px);
+      opacity: 0;
+    }
+  }
 }
