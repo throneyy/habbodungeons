@@ -41,15 +41,21 @@ export const EntitySprite = ({
   }, [damage]);
 
   // Convert grid coordinates to isometric screen position
-  const isoX = (x - y) * (TILE_WIDTH / 2);
-  const isoY = (x + y) * (TILE_HEIGHT / 2);
+  // Scale up for better visibility
+  const SCALE = 2.5; // Make entities much larger
+  const isoX = (x - y) * (TILE_WIDTH / 2) * SCALE;
+  const isoY = (x + y) * (TILE_HEIGHT / 2) * SCALE;
   
   // Calculate z-index based on depth (entities further back have lower z-index)
-  const zIndex = x + y;
+  const zIndex = 100 + x + y;
 
+  // Fix sprite path - it's already resolved from ENEMY_SPRITES mapping in Battle.tsx
   const imageUrl = type === 'player' 
     ? (habboAvatar || '/placeholder.svg')
-    : (sprite ? `/src/assets/${sprite}` : '/placeholder.svg');
+    : (sprite || '/placeholder.svg');
+
+  // Scale sprite size for prominence
+  const spriteSize = type === 'player' ? 120 : 160;
 
   return (
     <div
@@ -57,44 +63,64 @@ export const EntitySprite = ({
         position: 'absolute',
         left: `calc(50% + ${isoX}px)`,
         top: `calc(50% + ${isoY}px)`,
-        transform: 'translate(-50%, -100%)',
+        transform: isAttacking ? 'translate(-50%, -100%) scale(1.15)' : 'translate(-50%, -100%)',
         zIndex,
-        transition: isAttacking 
-          ? 'transform 0.2s ease-in-out' 
-          : 'left 0.3s ease-out, top 0.3s ease-out',
+        transition: 'all 0.3s ease-out',
+        filter: isDead ? 'grayscale(100%) brightness(0.5)' : 'none',
       }}
-      className={`${isDead ? 'opacity-30 grayscale' : 'opacity-100'} ${isAttacking ? 'scale-110' : ''}`}
+      className="drop-shadow-2xl"
     >
-      {/* Entity sprite */}
-      <img
-        src={imageUrl}
-        alt={username || name || 'Entity'}
-        className="pixelated select-none pointer-events-none"
-        style={{
-          imageRendering: 'pixelated',
-          width: type === 'player' ? '64px' : '80px',
-          height: 'auto',
-          filter: isAttacking ? 'brightness(1.3)' : 'none',
-        }}
-      />
+      {/* Entity sprite with glow effect */}
+      <div className="relative">
+        <img
+          src={imageUrl}
+          alt={username || name || 'Entity'}
+          className="pixelated select-none pointer-events-none"
+          style={{
+            imageRendering: 'pixelated',
+            width: `${spriteSize}px`,
+            height: 'auto',
+            filter: isAttacking ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255,255,255,0.8))' : 'brightness(1.1)',
+          }}
+        />
+        
+        {/* Attack flash effect */}
+        {isAttacking && (
+          <div 
+            className="absolute inset-0 bg-white/30 animate-pulse rounded-lg"
+            style={{ mixBlendMode: 'overlay' }}
+          />
+        )}
+      </div>
       
       {/* Username label for players */}
       {type === 'player' && username && (
         <div 
-          className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-bold text-white bg-black/70 px-2 py-1 rounded whitespace-nowrap"
-          style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}
+          className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-sm font-bold text-white bg-gradient-to-r from-primary/90 to-accent/90 px-3 py-1.5 rounded-full border-2 border-white/30 whitespace-nowrap shadow-lg"
+          style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9)' }}
         >
           {username}
+        </div>
+      )}
+
+      {/* Enemy name label */}
+      {type === 'enemy' && name && !isDead && (
+        <div 
+          className="absolute -top-12 left-1/2 -translate-x-1/2 text-sm font-bold text-red-400 bg-black/80 px-3 py-1.5 rounded border-2 border-red-500/50 whitespace-nowrap shadow-lg"
+          style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.9)' }}
+        >
+          {name}
         </div>
       )}
 
       {/* Floating damage number */}
       {showDamage && damage && damage > 0 && (
         <div 
-          className="absolute -top-8 left-1/2 -translate-x-1/2 text-2xl font-bold text-red-500 animate-fade-out pointer-events-none"
+          className="absolute -top-16 left-1/2 -translate-x-1/2 text-4xl font-bold text-red-500 pointer-events-none"
           style={{ 
-            textShadow: '2px 2px 4px rgba(0,0,0,0.9), -1px -1px 2px rgba(255,255,255,0.5)',
-            animation: 'floatUp 1s ease-out'
+            textShadow: '3px 3px 6px rgba(0,0,0,1), -2px -2px 4px rgba(255,255,255,0.8)',
+            animation: 'floatUp 1s ease-out',
+            WebkitTextStroke: '2px black',
           }}
         >
           -{damage}
