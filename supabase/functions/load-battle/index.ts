@@ -297,10 +297,10 @@ serve(async (req) => {
       { id: "E1", x: 2, y: 2 }
     ] : [];
     
-    // Player slots on right/front (x: 5-6, y: 2-4)
+    // Player slots on right/front with better horizontal spacing
     const playerSlots = players.map((_, index) => ({
       id: `P${index + 1}`,
-      x: 5 + (index % 2),
+      x: 4 + (index % 2) * 2, // Spread horizontally: 4, 6, 4, 6...
       y: 2 + Math.floor(index / 2)
     }));
     
