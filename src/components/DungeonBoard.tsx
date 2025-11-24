@@ -33,7 +33,7 @@ export const DungeonBoard = ({
 }: DungeonBoardProps) => {
   return (
     <div 
-      className="absolute inset-0 w-full h-full overflow-hidden"
+      className="absolute inset-0 w-full h-full"
       style={{
         backgroundImage: backgroundImageUrl ? `url(${backgroundImageUrl})` : 'none',
         backgroundSize: 'cover',
@@ -41,9 +41,12 @@ export const DungeonBoard = ({
         backgroundRepeat: 'no-repeat',
       }}
     >
-      {/* Entity container - centered in the board */}
+      {/* Vignette overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-black/40" />
+      
+      {/* Entity container - centered battle stage */}
       <div 
-        className="relative w-full h-full"
+        className="relative w-full h-full flex items-center justify-center"
         style={{
           transformStyle: 'preserve-3d',
         }}

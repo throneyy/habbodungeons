@@ -2657,17 +2657,7 @@ const Battle = () => {
 
   // Render battle mode
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Dungeon Board with AI-generated background and isometric entities */}
-      {battleData?.dungeon && (
-        <DungeonBoard 
-          dungeon={battleData.dungeon}
-          backgroundImageUrl={dungeonBackground || dungeonBg}
-          attackingEntityId={attackingEntityId}
-          damageDealt={damageDealt}
-        />
-      )}
-      
+    <div className="min-h-screen relative overflow-hidden bg-habbo-dark">
       {/* Background Loading Indicator */}
       {backgroundLoading && (
         <div className="fixed top-4 right-4 z-50 bg-habbo-dark/90 border-2 border-primary rounded-lg px-4 py-2 flex items-center gap-2">
@@ -2676,8 +2666,31 @@ const Battle = () => {
         </div>
       )}
       
-      <div className="relative z-10 p-8">
-        <div className="max-w-7xl mx-auto space-y-6">
+      {/* Main Battle Stage - Dungeon Board takes center stage */}
+      <div className="relative h-screen flex flex-col">
+        {/* Battle Stage Area - 60% of screen */}
+        <div className="relative h-[60vh] border-b-4 border-habbo-gold shadow-2xl">
+          {battleData?.dungeon && (
+            <DungeonBoard 
+              dungeon={{
+                ...battleData.dungeon,
+                entities: battleData.dungeon.entities.map(entity => ({
+                  ...entity,
+                  sprite: entity.type === 'enemy' && entity.sprite
+                    ? (ENEMY_SPRITES[entity.sprite] || entity.sprite)
+                    : entity.sprite
+                }))
+              }}
+              backgroundImageUrl={dungeonBackground || dungeonBg}
+              attackingEntityId={attackingEntityId}
+              damageDealt={damageDealt}
+            />
+          )}
+        </div>
+
+        {/* UI Panel Area - 40% of screen with semi-transparent overlay */}
+        <div className="relative h-[40vh] bg-gradient-to-b from-habbo-dark/95 to-habbo-dark overflow-y-auto">
+          <div className="p-4 space-y-3">
 
           {/* Battle Log - Main Focus */}
           <HabboPanel title="Battle Log">
@@ -3296,6 +3309,7 @@ const Battle = () => {
         >
           Return to Dashboard
         </Button>
+          </div>
         </div>
       </div>
 
