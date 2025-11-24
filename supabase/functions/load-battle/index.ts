@@ -288,29 +288,53 @@ serve(async (req) => {
       throw new Error('No players found in this battle. The server may be empty or battle state is invalid.');
     }
     
-    // Create dungeon grid with entity positions
+    // Generate battle layout with slots (enemies left/back, players right/front)
+    const numPlayers = players.length;
+    const numEnemies = hasValidEnemy ? 1 : 0;
+    
+    // Enemy slots on left/back (x: 1-3, y: 2-4)
+    const enemySlots = hasValidEnemy ? [
+      { id: "E1", x: 2, y: 2 }
+    ] : [];
+    
+    // Player slots on right/front (x: 5-6, y: 2-4)
+    const playerSlots = players.map((_, index) => ({
+      id: `P${index + 1}`,
+      x: 5 + (index % 2),
+      y: 2 + Math.floor(index / 2)
+    }));
+    
+    const layout = {
+      playerSlots,
+      enemySlots
+    };
+    
+    // Create dungeon grid with entity positions and slot assignments
     const dungeonGrid = {
       width: 8,
       height: 6,
+      layout,
       entities: [
-        // Position players on the left side of the grid
+        // Position players using slots
         ...players.map((p, index) => ({
           id: p.userId,
           type: 'player' as const,
-          x: 2,
-          y: 3 + index,
+          slotId: `P${index + 1}`,
+          x: playerSlots[index].x,
+          y: playerSlots[index].y,
           username: p.username,
           habboAvatar: p.habboAvatar,
           current_hp: p.current_hp,
           max_hp: p.max_hp,
           isDead: p.current_hp <= 0
         })),
-        // Position enemy on the right side if enemy is alive
+        // Position enemy using slot if alive
         ...(hasValidEnemy ? [{
           id: `enemy_${enemyState.name}`,
           type: 'enemy' as const,
-          x: 6,
-          y: 3,
+          slotId: "E1",
+          x: enemySlots[0].x,
+          y: enemySlots[0].y,
           name: enemyState.name,
           sprite: enemyState.sprite,
           current_hp: enemyState.current_hp,
