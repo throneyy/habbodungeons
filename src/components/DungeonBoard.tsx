@@ -3,6 +3,7 @@ interface DungeonEntity {
   type: 'player' | 'enemy';
   x: number;
   y: number;
+  slotId?: string;
   username?: string;
   name?: string;
   habboAvatar?: string | null;
@@ -20,6 +21,7 @@ interface DungeonBoardProps {
   };
   backgroundImageUrl: string | null;
   attackingEntityId?: string;
+  targetEntityId?: string;
   damageDealt?: { entityId: string; amount: number };
 }
 
@@ -29,8 +31,13 @@ export const DungeonBoard = ({
   dungeon, 
   backgroundImageUrl,
   attackingEntityId,
+  targetEntityId,
   damageDealt
 }: DungeonBoardProps) => {
+  // Find target entity position for attack animations
+  const targetEntity = dungeon.entities.find(e => e.id === targetEntityId);
+  const targetX = targetEntity?.x;
+  const targetY = targetEntity?.y;
   return (
     <div 
       className="absolute inset-0 w-full h-full"
@@ -65,6 +72,8 @@ export const DungeonBoard = ({
             isDead={entity.isDead}
             isAttacking={attackingEntityId === entity.id}
             damage={damageDealt?.entityId === entity.id ? damageDealt.amount : undefined}
+            targetX={attackingEntityId === entity.id ? targetX : undefined}
+            targetY={attackingEntityId === entity.id ? targetY : undefined}
           />
         ))}
       </div>

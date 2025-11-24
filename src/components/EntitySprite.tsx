@@ -12,6 +12,8 @@ interface EntitySpriteProps {
   isDead?: boolean;
   isAttacking?: boolean;
   damage?: number;
+  targetX?: number;
+  targetY?: number;
 }
 
 const TILE_WIDTH = 64;
@@ -28,9 +30,13 @@ export const EntitySprite = ({
   name,
   isDead,
   isAttacking,
-  damage
+  damage,
+  targetX,
+  targetY
 }: EntitySpriteProps) => {
   const [showDamage, setShowDamage] = useState(false);
+  const [animatePosition, setAnimatePosition] = useState({ x, y });
+  const [avatarAction, setAvatarAction] = useState<'std' | 'wlk' | 'crr'>('std');
 
   useEffect(() => {
     if (damage !== undefined && damage > 0) {
@@ -40,22 +46,60 @@ export const EntitySprite = ({
     }
   }, [damage]);
 
+  // Attack animation for players
+  useEffect(() => {
+    if (type === 'player' && isAttacking && targetX !== undefined && targetY !== undefined) {
+      // Phase 1: Move toward target
+      setAvatarAction('wlk');
+      const moveX = x + (targetX - x) * 0.4;
+      const moveY = y + (targetY - y) * 0.4;
+      setAnimatePosition({ x: moveX, y: moveY });
+      
+      // Phase 2: Attack pose at impact
+      const attackTimer = setTimeout(() => {
+        setAvatarAction('crr');
+      }, 300);
+      
+      // Phase 3: Return to original position
+      const returnTimer = setTimeout(() => {
+        setAnimatePosition({ x, y });
+        setAvatarAction('std');
+      }, 700);
+      
+      return () => {
+        clearTimeout(attackTimer);
+        clearTimeout(returnTimer);
+      };
+    } else {
+      setAnimatePosition({ x, y });
+      setAvatarAction('std');
+    }
+  }, [isAttacking, type, x, y, targetX, targetY]);
+
   // Convert grid coordinates to isometric screen position
   // Scale up for better visibility
   const SCALE = 2.5; // Make entities much larger
-  const isoX = (x - y) * (TILE_WIDTH / 2) * SCALE;
-  const isoY = (x + y) * (TILE_HEIGHT / 2) * SCALE;
+  const isoX = (animatePosition.x - animatePosition.y) * (TILE_WIDTH / 2) * SCALE;
+  const isoY = (animatePosition.x + animatePosition.y) * (TILE_HEIGHT / 2) * SCALE;
   
   // Calculate z-index based on depth (entities further back have lower z-index)
-  const zIndex = 100 + x + y;
+  const zIndex = 100 + Math.floor(animatePosition.x + animatePosition.y);
 
-  // Fix sprite path - it's already resolved from ENEMY_SPRITES mapping in Battle.tsx
+  // Generate player avatar URL with action and direction
+  // Direction 4 = facing left/back toward enemies, direction 2 = default
+  const playerDirection = type === 'player' && targetX !== undefined && targetX < x ? '4' : '2';
   const imageUrl = type === 'player' 
-    ? (habboAvatar || '/placeholder.svg')
+    ? (habboAvatar 
+        ? habboAvatar.replace(/action=[^&]*/, `action=${avatarAction}`).replace(/direction=\d/, `direction=${playerDirection}`)
+        : '/placeholder.svg'
+      )
     : (sprite || '/placeholder.svg');
 
   // Scale sprite size for prominence
   const spriteSize = type === 'player' ? 120 : 160;
+  
+  // Enemy flip if on right side (shouldn't happen normally, but future-proofing)
+  const shouldFlipEnemy = type === 'enemy' && x > 4;
 
   return (
     <div
@@ -63,9 +107,9 @@ export const EntitySprite = ({
         position: 'absolute',
         left: `calc(50% + ${isoX}px)`,
         top: `calc(50% + ${isoY}px)`,
-        transform: isAttacking ? 'translate(-50%, -100%) scale(1.15)' : 'translate(-50%, -100%)',
+        transform: `translate(-50%, -100%) ${isAttacking ? 'scale(1.15)' : ''} ${type === 'enemy' && isAttacking ? 'translateX(-5px)' : ''}`,
         zIndex,
-        transition: 'all 0.3s ease-out',
+        transition: 'left 0.3s ease-out, top 0.3s ease-out, transform 0.2s ease-out',
         filter: isDead ? 'grayscale(100%) brightness(0.5)' : 'none',
       }}
       className="drop-shadow-2xl"
@@ -81,6 +125,7 @@ export const EntitySprite = ({
             width: `${spriteSize}px`,
             height: 'auto',
             filter: isAttacking ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255,255,255,0.8))' : 'brightness(1.1)',
+            transform: shouldFlipEnemy ? 'scaleX(-1)' : 'none',
           }}
         />
         

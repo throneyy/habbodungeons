@@ -306,6 +306,7 @@ const Battle = () => {
   const [dungeonBackground, setDungeonBackground] = useState<string | null>(null);
   const [backgroundLoading, setBackgroundLoading] = useState(false);
   const [attackingEntityId, setAttackingEntityId] = useState<string | undefined>();
+  const [targetEntityId, setTargetEntityId] = useState<string | undefined>();
   const [damageDealt, setDamageDealt] = useState<{ entityId: string; amount: number } | undefined>();
   
   // Turn-based combat state
@@ -1650,10 +1651,17 @@ const Battle = () => {
       return;
     }
 
-    // Trigger attack animation
+    // Trigger attack animation - player attacks enemy
     if (currentUserId && battleData?.dungeon) {
-      setAttackingEntityId(currentUserId);
-      setTimeout(() => setAttackingEntityId(undefined), 300);
+      const enemyEntity = battleData.dungeon.entities.find(e => e.type === 'enemy');
+      if (enemyEntity) {
+        setAttackingEntityId(currentUserId);
+        setTargetEntityId(enemyEntity.id);
+        setTimeout(() => {
+          setAttackingEntityId(undefined);
+          setTargetEntityId(undefined);
+        }, 700);
+      }
     }
 
     setLoading(true);
@@ -1705,6 +1713,17 @@ const Battle = () => {
           setTimeout(() => {
             console.log("Setting playerHit to TRUE - Enemy dealt", data.enemyDamageDealt, "damage");
             setPlayerHit(true);
+            
+            // Trigger enemy attack animation
+            const enemyEntity = data.battleData?.dungeon?.entities.find((e: any) => e.type === 'enemy');
+            if (enemyEntity && currentUserId) {
+              setAttackingEntityId(enemyEntity.id);
+              setTargetEntityId(currentUserId);
+              setTimeout(() => {
+                setAttackingEntityId(undefined);
+                setTargetEntityId(undefined);
+              }, 300);
+            }
             
             // Show damage on dungeon board entity (current user)
             if (currentUserId) {
@@ -2683,6 +2702,7 @@ const Battle = () => {
               }}
               backgroundImageUrl={dungeonBackground || dungeonBg}
               attackingEntityId={attackingEntityId}
+              targetEntityId={targetEntityId}
               damageDealt={damageDealt}
             />
           )}
