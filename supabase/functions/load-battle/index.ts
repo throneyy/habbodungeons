@@ -292,10 +292,10 @@ serve(async (req) => {
     const numPlayers = players.length;
     const numEnemies = hasValidEnemy ? 1 : 0;
     
-    // Enemy slots on left/back - pushed far back toward the wall
-    // Using very low x+y sums to position enemies at the back of the isometric floor
+    // Enemy slots on left/back - pushed even further back toward the wall
+    // Using very low x+y to position enemies at the furthest back of the isometric floor
     const enemySlots = hasValidEnemy ? [
-      { id: "E1", x: 1, y: 1 }  // Far back left corner, against the wall
+      { id: "E1", x: 1, y: 0 }  // Far back, against the rear wall
     ] : [];
     
     // Player slots in center-right area - pulled toward center of arena
