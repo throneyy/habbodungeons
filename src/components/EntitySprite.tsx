@@ -26,11 +26,12 @@ const TILE_WIDTH = 64;
 const TILE_HEIGHT = 32;
 
 // Arena margin system to prevent entities from being cut off at edges
+// These values ensure all characters stay within the visible floor area
 const ARENA_MARGIN = {
-  bottom: 90,   // keeps players from touching the bottom edge
-  top: 60,      // prevents enemies from touching top border
-  left: 80,
-  right: 80
+  bottom: 120,  // Large bottom margin to keep players fully visible
+  top: 80,      // Top margin prevents enemies from touching top border
+  left: 100,    // Left margin for enemy positioning
+  right: 100    // Right margin for player positioning
 };
 
 export const EntitySprite = ({
@@ -102,8 +103,15 @@ export const EntitySprite = ({
   const rawIsoY = (animatePosition.x + animatePosition.y) * (TILE_HEIGHT / 2) * SCALE;
   
   // Apply margins to keep entities within safe arena bounds
-  const isoX = rawIsoX + ARENA_MARGIN.left;
-  const isoY = rawIsoY + ARENA_MARGIN.top;
+  let isoX = rawIsoX + ARENA_MARGIN.left;
+  let isoY = rawIsoY + ARENA_MARGIN.top;
+  
+  // Clamp positions to ensure they never exceed arena bounds
+  // Assume arena dimensions based on typical viewport
+  const ARENA_WIDTH = 1600;
+  const ARENA_HEIGHT = 800;
+  isoX = Math.max(ARENA_MARGIN.left, Math.min(isoX, ARENA_WIDTH - ARENA_MARGIN.right));
+  isoY = Math.max(ARENA_MARGIN.top, Math.min(isoY, ARENA_HEIGHT - ARENA_MARGIN.bottom));
   
   // Calculate z-index based on depth (entities further back have lower z-index)
   const zIndex = 100 + Math.floor(animatePosition.x + animatePosition.y);

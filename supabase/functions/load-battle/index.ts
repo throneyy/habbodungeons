@@ -292,19 +292,21 @@ serve(async (req) => {
     const numPlayers = players.length;
     const numEnemies = hasValidEnemy ? 1 : 0;
     
-    // Enemy slots on left/back with safe margins
+    // Enemy slots on left/back - positioned high to stay within bounds
+    // Using low x+y sums to keep enemies toward top of isometric floor
     const enemySlots = hasValidEnemy ? [
-      { id: "E1", x: 2, y: 3 }  // Positioned higher to avoid top edge
+      { id: "E1", x: 2, y: 2 }  // Left side, higher up on floor
     ] : [];
     
-    // Player slots in diagonal line on right side with safe margins
-    // Front player starts at x=5, y=4 (well within bounds)
-    const baseX = 5;
-    const baseY = 4;
+    // Player slots in diagonal line on right side - positioned high to avoid bottom clipping
+    // Using moderate x (right side) with LOW y values (keeps them high on floor)
+    // Front player at (6,2), back players step diagonally up-left
+    const baseX = 6;  // Right side of arena
+    const baseY = 2;  // Low y = higher up on isometric floor
     const playerSlots = players.map((_, index) => ({
       id: `P${index + 1}`,
-      x: baseX - index,     // Move up-left with each player
-      y: baseY - index      // Diagonal stagger along isometric angle
+      x: baseX - index,     // Move left with each player
+      y: baseY - index      // Move up with each player (lower y = higher on screen)
     }));
     
     const layout = {
