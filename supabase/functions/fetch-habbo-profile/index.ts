@@ -22,8 +22,17 @@ serve(async (req) => {
       console.log(`Verification code provided: ${verificationCode}`);
     }
 
-    // Fetch from bobba.me API which includes skill levels
-    const response = await fetch(`https://api.bobba.me/habboGET?username=${encodeURIComponent(username)}`);
+    // Try bobba.me API first (includes skill levels)
+    let response = await fetch(`https://api.bobba.me/habboGET?username=${encodeURIComponent(username)}`);
+    let usedBobbaApi = false;
+    
+    if (response.ok) {
+      usedBobbaApi = true;
+    } else {
+      console.warn(`Bobba API failed with status ${response.status}, falling back to Habbo Origins API`);
+      // Fallback to Habbo Origins API
+      response = await fetch(`https://origins.habbo.com/api/public/users?name=${encodeURIComponent(username)}`);
+    }
     
     console.log(`Habbo API response status: ${response.status}`);
     
@@ -40,21 +49,43 @@ serve(async (req) => {
     const data = await response.json();
     console.log(`Habbo API response data:`, data);
 
-    if (!data || !data.mainDetails || !data.mainDetails.name) {
-      throw new Error("Invalid response from Habbo API");
+    let profileData;
+    
+    if (usedBobbaApi) {
+      // Bobba.me API format
+      if (!data || !data.mainDetails || !data.mainDetails.name) {
+        throw new Error("Invalid response from Bobba API");
+      }
+      
+      profileData = {
+        name: data.mainDetails.name,
+        figureString: data.mainDetails.figureString,
+        motto: data.mainDetails.motto || "",
+        uniqueId: data.uniqueIds?.uniqueId || null,
+        bouncerPlayerId: data.uniqueIds?.bouncerPlayerId || null,
+        fishingLevel: data.mainDetails.fishingLevel || 0,
+        gardeningLevel: data.mainDetails.gardeningLevel || 0,
+      };
+    } else {
+      // Habbo Origins API format
+      if (!data || !data.name) {
+        throw new Error("Invalid response from Habbo Origins API");
+      }
+      
+      profileData = {
+        name: data.name,
+        figureString: data.figureString,
+        motto: data.motto || "",
+        uniqueId: data.uniqueId || null,
+        bouncerPlayerId: data.bouncerPlayerId || null,
+        fishingLevel: 0, // Origins API doesn't include levels in user endpoint
+        gardeningLevel: 0,
+      };
     }
 
     return new Response(
       JSON.stringify({
-        profile: {
-          name: data.mainDetails.name,
-          figureString: data.mainDetails.figureString,
-          motto: data.mainDetails.motto || "",
-          uniqueId: data.uniqueIds?.uniqueId || null,
-          bouncerPlayerId: data.uniqueIds?.bouncerPlayerId || null,
-          fishingLevel: data.mainDetails.fishingLevel || 0,
-          gardeningLevel: data.mainDetails.gardeningLevel || 0,
-        },
+        profile: profileData,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
