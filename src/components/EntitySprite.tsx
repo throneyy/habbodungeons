@@ -107,8 +107,8 @@ export const EntitySprite = ({
       )
     : (sprite || '/placeholder.svg');
 
-  // Scale sprite size for prominence
-  const spriteSize = type === 'player' ? 120 : 160;
+  // Scale sprite size for prominence - larger for better visibility at full resolution
+  const spriteSize = type === 'player' ? 120 : 200;
 
   return (
     <div
