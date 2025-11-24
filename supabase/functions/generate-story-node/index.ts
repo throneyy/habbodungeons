@@ -124,7 +124,10 @@ serve(async (req) => {
     console.log("Battle state loaded:", battleState.id, "Room:", battleState.current_room_index);
 
     // Check if there's already a story node for this room (prevent regeneration)
-    if (battleState.current_story_node) {
+    // But make sure it's a real story node, not the temporary "generating" marker
+    if (battleState.current_story_node && 
+        !battleState.current_story_node.generating &&
+        battleState.current_story_node.storyText) {
       console.log("Returning existing story node for room", battleState.current_room_index);
       return new Response(JSON.stringify({ storyNode: battleState.current_story_node }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
