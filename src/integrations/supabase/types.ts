@@ -134,6 +134,7 @@ export type Database = {
       }
       dungeons: {
         Row: {
+          ai_background_url: string | null
           created_at: string
           difficulty: string
           dungeon_json: Json
@@ -145,6 +146,7 @@ export type Database = {
           times_played: number | null
         }
         Insert: {
+          ai_background_url?: string | null
           created_at?: string
           difficulty: string
           dungeon_json: Json
@@ -156,6 +158,7 @@ export type Database = {
           times_played?: number | null
         }
         Update: {
+          ai_background_url?: string | null
           created_at?: string
           difficulty?: string
           dungeon_json?: Json
