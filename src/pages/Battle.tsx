@@ -1757,10 +1757,7 @@ const Battle = () => {
             description: "Your party members continue the fight. You'll be revived if they win!",
             variant: "destructive" 
           });
-          // Reload battle to show updated state
-          setTimeout(() => {
-            loadBattle();
-          }, 2000);
+          // Battle state already updated via real-time subscription, no need to reload
         } else if (data.defeat) {
           // Entire party wiped out - show dramatic dialog
           setShowPartyWipeDialog(true);

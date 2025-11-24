@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Nameplate } from './Nameplate';
 import { EnemySprite } from './EnemySprite';
+import explosionHit from '@/assets/explosion-hit.gif';
+import hitBump from '@/assets/hit-bump.gif';
 
 interface EntitySpriteProps {
   id: string;
@@ -41,6 +43,7 @@ export const EntitySprite = ({
   const [showDamage, setShowDamage] = useState(false);
   const [animatePosition, setAnimatePosition] = useState({ x, y });
   const [avatarAction, setAvatarAction] = useState<'std' | 'wlk' | 'crr'>('std');
+  const [showMovementEffect, setShowMovementEffect] = useState(false);
 
   useEffect(() => {
     if (damage !== undefined && damage > 0) {
@@ -55,6 +58,7 @@ export const EntitySprite = ({
     if (type === 'player' && isAttacking && targetX !== undefined && targetY !== undefined) {
       // Phase 1: Move toward target
       setAvatarAction('wlk');
+      setShowMovementEffect(true);
       const moveX = x + (targetX - x) * 0.4;
       const moveY = y + (targetY - y) * 0.4;
       setAnimatePosition({ x: moveX, y: moveY });
@@ -62,6 +66,7 @@ export const EntitySprite = ({
       // Phase 2: Attack pose at impact
       const attackTimer = setTimeout(() => {
         setAvatarAction('crr');
+        setShowMovementEffect(false);
       }, 300);
       
       // Phase 3: Return to original position
@@ -77,6 +82,7 @@ export const EntitySprite = ({
     } else {
       setAnimatePosition({ x, y });
       setAvatarAction('std');
+      setShowMovementEffect(false);
     }
   }, [isAttacking, type, x, y, targetX, targetY]);
 
@@ -117,6 +123,24 @@ export const EntitySprite = ({
       }}
       className="drop-shadow-2xl"
     >
+      {/* Movement effect under feet */}
+      {showMovementEffect && (
+        <img
+          src={hitBump}
+          alt=""
+          className="absolute pixelated select-none pointer-events-none"
+          style={{
+            bottom: '-10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '80px',
+            height: 'auto',
+            imageRendering: 'pixelated',
+            zIndex: -1,
+          }}
+        />
+      )}
+
       {/* Entity sprite with glow effect */}
       <div className="relative">
         {type === 'player' ? (
@@ -142,6 +166,23 @@ export const EntitySprite = ({
               width: `${spriteSize}px`,
               height: 'auto',
               filter: isAttacking ? 'brightness(1.5) drop-shadow(0 0 20px rgba(255,255,255,0.8))' : 'brightness(1.1)',
+            }}
+          />
+        )}
+        
+        {/* Damage effect on body */}
+        {showDamage && damage && damage > 0 && (
+          <img
+            src={explosionHit}
+            alt=""
+            className="absolute pixelated select-none pointer-events-none"
+            style={{
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '120px',
+              height: 'auto',
+              imageRendering: 'pixelated',
             }}
           />
         )}
