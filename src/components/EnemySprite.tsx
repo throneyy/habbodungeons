@@ -32,11 +32,12 @@ export const EnemySprite = ({
     <img
       src={spriteUrl}
       alt={alt || name || 'Enemy'}
-      className={className}
+      className={`${className} pixelated`}
       style={{
         imageRendering: 'pixelated',
         transform: needsFlip ? 'scaleX(-1)' : 'none',
         transformOrigin: 'center',
+        objectFit: 'contain',
         ...style,
       }}
     />
