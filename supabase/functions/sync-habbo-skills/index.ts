@@ -78,45 +78,17 @@ serve(async (req) => {
     const habboUsername = profile.habbo_username;
     console.log('Fetching skills for Habbo user:', habboUsername);
 
-    // Fetch skills from Habbo Origins API
-    let fishingLevel = 0;
-    let gardeningLevel = 0;
-
-    try {
-      const skillsResponse = await fetch(
-        `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboUsername)}`
-      );
-      
-      if (!skillsResponse.ok) {
-        throw new Error(`Habbo API returned status ${skillsResponse.status}`);
-      }
-
-      const skillsData = await skillsResponse.json();
-      console.log('Skills data from Habbo Origins:', skillsData);
-
-      // Parse fishing and gardening levels from the response
-      // The structure may vary - adjust based on actual API response
-      if (skillsData.skills) {
-        const fishingSkill = skillsData.skills.find((s: any) => 
-          s.name?.toLowerCase() === 'fishing' || s.type?.toLowerCase() === 'fishing'
-        );
-        const gardeningSkill = skillsData.skills.find((s: any) => 
-          s.name?.toLowerCase() === 'gardening' || s.type?.toLowerCase() === 'gardening'
-        );
-
-        fishingLevel = fishingSkill?.level || 0;
-        gardeningLevel = gardeningSkill?.level || 0;
-      } else {
-        // If the response structure is different, try direct properties
-        fishingLevel = skillsData.fishing?.level || skillsData.fishingLevel || 0;
-        gardeningLevel = skillsData.gardening?.level || skillsData.gardeningLevel || 0;
-      }
-
-      console.log('Parsed levels - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
-    } catch (error: any) {
-      console.error('Failed to fetch skills from Habbo Origins:', error);
-      throw new Error(`Could not fetch skills from Habbo Origins: ${error.message || 'Unknown error'}`);
-    }
+    // For now, return mock data since the Habbo Origins API requires a player ID, not username
+    // TODO: Need to store and use the actual Habbo Origins uniquePlayerId during account linking
+    console.warn('Habbo Origins API integration not yet fully implemented - using mock data');
+    console.log('To implement: Need to obtain uniquePlayerId from Habbo Origins during account linking');
+    console.log('API endpoint requires: GET /api/public/skills/{uniquePlayerId}');
+    
+    // Return mock data for testing
+    const fishingLevel = 0;
+    const gardeningLevel = 0;
+    
+    console.log('Using mock levels - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
 
     // Calculate unlocked skills
     const unlockedSkills = getUnlockedSkills(fishingLevel, gardeningLevel);
