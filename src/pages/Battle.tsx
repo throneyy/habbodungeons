@@ -12,6 +12,7 @@ import { PartyWipeDialog } from "@/components/PartyWipeDialog";
 import { ItemTooltip } from "@/components/ItemTooltip";
 import { QuestDetailsDialog } from "@/components/QuestDetailsDialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { DungeonBoard } from "@/components/DungeonBoard";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
@@ -182,6 +183,23 @@ interface BattleData {
       skillType?: string;
     }>;
   } | null;
+  dungeon?: {
+    width: number;
+    height: number;
+    entities: Array<{
+      id: string;
+      type: 'player' | 'enemy';
+      x: number;
+      y: number;
+      username?: string;
+      name?: string;
+      habboAvatar?: string | null;
+      sprite?: string;
+      current_hp?: number;
+      max_hp?: number;
+      isDead?: boolean;
+    }>;
+  };
 }
 
 interface Profile {
@@ -287,6 +305,8 @@ const Battle = () => {
   // AI dungeon background state
   const [dungeonBackground, setDungeonBackground] = useState<string | null>(null);
   const [backgroundLoading, setBackgroundLoading] = useState(false);
+  const [attackingEntityId, setAttackingEntityId] = useState<string | undefined>();
+  const [damageDealt, setDamageDealt] = useState<{ entityId: string; amount: number } | undefined>();
   
   // Turn-based combat state
   const isMyTurn = !battleData?.isPartyBattle || battleData?.currentTurnUserId === currentUserId;
@@ -1630,6 +1650,12 @@ const Battle = () => {
       return;
     }
 
+    // Trigger attack animation
+    if (currentUserId && battleData?.dungeon) {
+      setAttackingEntityId(currentUserId);
+      setTimeout(() => setAttackingEntityId(undefined), 300);
+    }
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("resolve-turn", {
@@ -1660,6 +1686,14 @@ const Battle = () => {
         if (data.playerDamageDealt && data.playerDamageDealt > 0) {
           console.log("Setting enemyHit to TRUE - Player dealt", data.playerDamageDealt, "damage");
           setEnemyHit(true);
+          
+          // Show damage on dungeon board entity
+          const enemyEntity = battleData?.dungeon?.entities.find(e => e.type === 'enemy');
+          if (enemyEntity) {
+            setDamageDealt({ entityId: enemyEntity.id, amount: data.playerDamageDealt });
+            setTimeout(() => setDamageDealt(undefined), 1000);
+          }
+          
           setTimeout(() => {
             console.log("Resetting enemyHit to FALSE");
             setEnemyHit(false);
@@ -1671,6 +1705,13 @@ const Battle = () => {
           setTimeout(() => {
             console.log("Setting playerHit to TRUE - Enemy dealt", data.enemyDamageDealt, "damage");
             setPlayerHit(true);
+            
+            // Show damage on dungeon board entity (current user)
+            if (currentUserId) {
+              setDamageDealt({ entityId: currentUserId, amount: data.enemyDamageDealt });
+              setTimeout(() => setDamageDealt(undefined), 1000);
+            }
+            
             setTimeout(() => {
               console.log("Resetting playerHit to FALSE");
               setPlayerHit(false);
@@ -2616,17 +2657,16 @@ const Battle = () => {
 
   // Render battle mode
   return (
-    <div className="min-h-screen bg-background relative">
-      {/* AI-Generated Dungeon Background */}
-      <div 
-        className="fixed inset-0 opacity-30 bg-center bg-cover transition-opacity duration-500"
-        style={{ 
-          backgroundImage: dungeonBackground 
-            ? `url(${dungeonBackground})` 
-            : `url(${dungeonBg})`,
-          filter: backgroundLoading ? 'blur(8px)' : 'none'
-        }}
-      />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Dungeon Board with AI-generated background and isometric entities */}
+      {battleData?.dungeon && (
+        <DungeonBoard 
+          dungeon={battleData.dungeon}
+          backgroundImageUrl={dungeonBackground || dungeonBg}
+          attackingEntityId={attackingEntityId}
+          damageDealt={damageDealt}
+        />
+      )}
       
       {/* Background Loading Indicator */}
       {backgroundLoading && (

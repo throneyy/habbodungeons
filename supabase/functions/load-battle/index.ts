@@ -288,6 +288,38 @@ serve(async (req) => {
       throw new Error('No players found in this battle. The server may be empty or battle state is invalid.');
     }
     
+    // Create dungeon grid with entity positions
+    const dungeonGrid = {
+      width: 8,
+      height: 6,
+      entities: [
+        // Position players on the left side of the grid
+        ...players.map((p, index) => ({
+          id: p.userId,
+          type: 'player' as const,
+          x: 2,
+          y: 3 + index,
+          username: p.username,
+          habboAvatar: p.habboAvatar,
+          current_hp: p.current_hp,
+          max_hp: p.max_hp,
+          isDead: p.current_hp <= 0
+        })),
+        // Position enemy on the right side if enemy is alive
+        ...(hasValidEnemy ? [{
+          id: `enemy_${enemyState.name}`,
+          type: 'enemy' as const,
+          x: 6,
+          y: 3,
+          name: enemyState.name,
+          sprite: enemyState.sprite,
+          current_hp: enemyState.current_hp,
+          max_hp: enemyState.max_hp,
+          isDead: enemyState.current_hp <= 0
+        }] : [])
+      ]
+    };
+    
     const battleData = {
       enemy: enemyState,
       players: players, // Array of all players (party or solo)
@@ -309,7 +341,8 @@ serve(async (req) => {
       isPartyBattle: !!(battle.server_id || battle.party_id),
       currentTurnUserId: battle.current_turn_user_id,
       turnOrder: battle.turn_order || [],
-      current_story_node: battle.current_story_node || null
+      current_story_node: battle.current_story_node || null,
+      dungeon: dungeonGrid
     };
 
     return new Response(
