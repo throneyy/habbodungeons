@@ -20,29 +20,15 @@ export const useTextToSpeech = () => {
     try {
       setIsLoading(true);
 
+      // Try ElevenLabs first
       const { data, error } = await supabase.functions.invoke('text-to-speech', {
         body: { text, voice }
       });
 
-      if (error) {
-        console.error('TTS error:', error);
-        toast({
-          title: "Text-to-speech unavailable",
-          description: error.message || "Please check your ElevenLabs credits or try a shorter text",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      if (!data.audioContent) {
-        if (data.error) {
-          toast({
-            title: "Text-to-speech failed",
-            description: data.error,
-            variant: "destructive"
-          });
-        }
-        console.warn('No audio content received from TTS');
+      if (error || !data?.audioContent) {
+        // Fall back to browser TTS
+        console.log('ElevenLabs unavailable, using browser TTS fallback');
+        useBrowserTTS(text);
         return;
       }
 
@@ -66,20 +52,48 @@ export const useTextToSpeech = () => {
       audio.onerror = () => {
         setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
-        toast({
-          title: "Audio Error",
-          description: "Failed to play audio",
-          variant: "destructive"
-        });
+        // Fall back to browser TTS on audio playback error
+        useBrowserTTS(text);
       };
 
       await audio.play();
     } catch (error) {
-      console.warn('Text-to-speech error:', error);
-      // Silently fail - TTS is a nice-to-have feature, not critical
+      console.warn('ElevenLabs error, falling back to browser TTS:', error);
+      useBrowserTTS(text);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const useBrowserTTS = (text: string) => {
+    if (!('speechSynthesis' in window)) {
+      toast({
+        title: "Text-to-speech unavailable",
+        description: "Your browser doesn't support text-to-speech",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9; // Slightly slower for better clarity
+    utterance.pitch = 1.0;
+    
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => {
+      setIsPlaying(false);
+      toast({
+        title: "Speech Error",
+        description: "Browser text-to-speech failed",
+        variant: "destructive"
+      });
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const stop = () => {
