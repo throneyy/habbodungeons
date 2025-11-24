@@ -3,6 +3,9 @@ project_id = "cswyarorrvzbunodiftf"
 [functions.cleanup-completed-servers]
 verify_jwt = false
 
+[functions.generate-dungeon-background]
+verify_jwt = true
+
 [functions.request-password-reset]
 verify_jwt = false
 

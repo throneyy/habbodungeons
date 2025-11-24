@@ -284,6 +284,10 @@ const Battle = () => {
   const [enemyHit, setEnemyHit] = useState(false);
   const [showPartyWipeDialog, setShowPartyWipeDialog] = useState(false);
   
+  // AI dungeon background state
+  const [dungeonBackground, setDungeonBackground] = useState<string | null>(null);
+  const [backgroundLoading, setBackgroundLoading] = useState(false);
+  
   // Turn-based combat state
   const isMyTurn = !battleData?.isPartyBattle || battleData?.currentTurnUserId === currentUserId;
   const currentTurnPlayer = battleData?.players?.find(p => p.userId === battleData?.currentTurnUserId);
@@ -389,7 +393,47 @@ const Battle = () => {
     loadCurrentUser();
     checkExistingParty();
     loadInventory();
+    generateDungeonBackground();
   }, [id]);
+
+  // Generate or fetch AI dungeon background
+  const generateDungeonBackground = async () => {
+    if (!id) return;
+    
+    setBackgroundLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-dungeon-background', {
+        body: {
+          theme: battleData?.dungeon_theme || 'ice_winter',
+          difficulty: battleData?.dungeon_difficulty === 'Hardcore' ? 2 : 1,
+          dungeonId: id
+        }
+      });
+
+      if (error) {
+        console.error('Error generating dungeon background:', error);
+        toast({
+          title: "Background Generation Failed",
+          description: "Using default background instead.",
+          variant: "destructive"
+        });
+      } else if (data?.imageUrl) {
+        setDungeonBackground(data.imageUrl);
+        console.log('Dungeon background loaded:', data.imageUrl);
+      }
+    } catch (err) {
+      console.error('Failed to generate background:', err);
+    } finally {
+      setBackgroundLoading(false);
+    }
+  };
+
+  // Re-generate background when battle data loads with theme info
+  useEffect(() => {
+    if (battleData && !dungeonBackground && !backgroundLoading) {
+      generateDungeonBackground();
+    }
+  }, [battleData?.dungeon_theme, battleData?.dungeon_difficulty]);
 
   // Set up Realtime subscription for battle state changes
   useEffect(() => {
@@ -2573,10 +2617,24 @@ const Battle = () => {
   // Render battle mode
   return (
     <div className="min-h-screen bg-background relative">
+      {/* AI-Generated Dungeon Background */}
       <div 
-        className="fixed inset-0 opacity-20 bg-center bg-cover"
-        style={{ backgroundImage: `url(${dungeonBg})` }}
+        className="fixed inset-0 opacity-30 bg-center bg-cover transition-opacity duration-500"
+        style={{ 
+          backgroundImage: dungeonBackground 
+            ? `url(${dungeonBackground})` 
+            : `url(${dungeonBg})`,
+          filter: backgroundLoading ? 'blur(8px)' : 'none'
+        }}
       />
+      
+      {/* Background Loading Indicator */}
+      {backgroundLoading && (
+        <div className="fixed top-4 right-4 z-50 bg-habbo-dark/90 border-2 border-primary rounded-lg px-4 py-2 flex items-center gap-2">
+          <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
+          <span className="text-sm font-bold text-foreground">Generating dungeon...</span>
+        </div>
+      )}
       
       <div className="relative z-10 p-8">
         <div className="max-w-7xl mx-auto space-y-6">
