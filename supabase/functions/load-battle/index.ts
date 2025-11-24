@@ -297,11 +297,13 @@ serve(async (req) => {
       { id: "E1", x: 2, y: 2 }
     ] : [];
     
-    // Player slots on right/front with better horizontal spacing
+    // Player slots in diagonal line on right side (front to back, matching isometric angle)
+    const baseX = 6; // Front-right position
+    const baseY = 3;
     const playerSlots = players.map((_, index) => ({
       id: `P${index + 1}`,
-      x: 4 + (index % 2) * 2, // Spread horizontally: 4, 6, 4, 6...
-      y: 2 + Math.floor(index / 2)
+      x: baseX - index,     // Move up-left with each player
+      y: baseY - index      // Diagonal stagger along isometric angle
     }));
     
     const layout = {
