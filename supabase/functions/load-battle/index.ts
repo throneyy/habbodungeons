@@ -292,14 +292,15 @@ serve(async (req) => {
     const numPlayers = players.length;
     const numEnemies = hasValidEnemy ? 1 : 0;
     
-    // Enemy slots on left/back (x: 1-3, y: 2-4)
+    // Enemy slots on left/back with safe margins
     const enemySlots = hasValidEnemy ? [
-      { id: "E1", x: 2, y: 2 }
+      { id: "E1", x: 2, y: 3 }  // Positioned higher to avoid top edge
     ] : [];
     
-    // Player slots in diagonal line on right side (front to back, matching isometric angle)
-    const baseX = 6; // Front-right position
-    const baseY = 3;
+    // Player slots in diagonal line on right side with safe margins
+    // Front player starts at x=5, y=4 (well within bounds)
+    const baseX = 5;
+    const baseY = 4;
     const playerSlots = players.map((_, index) => ({
       id: `P${index + 1}`,
       x: baseX - index,     // Move up-left with each player
