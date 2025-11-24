@@ -541,6 +541,13 @@ Make it feel dangerous, not dramatic.`
     const aiData = await aiResponse.json();
     console.log("AI response:", JSON.stringify(aiData).substring(0, 300));
     
+    // Check for error responses from AI API
+    if (aiData.type === 'payment_required' || aiData.error || !aiData.choices) {
+      const errorMsg = aiData.message || aiData.error || 'AI generation failed';
+      console.error("AI API error:", aiData);
+      throw new Error(`AI generation failed: ${errorMsg}`);
+    }
+    
     // Extract structured output from tool call
     const toolCall = aiData.choices[0].message.tool_calls?.[0];
     if (!toolCall || !toolCall.function || !toolCall.function.arguments) {
