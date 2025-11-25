@@ -10,6 +10,7 @@ import { STORE_ITEMS, getCategoryItems, type StoreItem } from "@/lib/storeItems"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import bookcaseImage from "@/assets/medieval-bookcase.gif";
 import fantasyVillageImage from "@/assets/fantasy-village-square.png";
+import frostkeepMerchantTitle from "@/assets/frostkeep-merchant-title.gif";
 import { getDailyBooks, getMaterialImage, type DailyBook } from "@/lib/dailyBooks";
 import { Sparkles } from "lucide-react";
 import { getNPCById } from "@/lib/npcData";
@@ -349,11 +350,19 @@ export default function Store() {
   return (
     <AppLayout>
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        <HabboPanel title="The Frostkeep Merchant" className="mb-6 relative overflow-hidden">
+        <HabboPanel className="mb-6 relative overflow-hidden">
           <div 
             className="absolute inset-0 opacity-15 bg-center bg-no-repeat pointer-events-none"
             style={{ backgroundImage: `url(${fantasyVillageImage})`, backgroundSize: '140%' }}
           />
+          <div className="relative z-10 mb-6">
+            <img 
+              src={frostkeepMerchantTitle} 
+              alt="The Frostkeep Merchant" 
+              className="pixel-icon"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </div>
           <div className="flex flex-col lg:flex-row gap-6 items-start relative z-10">
             {/* Left Side - Bookcase */}
             <div className="flex-shrink-0">
