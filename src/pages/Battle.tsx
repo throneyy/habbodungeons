@@ -34,7 +34,6 @@ import frostMutant from "@/assets/frost-mutant.png";
 import frostWraith from "@/assets/frost-wraith.png";
 import undeadHabbo from "@/assets/undead-habbo.png";
 import frostbiteSpider from "@/assets/frostbite-spider.png";
-import iceShade from "@/assets/ice-shade.png";
 import fireDrake from "@/assets/fire-drake.png";
 import bloodDragonBoss from "@/assets/blood-dragon-boss.gif";
 import flamingPhantom from "@/assets/flaming-phantom.png";
@@ -68,7 +67,6 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frost-undead.gif": undeadHabbo,
   "undead-habbo.png": undeadHabbo,
   "frostbite-spider.png": frostbiteSpider,
-  "ice-shade.png": iceShade,
   "fire-drake.png": fireDrake,
   "blood-dragon-boss.gif": bloodDragonBoss,
   "flaming-phantom.png": flamingPhantom,
