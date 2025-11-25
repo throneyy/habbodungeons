@@ -318,6 +318,79 @@ export const STORE_ITEMS: StoreItem[] = [
     goldPrice: 10,
     silverPrice: 90,
     itemType: 'consumable'
+  },
+  // New Weapons
+  {
+    id: 'longsword',
+    name: 'Longsword Sprite',
+    description: 'A versatile blade favored by knights (+18 ATK)',
+    sprite: 'longsword.png',
+    category: 'weapon',
+    goldPrice: 30,
+    silverPrice: 300,
+    itemType: 'weapon'
+  },
+  // New Armor
+  {
+    id: 'blue-robes',
+    name: 'Blue Robes',
+    description: 'Mystical robes that enhance magical power (+10 DEF, +10 MP)',
+    sprite: 'blue-robes.png',
+    category: 'weapon',
+    goldPrice: 25,
+    silverPrice: 250,
+    itemType: 'armor'
+  },
+  {
+    id: 'red-robes',
+    name: 'Red Robes',
+    description: 'Enchanted robes infused with fire magic (+10 DEF, +5 ATK)',
+    sprite: 'red-robes.png',
+    category: 'weapon',
+    goldPrice: 25,
+    silverPrice: 250,
+    itemType: 'armor'
+  },
+  // New Materials
+  {
+    id: 'white-sack',
+    name: 'White Sack',
+    description: 'A clean white sack for storing goods',
+    sprite: 'white-sack.png',
+    category: 'material',
+    goldPrice: 1,
+    silverPrice: 8,
+    itemType: 'material'
+  },
+  {
+    id: 'brown-sack',
+    name: 'Brown Sack',
+    description: 'A sturdy burlap sack for transporting goods',
+    sprite: 'brown-sack.png',
+    category: 'material',
+    goldPrice: 1,
+    silverPrice: 8,
+    itemType: 'material'
+  },
+  {
+    id: 'red-summoning-circle',
+    name: 'Red Summoning Circle',
+    description: 'Powerful red rune circle for summoning rituals',
+    sprite: 'summoning-circle-red.png',
+    category: 'material',
+    goldPrice: 15,
+    silverPrice: 120,
+    itemType: 'material'
+  },
+  {
+    id: 'purple-summoning-circle',
+    name: 'Purple Summoning Circle',
+    description: 'Arcane purple circle for summoning shadow entities',
+    sprite: 'summoning-circle-purple.png',
+    category: 'material',
+    goldPrice: 15,
+    silverPrice: 120,
+    itemType: 'material'
   }
 ];
 

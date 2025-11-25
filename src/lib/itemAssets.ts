@@ -32,6 +32,13 @@ import flamingPhantom from "@/assets/flaming-phantom.png";
 import elixirPotion from "@/assets/elixir-potion.png";
 import royalArmor from "@/assets/royal-armor.png";
 import royalSword from "@/assets/royal-sword.png";
+import longswordSprite from "@/assets/longsword.png";
+import blueRobes from "@/assets/blue-robes.png";
+import redRobes from "@/assets/red-robes.png";
+import whiteSack from "@/assets/white-sack.png";
+import brownSack from "@/assets/brown-sack.png";
+import summoningCircleRed from "@/assets/summoning-circle-red.png";
+import summoningCirclePurple from "@/assets/summoning-circle-purple.png";
 
 import victoryTrophy from "@/assets/victory-trophy.png";
 import rareTreasureChest from "@/assets/rare-treasure-chest.png";
@@ -43,7 +50,7 @@ import ironHelmet from "@/assets/iron-helmet.png";
 import ironLegArmour from "@/assets/iron-leg-armour.png";
 
 export const ITEM_ASSETS: Record<string, string> = {
-  "Rusty Sword": rustySword,
+  "Rusty Sword": fightersSword,
   "Runestones": runestones,
   "Crystal Shards": crystalShards,
   "Gold Coins": goldCoins,
@@ -63,8 +70,6 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Ether": elixer,
   "Elixer": elixer,
   "Elixir Potion": elixirPotion,
-  "Royal Armor": royalArmor,
-  "Royal Sword": royalSword,
   "Everyday Supply Chest": everydaySupplyChest,
   "Rare Treasure Chest": rareTreasureChest,
   "Fighters Sword": fightersSword,
@@ -104,8 +109,10 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Blade": rustySword,
   "Sword": fightersSword,
   "Longsword": warriorsSword,
+  "Longsword Sprite": longswordSprite,
   "Shortsword": fightersSword,
   "Greatsword": warriorsSword,
+  "Royal Sword": royalSword,
   // Keys
   "Key": metalIngot,
   "Old Key": metalIngot,
@@ -145,6 +152,21 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Horned Helmet": hornedHelmet,
   "Iron Helmet": ironHelmet,
   "Iron Leg Armour": ironLegArmour,
+  "Royal Armor": royalArmor,
+  "Blue Robes": blueRobes,
+  "Red Robes": redRobes,
+  "Mage Robes": blueRobes,
+  "Wizard Robes": redRobes,
+  // Sacks
+  "White Sack": whiteSack,
+  "Brown Sack": brownSack,
+  "Flour Sack": whiteSack,
+  "Grain Sack": brownSack,
+  // Summoning Circles
+  "Summoning Circle": summoningCircleRed,
+  "Red Summoning Circle": summoningCircleRed,
+  "Purple Summoning Circle": summoningCirclePurple,
+  "Summoning Rune": summoningCircleRed,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {
@@ -191,6 +213,10 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Iron Helmet": "Standard iron headgear for warriors. +10 DEF",
   "Iron Leg Armour": "Protective plating for your legs. +10 DEF",
   "Royal Armor": "Legendary armor forged for kings. Incredibly rare. +35 DEF",
+  "Blue Robes": "Mystical robes that enhance magical power. +10 DEF, +10 MP",
+  "Red Robes": "Enchanted robes infused with fire magic. +10 DEF, +5 ATK",
+  "Mage Robes": "Traditional mage attire for spellcasters. +8 DEF, +15 MP",
+  "Wizard Robes": "Ancient robes worn by powerful wizards. +12 DEF, +20 MP",
   
   // Consumables - Healing
   "Potion": "Restores 50 HP. A staple for any adventurer.",
@@ -263,6 +289,18 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Flaming Phantom": "Essence of a fire spirit. Burns eternally.",
   "Phantom": "Spectral residue from defeated ghosts.",
   
+  // Sacks
+  "White Sack": "A clean white sack for storing flour or grains.",
+  "Brown Sack": "A sturdy burlap sack for transporting goods.",
+  "Flour Sack": "A sack filled with finely ground flour.",
+  "Grain Sack": "A heavy sack containing dried grains.",
+  
+  // Summoning Items
+  "Summoning Circle": "A mystical circle used to summon creatures from other realms.",
+  "Red Summoning Circle": "A powerful red rune circle for summoning fire-aligned beings.",
+  "Purple Summoning Circle": "An arcane purple circle for summoning shadow entities.",
+  "Summoning Rune": "Ancient runes inscribed for creature summoning rituals.",
+
   "Owl": "Feathers and talons from a mystical owl.",
 };
 
