@@ -164,7 +164,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${castleFortress})`, backgroundSize: '260%' }}
+              style={{ backgroundImage: `url(${castleFortress})`, backgroundSize: '300%' }}
             />
             <div className="relative z-10">
               <img src={pixelSword} alt="Epic Battles" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
@@ -206,7 +206,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${villageMarket})`, backgroundSize: '260%' }}
+              style={{ backgroundImage: `url(${villageMarket})`, backgroundSize: '300%' }}
             />
             <div className="relative z-10">
               <img src={pixelStar} alt="Level Up" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
