@@ -29,24 +29,24 @@ const AVAILABLE_MATERIALS = [
 const ALL_BOOKS = [
   {
     id: 'book_of_wolves',
-    name: 'Book of Wolves',
-    description: 'Summon loyal frost wolves to fight alongside you. These noble beasts are fierce protectors.',
+    name: 'Book of Ancient Treants',
+    description: 'Summon the ancient guardians of the forest. These wise treants bring nature\'s fury.',
     sprite: bookOfWolvesImg,
-    summonType: 'Frost Wolf'
+    summonType: 'Ancient Treant'
   },
   {
     id: 'book_of_rats',
-    name: 'Book of Rats',
-    description: 'Call forth a swarm of intelligent frost rats. Small but cunning creatures.',
+    name: 'Book of Azure Dragons',
+    description: 'Call forth the legendary azure dragons. Masters of the skies and arcane power.',
     sprite: bookOfRatsImg,
-    summonType: 'Frost Rat'
+    summonType: 'Azure Dragon'
   },
   {
     id: 'book_of_drakes',
-    name: 'Book of Drakes',
-    description: 'Summon powerful elemental drakes. These majestic creatures wield devastating magic.',
+    name: 'Book of Emerald Drakes',
+    description: 'Summon powerful emerald drakes. These majestic creatures wield devastating nature magic.',
     sprite: bookOfDrakesImg,
-    summonType: 'Elemental Drake'
+    summonType: 'Emerald Drake'
   },
   {
     id: 'book_of_phoenixes',
@@ -57,10 +57,10 @@ const ALL_BOOKS = [
   },
   {
     id: 'book_of_goblins',
-    name: 'Book of Goblins',
-    description: 'Command goblin allies. These reformed goblins have pledged their loyalty.',
+    name: 'Book of Slumber Bears',
+    description: 'Command the mighty slumber bears. These gentle giants awaken to protect their allies.',
     sprite: bookOfGoblinsImg,
-    summonType: 'Goblin Ally'
+    summonType: 'Slumber Bear'
   }
 ];
 
