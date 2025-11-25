@@ -165,16 +165,16 @@ function generatePrompt(itemName: string, itemType: string, description?: string
   if (itemType.toLowerCase() === 'weapon') {
     // Special prompt for Rusty Sword
     if (itemName.toLowerCase() === 'rusty sword') {
-      return "White Habbo Hotel pixel art mannequin character holding rusty brown weathered sword with orange rust spots, 35x68 pixels, FULLY TRANSPARENT BACKGROUND PNG with alpha channel NO black white or colored backgrounds, isometric 45-degree angle view, clean pixel art style matching fighters-sword.png aesthetic, weapon held in character's hands, Habbo style sprite";
+      return "Rusty brown weathered sword weapon with orange rust spots, isometric 45-degree angle view, 35x68 pixels, ACTUAL transparent PNG with true alpha channel - DO NOT draw checkerboard pattern, DO NOT draw gray/white grid, DO NOT include any background at all, weapon floating on completely empty transparent background (rgba 0,0,0,0), clean pixel art style, vibrant colors. Background must be 100% transparent alpha channel. Do NOT render transparency checkerboard. Do NOT draw background grid. The weapon should float on nothing.";
     }
     
     // Special prompt for Ice Dagger
     if (itemName.toLowerCase() === 'ice dagger') {
-      return "White Habbo Hotel pixel art mannequin character holding blue icy frost dagger, 35x68 pixels, FULLY TRANSPARENT BACKGROUND PNG with alpha channel NO black white or colored backgrounds, isometric 45-degree angle view, clean pixel art style matching fighters-sword.png aesthetic, weapon held in character's hands, Habbo style sprite";
+      return "Blue icy frost dagger weapon with ice crystals, isometric 45-degree angle view, 35x68 pixels, ACTUAL transparent PNG with true alpha channel - DO NOT draw checkerboard pattern, DO NOT draw gray/white grid, DO NOT include any background at all, weapon floating on completely empty transparent background (rgba 0,0,0,0), clean pixel art style, vibrant colors. Background must be 100% transparent alpha channel. Do NOT render transparency checkerboard. Do NOT draw background grid. The weapon should float on nothing.";
     }
     
-    // Generic weapon prompt with mannequin
-    return `White Habbo Hotel pixel art mannequin character holding ${itemName}, 35x68 pixels, FULLY TRANSPARENT BACKGROUND PNG with alpha channel NO black white or colored backgrounds, isometric 45-degree angle view, clean pixel art style matching fighters-sword.png, weapon held in character's hands, Habbo style sprite`;
+    // Generic weapon prompt - weapon only, no mannequin
+    return `${itemName} weapon sprite, isometric 45-degree angle view, 35x68 pixels, ACTUAL transparent PNG with true alpha channel - DO NOT draw checkerboard pattern, DO NOT draw gray/white grid, DO NOT include any background at all, weapon floating on completely empty transparent background (rgba 0,0,0,0), clean pixel art style, vibrant colors. Background must be 100% transparent alpha channel.`;
   }
   
   // Non-weapon items use standard icon style
