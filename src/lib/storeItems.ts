@@ -287,6 +287,37 @@ export const STORE_ITEMS: StoreItem[] = [
     goldPrice: 6,
     silverPrice: 55,
     itemType: 'scroll'
+  },
+  // Very Rare Items
+  {
+    id: 'royal-sword',
+    name: 'Royal Sword',
+    description: 'Legendary blade fit for royalty (+40 ATK)',
+    sprite: 'royal-sword.png',
+    category: 'weapon',
+    goldPrice: 100,
+    silverPrice: 1000,
+    itemType: 'weapon'
+  },
+  {
+    id: 'royal-armor',
+    name: 'Royal Armor',
+    description: 'Legendary armor forged for kings (+35 DEF)',
+    sprite: 'royal-armor.png',
+    category: 'weapon',
+    goldPrice: 100,
+    silverPrice: 1000,
+    itemType: 'armor'
+  },
+  {
+    id: 'elixir-potion',
+    name: 'Elixir Potion',
+    description: 'Powerful elixir that fully restores MP',
+    sprite: 'elixir-potion.png',
+    category: 'consumable',
+    goldPrice: 10,
+    silverPrice: 90,
+    itemType: 'consumable'
   }
 ];
 
