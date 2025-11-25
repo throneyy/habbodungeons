@@ -2797,7 +2797,7 @@ const Battle = () => {
             <DungeonBoard 
               dungeon={{
                 ...(battleData?.dungeon || cachedDungeon)!,
-                entities: battleData.dungeon.entities.map(entity => ({
+                entities: (battleData?.dungeon || cachedDungeon)!.entities.map(entity => ({
                   ...entity,
                   spriteFilename: entity.sprite, // Preserve original filename for direction lookup
                   sprite: entity.type === 'enemy' && entity.sprite
