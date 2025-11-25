@@ -440,7 +440,6 @@ const Battle = () => {
     loadCurrentUser();
     checkExistingParty();
     loadInventory();
-    generateDungeonBackground();
   }, [id]);
 
   // Generate or fetch AI dungeon background
