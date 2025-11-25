@@ -2167,9 +2167,9 @@ const Battle = () => {
               </div>
             </HabboPanel>
 
-            {/* Story Panel Below Log - Only show in story mode */}
+            {/* Story Panel Below Log - Only show in story mode ONCE */}
             {battleData.mode === "story" && (
-              <div className="grid md:grid-cols-3 gap-6">
+              <div key="story-section" className="grid md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
                   <HabboPanel title="The Story Unfolds">
                     <div className="space-y-6">
@@ -2279,9 +2279,9 @@ const Battle = () => {
                         )}
                       </div>
 
-                      {/* Choices - Only show for regular story rooms */}
+                      {/* Choices - Only show for regular story rooms - Single Render */}
                       {(!battleData.room_type || (battleData.room_type !== 'treasure' && battleData.room_type !== 'event')) && activeStoryNode && activeStoryNode.choices && activeStoryNode.choices.length > 0 && (
-                      <div className="space-y-3">
+                      <div key="story-choices" className="space-y-3">
                         {/* Turn-based choice header */}
                         {battleData.isPartyBattle && (
                           <div className={`p-3 rounded-lg border-2 mb-4 ${
@@ -2303,9 +2303,9 @@ const Battle = () => {
                         
                         <h3 className="text-xl font-black mb-4">What will you do?</h3>
                         
-                        {/* Dice input dialog */}
+                        {/* Dice input dialog - Single Instance */}
                         {selectedChoice && selectedChoice.diceRequired && (
-                          <div className="mb-6 p-6 bg-muted border-4 border-habbo-dark rounded-lg space-y-4">
+                          <div key="dice-dialog" className="mb-6 p-6 bg-muted border-4 border-habbo-dark rounded-lg space-y-4">
                             <div className="flex items-start gap-3 mb-2">
                               <img src={diceSprite} alt="Dice" className="w-auto pixelated" />
                               <div className="flex-1">
@@ -2372,7 +2372,8 @@ const Battle = () => {
                           </div>
                         )}
                         
-                        <div className="space-y-3">
+                        {/* Story choices buttons - Render Once with Keys */}
+                        <div key="choice-buttons-container" className="space-y-3">
                           {activeStoryNode.choices.map((choice) => {
                             // Remove the dice check text from the label if it exists
                             const cleanLabel = choice.label.replace(/\s*\[Dice Check:.*?\]\s*$/i, '');
