@@ -230,7 +230,7 @@ Theme: ${battleState.dungeons.theme}
 Current room: ${context.roomIndex + 1}/${dungeonJson.rooms?.length || 10}
 Room type: ${currentRoom.room_type}
 Room description: ${roomDescription}
-${currentRoom.enemy ? `\n**CRITICAL: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\nYou MUST incorporate this EXACT enemy into your story if creating an encounter that could lead to combat. Do NOT invent different enemies.` : ''}
+${currentRoom.enemy ? `\n**CRITICAL ENEMY CONSTRAINT: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\n\n⚠️ MANDATORY RULE FOR COMBAT CHOICES:\n- If you create ANY choice that involves fighting, attacking, or combat, the choice MUST say "Fight ${currentRoom.enemy.name}" or "Attack ${currentRoom.enemy.name}"\n- NEVER write "Fight Ice Shade" or any other enemy name unless that is the EXACT enemy in this room\n- If this room has "${currentRoom.enemy.name}", ALL combat choices must reference "${currentRoom.enemy.name}"\n- Example: "Fight ${currentRoom.enemy.name}!" or "Attack the ${currentRoom.enemy.name}!"\n- DO NOT invent different enemies. Use "${currentRoom.enemy.name}" or write non-combat choices.` : ''}
 ${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
 
 ## WHAT JUST HAPPENED (THIS IS THE IMMEDIATE PRESENT):
