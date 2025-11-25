@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { MainNav } from "@/components/MainNav";
-import dungeonBg from "@/assets/dungeon-bg-isometric.png";
+import dungeonBg from "@/assets/ice-pool-isometric.webp";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import SnowFall from "@/components/SnowFall";
 import { toast } from "sonner";
@@ -60,7 +60,7 @@ const Home = () => {
     <div className="min-h-screen bg-background p-8 relative">
       <SnowFall />
       <div 
-        className="absolute inset-0 opacity-20 bg-center bg-no-repeat"
+        className="absolute inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
         style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '80%' }}
       />
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
@@ -92,7 +92,7 @@ const Home = () => {
         <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 overflow-hidden relative">
           <div 
             className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${icyMountainForest})`, backgroundSize: '140%' }}
+            style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '140%' }}
           />
           <div className="space-y-6 py-8 relative z-10">
             <img 

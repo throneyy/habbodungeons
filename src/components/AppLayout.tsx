@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import SnowFall from "./SnowFall";
 import { MainNav } from "./MainNav";
-import dungeonBg from "@/assets/dungeon-bg-isometric.png";
+import dungeonBg from "@/assets/ice-pool-isometric.webp";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -12,7 +12,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     <div className="min-h-screen bg-background relative">
       <SnowFall />
       <div 
-        className="fixed inset-0 opacity-20 bg-center bg-no-repeat"
+        className="fixed inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
         style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '80%' }}
       />
       
