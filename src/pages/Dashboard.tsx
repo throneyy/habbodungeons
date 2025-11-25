@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Link, Users, Gift, RefreshCw, Shield, Sparkles } from "lucide-react";
+import { LogOut, Link, Users, Gift, RefreshCw, Shield, Sparkles, ShoppingCart } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 
 interface Profile {
@@ -417,6 +417,14 @@ const Dashboard = () => {
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   View Skills
+                </Button>
+                <Button
+                  onClick={() => navigate("/store")}
+                  variant="secondary"
+                  className="font-bold border-4 border-habbo-dark whitespace-nowrap"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Visit Store
                 </Button>
                 <Button
                   onClick={syncSkillsManually}
