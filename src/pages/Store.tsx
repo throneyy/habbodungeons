@@ -348,7 +348,7 @@ export default function Store() {
   return (
     <AppLayout>
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        <HabboPanel title="🏪 The Frostkeep Merchant" className="mb-6">
+        <HabboPanel title="The Frostkeep Merchant" className="mb-6">
           <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* Left Side - Bookcase */}
             <div className="flex-shrink-0">
@@ -414,25 +414,25 @@ export default function Store() {
           </div>
         </HabboPanel>
 
-        <HabboPanel title="⚗️ Consumables" className="mb-6">
+        <HabboPanel title="Consumables" className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getCategoryItems('consumable').map(renderItemCard)}
           </div>
         </HabboPanel>
 
-        <HabboPanel title="⚔️ Weapons" className="mb-6">
+        <HabboPanel title="Weapons" className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getCategoryItems('weapon').map(renderItemCard)}
           </div>
         </HabboPanel>
 
-        <HabboPanel title="🔨 Materials" className="mb-6">
+        <HabboPanel title="Materials" className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getCategoryItems('material').map(renderItemCard)}
           </div>
         </HabboPanel>
 
-        <HabboPanel title="✨ Daily Exclusive Books" className="mb-6">
+        <HabboPanel title="Daily Exclusive Books" className="mb-6">
           <div className="mb-4 p-3 bg-primary/10 border border-primary rounded-lg">
             <p className="text-sm text-center text-foreground">
               <Sparkles className="inline w-4 h-4 mr-1" />
