@@ -2763,7 +2763,7 @@ const Battle = () => {
       <div className="relative h-screen flex flex-col">
         {/* Battle Stage Area - 65% of screen */}
         <div className="relative h-[65vh]">
-          {battleData?.dungeon && (
+          {battleData?.dungeon ? (
             <DungeonBoard 
               dungeon={{
                 ...battleData.dungeon,
@@ -2780,6 +2780,13 @@ const Battle = () => {
               targetEntityId={targetEntityId}
               damageDealt={damageDealt}
             />
+          ) : (
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-habbo-dark">
+              <div className="text-center space-y-4">
+                <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto" />
+                <p className="text-lg font-bold text-foreground">Loading battle arena...</p>
+              </div>
+            </div>
           )}
         </div>
 
