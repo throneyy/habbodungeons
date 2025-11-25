@@ -145,14 +145,4 @@ All colors MUST be HSL.
       opacity: 0;
     }
   }
-  
-  /* Idle floating animation for phantoms */
-  @keyframes idleFloat {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-15px);
-    }
-  }
 }

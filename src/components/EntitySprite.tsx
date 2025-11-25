@@ -162,10 +162,6 @@ export const EntitySprite = React.memo(({
 
   // Scale sprite size for prominence - larger for better visibility at full resolution
   const spriteSize = type === 'player' ? 80 : 240;
-  
-  // Check if this is the Flaming Phantom for floating animation
-  const isPhantom = spriteFilename?.includes('flaming-phantom') || sprite?.includes('flaming-phantom');
-  const shouldFloat = isPhantom && !isAttacking && !showDamage && !isDead;
 
   return (
     <div
@@ -177,7 +173,6 @@ export const EntitySprite = React.memo(({
         zIndex,
         transition: 'left 0.3s ease-out, top 0.3s ease-out, transform 0.2s ease-out',
         filter: isDead ? 'grayscale(100%) brightness(0.5)' : 'none',
-        animation: shouldFloat ? 'idleFloat 2.5s ease-in-out infinite' : 'none',
       }}
       className="drop-shadow-2xl"
     >
