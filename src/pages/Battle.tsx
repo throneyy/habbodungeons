@@ -2825,108 +2825,7 @@ const Battle = () => {
         <div className="relative h-[35vh] bg-gradient-to-b from-black/40 via-habbo-dark/98 to-habbo-dark overflow-y-auto shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.8)]">
           <div className="max-w-7xl mx-auto p-4 space-y-3">
 
-          {/* Battle Log - Main Focus */}
-          <HabboPanel title="Battle Log">
-            <div ref={battleLogRef} className="h-96 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
-              {battleData.battle_log && battleData.battle_log.length > 0 ? (
-                battleData.battle_log.map((entry: any, i) => {
-                  // Handle entry - can be string, object, or JSON string
-                  let message = '';
-                  let userId = null;
-                  let entryType = undefined;
-                  
-                  // Helper function to extract message recursively
-                  const extractMessage = (obj: any): string => {
-                    if (typeof obj === 'string') return obj;
-                    if (obj && typeof obj === 'object' && obj.message) {
-                      return extractMessage(obj.message);
-                    }
-                    return JSON.stringify(obj);
-                  };
-                  
-                  if (typeof entry === 'string') {
-                    // Try to parse if it looks like JSON
-                    const trimmedEntry = entry.trim();
-                    if (trimmedEntry.startsWith('{')) {
-                      try {
-                        const parsed = JSON.parse(trimmedEntry);
-                        message = extractMessage(parsed.message || parsed);
-                        userId = parsed.user_id || null;
-                        entryType = parsed.type;
-                      } catch (e) {
-                        message = entry;
-                      }
-                    } else {
-                      message = entry;
-                    }
-                  } else if (entry && typeof entry === 'object') {
-                    // It's already an object
-                    message = extractMessage(entry.message || entry);
-                    userId = entry.user_id || null;
-                    entryType = entry.type;
-                  }
-                  
-                  // Ensure message is always a string
-                  message = String(message || '');
-                  
-                  const isCurrentUser = userId === currentUserId;
-                  const userProfile = userId ? partyProfiles.get(userId) : null;
-                  const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
-                  const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
-                  const isDiceSuccess = entryType === 'dice_success' || message.includes('PASSING') || message.toUpperCase().includes('SUCCESS');
-                  const isDiceFailure = entryType === 'dice_failure' || message.includes('FAILING') || message.toUpperCase().includes('FAIL');
-                  const isSpiritualBoost = entryType === 'spiritual_boost';
-                  const isDamage = entryType === 'damage';
-                  const isDamageDealt = isDamage && message.includes('Dealt');
-                  const isDamageTaken = isDamage && message.includes('Took');
-                  
-                  // Replace "You" with actual username for other players' messages
-                  let displayMessage = message;
-                  if (!isCurrentUser && userId) {
-                    // Replace "You " at the start of the message with [username] in brackets
-                    displayMessage = message.replace(/^You /, `[${username}] `);
-                    // Replace " You " in the middle with [username] in brackets
-                    displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
-                    // Replace "Your " with possessive form in brackets
-                    displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
-                  } else if (isCurrentUser) {
-                    // Replace "You " with [username] in brackets for current user too
-                    displayMessage = message.replace(/^You /, `[${username}] `);
-                    displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
-                    displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
-                  }
-                  
-                  return (
-                    <p key={i} className={`text-sm animate-fade-in ${
-                      isSpiritualBoost ? 'text-green-500 font-bold' :
-                      isDiceSuccess ? 'text-green-500 font-bold' : 
-                      isDiceFailure ? 'text-red-500 font-bold' : 
-                      isDiceRoll ? 'text-[#FFD700] font-bold' :
-                      isDamageDealt ? 'text-habbo-orange font-bold' :
-                      isDamageTaken ? 'text-red-400 font-bold' : ''
-                    }`}>
-                      <span className="text-primary font-bold">›</span>{" "}
-                      {isCurrentUser || !userId ? (
-                        renderTextWithWeapons(displayMessage)
-                      ) : (
-                        <>
-                          {isDiceRoll ? (
-                            renderTextWithWeapons(displayMessage)
-                          ) : (
-                            renderTextWithWeapons(displayMessage)
-                          )}
-                        </>
-                      )}
-                    </p>
-                  );
-                })
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Battle begins...</p>
-              )}
-            </div>
-          </HabboPanel>
-
-          {/* Combat Panels - Slide in from top */}
+          {/* Combat Panels - Info displays at the top */}
           <div className={`grid md:grid-cols-3 gap-6 transition-all duration-500 ${
             showCombatPanels ? "translate-y-0 opacity-100" : "-translate-y-8 opacity-0"
           }`}>
@@ -3204,6 +3103,107 @@ const Battle = () => {
             </div>
           </HabboPanel>
         </div>
+
+          {/* Battle Log - Below the info panels */}
+          <HabboPanel title="Battle Log">
+            <div ref={battleLogRef} className="h-64 overflow-y-auto space-y-2 p-4 bg-muted rounded border-2 border-habbo-dark">
+              {battleData.battle_log && battleData.battle_log.length > 0 ? (
+                battleData.battle_log.map((entry: any, i) => {
+                  // Handle entry - can be string, object, or JSON string
+                  let message = '';
+                  let userId = null;
+                  let entryType = undefined;
+                  
+                  // Helper function to extract message recursively
+                  const extractMessage = (obj: any): string => {
+                    if (typeof obj === 'string') return obj;
+                    if (obj && typeof obj === 'object' && obj.message) {
+                      return extractMessage(obj.message);
+                    }
+                    return JSON.stringify(obj);
+                  };
+                  
+                  if (typeof entry === 'string') {
+                    // Try to parse if it looks like JSON
+                    const trimmedEntry = entry.trim();
+                    if (trimmedEntry.startsWith('{')) {
+                      try {
+                        const parsed = JSON.parse(trimmedEntry);
+                        message = extractMessage(parsed.message || parsed);
+                        userId = parsed.user_id || null;
+                        entryType = parsed.type;
+                      } catch (e) {
+                        message = entry;
+                      }
+                    } else {
+                      message = entry;
+                    }
+                  } else if (entry && typeof entry === 'object') {
+                    // It's already an object
+                    message = extractMessage(entry.message || entry);
+                    userId = entry.user_id || null;
+                    entryType = entry.type;
+                  }
+                  
+                  // Ensure message is always a string
+                  message = String(message || '');
+                  
+                  const isCurrentUser = userId === currentUserId;
+                  const userProfile = userId ? partyProfiles.get(userId) : null;
+                  const username = userProfile?.habbo_username || userProfile?.username || "Unknown";
+                  const isDiceRoll = entryType === 'dice_roll' || message.includes('rolled');
+                  const isDiceSuccess = entryType === 'dice_success' || message.includes('PASSING') || message.toUpperCase().includes('SUCCESS');
+                  const isDiceFailure = entryType === 'dice_failure' || message.includes('FAILING') || message.toUpperCase().includes('FAIL');
+                  const isSpiritualBoost = entryType === 'spiritual_boost';
+                  const isDamage = entryType === 'damage';
+                  const isDamageDealt = isDamage && message.includes('Dealt');
+                  const isDamageTaken = isDamage && message.includes('Took');
+                  
+                  // Replace "You" with actual username for other players' messages
+                  let displayMessage = message;
+                  if (!isCurrentUser && userId) {
+                    // Replace "You " at the start of the message with [username] in brackets
+                    displayMessage = message.replace(/^You /, `[${username}] `);
+                    // Replace " You " in the middle with [username] in brackets
+                    displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
+                    // Replace "Your " with possessive form in brackets
+                    displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
+                  } else if (isCurrentUser) {
+                    // Replace "You " with [username] in brackets for current user too
+                    displayMessage = message.replace(/^You /, `[${username}] `);
+                    displayMessage = displayMessage.replace(/ You /g, ` [${username}] `);
+                    displayMessage = displayMessage.replace(/Your /g, `[${username}]'s `);
+                  }
+                  
+                  return (
+                    <p key={i} className={`text-sm animate-fade-in ${
+                      isSpiritualBoost ? 'text-green-500 font-bold' :
+                      isDiceSuccess ? 'text-green-500 font-bold' : 
+                      isDiceFailure ? 'text-red-500 font-bold' : 
+                      isDiceRoll ? 'text-[#FFD700] font-bold' :
+                      isDamageDealt ? 'text-habbo-orange font-bold' :
+                      isDamageTaken ? 'text-red-400 font-bold' : ''
+                    }`}>
+                      <span className="text-primary font-bold">›</span>{" "}
+                      {isCurrentUser || !userId ? (
+                        renderTextWithWeapons(displayMessage)
+                      ) : (
+                        <>
+                          {isDiceRoll ? (
+                            renderTextWithWeapons(displayMessage)
+                          ) : (
+                            renderTextWithWeapons(displayMessage)
+                          )}
+                        </>
+                      )}
+                    </p>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Battle begins...</p>
+              )}
+            </div>
+          </HabboPanel>
 
         {/* Party Turn Indicator - Minimal horizontal display in battle mode */}
         {battleData.mode === "battle" ? (
