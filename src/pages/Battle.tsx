@@ -271,6 +271,8 @@ const Battle = () => {
   const { speak, isPlaying, isLoading: ttsLoading } = useTextToSpeech();
   
   const [battleData, setBattleData] = useState<BattleData | null>(null);
+  // Cache dungeon data separately to prevent loss during realtime updates
+  const [cachedDungeon, setCachedDungeon] = useState<BattleData['dungeon'] | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [partyProfiles, setPartyProfiles] = useState<Map<string, Profile>>(new Map());
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -863,6 +865,12 @@ const Battle = () => {
         console.log("🔍 Dungeon data:", data.battleData.dungeon ? 
           `width=${data.battleData.dungeon.width}, height=${data.battleData.dungeon.height}, entities=${data.battleData.dungeon.entities?.length}` : 
           "MISSING!");
+        
+        // Cache dungeon data if present to prevent loss during realtime updates
+        if (data.battleData.dungeon) {
+          console.log("💾 Caching dungeon data");
+          setCachedDungeon(data.battleData.dungeon);
+        }
         
         setBattleData(data.battleData);
         
@@ -2769,21 +2777,26 @@ const Battle = () => {
         {/* Battle Stage Area - 65% of screen */}
         <div className="relative h-[65vh]">
           {(() => {
-            console.log("🎨 Render check: battleData exists?", !!battleData, "dungeon exists?", !!battleData?.dungeon);
-            if (battleData?.dungeon) {
+            // Use cached dungeon data as fallback if battleData.dungeon is missing
+            const dungeon = battleData?.dungeon || cachedDungeon;
+            console.log("🎨 Render check: battleData exists?", !!battleData, "dungeon exists?", !!dungeon, 
+              "source:", battleData?.dungeon ? "battleData" : cachedDungeon ? "cache" : "none");
+            
+            if (dungeon) {
               console.log("✅ Rendering DungeonBoard with dungeon:", {
-                width: battleData.dungeon.width,
-                height: battleData.dungeon.height,
-                entityCount: battleData.dungeon.entities?.length
+                width: dungeon.width,
+                height: dungeon.height,
+                entityCount: dungeon.entities?.length,
+                source: battleData?.dungeon ? "battleData" : "cache"
               });
             } else {
-              console.log("❌ Cannot render DungeonBoard - dungeon is missing from battleData");
+              console.log("❌ Cannot render DungeonBoard - no dungeon data available");
             }
-            return battleData?.dungeon;
+            return dungeon;
           })() ? (
             <DungeonBoard 
               dungeon={{
-                ...battleData.dungeon,
+                ...(battleData?.dungeon || cachedDungeon)!,
                 entities: battleData.dungeon.entities.map(entity => ({
                   ...entity,
                   spriteFilename: entity.sprite, // Preserve original filename for direction lookup
