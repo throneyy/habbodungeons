@@ -52,6 +52,7 @@ const Dashboard = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSkillTree, setShowSkillTree] = useState(false);
@@ -222,6 +223,47 @@ const Dashboard = () => {
     setRefreshing(false);
   };
 
+  const syncSkillsManually = async () => {
+    if (!profile?.habbo_username) {
+      toast({
+        title: "No Habbo account linked",
+        description: "Please link your Habbo account first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      console.log('Manual skill sync triggered');
+      const { data, error } = await supabase.functions.invoke('sync-habbo-skills', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({ 
+        title: "Skills synced!", 
+        description: `Fishing: ${data.fishingLevel}, Gardening: ${data.gardeningLevel}` 
+      });
+
+      // Reload data to show updated skills
+      await loadData();
+    } catch (error: any) {
+      toast({
+        title: "Failed to sync skills",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+    setSyncing(false);
+  };
+
   const useConsumable = async (itemId: string, itemName: string) => {
     try {
       const { data, error } = await supabase.functions.invoke("use-consumable", {
@@ -372,6 +414,16 @@ const Dashboard = () => {
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   View Skills
+                </Button>
+                <Button
+                  onClick={syncSkillsManually}
+                  disabled={syncing}
+                  variant="outline"
+                  size="sm"
+                  className="font-bold border-2 border-habbo-dark whitespace-nowrap"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                  Sync Skills
                 </Button>
               </div>
             )}
