@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LogIn, User, BookOpen, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
+import habboDungeonsBanner from "@/assets/habbo-dungeons-banner-new.gif";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 export const MainNav = () => {
