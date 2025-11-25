@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Coins, ShoppingCart } from "lucide-react";
 import { STORE_ITEMS, getCategoryItems, type StoreItem } from "@/lib/storeItems";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import bookcaseImage from "@/assets/medieval-bookcase.gif";
 
 export default function Store() {
   const navigate = useNavigate();
@@ -185,8 +186,19 @@ export default function Store() {
     <AppLayout>
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <HabboPanel title="🏪 The Frostkeep Merchant" className="mb-6">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-6">
+          <div className="flex flex-col items-center gap-6">
+            {/* Bookcase Centerpiece */}
+            <div className="flex justify-center py-4">
+              <img 
+                src={bookcaseImage} 
+                alt="Merchant's Bookcase" 
+                className="pixel-icon"
+                style={{ width: 'auto', height: 'auto', maxWidth: '300px' }}
+              />
+            </div>
+            
+            {/* Currency Display */}
+            <div className="flex items-center justify-center gap-8 w-full">
               <div className="flex items-center gap-2">
                 <img src="/src/assets/gold-coins.png" alt="Gold" className="w-8 h-8 pixel-icon" />
                 <span className="text-2xl font-bold">{goldCoins}</span>
@@ -198,6 +210,8 @@ export default function Store() {
                 <span className="text-sm text-muted-foreground">Silver</span>
               </div>
             </div>
+            
+            {/* Navigation Buttons */}
             <div className="flex gap-2">
               <Button variant="secondary" onClick={() => navigate("/inventory")}>
                 View Inventory
