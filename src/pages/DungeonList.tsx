@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Users, ArrowLeft } from "lucide-react";
 import winterLandscape from "@/assets/winter-landscape.jpg";
+import serverBrowserTitle from "@/assets/server-browser.gif";
 
 interface Server {
   id: string;
@@ -250,7 +251,12 @@ const DungeonList = () => {
           
           {/* Content */}
           <div className="relative z-10 flex items-center justify-between">
-            <h1 className="text-4xl font-black text-primary-foreground">Server Browser</h1>
+            <img 
+              src={serverBrowserTitle} 
+              alt="Server Browser" 
+              className="pixel-icon"
+              style={{ imageRendering: 'pixelated' }}
+            />
             <Button
               variant="outline"
               onClick={() => navigate("/dashboard")}
