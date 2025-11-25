@@ -46,48 +46,51 @@ serve(async (req) => {
     const prompt = generatePrompt(itemName, itemType, description);
     console.log(`Generated prompt: ${prompt}`);
     
-    // Call Banana Nano API
-    const bananaApiKey = Deno.env.get('BANANA_API_KEY');
-    if (!bananaApiKey) {
-      throw new Error('BANANA_API_KEY not configured');
+    // Call Lovable AI Gateway for image generation
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
     
-    const bananaResponse = await fetch('https://api.banana.dev/start/v4', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${bananaApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
       },
       body: JSON.stringify({
-        apiKey: bananaApiKey,
-        modelKey: 'google/gemini-2.5-flash-image-preview',
-        modelInputs: {
-          prompt: prompt,
-          width: 64,
-          height: 64,
-          seed: generateSeed(itemName),
-        },
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          }
+        ],
+        modalities: ['image', 'text'],
       }),
     });
     
-    if (!bananaResponse.ok) {
-      const errorText = await bananaResponse.text();
-      console.error('Banana API error:', errorText);
-      throw new Error(`Banana API error: ${bananaResponse.status}`);
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('Lovable AI error:', errorText);
+      throw new Error(`Lovable AI error: ${aiResponse.status}`);
     }
     
-    const bananaData = await bananaResponse.json();
-    console.log('Banana API response received');
+    const aiData = await aiResponse.json();
+    console.log('Lovable AI response received');
     
     // Extract base64 image from response
-    let imageBase64: string;
-    if (bananaData.modelOutputs && bananaData.modelOutputs[0]) {
-      imageBase64 = bananaData.modelOutputs[0].image_base64;
-    } else if (bananaData.output) {
-      imageBase64 = bananaData.output;
-    } else {
-      throw new Error('No image data in Banana API response');
+    const imageUrl = aiData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    if (!imageUrl) {
+      throw new Error('No image data in AI response');
     }
+    
+    // Extract base64 data from data URL
+    const base64Match = imageUrl.match(/^data:image\/\w+;base64,(.+)$/);
+    if (!base64Match) {
+      throw new Error('Invalid image data format');
+    }
+    const imageBase64 = base64Match[1];
     
     // Convert base64 to blob
     const imageBuffer = Uint8Array.from(atob(imageBase64), c => c.charCodeAt(0));
