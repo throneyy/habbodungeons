@@ -118,14 +118,17 @@ export default function Store() {
         <TooltipTrigger asChild>
           <div className="bg-card border-4 border-habbo-dark rounded-lg p-4 hover:scale-105 transition-transform">
             <div className="flex flex-col items-center gap-2">
-              <img 
-                src={`/src/assets/${item.sprite}`}
-                alt={item.name}
-                className="w-16 h-16 pixel-icon"
-                onError={(e) => {
-                  e.currentTarget.src = '/src/assets/mystical-icon.png';
-                }}
-              />
+              <div className="flex items-center justify-center h-20">
+                <img 
+                  src={`/src/assets/${item.sprite}`}
+                  alt={item.name}
+                  className="pixel-icon max-h-20"
+                  style={{ width: 'auto', height: 'auto' }}
+                  onError={(e) => {
+                    e.currentTarget.src = '/src/assets/mystical-icon.png';
+                  }}
+                />
+              </div>
               <h4 className="font-bold text-sm text-center">{item.name}</h4>
               <p className="text-xs text-muted-foreground text-center">{item.description}</p>
               
@@ -159,7 +162,8 @@ export default function Store() {
             <img 
               src={`/src/assets/${item.sprite}`}
               alt={item.name}
-              className="w-24 h-24 pixel-icon"
+              className="pixel-icon"
+              style={{ width: 'auto', height: 'auto', maxHeight: '150px' }}
               onError={(e) => {
                 e.currentTarget.src = '/src/assets/mystical-icon.png';
               }}
