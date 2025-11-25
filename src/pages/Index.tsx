@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { DailyLeaderboard } from "@/components/DailyLeaderboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import habboDungeonsBanner from "@/assets/habbo-dungeons-banner-new.gif";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -19,7 +20,14 @@ const Index = () => {
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center space-y-4">
-          <h1 className="text-5xl font-black text-primary">Habbo Dungeons</h1>
+          <div className="flex justify-center">
+            <img 
+              src={habboDungeonsBanner} 
+              alt="Habbo Dungeons" 
+              className="pixel-icon"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </div>
           <p className="text-xl text-muted-foreground">Adventure awaits in the frozen depths!</p>
           
           <div className="flex gap-4 justify-center pt-4">
