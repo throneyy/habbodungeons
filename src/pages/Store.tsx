@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { HabboPanel } from "@/components/HabboPanel";
+import { ItemIcon } from "@/components/ItemIcon";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Coins, ShoppingCart } from "lucide-react";
@@ -119,14 +120,12 @@ export default function Store() {
           <div className="bg-card border-4 border-habbo-dark rounded-lg p-4 hover:scale-105 transition-transform">
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center justify-center h-20">
-                <img 
-                  src={`/src/assets/${item.sprite}`}
-                  alt={item.name}
-                  className="pixel-icon max-h-20"
-                  style={{ width: 'auto', height: 'auto' }}
-                  onError={(e) => {
-                    e.currentTarget.src = '/src/assets/mystical-icon.png';
-                  }}
+                <ItemIcon 
+                  itemName={item.name}
+                  itemType={item.itemType}
+                  sprite={item.sprite}
+                  description={item.description}
+                  className="max-h-20 w-auto"
                 />
               </div>
               <h4 className="font-bold text-sm text-center">{item.name}</h4>
@@ -159,14 +158,12 @@ export default function Store() {
         </TooltipTrigger>
         <TooltipContent>
           <div className="flex flex-col items-center gap-2">
-            <img 
-              src={`/src/assets/${item.sprite}`}
-              alt={item.name}
-              className="pixel-icon"
-              style={{ width: 'auto', height: 'auto', maxHeight: '150px' }}
-              onError={(e) => {
-                e.currentTarget.src = '/src/assets/mystical-icon.png';
-              }}
+            <ItemIcon 
+              itemName={item.name}
+              itemType={item.itemType}
+              sprite={item.sprite}
+              description={item.description}
+              className="max-h-[150px] w-auto"
             />
             <p className="font-bold">{item.name}</p>
             <p className="text-sm">{item.description}</p>
