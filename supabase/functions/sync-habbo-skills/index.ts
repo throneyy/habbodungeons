@@ -83,36 +83,51 @@ serve(async (req) => {
     let fishingLevel = 0;
     let gardeningLevel = 0;
 
-    // Try bobba.me API first (most reliable source for skill levels)
-    try {
-      console.log(`Fetching skills from bobba.me for: ${habboUsername}`);
-      
-      const bobbaResponse = await fetch(
-        `https://api.bobba.me/habboGET?username=${encodeURIComponent(habboUsername)}`
-      );
-      
-      if (bobbaResponse.ok) {
-        const skillsData = await bobbaResponse.json();
-        console.log('Skills data from bobba.me:', skillsData);
+    // Fetch skill levels from bobba.me API (the only reliable source for Origins skills)
+    // Implement retry logic with exponential backoff since API can be temporarily unavailable
+    const maxRetries = 3;
+    const baseDelay = 1000; // 1 second
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        console.log(`Attempt ${attempt + 1}/${maxRetries}: Fetching skills from bobba.me for: ${habboUsername}`);
+        
+        const bobbaResponse = await fetch(
+          `https://api.bobba.me/habboGET?username=${encodeURIComponent(habboUsername)}`,
+          {
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
+        );
+        
+        if (bobbaResponse.ok) {
+          const skillsData = await bobbaResponse.json();
+          console.log('Skills data from bobba.me:', JSON.stringify(skillsData));
 
-        fishingLevel = skillsData.mainDetails?.fishingLevel || 0;
-        gardeningLevel = skillsData.mainDetails?.gardeningLevel || 0;
-        console.log('Parsed levels from bobba.me - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
-      } else {
-        console.warn(`Bobba API returned status ${bobbaResponse.status}`);
+          fishingLevel = skillsData.mainDetails?.fishingLevel || 0;
+          gardeningLevel = skillsData.mainDetails?.gardeningLevel || 0;
+          console.log(`SUCCESS: Parsed levels - Fishing: ${fishingLevel}, Gardening: ${gardeningLevel}`);
+          break; // Success, exit retry loop
+        } else {
+          const errorText = await bobbaResponse.text();
+          console.warn(`Bobba API returned status ${bobbaResponse.status}: ${errorText}`);
+          
+          if (attempt < maxRetries - 1) {
+            const delay = baseDelay * Math.pow(2, attempt);
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          } else {
+            throw new Error(`Bobba API failed after ${maxRetries} attempts. Status: ${bobbaResponse.status}`);
+          }
+        }
+      } catch (error: any) {
+        console.error(`Attempt ${attempt + 1} failed:`, error);
         
-        // Bobba.me is down - Origins API skills endpoint requires username, not ID
-        // The skills API is not publicly documented and may not be available
-        // For now, users will need to wait for bobba.me to come back online
-        // or we need to find an alternative API
-        
-        throw new Error('Bobba API is unavailable. Skill sync requires bobba.me API to be online.');
+        if (attempt >= maxRetries - 1) {
+          throw new Error(`Unable to fetch skills: ${error.message}. The bobba.me API appears to be temporarily unavailable. Please try again in a few minutes.`);
+        }
       }
-    } catch (error: any) {
-      console.error('Failed to fetch skills:', error);
-      
-      // If bobba.me is down, throw an error instead of silently returning 0
-      throw new Error(`Unable to sync skills: ${error.message}. Please try again later when bobba.me API is available.`);
     }
 
     // Calculate unlocked skills
