@@ -43,6 +43,7 @@ import emeraldDrake from "@/assets/emerald-drake.png";
 import azureDragon from "@/assets/azure-dragon.png";
 import ancientTreant from "@/assets/ancient-treant.png";
 import wolfPup from "@/assets/wolf-pup.png";
+import gnoll from "@/assets/gnoll.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -79,6 +80,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "azure-dragon.png": azureDragon,
   "ancient-treant.png": ancientTreant,
   "wolf-pup.png": wolfPup,
+  "gnoll.png": gnoll,
 };
 
 interface Monster {
