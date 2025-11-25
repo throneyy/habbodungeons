@@ -16,6 +16,10 @@ import pixelStar from "@/assets/pixel-star.png";
 import npcKnight from "@/assets/npc-knight.png";
 import { DailyLeaderboard } from "@/components/DailyLeaderboard";
 import icyMountainForest from "@/assets/icy-mountain-forest.png";
+import medievalHouseForest from "@/assets/medieval-house-forest.png";
+import interiorTavern from "@/assets/interior-tavern.png";
+import castleFortress from "@/assets/castle-fortress.png";
+import villageMarket from "@/assets/village-market.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -159,7 +163,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '140%' }}
+              style={{ backgroundImage: `url(${castleFortress})`, backgroundSize: '140%' }}
             />
             <div className="relative z-10">
               <img src={pixelSword} alt="Epic Battles" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
@@ -173,7 +177,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '140%' }}
+              style={{ backgroundImage: `url(${interiorTavern})`, backgroundSize: '140%' }}
             />
             <div className="relative z-10">
               <img src={npcWarrior} alt="Party System" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
@@ -187,7 +191,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '140%' }}
+              style={{ backgroundImage: `url(${medievalHouseForest})`, backgroundSize: '140%' }}
             />
             <div className="relative z-10">
               <img src={treasureChestOpen} alt="Legendary Loot" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
@@ -201,7 +205,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '140%' }}
+              style={{ backgroundImage: `url(${villageMarket})`, backgroundSize: '140%' }}
             />
             <div className="relative z-10">
               <img src={pixelStar} alt="Level Up" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
