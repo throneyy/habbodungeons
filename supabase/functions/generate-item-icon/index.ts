@@ -165,7 +165,7 @@ function generatePrompt(itemName: string, itemType: string, description?: string
   
   // Special prompt for Rusty Sword
   if (itemName.toLowerCase() === 'rusty sword') {
-    return "Rusty Sword in Habbo Hotel pixel art style, isometric view at 45-degree angle, weathered brown-orange blade with rust spots, simple medieval sword, game item icon, vibrant retro colors, clean outlines, simple shading, 64x64px resolution, black background";
+    return "A rusty medieval sword in Habbo Hotel isometric pixel art style, 45-degree angle view, brown-orange weathered blade with visible rust patches, simple straight sword design matching Fighters Sword aesthetic, clean pixel outlines, bold colors, minimal shading, game item icon, centered on black background, 64x64 pixels";
   }
   
   switch (itemType.toLowerCase()) {
