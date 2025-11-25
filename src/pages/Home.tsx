@@ -15,6 +15,7 @@ import treasureChestOpen from "@/assets/treasure-chest-open.png";
 import pixelStar from "@/assets/pixel-star.png";
 import npcKnight from "@/assets/npc-knight.png";
 import { DailyLeaderboard } from "@/components/DailyLeaderboard";
+import icyMountainForest from "@/assets/icy-mountain-forest.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ const Home = () => {
       <SnowFall />
       <div 
         className="absolute inset-0 opacity-20 bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '50%' }}
+        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '80%' }}
       />
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         <MainNav />
@@ -88,8 +89,12 @@ const Home = () => {
         <DailyLeaderboard />
         
         {/* Hero Section */}
-        <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 overflow-hidden">
-          <div className="space-y-6 py-8">
+        <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 overflow-hidden relative">
+          <div 
+            className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${icyMountainForest})`, backgroundSize: '140%' }}
+          />
+          <div className="space-y-6 py-8 relative z-10">
             <img 
               src={frostkeepBanner}
               alt="The Shattered Frostkeep"
