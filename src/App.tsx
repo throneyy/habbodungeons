@@ -17,6 +17,7 @@ import LootBox from "./pages/LootBox";
 import AdminPanel from "./pages/AdminPanel";
 import PlayerProfile from "./pages/PlayerProfile";
 import MonsterManual from "./pages/MonsterManual";
+import SpriteEditor from "./pages/SpriteEditor";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/player/:habboUsername" element={<PlayerProfile />} />
           <Route path="/monster-manual" element={<MonsterManual />} />
+          <Route path="/sprite-editor" element={<SpriteEditor />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
