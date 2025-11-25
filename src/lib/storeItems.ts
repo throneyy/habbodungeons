@@ -334,7 +334,7 @@ export const STORE_ITEMS: StoreItem[] = [
     name: 'Red Amulet',
     description: 'Powerful amulet pulsing with crimson energy (+30 MP, +15 ATK)',
     sprite: 'summoning-circle-red.png',
-    category: 'weapon',
+    category: 'armor',
     goldPrice: 6000,
     silverPrice: 60000,
     itemType: 'accessory'
@@ -344,7 +344,7 @@ export const STORE_ITEMS: StoreItem[] = [
     name: 'Purple Amulet',
     description: 'Mystical amulet radiating arcane power (+40 MP, +10 DEF)',
     sprite: 'summoning-circle-purple.png',
-    category: 'weapon',
+    category: 'armor',
     goldPrice: 6000,
     silverPrice: 60000,
     itemType: 'accessory'
