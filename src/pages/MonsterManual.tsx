@@ -303,7 +303,7 @@ export default function MonsterManual() {
                         style={{
                           transform: `scale(${
                             monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
-                            monster.sprite_filename === 'frost-rat.gif' ? '6.375' : '1'
+                            monster.sprite_filename === 'frost-rat.gif' ? '4.4625' : '1'
                           })`
                         }}
                       />
