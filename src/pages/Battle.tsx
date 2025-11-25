@@ -434,12 +434,17 @@ const Battle = () => {
 
   // Preload battle animation assets
   const preloadBattleAssets = () => {
+    console.log('🎬 PRELOADING BATTLE ANIMATIONS...');
     const imagesToPreload = [explosionHit, hitBump];
-    imagesToPreload.forEach(src => {
+    console.log('Images to preload:', imagesToPreload);
+    
+    imagesToPreload.forEach((src, index) => {
       const img = new Image();
+      img.onload = () => console.log(`✅ Loaded animation ${index + 1}:`, src);
+      img.onerror = (e) => console.error(`❌ Failed to load animation ${index + 1}:`, src, e);
       img.src = src;
     });
-    console.log('Battle animations preloaded');
+    console.log('✅ Battle animations preloaded');
   };
 
   useEffect(() => {
@@ -1723,15 +1728,18 @@ const Battle = () => {
     }
 
     // Block realtime updates during animations
+    console.log('🔒 BLOCKING REALTIME UPDATES - animationActiveRef set to TRUE');
     animationActiveRef.current = true;
 
     // Trigger attack animation - player attacks enemy
     if (currentUserId && battleData?.dungeon) {
       const enemyEntity = battleData.dungeon.entities.find(e => e.type === 'enemy');
       if (enemyEntity) {
+        console.log('🎯 Starting player attack animation');
         setAttackingEntityId(currentUserId);
         setTargetEntityId(enemyEntity.id);
         setTimeout(() => {
+          console.log('🎯 Ending player attack animation');
           setAttackingEntityId(undefined);
           setTargetEntityId(undefined);
         }, 700);
@@ -1769,34 +1777,42 @@ const Battle = () => {
         console.log("Damage dealt - Player:", data.playerDamageDealt, "Enemy:", data.enemyDamageDealt);
         
         if (data.playerDamageDealt && data.playerDamageDealt > 0) {
-          console.log("Setting enemyHit to TRUE - Player dealt", data.playerDamageDealt, "damage");
+          console.log("💥 PLAYER DAMAGE:", data.playerDamageDealt, "- Setting enemyHit to TRUE");
           setEnemyHit(true);
           
           // Show damage on dungeon board entity
           const enemyEntity = battleData?.dungeon?.entities.find(e => e.type === 'enemy');
           if (enemyEntity) {
+            console.log("💥 Setting damage on enemy entity:", enemyEntity.id);
             setDamageDealt({ entityId: enemyEntity.id, amount: data.playerDamageDealt });
-            setTimeout(() => setDamageDealt(undefined), 1000);
+            setTimeout(() => {
+              console.log("💥 Clearing damage from enemy entity");
+              setDamageDealt(undefined);
+            }, 1000);
           }
           
           setTimeout(() => {
-            console.log("Resetting enemyHit to FALSE");
+            console.log("💥 Resetting enemyHit to FALSE");
             setEnemyHit(false);
           }, 600);
+        } else {
+          console.log("ℹ️ No player damage dealt");
         }
         
         // Enemy counterattacks AFTER player's attack animation (1 second delay)
         if (data.enemyDamageDealt && data.enemyDamageDealt > 0) {
           setTimeout(() => {
-            console.log("Setting playerHit to TRUE - Enemy dealt", data.enemyDamageDealt, "damage");
+            console.log("💥 ENEMY DAMAGE:", data.enemyDamageDealt, "- Setting playerHit to TRUE");
             setPlayerHit(true);
             
             // Trigger enemy attack animation
             const enemyEntity = data.battleData?.dungeon?.entities.find((e: any) => e.type === 'enemy');
             if (enemyEntity && currentUserId) {
+              console.log("🎯 Starting enemy counterattack animation");
               setAttackingEntityId(enemyEntity.id);
               setTargetEntityId(currentUserId);
               setTimeout(() => {
+                console.log("🎯 Ending enemy counterattack animation");
                 setAttackingEntityId(undefined);
                 setTargetEntityId(undefined);
               }, 300);
@@ -1804,21 +1820,28 @@ const Battle = () => {
             
             // Show damage on dungeon board entity (current user)
             if (currentUserId) {
+              console.log("💥 Setting damage on player entity:", currentUserId);
               setDamageDealt({ entityId: currentUserId, amount: data.enemyDamageDealt });
-              setTimeout(() => setDamageDealt(undefined), 1000);
+              setTimeout(() => {
+                console.log("💥 Clearing damage from player entity");
+                setDamageDealt(undefined);
+              }, 1000);
             }
             
             setTimeout(() => {
-              console.log("Resetting playerHit to FALSE");
+              console.log("💥 Resetting playerHit to FALSE");
               setPlayerHit(false);
               
               // All animations complete - unblock realtime updates
+              console.log("🔓 UNBLOCKING REALTIME UPDATES - animationActiveRef set to FALSE");
               animationActiveRef.current = false;
             }, 600);
           }, 1000);
         } else {
+          console.log("ℹ️ No enemy damage dealt");
           // No enemy counterattack - unblock immediately after player attack completes
           setTimeout(() => {
+            console.log("🔓 UNBLOCKING REALTIME UPDATES - animationActiveRef set to FALSE (no counterattack)");
             animationActiveRef.current = false;
           }, 1000);
         }
@@ -1845,12 +1868,14 @@ const Battle = () => {
         }
       }
     } catch (error: any) {
+      console.error("❌ ERROR in handleResolveTurn:", error);
       toast({
         title: "Failed to resolve turn",
         description: error.message,
         variant: "destructive",
       });
       // Unblock on error
+      console.log("🔓 UNBLOCKING REALTIME UPDATES - animationActiveRef set to FALSE (error)");
       animationActiveRef.current = false;
     }
     setLoading(false);

@@ -59,15 +59,20 @@ export const EntitySprite = React.memo(({
 
   useEffect(() => {
     if (damage !== undefined && damage > 0) {
+      console.log(`💥 EntitySprite [${id}] showing damage:`, damage);
       setShowDamage(true);
-      const timer = setTimeout(() => setShowDamage(false), 1000);
+      const timer = setTimeout(() => {
+        console.log(`💥 EntitySprite [${id}] hiding damage`);
+        setShowDamage(false);
+      }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [damage]);
+  }, [damage, id]);
 
   // Attack animation for players
   useEffect(() => {
     if (type === 'player' && isAttacking && targetX !== undefined && targetY !== undefined) {
+      console.log(`🎯 Player [${id}] starting attack animation`);
       // Phase 1: Move toward target
       setAvatarAction('wlk');
       setShowMovementEffect(true);
@@ -77,12 +82,14 @@ export const EntitySprite = React.memo(({
       
       // Phase 2: Attack pose at impact
       const attackTimer = setTimeout(() => {
+        console.log(`🎯 Player [${id}] attack impact`);
         setAvatarAction('crr');
         setShowMovementEffect(false);
       }, 300);
       
       // Phase 3: Return to original position
       const returnTimer = setTimeout(() => {
+        console.log(`🎯 Player [${id}] returning to position`);
         setAnimatePosition({ x, y });
         setAvatarAction('std');
       }, 700);
@@ -96,7 +103,7 @@ export const EntitySprite = React.memo(({
       setAvatarAction('std');
       setShowMovementEffect(false);
     }
-  }, [isAttacking, type, x, y, targetX, targetY]);
+  }, [isAttacking, type, x, y, targetX, targetY, id]);
 
   // Convert grid coordinates to isometric screen position with proper margins
   const SCALE = 2.5; // Make entities much larger
@@ -149,7 +156,7 @@ export const EntitySprite = React.memo(({
       {showMovementEffect && (
         <img
           src={hitBump}
-          alt=""
+          alt="Movement effect"
           className="absolute pixelated select-none pointer-events-none"
           style={{
             bottom: '-20px',
@@ -161,6 +168,8 @@ export const EntitySprite = React.memo(({
             zIndex: 1,
             opacity: 0.9,
           }}
+          onLoad={() => console.log(`✅ hitBump.gif loaded for entity [${id}]`)}
+          onError={(e) => console.error(`❌ hitBump.gif failed to load for entity [${id}]`, e)}
         />
       )}
 
@@ -198,7 +207,7 @@ export const EntitySprite = React.memo(({
         {showDamage && damage && damage > 0 && (
           <img
             src={explosionHit}
-            alt=""
+            alt="Damage explosion"
             className="absolute pixelated select-none pointer-events-none"
             style={{
               top: '30%',
@@ -210,6 +219,8 @@ export const EntitySprite = React.memo(({
               zIndex: 10,
               opacity: 0.95,
             }}
+            onLoad={() => console.log(`✅ explosionHit.gif loaded for entity [${id}] with damage:`, damage)}
+            onError={(e) => console.error(`❌ explosionHit.gif failed to load for entity [${id}]`, e)}
           />
         )}
         
