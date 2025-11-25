@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.generate-featured-dungeons]
 verify_jwt = false
+
+[functions.generate-item-icon]
+verify_jwt = true
