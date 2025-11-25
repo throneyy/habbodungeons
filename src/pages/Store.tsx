@@ -360,12 +360,12 @@ export default function Store() {
             {/* Currency Display */}
             <div className="flex items-center justify-center gap-8 w-full">
               <div className="flex items-center gap-2">
-                <img src="/src/assets/gold-coins.png" alt="Gold" className="w-8 h-8 pixel-icon" />
+                <img src="/src/assets/gold-coins.png" alt="Gold" className="pixel-icon" />
                 <span className="text-2xl font-bold">{goldCoins}</span>
                 <span className="text-sm text-muted-foreground">Gold</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="/src/assets/metal-ingot.png" alt="Silver" className="w-8 h-8 pixel-icon" />
+                <img src="/src/assets/metal-ingot.png" alt="Silver" className="pixel-icon" />
                 <span className="text-2xl font-bold">{silver}</span>
                 <span className="text-sm text-muted-foreground">Silver</span>
               </div>
