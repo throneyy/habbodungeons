@@ -97,11 +97,6 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
     description: "Animated bones of fallen warriors, cursed to guard the frozen halls for eternity.",
     difficulty: "Common"
   },
-  "Frozen Goblin": {
-    type: "Humanoid",
-    description: "Small, vicious creatures warped by the eternal winter, they attack in savage packs.",
-    difficulty: "Common"
-  },
   "Goblin Trio": {
     type: "Humanoid",
     description: "Three goblins that fight as one, coordinating their attacks with deadly precision.",
