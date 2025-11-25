@@ -6,6 +6,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { EnemySprite } from "@/components/EnemySprite";
 import { toast } from "sonner";
 import monsterManualTitle from "@/assets/monster-manual-title.png";
+import ancientJailImage from "@/assets/ancient-jail.png";
 
 // Import enemy sprites
 import skeleton from "@/assets/skeleton.png";
@@ -304,8 +305,12 @@ export default function MonsterManual() {
   return (
     <AppLayout>
       <div className="py-8 space-y-6">
-        <HabboPanel className="bg-gradient-to-br from-destructive/20 to-primary/20">
-          <div className="space-y-3">
+        <HabboPanel className="bg-gradient-to-br from-destructive/20 to-primary/20 relative overflow-hidden">
+          <div 
+            className="absolute inset-0 opacity-15 bg-center bg-no-repeat pointer-events-none"
+            style={{ backgroundImage: `url(${ancientJailImage})`, backgroundSize: '140%' }}
+          />
+          <div className="space-y-3 relative z-10">
             <img 
               src={monsterManualTitle} 
               alt="Monster Manual" 
