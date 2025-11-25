@@ -17,8 +17,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 50 HP',
     sprite: 'potion.png',
     category: 'consumable',
-    goldPrice: 20,
-    silverPrice: 2,
+    goldPrice: 2,
+    silverPrice: 20,
     itemType: 'consumable'
   },
   {
@@ -27,8 +27,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 40 MP',
     sprite: 'elixer.png',
     category: 'consumable',
-    goldPrice: 25,
-    silverPrice: 3,
+    goldPrice: 3,
+    silverPrice: 25,
     itemType: 'consumable'
   },
   {
@@ -37,8 +37,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 50 MP',
     sprite: 'elixer.png',
     category: 'consumable',
-    goldPrice: 30,
-    silverPrice: 3,
+    goldPrice: 3,
+    silverPrice: 30,
     itemType: 'consumable'
   },
   // Consumables - Food
@@ -48,8 +48,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 15 HP',
     sprite: 'sweetcakes.png',
     category: 'consumable',
-    goldPrice: 10,
-    silverPrice: 1,
+    goldPrice: 1,
+    silverPrice: 10,
     itemType: 'consumable'
   },
   {
@@ -58,8 +58,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 20 HP',
     sprite: 'frothy-pint.png',
     category: 'consumable',
-    goldPrice: 15,
-    silverPrice: 2,
+    goldPrice: 2,
+    silverPrice: 15,
     itemType: 'consumable'
   },
   {
@@ -68,8 +68,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 25 HP',
     sprite: 'cured-meat.png',
     category: 'consumable',
-    goldPrice: 20,
-    silverPrice: 2,
+    goldPrice: 2,
+    silverPrice: 20,
     itemType: 'consumable'
   },
   // Weapons
@@ -79,8 +79,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Basic weapon for beginners',
     sprite: 'fighters-sword.png',
     category: 'weapon',
-    goldPrice: 50,
-    silverPrice: 5,
+    goldPrice: 5,
+    silverPrice: 50,
     itemType: 'weapon'
   },
   {
@@ -89,8 +89,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'A sturdy blade (+15 ATK)',
     sprite: 'fighters-sword.png',
     category: 'weapon',
-    goldPrice: 200,
-    silverPrice: 20,
+    goldPrice: 20,
+    silverPrice: 200,
     itemType: 'weapon'
   },
   {
@@ -99,8 +99,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Arcane weapon (+10 ATK, +20 MP)',
     sprite: 'mage-staff.png',
     category: 'weapon',
-    goldPrice: 250,
-    silverPrice: 25,
+    goldPrice: 25,
+    silverPrice: 250,
     itemType: 'weapon'
   },
   {
@@ -109,8 +109,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Ranged weapon (+12 ATK)',
     sprite: 'bow-and-arrow.png',
     category: 'weapon',
-    goldPrice: 180,
-    silverPrice: 18,
+    goldPrice: 18,
+    silverPrice: 180,
     itemType: 'weapon'
   },
   // Materials
@@ -120,8 +120,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Magical stones for crafting',
     sprite: 'runestones.png',
     category: 'material',
-    goldPrice: 15,
-    silverPrice: 2,
+    goldPrice: 2,
+    silverPrice: 15,
     itemType: 'material'
   },
   {
@@ -130,8 +130,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Fragments of mystical crystals',
     sprite: 'crystal-shards.png',
     category: 'material',
-    goldPrice: 20,
-    silverPrice: 2,
+    goldPrice: 2,
+    silverPrice: 20,
     itemType: 'material'
   },
   {
@@ -140,8 +140,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Basic fabric material',
     sprite: 'cloth-squares.png',
     category: 'material',
-    goldPrice: 10,
-    silverPrice: 1,
+    goldPrice: 1,
+    silverPrice: 10,
     itemType: 'material'
   },
   {
@@ -150,8 +150,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Bundle of wooden sticks',
     sprite: 'stick-pile.png',
     category: 'material',
-    goldPrice: 5,
-    silverPrice: 1,
+    goldPrice: 1,
+    silverPrice: 5,
     itemType: 'material'
   },
   {
@@ -160,8 +160,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Medicinal plant',
     sprite: 'herb.png',
     category: 'material',
-    goldPrice: 12,
-    silverPrice: 1,
+    goldPrice: 1,
+    silverPrice: 12,
     itemType: 'material'
   },
   // Scrolls - Healing
@@ -171,8 +171,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 20 HP instantly (no dice required)',
     sprite: 'scroll.png',
     category: 'consumable',
-    goldPrice: 25,
-    silverPrice: 3,
+    goldPrice: 3,
+    silverPrice: 25,
     itemType: 'scroll'
   },
   {
@@ -181,8 +181,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 50 HP instantly (no dice required)',
     sprite: 'scroll-open.png',
     category: 'consumable',
-    goldPrice: 50,
-    silverPrice: 5,
+    goldPrice: 5,
+    silverPrice: 50,
     itemType: 'scroll'
   },
   {
@@ -191,8 +191,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Restores 100 HP instantly (no dice required)',
     sprite: 'scroll-stack.png',
     category: 'consumable',
-    goldPrice: 100,
-    silverPrice: 10,
+    goldPrice: 10,
+    silverPrice: 100,
     itemType: 'scroll'
   },
   // Scrolls - Support
@@ -202,8 +202,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Grants +15 DEF for 3 turns (no dice required)',
     sprite: 'scroll.png',
     category: 'consumable',
-    goldPrice: 40,
-    silverPrice: 4,
+    goldPrice: 4,
+    silverPrice: 40,
     itemType: 'scroll'
   },
   {
@@ -212,8 +212,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Grants +20 SPD for 3 turns (no dice required)',
     sprite: 'scroll-open.png',
     category: 'consumable',
-    goldPrice: 45,
-    silverPrice: 5,
+    goldPrice: 5,
+    silverPrice: 45,
     itemType: 'scroll'
   },
   {
@@ -222,8 +222,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Grants +15 ATK for 3 turns (no dice required)',
     sprite: 'scroll-stack.png',
     category: 'consumable',
-    goldPrice: 50,
-    silverPrice: 5,
+    goldPrice: 5,
+    silverPrice: 50,
     itemType: 'scroll'
   },
   // Scrolls - Attack
@@ -233,8 +233,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Deals 25 fire damage to enemy (no dice required)',
     sprite: 'scroll.png',
     category: 'consumable',
-    goldPrice: 60,
-    silverPrice: 6,
+    goldPrice: 6,
+    silverPrice: 60,
     itemType: 'scroll'
   },
   {
@@ -243,8 +243,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Deals 30 lightning damage to enemy (no dice required)',
     sprite: 'scroll-open.png',
     category: 'consumable',
-    goldPrice: 70,
-    silverPrice: 7,
+    goldPrice: 7,
+    silverPrice: 70,
     itemType: 'scroll'
   },
   {
@@ -253,8 +253,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Deals 20 ice damage and reduces enemy SPD by 10 for 2 turns (no dice required)',
     sprite: 'scroll-stack.png',
     category: 'consumable',
-    goldPrice: 65,
-    silverPrice: 7,
+    goldPrice: 7,
+    silverPrice: 65,
     itemType: 'scroll'
   },
   // Scrolls - Curse
@@ -264,8 +264,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Reduces enemy ATK by 15 for 3 turns (no dice required)',
     sprite: 'scroll.png',
     category: 'consumable',
-    goldPrice: 45,
-    silverPrice: 5,
+    goldPrice: 5,
+    silverPrice: 45,
     itemType: 'scroll'
   },
   {
@@ -274,8 +274,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Deals 10 poison damage per turn for 3 turns (no dice required)',
     sprite: 'scroll-open.png',
     category: 'consumable',
-    goldPrice: 50,
-    silverPrice: 5,
+    goldPrice: 5,
+    silverPrice: 50,
     itemType: 'scroll'
   },
   {
@@ -284,8 +284,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Reduces enemy accuracy by 30% for 2 turns (no dice required)',
     sprite: 'scroll-stack.png',
     category: 'consumable',
-    goldPrice: 55,
-    silverPrice: 6,
+    goldPrice: 6,
+    silverPrice: 55,
     itemType: 'scroll'
   }
 ];
