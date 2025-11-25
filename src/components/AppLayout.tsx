@@ -12,8 +12,8 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
     <div className="min-h-screen bg-background relative">
       <SnowFall />
       <div 
-        className="fixed inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
-        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '125%' }}
+        className="fixed inset-0 opacity-30 bg-no-repeat brightness-75"
+        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '125%', backgroundPosition: 'calc(50% + 20px) center' }}
       />
       
       <div className="relative z-10 p-4">
