@@ -59,10 +59,8 @@ export const EntitySprite = React.memo(({
 
   useEffect(() => {
     if (damage !== undefined && damage > 0) {
-      console.log(`💥 EntitySprite [${id}] showing damage:`, damage);
       setShowDamage(true);
       const timer = setTimeout(() => {
-        console.log(`💥 EntitySprite [${id}] hiding damage`);
         setShowDamage(false);
       }, 1000);
       return () => clearTimeout(timer);
@@ -72,7 +70,6 @@ export const EntitySprite = React.memo(({
   // Attack animation for players
   useEffect(() => {
     if (type === 'player' && isAttacking && targetX !== undefined && targetY !== undefined) {
-      console.log(`🎯 Player [${id}] starting attack animation`);
       // Phase 1: Move toward target
       setAvatarAction('wlk');
       setShowMovementEffect(true);
@@ -82,14 +79,12 @@ export const EntitySprite = React.memo(({
       
       // Phase 2: Attack pose at impact
       const attackTimer = setTimeout(() => {
-        console.log(`🎯 Player [${id}] attack impact`);
         setAvatarAction('crr');
         setShowMovementEffect(false);
       }, 300);
       
       // Phase 3: Return to original position
       const returnTimer = setTimeout(() => {
-        console.log(`🎯 Player [${id}] returning to position`);
         setAnimatePosition({ x, y });
         setAvatarAction('std');
       }, 700);
@@ -168,8 +163,6 @@ export const EntitySprite = React.memo(({
             zIndex: 1,
             opacity: 0.9,
           }}
-          onLoad={() => console.log(`✅ hitBump.gif loaded for entity [${id}]`)}
-          onError={(e) => console.error(`❌ hitBump.gif failed to load for entity [${id}]`, e)}
         />
       )}
 
@@ -219,8 +212,6 @@ export const EntitySprite = React.memo(({
               zIndex: 10,
               opacity: 0.95,
             }}
-            onLoad={() => console.log(`✅ explosionHit.gif loaded for entity [${id}] with damage:`, damage)}
-            onError={(e) => console.error(`❌ explosionHit.gif failed to load for entity [${id}]`, e)}
           />
         )}
         
