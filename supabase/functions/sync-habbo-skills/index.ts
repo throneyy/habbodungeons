@@ -83,7 +83,7 @@ serve(async (req) => {
     let fishingLevel = 0;
     let gardeningLevel = 0;
 
-    // Try bobba.me API first, fall back to Habbo Origins API
+    // Try bobba.me API first (most reliable source for skill levels)
     try {
       console.log(`Fetching skills from bobba.me for: ${habboUsername}`);
       
@@ -99,49 +99,20 @@ serve(async (req) => {
         gardeningLevel = skillsData.mainDetails?.gardeningLevel || 0;
         console.log('Parsed levels from bobba.me - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
       } else {
-        console.warn(`Bobba API returned status ${bobbaResponse.status}, trying Habbo Origins API`);
+        console.warn(`Bobba API returned status ${bobbaResponse.status}`);
         
-        // Fallback to Habbo Origins API (requires separate calls per skill)
-        const originsId = profile.habbo_origins_id;
-        if (originsId) {
-          console.log(`Fetching skills from Habbo Origins for ID: ${originsId}`);
-          
-          // Fetch fishing level
-          const fishingResponse = await fetch(
-            `https://origins.habbo.com/api/public/skills/${encodeURIComponent(originsId)}?skillType=FISHING`
-          );
-          console.log(`Origins API fishing response status: ${fishingResponse.status}`);
-          if (fishingResponse.ok) {
-            const fishingData = await fishingResponse.json();
-            console.log('Origins fishing data:', fishingData);
-            fishingLevel = fishingData.level || 0;
-          } else {
-            const fishingError = await fishingResponse.text();
-            console.error(`Origins fishing API error: ${fishingError}`);
-          }
-          
-          // Fetch gardening level
-          const gardeningResponse = await fetch(
-            `https://origins.habbo.com/api/public/skills/${encodeURIComponent(originsId)}?skillType=GARDENING`
-          );
-          console.log(`Origins API gardening response status: ${gardeningResponse.status}`);
-          if (gardeningResponse.ok) {
-            const gardeningData = await gardeningResponse.json();
-            console.log('Origins gardening data:', gardeningData);
-            gardeningLevel = gardeningData.level || 0;
-          } else {
-            const gardeningError = await gardeningResponse.text();
-            console.error(`Origins gardening API error: ${gardeningError}`);
-          }
-          
-          console.log('Parsed levels from Origins API - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
-        } else {
-          console.error('No Origins ID available for fallback');
-        }
+        // Bobba.me is down - Origins API skills endpoint requires username, not ID
+        // The skills API is not publicly documented and may not be available
+        // For now, users will need to wait for bobba.me to come back online
+        // or we need to find an alternative API
+        
+        throw new Error('Bobba API is unavailable. Skill sync requires bobba.me API to be online.');
       }
     } catch (error: any) {
       console.error('Failed to fetch skills:', error);
-      console.warn('Using default levels (0) due to API error');
+      
+      // If bobba.me is down, throw an error instead of silently returning 0
+      throw new Error(`Unable to sync skills: ${error.message}. Please try again later when bobba.me API is available.`);
     }
 
     // Calculate unlocked skills
