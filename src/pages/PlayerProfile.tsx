@@ -7,6 +7,7 @@ import { StatBar } from "@/components/StatBar";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { getArchetypeById } from "@/lib/classArchetypes";
 
 interface PlayerData {
   username: string;
@@ -23,6 +24,9 @@ interface PlayerData {
   def: number;
   spd: number;
   figureString?: string;
+  custom_class_name?: string;
+  custom_class_description?: string;
+  custom_class_archetype?: string;
 }
 
 export default function PlayerProfile() {
@@ -47,7 +51,7 @@ export default function PlayerProfile() {
 
       const { data: profiles, error: profileError } = await supabase
         .from("profiles")
-        .select("id, username, habbo_username, habbo_profile_json, created_at")
+        .select("id, username, habbo_username, habbo_profile_json, created_at, custom_class_name, custom_class_description, custom_class_archetype")
         .ilike("habbo_username", habboUsername)
         .order("created_at", { ascending: false })
         .limit(1);
@@ -101,6 +105,9 @@ export default function PlayerProfile() {
         atk: statsData.atk || 10,
         def: statsData.def || 10,
         spd: statsData.spd || 10,
+        custom_class_name: profileData.custom_class_name,
+        custom_class_description: profileData.custom_class_description,
+        custom_class_archetype: profileData.custom_class_archetype,
       });
     } catch (error: any) {
       console.error("Error loading player:", error);
@@ -160,6 +167,29 @@ export default function PlayerProfile() {
             <div className="flex-1 space-y-3">
               <h1 className="text-5xl font-bold text-foreground">{player.habbo_username}</h1>
               <p className="text-xl text-muted-foreground">Habbo Dungeons: {player.username.split('@')[0]}</p>
+              
+              {/* Player Class Display */}
+              {player.custom_class_name && (
+                <div className="p-4 bg-primary/10 rounded-lg border-4 border-primary/30 max-w-xl">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-3xl">
+                      {getArchetypeById(player.custom_class_archetype || "")?.icon || "⚔️"}
+                    </span>
+                    <div>
+                      <h3 className="text-xl font-black text-primary">{player.custom_class_name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Archetype: {getArchetypeById(player.custom_class_archetype || "")?.name || "Unknown"}
+                      </p>
+                    </div>
+                  </div>
+                  {player.custom_class_description && (
+                    <p className="text-sm italic border-l-4 border-primary pl-3 py-1 mt-2">
+                      {player.custom_class_description}
+                    </p>
+                  )}
+                </div>
+              )}
+              
               <div className="flex gap-3 flex-wrap">
                 <div className="inline-block px-4 py-2 bg-primary/20 border-2 border-primary rounded-lg">
                   <span className="text-sm text-muted-foreground mr-2">Level</span>

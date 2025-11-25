@@ -395,7 +395,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          class_id: string | null
           created_at: string
+          custom_class_archetype: string | null
+          custom_class_description: string | null
+          custom_class_icon: string | null
+          custom_class_name: string | null
           fishing_level: number | null
           fishing_xp: number | null
           gardening_level: number | null
@@ -410,7 +415,12 @@ export type Database = {
           username: string
         }
         Insert: {
+          class_id?: string | null
           created_at?: string
+          custom_class_archetype?: string | null
+          custom_class_description?: string | null
+          custom_class_icon?: string | null
+          custom_class_name?: string | null
           fishing_level?: number | null
           fishing_xp?: number | null
           gardening_level?: number | null
@@ -425,7 +435,12 @@ export type Database = {
           username: string
         }
         Update: {
+          class_id?: string | null
           created_at?: string
+          custom_class_archetype?: string | null
+          custom_class_description?: string | null
+          custom_class_icon?: string | null
+          custom_class_name?: string | null
           fishing_level?: number | null
           fishing_xp?: number | null
           gardening_level?: number | null
