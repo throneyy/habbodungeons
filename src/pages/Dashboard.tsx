@@ -64,59 +64,55 @@ const Dashboard = () => {
     loadData();
   }, []);
 
-  // Auto-sync skills on load and periodically
-  useEffect(() => {
-    const syncSkills = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
+  // Auto-sync skills on load and periodically - DISABLED until we have working API access
+  // useEffect(() => {
+  //   const syncSkills = async () => {
+  //     try {
+  //       const { data: { session } } = await supabase.auth.getSession();
+  //       if (!session) return;
 
-        // Check if user has a linked Habbo account
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('habbo_username')
-          .eq('id', session.user.id)
-          .single();
+  //       const { data: profileData } = await supabase
+  //         .from('profiles')
+  //         .select('habbo_username')
+  //         .eq('id', session.user.id)
+  //         .single();
 
-        if (!profileData?.habbo_username) {
-          console.log('No Habbo account linked, skipping skill sync');
-          return;
-        }
+  //       if (!profileData?.habbo_username) {
+  //         console.log('No Habbo account linked, skipping skill sync');
+  //         return;
+  //       }
 
-        console.log('Auto-syncing skills...');
-        const { error } = await supabase.functions.invoke('sync-habbo-skills', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-        });
+  //       console.log('Auto-syncing skills...');
+  //       const { error } = await supabase.functions.invoke('sync-habbo-skills', {
+  //         headers: {
+  //           Authorization: `Bearer ${session.access_token}`,
+  //         },
+  //       });
 
-        if (error) {
-          console.error('Skill sync error:', error);
-        } else {
-          console.log('Skills synced successfully');
-          // Reload data to get updated skills
-          loadData();
-        }
-      } catch (error) {
-        console.error('Auto-sync error:', error);
-      }
-    };
+  //       if (error) {
+  //         console.error('Skill sync error:', error);
+  //       } else {
+  //         console.log('Skills synced successfully');
+  //         loadData();
+  //       }
+  //     } catch (error) {
+  //       console.error('Auto-sync error:', error);
+  //     }
+  //   };
 
-    // Initial sync after a short delay
-    const initialTimeout = setTimeout(() => {
-      syncSkills();
-    }, 2000);
+  //   const initialTimeout = setTimeout(() => {
+  //     syncSkills();
+  //   }, 2000);
 
-    // Periodic sync every 5 minutes
-    const syncInterval = setInterval(() => {
-      syncSkills();
-    }, 5 * 60 * 1000);
+  //   const syncInterval = setInterval(() => {
+  //     syncSkills();
+  //   }, 5 * 60 * 1000);
 
-    return () => {
-      clearTimeout(initialTimeout);
-      clearInterval(syncInterval);
-    };
-  }, []);
+  //   return () => {
+  //     clearTimeout(initialTimeout);
+  //     clearInterval(syncInterval);
+  //   };
+  // }, []);
 
   const loadData = async () => {
     try {
@@ -227,44 +223,10 @@ const Dashboard = () => {
   };
 
   const syncSkillsManually = async () => {
-    if (!profile?.habbo_username) {
-      toast({
-        title: "No Habbo account linked",
-        description: "Please link your Habbo account first",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setSyncing(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-
-      console.log('Manual skill sync triggered');
-      const { data, error } = await supabase.functions.invoke('sync-habbo-skills', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) throw error;
-
-      toast({ 
-        title: "Skills synced!", 
-        description: `Fishing: Lv${data.fishingLevel} (${data.fishingXp} XP) | Gardening: Lv${data.gardeningLevel} (${data.gardeningXp} XP)` 
-      });
-
-      // Reload data to show updated skills
-      await loadData();
-    } catch (error: any) {
-      toast({
-        title: "Failed to sync skills",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-    setSyncing(false);
+    toast({
+      title: "Skills Sync Coming Soon",
+      description: "Habbo Origins skills sync is currently unavailable. Manual entry will be available in a future update.",
+    });
   };
 
   const useConsumable = async (itemId: string, itemName: string) => {
@@ -423,10 +385,11 @@ const Dashboard = () => {
                   disabled={syncing}
                   variant="outline"
                   size="sm"
-                  className="font-bold border-2 border-habbo-dark whitespace-nowrap"
+                  className="font-bold border-2 border-habbo-dark whitespace-nowrap opacity-50 cursor-not-allowed"
+                  title="Coming soon"
                 >
-                  <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                  Sync Skills
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Sync Skills (Coming Soon)
                 </Button>
               </div>
             )}
