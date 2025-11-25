@@ -429,7 +429,8 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
       .replace(/,\s*\}/g, '}')  // Remove trailing commas before }
       .replace(/\n/g, ' ')       // Remove newlines that might break strings
       .replace(/\r/g, '')        // Remove carriage returns
-      .replace(/—/g, '--');      // Replace em dashes with double hyphens (pixel font fix)
+      .replace(/—/g, '--')       // Replace em dashes with double hyphens (pixel font fix)
+      .replace(/"(\w+)"\s+"([^"]*)"/g, '"$1": "$2"');  // Fix missing colons: "label" "text" -> "label": "text"
 
     let storyNode;
     let parseAttempts = 0;
@@ -452,15 +453,19 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
         
         // Try progressively more aggressive cleaning
         if (parseAttempts === 1) {
-          // Attempt 2: Try to fix escaped quotes
-          storyContent = storyContent.replace(/\\"/g, '"').replace(/\\'/g, "'");
+          // Attempt 2: Fix missing colons more aggressively and escaped quotes
+          storyContent = storyContent
+            .replace(/"(\w+)"\s*"([^"]*)"/g, '"$1": "$2"')  // Fix missing colons
+            .replace(/\\"/g, '"')
+            .replace(/\\'/g, "'");
         } else if (parseAttempts === 2) {
-          // Attempt 3: Extract just the outermost braces more carefully
+          // Attempt 3: Extract just the outermost braces more carefully and fix colons again
           const firstBrace = storyContent.indexOf('{');
           const lastBrace = storyContent.lastIndexOf('}');
           if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
             storyContent = storyContent.substring(firstBrace, lastBrace + 1);
           }
+          storyContent = storyContent.replace(/"(\w+)"\s*"([^"]*)"/g, '"$1": "$2"');
         }
       }
     }
