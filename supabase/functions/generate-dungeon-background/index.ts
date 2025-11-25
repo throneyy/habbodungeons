@@ -80,9 +80,8 @@ serve(async (req) => {
     // Generate deterministic seed
     const seed = generateSeed(dungeonId, theme, difficulty);
     
-    // Create theme-appropriate prompt
-    const themeText = theme.replace(/_/g, ' ');
-    const prompt = `isometric pixel art dungeon room, ${themeText} theme, habbo hotel style, game screenshot, empty center, 45 degree angle, crisp pixel art, no UI text, black background, never white background`;
+    // Force icy/frozen theme for all dungeons (game aesthetic)
+    const prompt = `isometric pixel art frozen icy dungeon room, ice cavern with frost crystals, habbo hotel style, game screenshot, empty center battlefield, 45 degree angle, crisp pixel art, no UI text, black background, never white background, frozen dungeon aesthetic`;
     
     console.log('Calling Banana Nano with:', { prompt, seed, width: 768, height: 512 });
 
