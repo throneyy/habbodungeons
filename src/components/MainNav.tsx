@@ -28,8 +28,9 @@ export const MainNav = () => {
         <img 
           src={habboDungeonsBanner}
           alt="Habbo Dungeons"
-          className="cursor-pointer pixel-icon h-8"
+          className="cursor-pointer pixel-icon"
           onClick={() => navigate("/")}
+          style={{ imageRendering: 'pixelated' }}
         />
         
         <div className="flex items-center gap-2">
