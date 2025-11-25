@@ -398,7 +398,20 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
     const aiData = await aiResponse.json();
     console.log("AI response:", aiData);
 
-    let storyContent = aiData.choices[0]?.message?.content || "";
+    // Check for API errors in the response
+    const choice = aiData.choices?.[0];
+    if (choice?.error) {
+      const errorMsg = choice.error.message || "Unknown AI API error";
+      const errorCode = choice.error.code || 500;
+      console.error("AI API returned error:", choice.error);
+      throw new Error(`AI API error (${errorCode}): ${errorMsg}`);
+    }
+
+    let storyContent = choice?.message?.content || "";
+    if (!storyContent || storyContent.trim().length === 0) {
+      throw new Error("AI API returned empty content");
+    }
+    
     console.log("Raw AI content:", storyContent.substring(0, 200) + "...");
     
     // Remove markdown code fences and any explanatory text
