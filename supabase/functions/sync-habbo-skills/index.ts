@@ -110,21 +110,33 @@ serve(async (req) => {
           const fishingResponse = await fetch(
             `https://origins.habbo.com/api/public/skills/${encodeURIComponent(originsId)}?skillType=FISHING`
           );
+          console.log(`Origins API fishing response status: ${fishingResponse.status}`);
           if (fishingResponse.ok) {
             const fishingData = await fishingResponse.json();
+            console.log('Origins fishing data:', fishingData);
             fishingLevel = fishingData.level || 0;
+          } else {
+            const fishingError = await fishingResponse.text();
+            console.error(`Origins fishing API error: ${fishingError}`);
           }
           
           // Fetch gardening level
           const gardeningResponse = await fetch(
             `https://origins.habbo.com/api/public/skills/${encodeURIComponent(originsId)}?skillType=GARDENING`
           );
+          console.log(`Origins API gardening response status: ${gardeningResponse.status}`);
           if (gardeningResponse.ok) {
             const gardeningData = await gardeningResponse.json();
+            console.log('Origins gardening data:', gardeningData);
             gardeningLevel = gardeningData.level || 0;
+          } else {
+            const gardeningError = await gardeningResponse.text();
+            console.error(`Origins gardening API error: ${gardeningError}`);
           }
           
           console.log('Parsed levels from Origins API - Fishing:', fishingLevel, 'Gardening:', gardeningLevel);
+        } else {
+          console.error('No Origins ID available for fallback');
         }
       }
     } catch (error: any) {
