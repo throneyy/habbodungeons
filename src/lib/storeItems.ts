@@ -84,6 +84,16 @@ export const STORE_ITEMS: StoreItem[] = [
     itemType: 'weapon'
   },
   {
+    id: 'ice-dagger',
+    name: 'Ice Dagger',
+    description: 'A frost-enchanted dagger that chills enemies (+8 ATK, +5 DEF)',
+    sprite: '', // Will use AI-generated icon
+    category: 'weapon',
+    goldPrice: 120,
+    silverPrice: 12,
+    itemType: 'weapon'
+  },
+  {
     id: 'fighters-sword',
     name: 'Fighters Sword',
     description: 'A sturdy blade (+15 ATK)',
