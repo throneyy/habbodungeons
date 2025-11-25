@@ -27,9 +27,6 @@ export function SkillTreeDialog({
   onSkillsUpdated,
 }: SkillTreeDialogProps) {
   const [syncing, setSyncing] = useState(false);
-  const [showManualEntry, setShowManualEntry] = useState(false);
-  const [manualFishing, setManualFishing] = useState(fishingLevel.toString());
-  const [manualGardening, setManualGardening] = useState(gardeningLevel.toString());
 
   const fishingSkills = SKILL_DEFINITIONS.filter(s => s.source === "fishing")
     .sort((a, b) => (a.requiredFishingLevel || 0) - (b.requiredFishingLevel || 0));
@@ -61,53 +58,12 @@ export function SkillTreeDialog({
       }
     } catch (error: any) {
       console.error('Sync error:', error);
-      toast.error("bobba.me API is down. Use manual entry below.");
-      setShowManualEntry(true);
+      toast.error("Failed to sync skills. Please try again later.");
     } finally {
       setSyncing(false);
     }
   };
 
-  const handleManualSubmit = async () => {
-    setSyncing(true);
-    try {
-      const fishing = parseInt(manualFishing) || 0;
-      const gardening = parseInt(manualGardening) || 0;
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      // Calculate unlocked skills based on manual levels
-      const unlockedSkills = SKILL_DEFINITIONS
-        .filter(skill => {
-          const meetsFishing = skill.requiredFishingLevel == null || fishing >= skill.requiredFishingLevel;
-          const meetsGardening = skill.requiredGardeningLevel == null || gardening >= skill.requiredGardeningLevel;
-          return meetsFishing && meetsGardening;
-        })
-        .map(skill => skill.id);
-
-      // Update profile directly
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          fishing_level: fishing,
-          gardening_level: gardening,
-          unlocked_skills: unlockedSkills,
-          last_habbo_skill_sync: new Date().toISOString(),
-        })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      toast.success(`Skills updated! Fishing: ${fishing}, Gardening: ${gardening}. ${unlockedSkills.length} skills unlocked.`);
-      setShowManualEntry(false);
-      onSkillsUpdated?.();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to update skills");
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   const renderSkillNode = (skill: typeof SKILL_DEFINITIONS[0], currentLevel: number) => {
     const requiredLevel = skill.requiredFishingLevel || skill.requiredGardeningLevel || 0;
@@ -180,67 +136,18 @@ export function SkillTreeDialog({
               <span className="text-2xl">🌟</span>
               Skill Trees
             </DialogTitle>
-            <div className="flex gap-2">
-              <Button 
-                onClick={handleSyncSkills} 
-                disabled={syncing}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Syncing...' : 'Sync from Habbo'}
-              </Button>
-              <Button 
-                onClick={() => setShowManualEntry(!showManualEntry)} 
-                disabled={syncing}
-                variant="secondary"
-                size="sm"
-              >
-                Manual Entry
-              </Button>
-            </div>
-          </div>
-        </DialogHeader>
-
-        {showManualEntry && (
-          <div className="bg-card border-2 border-primary/20 p-4 rounded-lg space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Enter your skill levels manually (temporary workaround while bobba.me is down):
-            </p>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Fishing Level</label>
-                <input
-                  type="number"
-                  value={manualFishing}
-                  onChange={(e) => setManualFishing(e.target.value)}
-                  className="w-full px-3 py-2 bg-background border-2 border-border rounded"
-                  min="0"
-                  max="100"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Gardening Level</label>
-                <input
-                  type="number"
-                  value={manualGardening}
-                  onChange={(e) => setManualGardening(e.target.value)}
-                  className="w-full px-3 py-2 bg-background border-2 border-border rounded"
-                  min="0"
-                  max="100"
-                />
-              </div>
-            </div>
-            <Button
-              onClick={handleManualSubmit}
+            <Button 
+              onClick={handleSyncSkills} 
               disabled={syncing}
-              className="w-full"
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
             >
-              {syncing ? "Updating..." : "Update Skill Levels"}
+              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? 'Syncing...' : 'Sync from Habbo'}
             </Button>
           </div>
-        )}
+        </DialogHeader>
 
         <Tabs defaultValue="fishing" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
