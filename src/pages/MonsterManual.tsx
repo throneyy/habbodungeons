@@ -19,7 +19,7 @@ import frostMutant from "@/assets/frost-mutant.png";
 import frostWraith from "@/assets/frost-wraith.png";
 import iceShade from "@/assets/ice-shade.png";
 import undeadHabbo from "@/assets/undead-habbo.png";
-import giantRat from "@/assets/giant-rat.png";
+import frostRat from "@/assets/frost-rat.gif";
 import goblinTrio from "@/assets/goblin-trio.png";
 import frostbiteSpider from "@/assets/frostbite-spider.png";
 import frostUndead from "@/assets/frost-undead.gif";
@@ -47,7 +47,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frost-wraith.png": frostWraith,
   "ice-shade.png": iceShade,
   "undead-habbo.png": undeadHabbo,
-  "giant-rat.png": giantRat,
+  "frost-rat.gif": frostRat,
   "goblin-trio.png": goblinTrio,
   "frostbite-spider.png": frostbiteSpider,
   "frost-undead.gif": frostUndead,
@@ -71,9 +71,9 @@ interface Monster {
 }
 
 const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; difficulty: string }> = {
-  "Giant Rat": {
+  "Frost Rat": {
     type: "Beast",
-    description: "Oversized vermin that scurry through the frozen dungeons, carriers of plague and pestilence.",
+    description: "Ice-adapted vermin with crystalline fur that scurry through the frozen dungeons, their bite carries a numbing chill.",
     difficulty: "Common"
   },
   "Skeleton": {
@@ -289,7 +289,7 @@ export default function MonsterManual() {
                         style={{
                           transform: `scale(${
                             monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
-                            monster.sprite_filename === 'giant-rat.png' ? '7.5' : '1'
+                            monster.sprite_filename === 'frost-rat.gif' ? '7.5' : '1'
                           })`
                         }}
                       />

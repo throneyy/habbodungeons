@@ -198,6 +198,36 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_icons: {
+        Row: {
+          created_at: string | null
+          id: string
+          item_name: string
+          item_type: string
+          prompt_used: string
+          regenerate_requested: boolean | null
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          item_name: string
+          item_type: string
+          prompt_used: string
+          regenerate_requested?: boolean | null
+          storage_path: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          item_name?: string
+          item_type?: string
+          prompt_used?: string
+          regenerate_requested?: boolean | null
+          storage_path?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           created_at: string
