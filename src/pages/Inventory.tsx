@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { Sword, Trash2, Check, Gift, Pill } from "lucide-react";
 import medievalHouse from "@/assets/medieval-house.png";
+import inventoryTitle from "@/assets/inventory-title.gif";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getItemImage, getItemDescription } from "@/lib/itemAssets";
@@ -246,7 +247,12 @@ const Inventory = () => {
           
           {/* Content */}
           <div className="relative z-10 flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-foreground">Inventory</h1>
+            <img 
+              src={inventoryTitle} 
+              alt="Inventory" 
+              className="pixel-icon"
+              style={{ imageRendering: 'pixelated' }}
+            />
             <div className="flex gap-2">
               <Button onClick={() => navigate("/loot-box")} variant="default">
                 <Gift className="mr-2 h-4 w-4" />
