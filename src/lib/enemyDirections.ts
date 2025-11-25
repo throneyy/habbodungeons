@@ -37,7 +37,7 @@ export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
   "blood-dragon-boss.gif": "left",
   
   // Animated enemies (GIF sprites)
-  "frost-undead.gif": "left", // Updated: faces left naturally
+  "frost-undead.gif": "right", // Faces right naturally, no flip needed
   "ice-tiger.gif": "left",
 };
 
