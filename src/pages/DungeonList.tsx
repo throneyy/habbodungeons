@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Users, ArrowLeft } from "lucide-react";
+import winterLandscape from "@/assets/winter-landscape.jpg";
 
 interface Server {
   id: string;
@@ -239,17 +240,27 @@ const DungeonList = () => {
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-4xl font-black text-primary">Server Browser</h1>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/dashboard")}
-            className="font-bold border-4 border-habbo-dark"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </div>
+        <HabboPanel className="relative overflow-hidden">
+          {/* Background Image with Dark Tint */}
+          <div 
+            className="absolute inset-0 bg-center bg-no-repeat pointer-events-none"
+            style={{ backgroundImage: `url(${winterLandscape})`, backgroundSize: '140%' }}
+          />
+          <div className="absolute inset-0 bg-black/60 pointer-events-none" />
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center justify-between">
+            <h1 className="text-4xl font-black text-primary-foreground">Server Browser</h1>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/dashboard")}
+              className="font-bold border-4 border-habbo-dark bg-card/90 hover:bg-card"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+        </HabboPanel>
 
         <HabboPanel title="Available Servers">
           {loading ? (
