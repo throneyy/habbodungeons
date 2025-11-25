@@ -5,6 +5,8 @@ import npcMaiden from "@/assets/npc-maiden.png";
 import npcGuard from "@/assets/npc-guard.png";
 import npcMage from "@/assets/npc-mage.png";
 import npcKnight from "@/assets/npc-knight.png";
+import npcGnome from "@/assets/npc-gnome.png";
+import npcPrince from "@/assets/npc-prince.png";
 
 export interface NPC {
   id: string;
@@ -87,6 +89,26 @@ export const NPCS: NPC[] = [
     questTheme: "Holy crusade dungeons fighting darkness and undead threats",
     questTypes: ["Purge undead corruption", "Reclaim holy sites", "Vanquish dark forces"],
     greeting: "The light guides the worthy. I have a sacred duty that requires a champion of good."
+  },
+  {
+    id: "gnome",
+    name: "Bramble Thistlewick",
+    sprite: npcGnome,
+    title: "Forest Guardian",
+    personality: "An ancient gnome druid with centuries of woodland wisdom. Speaks in riddles and nature metaphors, but fiercely protective of the wild. Mischievous yet deeply caring about the balance of nature.",
+    questTheme: "Nature-focused dungeons with elemental challenges, wildlife encounters, and environmental puzzles",
+    questTypes: ["Restore corrupted groves", "Protect endangered creatures", "Harness primal elements"],
+    greeting: "Ah, a sprout brave enough to venture deep! The forest whispers of imbalance... will you help the roots reclaim what's been taken?"
+  },
+  {
+    id: "prince",
+    name: "Prince Silverwing",
+    sprite: npcPrince,
+    title: "Heir of the Fey Court",
+    personality: "A mysterious fairy prince from the realm between worlds. Elegant and ethereal, speaking in poetic riddles with double meanings. Playful yet dangerous, bound by ancient fey contracts and oaths.",
+    questTheme: "Enchantment-focused dungeons with illusions, fey creatures, and magical bargains",
+    questTypes: ["Break ancient curses", "Navigate fey politics", "Unravel magical deceptions"],
+    greeting: "Well met, mortal walker. The threads of fate have woven you into my court's troubles. Dare you dance with the fey and risk what mortals hold dear?"
   }
 ];
 
