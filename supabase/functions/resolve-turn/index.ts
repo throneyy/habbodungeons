@@ -25,6 +25,38 @@ interface SkillDefinition {
   effectValues: SkillEffect;
 }
 
+// Scroll definitions - scrolls don't require dice rolls and automatically succeed
+interface ScrollEffect {
+  type: "heal" | "damage" | "buff" | "debuff";
+  amount?: number;
+  statType?: string; // "atk", "def", "spd", "poison", "accuracy"
+  duration?: number; // For buffs/debuffs
+}
+
+interface ScrollDefinition {
+  name: string;
+  effect: ScrollEffect;
+}
+
+const SCROLL_DEFINITIONS: Record<string, ScrollDefinition> = {
+  "Scroll of Minor Healing": { name: "Scroll of Minor Healing", effect: { type: "heal", amount: 20 } },
+  "Scroll of Greater Healing": { name: "Scroll of Greater Healing", effect: { type: "heal", amount: 50 } },
+  "Scroll of Full Healing": { name: "Scroll of Full Healing", effect: { type: "heal", amount: 100 } },
+  "Scroll of Protection": { name: "Scroll of Protection", effect: { type: "buff", statType: "def", amount: 15, duration: 3 } },
+  "Scroll of Haste": { name: "Scroll of Haste", effect: { type: "buff", statType: "spd", amount: 20, duration: 3 } },
+  "Scroll of Strength": { name: "Scroll of Strength", effect: { type: "buff", statType: "atk", amount: 15, duration: 3 } },
+  "Scroll of Fireball": { name: "Scroll of Fireball", effect: { type: "damage", amount: 25 } },
+  "Scroll of Lightning": { name: "Scroll of Lightning", effect: { type: "damage", amount: 30 } },
+  "Scroll of Ice Blast": { name: "Scroll of Ice Blast", effect: { type: "damage", amount: 20, statType: "spd", duration: 2 } },
+  "Scroll of Weakness": { name: "Scroll of Weakness", effect: { type: "debuff", statType: "atk", amount: 15, duration: 3 } },
+  "Scroll of Poison": { name: "Scroll of Poison", effect: { type: "debuff", statType: "poison", amount: 10, duration: 3 } },
+  "Scroll of Confusion": { name: "Scroll of Confusion", effect: { type: "debuff", statType: "accuracy", amount: 30, duration: 2 } }
+};
+
+function getScrollByName(name: string): ScrollDefinition | undefined {
+  return SCROLL_DEFINITIONS[name];
+}
+
 const SKILL_DEFINITIONS: SkillDefinition[] = [
   { id: "hooked_strike", name: "Hooked Strike", description: "A swift strike that hooks the enemy.", source: "fishing", mpCost: 8, effectType: "damage", effectValues: { amount: 25, target: "single" } },
   { id: "net_toss", name: "Net Toss", description: "Toss a net to ensnare multiple enemies.", source: "fishing", mpCost: 15, effectType: "damage", effectValues: { amount: 20, target: "aoe" } },
@@ -196,6 +228,179 @@ serve(async (req) => {
       .maybeSingle();
 
     console.log(`Equipped weapon: ${equippedWeapon?.item_name || 'none'}`);
+
+    // Handle scroll usage - scrolls automatically succeed without dice rolls
+    if (action === 'item' && itemName) {
+      const scroll = getScrollByName(itemName);
+      
+      if (scroll) {
+        console.log(`Using scroll: ${scroll.name}`);
+        
+        // Consume the scroll from inventory first
+        const { data: inventoryItem, error: inventoryError } = await supabase
+          .from('inventory')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('item_name', itemName)
+          .maybeSingle();
+
+        if (!inventoryItem) {
+          throw new Error(`Scroll ${itemName} not found in inventory`);
+        }
+
+        if (inventoryItem.quantity > 1) {
+          await supabase
+            .from('inventory')
+            .update({ quantity: inventoryItem.quantity - 1 })
+            .eq('id', inventoryItem.id);
+        } else {
+          await supabase
+            .from('inventory')
+            .delete()
+            .eq('id', inventoryItem.id);
+        }
+        
+        // Apply scroll effect
+        let playerNewHp = stats.current_hp;
+        let enemyNewHp = battle.current_enemy_state.current_hp;
+        let playerDamageDealt = 0;
+        let playerDamageTaken = 0;
+        let narration: string[] = [];
+        let statusEffect = '';
+        
+        const scrollEffect = scroll.effect;
+        
+        if (scrollEffect.type === 'heal') {
+          const healAmount = Math.min(scrollEffect.amount!, stats.max_hp - stats.current_hp);
+          playerNewHp = Math.min(stats.max_hp, stats.current_hp + scrollEffect.amount!);
+          narration.push(`You read the ${scroll.name}!`);
+          narration.push(`The magic heals you for ${healAmount} HP!`);
+        } else if (scrollEffect.type === 'damage') {
+          enemyNewHp = Math.max(0, battle.current_enemy_state.current_hp - scrollEffect.amount!);
+          playerDamageDealt = scrollEffect.amount!;
+          narration.push(`You read the ${scroll.name}!`);
+          narration.push(`The spell strikes the enemy for ${scrollEffect.amount} damage!`);
+          
+          // Add effect message for Ice Blast
+          if (scroll.name === "Scroll of Ice Blast") {
+            narration.push(`The enemy is slowed by the icy blast!`);
+            statusEffect = `Slowed (-${scrollEffect.amount} SPD) for ${scrollEffect.duration} turns`;
+          }
+        } else if (scrollEffect.type === 'buff') {
+          narration.push(`You read the ${scroll.name}!`);
+          if (scrollEffect.statType === 'atk') {
+            narration.push(`Your attack power surges! (+${scrollEffect.amount} ATK for ${scrollEffect.duration} turns)`);
+            statusEffect = `Strength (+${scrollEffect.amount} ATK) for ${scrollEffect.duration} turns`;
+          } else if (scrollEffect.statType === 'def') {
+            narration.push(`A protective barrier forms around you! (+${scrollEffect.amount} DEF for ${scrollEffect.duration} turns)`);
+            statusEffect = `Protected (+${scrollEffect.amount} DEF) for ${scrollEffect.duration} turns`;
+          } else if (scrollEffect.statType === 'spd') {
+            narration.push(`You feel incredibly fast! (+${scrollEffect.amount} SPD for ${scrollEffect.duration} turns)`);
+            statusEffect = `Hasted (+${scrollEffect.amount} SPD) for ${scrollEffect.duration} turns`;
+          }
+        } else if (scrollEffect.type === 'debuff') {
+          narration.push(`You read the ${scroll.name}!`);
+          if (scrollEffect.statType === 'atk') {
+            narration.push(`The enemy's strength falters! (-${scrollEffect.amount} ATK for ${scrollEffect.duration} turns)`);
+            statusEffect = `Weakened (-${scrollEffect.amount} ATK) for ${scrollEffect.duration} turns`;
+          } else if (scrollEffect.statType === 'poison') {
+            narration.push(`The enemy is poisoned! (${scrollEffect.amount} damage per turn for ${scrollEffect.duration} turns)`);
+            statusEffect = `Poisoned (${scrollEffect.amount} damage/turn) for ${scrollEffect.duration} turns`;
+          } else if (scrollEffect.statType === 'accuracy') {
+            narration.push(`The enemy becomes confused! (-${scrollEffect.amount}% accuracy for ${scrollEffect.duration} turns)`);
+            statusEffect = `Confused (-${scrollEffect.amount}% accuracy) for ${scrollEffect.duration} turns`;
+          }
+        }
+        
+        // Enemy counterattack (only if enemy survives)
+        if (enemyNewHp > 0) {
+          const enemyDamage = Math.max(1, Math.floor(battle.current_enemy_state.atk * 1.2 - (stats.def / 4)));
+          playerDamageTaken = enemyDamage;
+          playerNewHp = Math.max(0, playerNewHp - enemyDamage);
+          narration.push(`The enemy counterattacks for ${enemyDamage} damage!`);
+        } else {
+          narration.push(`The enemy is defeated!`);
+        }
+        
+        const victory = enemyNewHp <= 0;
+        const defeat = !victory && playerNewHp <= 0;
+        
+        // Update player stats
+        await supabase
+          .from('player_stats')
+          .update({ 
+            current_hp: playerNewHp,
+            current_mp: stats.current_mp, // MP unchanged
+            status_effects: statusEffect ? [statusEffect] : stats.status_effects || []
+          })
+          .eq('user_id', user.id);
+        
+        // Update battle log
+        const currentLog = battle.battle_log || [];
+        const newLogEntries = narration.map(msg => ({
+          user_id: user.id,
+          message: msg,
+          type: scrollEffect.type
+        }));
+        
+        // Update enemy state
+        await supabase
+          .from('battle_states')
+          .update({
+            current_enemy_state: {
+              ...battle.current_enemy_state,
+              current_hp: enemyNewHp
+            },
+            battle_log: [...currentLog, ...newLogEntries]
+          })
+          .eq('id', battle.id);
+        
+        // Handle turn advancement for party battles
+        if (isPartyBattle && !victory && !defeat) {
+          const turnOrder = battle.turn_order as string[];
+          const currentIndex = turnOrder.indexOf(user.id);
+          const nextIndex = (currentIndex + 1) % turnOrder.length;
+          const nextPlayerId = turnOrder[nextIndex];
+          
+          await supabase
+            .from('battle_states')
+            .update({ current_turn_user_id: nextPlayerId })
+            .eq('id', battle.id);
+        }
+        
+        // Return scroll result (skip AI processing)
+        return new Response(
+          JSON.stringify({
+            battleData: {
+              ...battle,
+              player: {
+                userId: user.id,
+                username: user.email,
+                level: stats.level,
+                current_hp: playerNewHp,
+                max_hp: stats.max_hp,
+                current_mp: stats.current_mp,
+                max_mp: stats.max_mp,
+                atk: stats.atk,
+                def: stats.def,
+                spd: stats.spd,
+                status_effects: statusEffect ? [statusEffect] : stats.status_effects || []
+              },
+              enemy: {
+                ...battle.current_enemy_state,
+                current_hp: enemyNewHp
+              },
+              battle_log: [...currentLog, ...newLogEntries]
+            },
+            playerDamageDealt,
+            playerDamageTaken,
+            victory,
+            defeat
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
 
     // Handle skill usage
     let skillUsed = null;
@@ -524,9 +729,22 @@ Output ONLY valid JSON (no markdown formatting) with:
         { name: 'Herb', type: 'consumable', weight: 15 },
         { name: 'Crystal Shards', type: 'material', weight: 10 },
         { name: 'Runestones', type: 'material', weight: 8 },
-        { name: 'Scroll', type: 'consumable', weight: 7 },
-        { name: 'Ancient Scroll', type: 'consumable', weight: 5 },
-        { name: 'Tome', type: 'consumable', weight: 3 },
+        // Scrolls - Healing
+        { name: 'Scroll of Minor Healing', type: 'scroll', weight: 12 },
+        { name: 'Scroll of Greater Healing', type: 'scroll', weight: 6 },
+        { name: 'Scroll of Full Healing', type: 'scroll', weight: 3 },
+        // Scrolls - Support
+        { name: 'Scroll of Protection', type: 'scroll', weight: 8 },
+        { name: 'Scroll of Haste', type: 'scroll', weight: 7 },
+        { name: 'Scroll of Strength', type: 'scroll', weight: 7 },
+        // Scrolls - Attack
+        { name: 'Scroll of Fireball', type: 'scroll', weight: 8 },
+        { name: 'Scroll of Lightning', type: 'scroll', weight: 6 },
+        { name: 'Scroll of Ice Blast', type: 'scroll', weight: 7 },
+        // Scrolls - Curse
+        { name: 'Scroll of Weakness', type: 'scroll', weight: 7 },
+        { name: 'Scroll of Poison', type: 'scroll', weight: 6 },
+        { name: 'Scroll of Confusion', type: 'scroll', weight: 5 },
       ];
 
       // Number of loot drops increases with enemy level

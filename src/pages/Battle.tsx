@@ -3023,54 +3023,81 @@ const Battle = () => {
                 </Button>
               </div>
 
-              {/* Item Selection */}
+              {/* Item Selection - Only show usable items (consumables and scrolls) */}
               {selectedAction === "item" && (
                 <div className="space-y-2 p-3 bg-muted rounded border-2 border-habbo-dark">
-                  <p className="text-xs font-bold mb-2">Select Item:</p>
-                  {inventory && inventory.length > 0 ? (
+                  <p className="text-xs font-bold mb-2">Select Usable Item (Scrolls & Consumables):</p>
+                  {inventory && inventory.filter(item => item.item_type === 'consumable' || item.item_type === 'scroll').length > 0 ? (
                     <div className="grid grid-cols-2 gap-2">
-                      {inventory.map((item) => (
+                      {inventory
+                        .filter(item => item.item_type === 'consumable' || item.item_type === 'scroll')
+                        .map((item) => (
                         <Button
                           key={item.id}
                           variant={selectedItem === item.item_name ? "default" : "outline"}
                           onClick={() => setSelectedItem(item.item_name)}
                           className="font-bold text-xs h-auto py-2"
+                          title={item.item_type === 'scroll' ? 'Scroll - Automatic success, no dice needed' : 'Consumable item'}
                         >
                           {item.item_name} ({item.quantity})
+                          {item.item_type === 'scroll' && <span className="ml-1 text-[10px] text-primary">📜</span>}
                         </Button>
                       ))}
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-2">
-                      No items in inventory
+                      No usable items (scrolls or consumables)
                     </p>
                   )}
                 </div>
               )}
 
-              <div className="space-y-2">
-                <div className="flex items-start gap-2 mb-2">
-                  <img src={diceSprite} alt="Dice" className="w-auto pixelated" />
-                  <p className="font-bold text-sm flex-1">Enter your Dice results from Habbo:</p>
-                </div>
-                <div className="grid grid-cols-5 gap-2">
-                  {dice.map((val, i) => (
-                    <Input
-                      key={i}
-                      type="number"
-                      min="1"
-                      max="6"
-                      value={val}
-                      onChange={(e) => {
-                        const newDice = [...dice];
-                        newDice[i] = Math.max(1, Math.min(6, parseInt(e.target.value) || 1));
-                        setDice(newDice);
-                      }}
-                      className="text-center font-bold border-2 border-habbo-dark"
-                    />
-                  ))}
-                </div>
-              </div>
+              {/* Dice Input Section - Hidden for scrolls */}
+              {(() => {
+                const selectedItemData = inventory.find(item => item.item_name === selectedItem);
+                const isScroll = selectedItemData?.item_type === 'scroll';
+                
+                if (selectedAction === 'item' && isScroll) {
+                  return (
+                    <div className="p-4 bg-primary/20 border-2 border-primary rounded-lg">
+                      <p className="font-bold text-primary text-center">
+                        📜 Scrolls don't require dice rolls!
+                      </p>
+                      <p className="text-sm text-center mt-2">
+                        Scrolls automatically succeed and use your turn.
+                      </p>
+                    </div>
+                  );
+                }
+                
+                return (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2 mb-2">
+                      <img src={diceSprite} alt="Dice" className="w-auto pixelated" />
+                      <p className="font-bold text-sm flex-1">
+                        {selectedAction === 'item' ? 'Enter Dice for Consumable:' : 'Enter your Dice results from Habbo:'}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-5 gap-2">
+                      {dice.map((val, i) => (
+                        <Input
+                          key={i}
+                          type="number"
+                          min="1"
+                          max="6"
+                          value={val}
+                          onChange={(e) => {
+                            const newDice = [...dice];
+                            newDice[i] = Math.max(1, Math.min(6, parseInt(e.target.value) || 1));
+                            setDice(newDice);
+                          }}
+                          className="text-center font-bold border-2 border-habbo-dark"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               <Button
                 onClick={handleResolveTurn}
