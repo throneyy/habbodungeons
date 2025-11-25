@@ -27,6 +27,7 @@ interface DungeonBoardProps {
 }
 
 import { EntitySprite } from './EntitySprite';
+import { useEffect, useState, useRef } from 'react';
 
 export const DungeonBoard = ({ 
   dungeon, 
@@ -35,14 +36,38 @@ export const DungeonBoard = ({
   targetEntityId,
   damageDealt
 }: DungeonBoardProps) => {
+  const arenaRef = useRef<HTMLDivElement>(null);
+  const [arenaDimensions, setArenaDimensions] = useState({ width: 1600, height: 1000 });
+
+  // Detect arena dimensions dynamically
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (arenaRef.current) {
+        setArenaDimensions({
+          width: arenaRef.current.offsetWidth,
+          height: arenaRef.current.offsetHeight
+        });
+      }
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
   // Find target entity position for attack animations
   const targetEntity = dungeon.entities.find(e => e.id === targetEntityId);
   const targetX = targetEntity?.x;
   const targetY = targetEntity?.y;
+  
   return (
     <div className="absolute inset-0 w-full h-full flex items-center justify-center">
       {/* Contained dungeon box - wider to fill space */}
-      <div className="relative w-[95%] max-w-[1600px] mx-auto aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl">
+      <div 
+        ref={arenaRef}
+        id="arena-container"
+        className="relative w-[95%] max-w-[1600px] mx-auto aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl"
+      >
         {/* Background image with cover */}
         <div 
           className="absolute inset-0 w-full h-full"
@@ -60,7 +85,7 @@ export const DungeonBoard = ({
         
         {/* Entity container - centered battle stage */}
         <div 
-          className="relative w-full h-full flex items-center justify-center"
+          className="relative w-full h-full"
           style={{
             transformStyle: 'preserve-3d',
           }}
@@ -85,6 +110,8 @@ export const DungeonBoard = ({
               name={entity.name}
               isDead={entity.isDead}
               slotIndex={slotIndex}
+              totalPlayers={dungeon.entities.filter(e => e.type === 'player').length}
+              arenaDimensions={arenaDimensions}
               isAttacking={attackingEntityId === entity.id}
               damage={damageDealt?.entityId === entity.id ? damageDealt.amount : undefined}
               targetX={attackingEntityId === entity.id ? targetX : undefined}

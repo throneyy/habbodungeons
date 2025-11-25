@@ -17,23 +17,23 @@ interface EntitySpriteProps {
   name?: string;
   isDead?: boolean;
   slotIndex?: number;
+  totalPlayers?: number;
+  arenaDimensions: { width: number; height: number };
   isAttacking?: boolean;
   damage?: number;
   targetX?: number;
   targetY?: number;
 }
 
-const TILE_WIDTH = 64;
-const TILE_HEIGHT = 32;
-
-// Arena margin system to prevent entities from being cut off at edges
-// These values ensure all characters stay within the visible floor area
-const ARENA_MARGIN = {
-  bottom: 120,  // Large bottom margin to keep players fully visible
-  top: 80,      // Top margin prevents enemies from touching top border
-  left: 100,    // Left margin for enemy positioning
-  right: 100    // Right margin for player positioning
-};
+// Diagonal party formation offsets for JRPG-style positioning
+const PARTY_OFFSETS = [
+  { x: 0, y: 0 },        // front-most player
+  { x: -28, y: 28 },     // one step back-left
+  { x: -56, y: 56 },     // two steps back-left
+  { x: -84, y: 84 },     // three steps back-left (for 4+ party)
+  { x: -112, y: 112 },   // four steps back-left (for 5+ party)
+  { x: -140, y: 140 },   // five steps back-left (for 6 party)
+];
 
 export const EntitySprite = React.memo(({
   id,
@@ -47,16 +47,46 @@ export const EntitySprite = React.memo(({
   name,
   isDead,
   slotIndex = 0,
+  totalPlayers = 1,
+  arenaDimensions,
   isAttacking,
   damage,
   targetX,
   targetY
 }: EntitySpriteProps) => {
   const [showDamage, setShowDamage] = useState(false);
-  const [animatePosition, setAnimatePosition] = useState({ x, y });
+  const [animatePosition, setAnimatePosition] = useState<{ x: number; y: number } | null>(null);
   const [avatarAction, setAvatarAction] = useState<'std' | 'wlk' | 'crr'>('std');
   const [showMovementEffect, setShowMovementEffect] = useState(false);
   const [showPushbackEffect, setShowPushbackEffect] = useState(false);
+
+  // Calculate base position based on type
+  const getBasePosition = (): { x: number; y: number } => {
+    const { width: arenaWidth, height: arenaHeight } = arenaDimensions;
+
+    if (type === 'enemy') {
+      // ENEMY: DEAD-CENTER IN ARENA
+      return {
+        x: arenaWidth / 2,
+        y: (arenaHeight / 2) - 20 // slight upward offset for floor alignment
+      };
+    } else {
+      // PARTY: RIGHT-SIDE DIAGONAL FORMATION
+      const partyBase = {
+        x: arenaWidth * 0.72,  // 72% from left
+        y: arenaHeight * 0.60  // 60% from top
+      };
+
+      const offset = PARTY_OFFSETS[slotIndex] || PARTY_OFFSETS[0];
+      
+      return {
+        x: partyBase.x + offset.x,
+        y: partyBase.y + offset.y
+      };
+    }
+  };
+
+  const basePosition = getBasePosition();
 
   // Damage animation with delay for turn-based sequencing
   useEffect(() => {
@@ -68,16 +98,16 @@ export const EntitySprite = React.memo(({
         setShowDamage(true);
         setShowPushbackEffect(true);
         
-        // Pushback animation
-        const pushbackDistance = type === 'player' ? 0.3 : -0.3;
+        // Pushback animation - move slightly away from center
+        const pushbackDistance = type === 'player' ? 15 : -15;
         setAnimatePosition({ 
-          x: x + pushbackDistance, 
-          y: y 
+          x: basePosition.x + pushbackDistance, 
+          y: basePosition.y 
         });
         
         // Return to normal position
         const returnTimer = setTimeout(() => {
-          setAnimatePosition({ x, y });
+          setAnimatePosition(null);
           setShowPushbackEffect(false);
         }, 300);
         
@@ -94,16 +124,22 @@ export const EntitySprite = React.memo(({
       
       return () => clearTimeout(showTimer);
     }
-  }, [damage, id, isAttacking, type, x, y]);
+  }, [damage, id, isAttacking, type, basePosition.x, basePosition.y]);
 
-  // Attack animation for players
+  // Attack animation
   useEffect(() => {
-    if (type === 'player' && isAttacking && targetX !== undefined && targetY !== undefined) {
-      // Phase 1: Move toward target
+    if (type === 'player' && isAttacking) {
+      // Calculate enemy center position for targeting
+      const enemyCenter = {
+        x: arenaDimensions.width / 2,
+        y: (arenaDimensions.height / 2) - 20
+      };
+      
+      // Phase 1: Move toward enemy center
       setAvatarAction('wlk');
       setShowMovementEffect(true);
-      const moveX = x + (targetX - x) * 0.4;
-      const moveY = y + (targetY - y) * 0.4;
+      const moveX = basePosition.x + (enemyCenter.x - basePosition.x) * 0.4;
+      const moveY = basePosition.y + (enemyCenter.y - basePosition.y) * 0.4;
       setAnimatePosition({ x: moveX, y: moveY });
       
       // Phase 2: Attack pose at impact
@@ -114,7 +150,7 @@ export const EntitySprite = React.memo(({
       
       // Phase 3: Return to original position
       const returnTimer = setTimeout(() => {
-        setAnimatePosition({ x, y });
+        setAnimatePosition(null);
         setAvatarAction('std');
       }, 700);
       
@@ -122,31 +158,26 @@ export const EntitySprite = React.memo(({
         clearTimeout(attackTimer);
         clearTimeout(returnTimer);
       };
+    } else if (type === 'enemy' && isAttacking) {
+      // Enemy shake animation (no movement, just visual effect)
+      setShowMovementEffect(true);
+      const shakeTimer = setTimeout(() => {
+        setShowMovementEffect(false);
+      }, 400);
+      
+      return () => clearTimeout(shakeTimer);
     } else {
-      setAnimatePosition({ x, y });
+      setAnimatePosition(null);
       setAvatarAction('std');
       setShowMovementEffect(false);
     }
-  }, [isAttacking, type, x, y, targetX, targetY, id]);
+  }, [isAttacking, type, basePosition.x, basePosition.y, arenaDimensions]);
 
-  // Convert grid coordinates to isometric screen position with proper margins
-  const SCALE = 2.5; // Make entities much larger
-  const rawIsoX = (animatePosition.x - animatePosition.y) * (TILE_WIDTH / 2) * SCALE;
-  const rawIsoY = (animatePosition.x + animatePosition.y) * (TILE_HEIGHT / 2) * SCALE;
+  // Current position for rendering (animated position or base position)
+  const currentPosition = animatePosition || basePosition;
   
-  // Apply margins to keep entities within safe arena bounds
-  let isoX = rawIsoX + ARENA_MARGIN.left;
-  let isoY = rawIsoY + ARENA_MARGIN.top;
-  
-  // Clamp positions to ensure they never exceed arena bounds
-  // Assume arena dimensions based on typical viewport
-  const ARENA_WIDTH = 1600;
-  const ARENA_HEIGHT = 800;
-  isoX = Math.max(ARENA_MARGIN.left, Math.min(isoX, ARENA_WIDTH - ARENA_MARGIN.right));
-  isoY = Math.max(ARENA_MARGIN.top, Math.min(isoY, ARENA_HEIGHT - ARENA_MARGIN.bottom));
-  
-  // Calculate z-index based on depth (entities further back have lower z-index)
-  const zIndex = 100 + Math.floor(animatePosition.x + animatePosition.y);
+  // Calculate z-index based on Y position for proper isometric layering
+  const zIndex = 100 + Math.floor(currentPosition.y);
 
   // Generate player avatar URL with action and direction
   // Direction 6 = facing toward enemies at optimal angle, head_direction 5 for better facing
@@ -160,16 +191,16 @@ export const EntitySprite = React.memo(({
       )
     : (sprite || '/placeholder.svg');
 
-  // Scale sprite size for prominence - larger for better visibility at full resolution
+  // Scale sprite size for prominence
   const spriteSize = type === 'player' ? 80 : 240;
 
   return (
     <div
       style={{
         position: 'absolute',
-        left: `calc(50% + ${isoX}px)`,
-        top: `calc(50% + ${isoY}px)`,
-        transform: `translate(-50%, -100%) ${isAttacking ? 'scale(1.15)' : ''} ${type === 'enemy' && isAttacking ? 'translateX(-5px)' : ''}`,
+        left: `${currentPosition.x}px`,
+        top: `${currentPosition.y}px`,
+        transform: `translate(-50%, -100%) ${isAttacking && type === 'player' ? 'scale(1.15)' : ''} ${type === 'enemy' && isAttacking ? 'translateX(-5px)' : ''}`,
         zIndex,
         transition: 'left 0.3s ease-out, top 0.3s ease-out, transform 0.2s ease-out',
         filter: isDead ? 'grayscale(100%) brightness(0.5)' : 'none',
