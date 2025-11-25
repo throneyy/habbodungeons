@@ -64,10 +64,10 @@ serve(async (req) => {
 
     console.log('Syncing skills for user:', user.id);
 
-    // Get user's profile to fetch habbo info
+    // Get user's profile to fetch habbo username
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('habbo_username, habbo_origins_id')
+      .select('habbo_username')
       .eq('id', user.id)
       .single();
 
@@ -81,12 +81,11 @@ serve(async (req) => {
 
     const habboUsername = profile.habbo_username;
     
-    console.log(`Syncing skills for ${habboUsername}`);
+    console.log(`Syncing skills for ${habboUsername} via Bobba API...`);
 
-    // Step 1: Fetch uniqueId from Habbo Origins API
-    console.log(`Fetching uniqueId for ${habboUsername}...`);
-    const userResponse = await fetch(
-      `https://origins.habbo.com/api/public/users?name=${encodeURIComponent(habboUsername)}`,
+    // Fetch skills from Bobba API
+    const bobbaResponse = await fetch(
+      `https://api.bobba.me/get_habbo?username=${encodeURIComponent(habboUsername)}`,
       {
         headers: {
           'Accept': 'application/json',
@@ -94,66 +93,22 @@ serve(async (req) => {
       }
     );
 
-    if (!userResponse.ok) {
-      throw new Error(`Failed to fetch user data from Habbo Origins. Status: ${userResponse.status}`);
+    if (!bobbaResponse.ok) {
+      throw new Error(`Bobba API returned status ${bobbaResponse.status}`);
     }
 
-    const userData = await userResponse.json();
-    console.log('User data response:', JSON.stringify(userData));
+    const bobbaData = await bobbaResponse.json();
+    console.log('Bobba API response:', JSON.stringify(bobbaData));
 
-    const uniqueId = userData.uniqueId;
-    if (!uniqueId) {
-      throw new Error('No uniqueId found in Habbo Origins response');
-    }
+    // Extract skill levels from mainDetails
+    const fishingLevel = bobbaData.mainDetails?.fishingLevel || 0;
+    const gardeningLevel = bobbaData.mainDetails?.gardeningLevel || 0;
+    
+    // For XP, we'll set to 0 for now since Bobba API doesn't provide it
+    const fishingXp = 0;
+    const gardeningXp = 0;
 
-    console.log(`Found uniqueId: ${uniqueId}`);
-
-    // Update profile with uniqueId for future use
-    await supabase
-      .from('profiles')
-      .update({ habbo_origins_id: uniqueId })
-      .eq('id', user.id);
-
-    // Step 2: Fetch skills array from Habbo Origins API
-    console.log(`Fetching skills for uniqueId: ${uniqueId}...`);
-    const skillsResponse = await fetch(
-      `https://origins.habbo.com/api/public/skills/${encodeURIComponent(uniqueId)}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
-
-    if (!skillsResponse.ok) {
-      throw new Error(`Failed to fetch skills from Habbo Origins. Status: ${skillsResponse.status}`);
-    }
-
-    const skillsArray = await skillsResponse.json();
-    console.log('Skills array response:', JSON.stringify(skillsArray));
-
-    // Parse fishing and gardening from the skills array
-    let fishingLevel = 0;
-    let fishingXp = 0;
-    let gardeningLevel = 0;
-    let gardeningXp = 0;
-
-    if (Array.isArray(skillsArray)) {
-      const fishingSkill = skillsArray.find((s: any) => s.skill === 'fishing');
-      const gardeningSkill = skillsArray.find((s: any) => s.skill === 'gardening');
-
-      if (fishingSkill) {
-        fishingLevel = fishingSkill.level || 0;
-        fishingXp = fishingSkill.xp || 0;
-      }
-
-      if (gardeningSkill) {
-        gardeningLevel = gardeningSkill.level || 0;
-        gardeningXp = gardeningSkill.xp || 0;
-      }
-    }
-
-    console.log(`Parsed levels - Fishing: Lv${fishingLevel} (${fishingXp} XP), Gardening: Lv${gardeningLevel} (${gardeningXp} XP)`);
+    console.log(`Parsed levels - Fishing: Lv${fishingLevel}, Gardening: Lv${gardeningLevel}`);
 
     // Calculate unlocked skills
     const unlockedSkills = getUnlockedSkills(fishingLevel, gardeningLevel);

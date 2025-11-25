@@ -37,7 +37,33 @@ export function SkillTreeDialog({
     .sort((a, b) => (a.requiredGardeningLevel || 0) - (b.requiredGardeningLevel || 0));
 
   const handleSyncSkills = async () => {
-    toast.info("Habbo Origins skills sync is currently unavailable. Manual entry will be available in a future update.");
+    setSyncing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('sync-habbo-skills', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Skills synced! Fishing: Lv${data.fishingLevel}, Gardening: Lv${data.gardeningLevel}`);
+      
+      if (onSkillsUpdated) {
+        onSkillsUpdated();
+      }
+    } catch (error: any) {
+      console.error('Sync error:', error);
+      toast.error("Failed to sync skills. Please try again later.");
+    } finally {
+      setSyncing(false);
+    }
   };
 
 
@@ -115,20 +141,14 @@ export function SkillTreeDialog({
               </DialogTitle>
               <Button 
                 onClick={handleSyncSkills} 
-                disabled={true}
+                disabled={syncing}
                 variant="outline"
                 size="sm"
-                className="flex items-center gap-2 opacity-50 cursor-not-allowed"
-                title="Coming soon"
+                className="flex items-center gap-2"
               >
-                <RefreshCw className="w-4 h-4" />
-                Sync (Coming Soon)
+                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync from Habbo'}
               </Button>
-            </div>
-            <div className="bg-muted/50 border-2 border-border rounded-lg p-3">
-              <p className="text-sm text-muted-foreground">
-                ℹ️ <strong>Habbo Origins skills sync coming soon</strong> - Manual entry will be available in a future update. Skills currently default to Level 0.
-              </p>
             </div>
             {lastSyncTime && (
               <p className="text-xs text-muted-foreground">
