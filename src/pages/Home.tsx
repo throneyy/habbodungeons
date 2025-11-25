@@ -59,8 +59,8 @@ const Home = () => {
     <div className="min-h-screen bg-background p-8 relative">
       <SnowFall />
       <div 
-        className="absolute inset-0 opacity-20 bg-center bg-cover"
-        style={{ backgroundImage: `url(${dungeonBg})` }}
+        className="absolute inset-0 opacity-20 bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '50%' }}
       />
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         <MainNav />
