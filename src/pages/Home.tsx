@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { MainNav } from "@/components/MainNav";
-import dungeonBg from "@/assets/dungeon-bg.png";
+import dungeonBg from "@/assets/dungeon-bg-isometric.png";
 import frostkeepBanner from "@/assets/the-shattered-frostkeep.gif";
 import SnowFall from "@/components/SnowFall";
 import { toast } from "sonner";
