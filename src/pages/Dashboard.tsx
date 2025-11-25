@@ -411,20 +411,20 @@ const Dashboard = () => {
                   Open Chests
                 </Button>
                 <Button
-                  onClick={() => setShowSkillTree(true)}
-                  variant="outline"
-                  className="font-bold border-4 border-habbo-dark whitespace-nowrap"
-                >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  View Skills
-                </Button>
-                <Button
                   onClick={() => navigate("/store")}
                   variant="secondary"
                   className="font-bold border-4 border-habbo-dark whitespace-nowrap"
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   Visit Store
+                </Button>
+                <Button
+                  onClick={() => setShowSkillTree(true)}
+                  variant="outline"
+                  className="font-bold border-4 border-habbo-dark whitespace-nowrap"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  View Skills
                 </Button>
                 <Button
                   onClick={syncSkillsManually}
