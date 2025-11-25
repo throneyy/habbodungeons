@@ -239,6 +239,10 @@ ${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
 ## RECENT NARRATIVE EVENTS (YOU MUST CONTINUE FROM THE CURRENT LOCATION ABOVE):
 ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'string').map((e: any, idx: number) => `${idx + 1}. ${e.message}`).join('\n')}
 
+⚠️ CRITICAL TEXT FORMATTING:
+- NEVER use em dashes (—). Use double hyphens (--) instead.
+- Use only standard ASCII punctuation that renders correctly in pixel fonts.
+
 ⚠️ CRITICAL NARRATIVE CONTINUITY RULES:
 1. Your storyText MUST begin in the EXACT location described above: "${currentLocationContext.substring(0, 100)}..."
 2. DO NOT simplify, paraphrase, or change environmental descriptions (e.g., "narrow waterlogged passage" must stay "narrow waterlogged passage", not become "narrow passage")
@@ -411,7 +415,8 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
       .replace(/,\s*\]/g, ']')  // Remove trailing commas before ]
       .replace(/,\s*\}/g, '}')  // Remove trailing commas before }
       .replace(/\n/g, ' ')       // Remove newlines that might break strings
-      .replace(/\r/g, '');       // Remove carriage returns
+      .replace(/\r/g, '')        // Remove carriage returns
+      .replace(/—/g, '--');      // Replace em dashes with double hyphens (pixel font fix)
 
     let storyNode;
     let parseAttempts = 0;
