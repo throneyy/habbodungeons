@@ -15,7 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Link, Users, Gift, RefreshCw, Shield, Sparkles, ShoppingCart } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
-import dashboardJail from "@/assets/dashboard-jail.png";
+import interiorRoom from "@/assets/interior-room.png";
+import playerDashboardTitle from "@/assets/player-dashboard-title.gif";
 
 interface Profile {
   username: string;
@@ -363,12 +364,17 @@ const Dashboard = () => {
           {/* Background Image with Transparency */}
           <div 
             className="absolute inset-0 opacity-15 bg-center bg-no-repeat pointer-events-none"
-            style={{ backgroundImage: `url(${dashboardJail})`, backgroundSize: '140%' }}
+            style={{ backgroundImage: `url(${interiorRoom})`, backgroundSize: '140%' }}
           />
           
           {/* Content */}
           <div className="relative z-10 flex justify-between items-center">
-            <h1 className="text-4xl font-black text-foreground">Player Dashboard</h1>
+            <img 
+              src={playerDashboardTitle} 
+              alt="Player Dashboard" 
+              className="pixel-icon"
+              style={{ imageRendering: 'pixelated' }}
+            />
             <div className="flex gap-2">
               {isAdmin && (
                 <Button
