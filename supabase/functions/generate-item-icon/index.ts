@@ -165,16 +165,16 @@ function generatePrompt(itemName: string, itemType: string, description?: string
   if (itemType.toLowerCase() === 'weapon') {
     // Special prompt for Rusty Sword
     if (itemName.toLowerCase() === 'rusty sword') {
-      return "Rusty brown weathered sword with orange rust spots held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, character facing forward-left, weapon clearly visible in hand";
+      return "White Habbo Hotel pixel art mannequin character holding rusty brown weathered sword with orange rust spots, 35x68 pixels, FULLY TRANSPARENT BACKGROUND PNG with alpha channel NO black white or colored backgrounds, isometric 45-degree angle view, clean pixel art style matching fighters-sword.png aesthetic, weapon held in character's hands, Habbo style sprite";
     }
     
     // Special prompt for Ice Dagger
     if (itemName.toLowerCase() === 'ice dagger') {
-      return "Frost-blue glowing dagger with icy crystals held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, character facing forward-left, ice weapon clearly visible in hand";
+      return "White Habbo Hotel pixel art mannequin character holding blue icy frost dagger, 35x68 pixels, FULLY TRANSPARENT BACKGROUND PNG with alpha channel NO black white or colored backgrounds, isometric 45-degree angle view, clean pixel art style matching fighters-sword.png aesthetic, weapon held in character's hands, Habbo style sprite";
     }
     
     // Generic weapon prompt with mannequin
-    return `${itemName} held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, weapon details visible, character facing forward-left, Habbo style character sprite`;
+    return `White Habbo Hotel pixel art mannequin character holding ${itemName}, 35x68 pixels, FULLY TRANSPARENT BACKGROUND PNG with alpha channel NO black white or colored backgrounds, isometric 45-degree angle view, clean pixel art style matching fighters-sword.png, weapon held in character's hands, Habbo style sprite`;
   }
   
   // Non-weapon items use standard icon style
