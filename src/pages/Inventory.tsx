@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/AppLayout";
 import { Sword, Trash2, Check, Gift, Pill } from "lucide-react";
+import medievalHouse from "@/assets/medieval-house.png";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { getItemImage, getItemDescription } from "@/lib/itemAssets";
@@ -236,18 +237,27 @@ const Inventory = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Inventory</h1>
-          <div className="flex gap-2">
-            <Button onClick={() => navigate("/loot-box")} variant="default">
-              <Gift className="mr-2 h-4 w-4" />
-              Open Chests
-            </Button>
-            <Button onClick={() => navigate("/dashboard")} variant="outline">
-              Back to Dashboard
-            </Button>
+        <HabboPanel className="relative overflow-hidden">
+          {/* Background Image with Transparency */}
+          <div 
+            className="absolute inset-0 opacity-15 bg-center bg-no-repeat pointer-events-none"
+            style={{ backgroundImage: `url(${medievalHouse})`, backgroundSize: '140%' }}
+          />
+          
+          {/* Content */}
+          <div className="relative z-10 flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-foreground">Inventory</h1>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate("/loot-box")} variant="default">
+                <Gift className="mr-2 h-4 w-4" />
+                Open Chests
+              </Button>
+              <Button onClick={() => navigate("/dashboard")} variant="outline">
+                Back to Dashboard
+              </Button>
+            </div>
           </div>
-        </div>
+        </HabboPanel>
 
         {/* Player Stats */}
         {stats && (
