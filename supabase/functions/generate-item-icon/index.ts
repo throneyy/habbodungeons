@@ -168,6 +168,11 @@ function generatePrompt(itemName: string, itemType: string, description?: string
       return "Rusty brown weathered sword with orange rust spots held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, character facing forward-left, weapon clearly visible in hand";
     }
     
+    // Special prompt for Ice Dagger
+    if (itemName.toLowerCase() === 'ice dagger') {
+      return "Frost-blue glowing dagger with icy crystals held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, character facing forward-left, ice weapon clearly visible in hand";
+    }
+    
     // Generic weapon prompt with mannequin
     return `${itemName} held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, weapon details visible, character facing forward-left, Habbo style character sprite`;
   }
