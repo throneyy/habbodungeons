@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut, Link, Users, Gift, RefreshCw, Shield, Sparkles, ShoppingCart } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
+import dashboardJail from "@/assets/dashboard-jail.png";
 
 interface Profile {
   username: string;
@@ -358,29 +359,38 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-4xl font-black text-primary">Player Dashboard</h1>
-          <div className="flex gap-2">
-            {isAdmin && (
+        <HabboPanel className="relative overflow-hidden">
+          {/* Background Image with Transparency */}
+          <div 
+            className="absolute inset-0 opacity-15 bg-center bg-no-repeat pointer-events-none"
+            style={{ backgroundImage: `url(${dashboardJail})`, backgroundSize: '140%' }}
+          />
+          
+          {/* Content */}
+          <div className="relative z-10 flex justify-between items-center">
+            <h1 className="text-4xl font-black text-foreground">Player Dashboard</h1>
+            <div className="flex gap-2">
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/admin")}
+                  className="font-bold border-4 border-habbo-dark"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  Admin Panel
+                </Button>
+              )}
               <Button
                 variant="outline"
-                onClick={() => navigate("/admin")}
+                onClick={handleLogout}
                 className="font-bold border-4 border-habbo-dark"
               >
-                <Shield className="w-4 h-4 mr-2" />
-                Admin Panel
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
               </Button>
-            )}
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="font-bold border-4 border-habbo-dark"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            </div>
           </div>
-        </div>
+        </HabboPanel>
 
         {/* Player Identity */}
         <HabboPanel title="Player Identity">
