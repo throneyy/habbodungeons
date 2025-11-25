@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { LogIn, User, BookOpen } from "lucide-react";
+import { LogIn, User, BookOpen, ShoppingCart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import habboDungeonsBanner from "@/assets/habbo-dungeons-banner.gif";
@@ -60,6 +60,14 @@ export const MainNav = () => {
             onClick={() => navigate("/inventory")}
           >
             Inventory
+          </Button>
+          <Button
+            variant="secondary"
+            className="border-2 border-habbo-dark font-bold shadow-md"
+            onClick={() => navigate("/store")}
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Store
           </Button>
           {user ? (
             <Button

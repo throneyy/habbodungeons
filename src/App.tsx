@@ -18,6 +18,7 @@ import AdminPanel from "./pages/AdminPanel";
 import PlayerProfile from "./pages/PlayerProfile";
 import MonsterManual from "./pages/MonsterManual";
 import SpriteEditor from "./pages/SpriteEditor";
+import Store from "./pages/Store";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const App = () => (
           <Route path="/player/:habboUsername" element={<PlayerProfile />} />
           <Route path="/monster-manual" element={<MonsterManual />} />
           <Route path="/sprite-editor" element={<SpriteEditor />} />
+          <Route path="/store" element={<Store />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
