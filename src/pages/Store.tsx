@@ -351,8 +351,8 @@ export default function Store() {
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <HabboPanel title="The Frostkeep Merchant" className="mb-6 relative overflow-hidden">
           <div 
-            className="absolute inset-0 opacity-15 bg-center bg-no-repeat bg-contain pointer-events-none"
-            style={{ backgroundImage: `url(${fantasyVillageImage})` }}
+            className="absolute inset-0 opacity-15 bg-center bg-no-repeat pointer-events-none"
+            style={{ backgroundImage: `url(${fantasyVillageImage})`, backgroundSize: '140%' }}
           />
           <div className="flex flex-col lg:flex-row gap-6 items-start relative z-10">
             {/* Left Side - Bookcase */}
