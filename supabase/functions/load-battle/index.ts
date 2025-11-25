@@ -382,13 +382,25 @@ serve(async (req) => {
     // Get skills for current player
     const { data: currentUserProfile } = await supabaseAdmin
       .from("profiles")
-      .select("unlocked_skills, fishing_level, gardening_level, current_mp")
+      .select("unlocked_skills, fishing_level, gardening_level")
       .eq("id", user.id)
       .single();
 
+    // Determine which skills should be unlocked based on levels
+    const fishingLevel = currentUserProfile?.fishing_level || 0;
+    const gardeningLevel = currentUserProfile?.gardening_level || 0;
+    
+    const unlockedSkillIds = SKILL_DEFINITIONS
+      .filter(skill => {
+        if (skill.requiredFishingLevel && fishingLevel >= skill.requiredFishingLevel) return true;
+        if (skill.requiredGardeningLevel && gardeningLevel >= skill.requiredGardeningLevel) return true;
+        return false;
+      })
+      .map(skill => skill.id);
+
     const availableSkills = getAvailableSkills(
-      currentUserProfile?.unlocked_skills || [],
-      currentUserProfile?.current_mp || currentPlayer.current_mp,
+      unlockedSkillIds,
+      currentPlayer.current_mp,
       battle.used_skills || []
     );
 
