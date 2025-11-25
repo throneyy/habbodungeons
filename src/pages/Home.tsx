@@ -21,6 +21,7 @@ import interiorTavern from "@/assets/interior-tavern.png";
 import castleFortress from "@/assets/castle-fortress.png";
 import villageMarket from "@/assets/village-market.png";
 import winterMountainLandscape from "@/assets/winter-mountain-landscape.jpg";
+import dungeonPrison from "@/assets/dungeon-prison.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -178,7 +179,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${interiorTavern})`, backgroundSize: '140%' }}
+              style={{ backgroundImage: `url(${dungeonPrison})`, backgroundSize: '170%' }}
             />
             <div className="relative z-10">
               <img src={npcWarrior} alt="Party System" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
