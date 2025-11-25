@@ -61,7 +61,7 @@ const Home = () => {
       <SnowFall />
       <div 
         className="absolute inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
-        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '80%' }}
+        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '120%' }}
       />
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         <MainNav />
