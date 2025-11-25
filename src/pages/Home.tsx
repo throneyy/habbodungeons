@@ -20,6 +20,7 @@ import medievalHouseForest from "@/assets/medieval-house-forest.png";
 import interiorTavern from "@/assets/interior-tavern.png";
 import castleFortress from "@/assets/castle-fortress.png";
 import villageMarket from "@/assets/village-market.png";
+import winterMountainLandscape from "@/assets/winter-mountain-landscape.jpg";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -163,7 +164,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${castleFortress})`, backgroundSize: '140%' }}
+              style={{ backgroundImage: `url(${castleFortress})`, backgroundSize: '180%' }}
             />
             <div className="relative z-10">
               <img src={pixelSword} alt="Epic Battles" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
@@ -205,7 +206,7 @@ const Home = () => {
           <HabboPanel className="text-center overflow-hidden relative">
             <div 
               className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-              style={{ backgroundImage: `url(${villageMarket})`, backgroundSize: '140%' }}
+              style={{ backgroundImage: `url(${villageMarket})`, backgroundSize: '180%' }}
             />
             <div className="relative z-10">
               <img src={pixelStar} alt="Level Up" className="w-16 h-16 mx-auto mb-4 pixel-icon" style={{ imageRendering: 'pixelated', objectFit: 'contain' }} />
@@ -218,29 +219,35 @@ const Home = () => {
         </div>
 
         {/* How to Play */}
-        <HabboPanel className="bg-gradient-to-br from-secondary/20 to-accent/20">
-          <h2 className="text-3xl font-bold text-foreground mb-6 text-center">How to Play</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center space-y-2">
-              <div className="text-4xl font-bold text-primary mb-2">1</div>
-              <h4 className="text-xl font-bold text-foreground">Create Account</h4>
-              <p className="text-muted-foreground">
-                Sign up and link your Habbo account to get started
-              </p>
-            </div>
-            <div className="text-center space-y-2">
-              <div className="text-4xl font-bold text-primary mb-2">2</div>
-              <h4 className="text-xl font-bold text-foreground">Join a Server</h4>
-              <p className="text-muted-foreground">
-                Browse available servers or create your own dungeon lobby
-              </p>
-            </div>
-            <div className="text-center space-y-2">
-              <div className="text-4xl font-bold text-primary mb-2">3</div>
-              <h4 className="text-xl font-bold text-foreground">Battle & Loot</h4>
-              <p className="text-muted-foreground">
-                Fight monsters, collect rewards, and level up your character
-              </p>
+        <HabboPanel className="overflow-hidden relative">
+          <div 
+            className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${winterMountainLandscape})`, backgroundSize: '140%' }}
+          />
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold text-foreground mb-6 text-center">How to Play</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center space-y-2">
+                <div className="text-4xl font-bold text-primary mb-2">1</div>
+                <h4 className="text-xl font-bold text-foreground">Create Account</h4>
+                <p className="text-muted-foreground">
+                  Sign up and link your Habbo account to get started
+                </p>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="text-4xl font-bold text-primary mb-2">2</div>
+                <h4 className="text-xl font-bold text-foreground">Join a Server</h4>
+                <p className="text-muted-foreground">
+                  Browse available servers or create your own dungeon lobby
+                </p>
+              </div>
+              <div className="text-center space-y-2">
+                <div className="text-4xl font-bold text-primary mb-2">3</div>
+                <h4 className="text-xl font-bold text-foreground">Battle & Loot</h4>
+                <p className="text-muted-foreground">
+                  Fight monsters, collect rewards, and level up your character
+                </p>
+              </div>
             </div>
           </div>
         </HabboPanel>
