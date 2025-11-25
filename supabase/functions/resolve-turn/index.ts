@@ -229,25 +229,29 @@ serve(async (req) => {
 
     console.log(`Equipped weapon: ${equippedWeapon?.item_name || 'none'}`);
 
-    // Handle scroll usage - scrolls automatically succeed without dice rolls
+    // Handle consumable usage - ALL consumables automatically succeed without dice rolls
     if (action === 'item' && itemName) {
-      const scroll = getScrollByName(itemName);
+      // Check inventory to determine if this is a consumable item
+      const { data: inventoryItem, error: inventoryError } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('item_name', itemName)
+        .maybeSingle();
+
+      if (!inventoryItem) {
+        throw new Error(`Item ${itemName} not found in inventory`);
+      }
+
+      const isConsumable = inventoryItem.item_type === 'consumable' || inventoryItem.item_type === 'scroll';
       
-      if (scroll) {
-        console.log(`Using scroll: ${scroll.name}`);
+      if (isConsumable) {
+        console.log(`Using consumable item: ${itemName}`);
         
-        // Consume the scroll from inventory first
-        const { data: inventoryItem, error: inventoryError } = await supabase
-          .from('inventory')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('item_name', itemName)
-          .maybeSingle();
-
-        if (!inventoryItem) {
-          throw new Error(`Scroll ${itemName} not found in inventory`);
-        }
-
+        // Check if it's a scroll with defined effects
+        const scroll = getScrollByName(itemName);
+        
+        // Consume the item from inventory
         if (inventoryItem.quantity > 1) {
           await supabase
             .from('inventory')
@@ -268,9 +272,11 @@ serve(async (req) => {
         let narration: string[] = [];
         let statusEffect = '';
         
-        const scrollEffect = scroll.effect;
-        
-        if (scrollEffect.type === 'heal') {
+        // Handle scroll effects if it's a defined scroll
+        if (scroll) {
+          const scrollEffect = scroll.effect;
+          
+          if (scrollEffect.type === 'heal') {
           const healAmount = Math.min(scrollEffect.amount!, stats.max_hp - stats.current_hp);
           playerNewHp = Math.min(stats.max_hp, stats.current_hp + scrollEffect.amount!);
           narration.push(`You read the ${scroll.name}!`);
@@ -311,6 +317,46 @@ serve(async (req) => {
             statusEffect = `Confused (-${scrollEffect.amount}% accuracy) for ${scrollEffect.duration} turns`;
           }
         }
+        } else {
+          // Handle generic consumables (Potions, Food, etc.)
+          narration.push(`You used [${itemName}]!`);
+          
+          // Healing items (Potions, Food)
+          if (itemName === 'Potion') {
+            const healAmount = Math.min(50, stats.max_hp - stats.current_hp);
+            playerNewHp = Math.min(stats.max_hp, stats.current_hp + 50);
+            narration.push(`Restored ${healAmount} HP!`);
+          } else if (itemName === 'Sweetcakes') {
+            const healAmount = Math.min(15, stats.max_hp - stats.current_hp);
+            playerNewHp = Math.min(stats.max_hp, stats.current_hp + 15);
+            narration.push(`Restored ${healAmount} HP!`);
+          } else if (itemName === 'Frothy Pint') {
+            const healAmount = Math.min(20, stats.max_hp - stats.current_hp);
+            playerNewHp = Math.min(stats.max_hp, stats.current_hp + 20);
+            narration.push(`Restored ${healAmount} HP!`);
+          } else if (itemName === 'Cured Meat') {
+            const healAmount = Math.min(25, stats.max_hp - stats.current_hp);
+            playerNewHp = Math.min(stats.max_hp, stats.current_hp + 25);
+            narration.push(`Restored ${healAmount} HP!`);
+          } else if (itemName === 'Ether') {
+            const mpAmount = Math.min(40, stats.max_mp - stats.current_mp);
+            await supabase
+              .from('player_stats')
+              .update({ current_mp: Math.min(stats.max_mp, stats.current_mp + 40) })
+              .eq('user_id', user.id);
+            narration.push(`Restored ${mpAmount} MP!`);
+          } else if (itemName === 'Elixir') {
+            const mpAmount = Math.min(50, stats.max_mp - stats.current_mp);
+            await supabase
+              .from('player_stats')
+              .update({ current_mp: Math.min(stats.max_mp, stats.current_mp + 50) })
+              .eq('user_id', user.id);
+            narration.push(`Restored ${mpAmount} MP!`);
+          } else {
+            // Generic consumable
+            narration.push(`The item's effect takes hold!`);
+          }
+        }
         
         // Enemy counterattack (only if enemy survives)
         if (enemyNewHp > 0) {
@@ -340,7 +386,7 @@ serve(async (req) => {
         const newLogEntries = narration.map(msg => ({
           user_id: user.id,
           message: msg,
-          type: scrollEffect.type
+          type: 'item' // All consumable items logged as 'item' type
         }));
         
         // Update enemy state
