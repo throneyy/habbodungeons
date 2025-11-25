@@ -162,15 +162,6 @@ const ENEMY_POOL = [
     baseSpd: 9
   },
   {
-    name: "Spirit Owl",
-    description: "A ghostly predator that hunts in eternal silence",
-    sprite: "spirit-owl.png",
-    baseHp: 38,
-    baseAtk: 11,
-    baseDef: 4,
-    baseSpd: 12
-  },
-  {
     name: "Flaming Phantom",
     description: "A vengeful spirit wreathed in cold fire and hatred",
     sprite: "flaming-phantom.png",

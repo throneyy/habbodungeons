@@ -29,7 +29,7 @@ import longFeathers from "@/assets/long-feathers.png";
 import crystals from "@/assets/crystals.png";
 import werewolf from "@/assets/werewolf.png";
 import flamingPhantom from "@/assets/flaming-phantom.png";
-import spiritOwl from "@/assets/spirit-owl.png";
+
 import victoryTrophy from "@/assets/victory-trophy.png";
 import rareTreasureChest from "@/assets/rare-treasure-chest.png";
 import spikedChestArmour from "@/assets/spiked-chest-armour.png";
@@ -86,8 +86,7 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Werewolf": werewolf,
   "Flaming Phantom": flamingPhantom,
   "Phantom": flamingPhantom,
-  "Spirit Owl": spiritOwl,
-  "Owl": spiritOwl,
+  
   // Quest items
   "Scroll of Minor Healing": scroll,
   "Potion of Minor Healing": potion,
@@ -254,7 +253,7 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Werewolf": "A cursed lycanthrope pelt. Radiates dark magic.",
   "Flaming Phantom": "Essence of a fire spirit. Burns eternally.",
   "Phantom": "Spectral residue from defeated ghosts.",
-  "Spirit Owl": "The spirit of a wise owl. Offers guidance.",
+  
   "Owl": "Feathers and talons from a mystical owl.",
 };
 

@@ -41,7 +41,7 @@ import bloodDragonBoss from "@/assets/blood-dragon-boss.gif";
 import flamingPhantom from "@/assets/flaming-phantom.png";
 import goblinTrio from "@/assets/goblin-trio.png";
 import iceKnightBoss from "@/assets/ice-knight-boss.png";
-import spiritOwl from "@/assets/spirit-owl.png";
+
 import werewolf from "@/assets/werewolf.png";
 import swampLurker from "@/assets/swamp-lurker.png";
 import voidStalker from "@/assets/void-stalker.png";
@@ -76,7 +76,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "flaming-phantom.png": flamingPhantom,
   "goblin-trio.png": goblinTrio,
   "ice-knight-boss.png": iceKnightBoss,
-  "spirit-owl.png": spiritOwl,
+  
   "werewolf.png": frostWolf,
   "swamp-lurker.png": swampLurker,
   "void-stalker.png": voidStalker,
