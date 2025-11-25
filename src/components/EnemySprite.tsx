@@ -1,4 +1,4 @@
-import { getEnemyBaseDirection } from '@/lib/enemyDirections';
+import { getEnemyBaseDirection, getEnemyScaleFactor } from '@/lib/enemyDirections';
 
 interface EnemySpriteProps {
   spriteUrl: string;
@@ -25,6 +25,9 @@ export const EnemySprite = ({
   // Get the base direction from our lookup table
   const baseDirection = getEnemyBaseDirection(filename);
   
+  // Get the scale factor for this enemy
+  const scaleFactor = getEnemyScaleFactor(filename);
+  
   // Flip only if base direction differs from desired direction
   const needsFlip = baseDirection !== shouldFace;
   
@@ -35,7 +38,7 @@ export const EnemySprite = ({
       className={`${className} pixelated`}
       style={{
         imageRendering: 'pixelated',
-        transform: needsFlip ? 'scaleX(-1)' : 'none',
+        transform: `${needsFlip ? 'scaleX(-1)' : ''} ${scaleFactor !== 1.0 ? `scale(${scaleFactor})` : ''}`.trim(),
         transformOrigin: 'center',
         objectFit: 'contain',
         ...style,

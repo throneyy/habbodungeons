@@ -5,6 +5,14 @@
 
 type EnemyDirection = "left" | "right";
 
+/**
+ * Scale factors for oversized enemy sprites.
+ * Default scale is 1.0 (100%). Values < 1.0 shrink the sprite.
+ */
+export const ENEMY_SCALE_FACTORS: Record<string, number> = {
+  "skeleton.png": 0.4,  // Skeleton Warrior is too large, scale to 40%
+};
+
 export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
   // Enemies facing LEFT in their base sprites
   "frostbite-spider.png": "left",
@@ -42,4 +50,8 @@ export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
 
 export function getEnemyBaseDirection(spriteFilename: string): EnemyDirection {
   return ENEMY_BASE_DIRECTIONS[spriteFilename] || "left";
+}
+
+export function getEnemyScaleFactor(spriteFilename: string): number {
+  return ENEMY_SCALE_FACTORS[spriteFilename] || 1.0;
 }
