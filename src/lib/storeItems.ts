@@ -105,7 +105,7 @@ export const STORE_ITEMS: StoreItem[] = [
   },
   {
     id: 'bow-and-arrow',
-    name: 'Bow and Arrow',
+    name: 'Bow & Arrow',
     description: 'Ranged weapon (+12 ATK)',
     sprite: 'bow-and-arrow.png',
     category: 'weapon',
