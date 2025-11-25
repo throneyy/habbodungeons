@@ -24,7 +24,7 @@ export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
   "undead-habbo.png": "left",
   "werewolf.png": "left",
   "swamp-lurker.png": "left",
-  "void-stalker.png": "left",
+  "void-stalker.png": "right",
   "frost-mutant.png": "left",
   "frost-brute.png": "left",
   "ice-elemental.png": "left",
