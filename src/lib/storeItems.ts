@@ -295,8 +295,8 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Legendary blade fit for royalty (+40 ATK)',
     sprite: 'royal-sword.png',
     category: 'weapon',
-    goldPrice: 100,
-    silverPrice: 1000,
+    goldPrice: 5000,
+    silverPrice: 50000,
     itemType: 'weapon'
   },
   {
@@ -305,19 +305,49 @@ export const STORE_ITEMS: StoreItem[] = [
     description: 'Legendary armor forged for kings (+35 DEF)',
     sprite: 'royal-armor.png',
     category: 'weapon',
-    goldPrice: 100,
-    silverPrice: 1000,
+    goldPrice: 5000,
+    silverPrice: 50000,
     itemType: 'armor'
   },
   {
-    id: 'elixir-potion',
-    name: 'Elixir Potion',
-    description: 'Powerful elixir that fully restores MP',
-    sprite: 'elixir-potion.png',
-    category: 'consumable',
-    goldPrice: 10,
-    silverPrice: 90,
-    itemType: 'consumable'
+    id: 'gold-crown',
+    name: 'Gold Crown',
+    description: 'Magnificent golden crown adorned with gems (+50 DEF)',
+    sprite: 'white-sack.png',
+    category: 'weapon',
+    goldPrice: 8000,
+    silverPrice: 80000,
+    itemType: 'armor'
+  },
+  {
+    id: 'silver-tiara',
+    name: 'Silver Tiara',
+    description: 'Elegant silver tiara fit for nobility (+45 DEF)',
+    sprite: 'brown-sack.png',
+    category: 'weapon',
+    goldPrice: 7000,
+    silverPrice: 70000,
+    itemType: 'armor'
+  },
+  {
+    id: 'red-amulet',
+    name: 'Red Amulet',
+    description: 'Powerful amulet pulsing with crimson energy (+30 MP, +15 ATK)',
+    sprite: 'summoning-circle-red.png',
+    category: 'weapon',
+    goldPrice: 6000,
+    silverPrice: 60000,
+    itemType: 'accessory'
+  },
+  {
+    id: 'purple-amulet',
+    name: 'Purple Amulet',
+    description: 'Mystical amulet radiating arcane power (+40 MP, +10 DEF)',
+    sprite: 'summoning-circle-purple.png',
+    category: 'weapon',
+    goldPrice: 6000,
+    silverPrice: 60000,
+    itemType: 'accessory'
   },
   // New Weapons
   {
@@ -350,47 +380,6 @@ export const STORE_ITEMS: StoreItem[] = [
     goldPrice: 25,
     silverPrice: 250,
     itemType: 'armor'
-  },
-  // New Materials
-  {
-    id: 'white-sack',
-    name: 'White Sack',
-    description: 'A clean white sack for storing goods',
-    sprite: 'white-sack.png',
-    category: 'material',
-    goldPrice: 1,
-    silverPrice: 8,
-    itemType: 'material'
-  },
-  {
-    id: 'brown-sack',
-    name: 'Brown Sack',
-    description: 'A sturdy burlap sack for transporting goods',
-    sprite: 'brown-sack.png',
-    category: 'material',
-    goldPrice: 1,
-    silverPrice: 8,
-    itemType: 'material'
-  },
-  {
-    id: 'red-summoning-circle',
-    name: 'Red Summoning Circle',
-    description: 'Powerful red rune circle for summoning rituals',
-    sprite: 'summoning-circle-red.png',
-    category: 'material',
-    goldPrice: 15,
-    silverPrice: 120,
-    itemType: 'material'
-  },
-  {
-    id: 'purple-summoning-circle',
-    name: 'Purple Summoning Circle',
-    description: 'Arcane purple circle for summoning shadow entities',
-    sprite: 'summoning-circle-purple.png',
-    category: 'material',
-    goldPrice: 15,
-    silverPrice: 120,
-    itemType: 'material'
   }
 ];
 

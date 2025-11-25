@@ -35,10 +35,10 @@ import royalSword from "@/assets/royal-sword.png";
 import longswordSprite from "@/assets/longsword.png";
 import blueRobes from "@/assets/blue-robes.png";
 import redRobes from "@/assets/red-robes.png";
-import whiteSack from "@/assets/white-sack.png";
-import brownSack from "@/assets/brown-sack.png";
-import summoningCircleRed from "@/assets/summoning-circle-red.png";
-import summoningCirclePurple from "@/assets/summoning-circle-purple.png";
+import goldCrown from "@/assets/white-sack.png";
+import silverTiara from "@/assets/brown-sack.png";
+import redAmulet from "@/assets/summoning-circle-red.png";
+import purpleAmulet from "@/assets/summoning-circle-purple.png";
 
 import victoryTrophy from "@/assets/victory-trophy.png";
 import rareTreasureChest from "@/assets/rare-treasure-chest.png";
@@ -69,7 +69,6 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Potion": potion,
   "Ether": elixer,
   "Elixer": elixer,
-  "Elixir Potion": elixirPotion,
   "Everyday Supply Chest": everydaySupplyChest,
   "Rare Treasure Chest": rareTreasureChest,
   "Fighters Sword": fightersSword,
@@ -157,16 +156,15 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Red Robes": redRobes,
   "Mage Robes": blueRobes,
   "Wizard Robes": redRobes,
-  // Sacks
-  "White Sack": whiteSack,
-  "Brown Sack": brownSack,
-  "Flour Sack": whiteSack,
-  "Grain Sack": brownSack,
-  // Summoning Circles
-  "Summoning Circle": summoningCircleRed,
-  "Red Summoning Circle": summoningCircleRed,
-  "Purple Summoning Circle": summoningCirclePurple,
-  "Summoning Rune": summoningCircleRed,
+  // Crowns and Tiaras
+  "Gold Crown": goldCrown,
+  "Silver Tiara": silverTiara,
+  "Crown": goldCrown,
+  "Tiara": silverTiara,
+  // Amulets
+  "Red Amulet": redAmulet,
+  "Purple Amulet": purpleAmulet,
+  "Amulet": redAmulet,
 };
 
 export const getItemImage = (itemName: string): string | undefined => {
@@ -223,7 +221,6 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Potion of Minor Healing": "Heals minor wounds. Restores 30 HP.",
   "Elixer": "Restores 50 MP. Essential for spellcasters.",
   "Elixir": "Restores 50 MP. Essential for spellcasters.",
-  "Elixir Potion": "A powerful elixir that fully restores MP. Very rare.",
   "Ether": "Replenishes magical energy. Restores 40 MP.",
   
   // Consumables - Food
@@ -289,17 +286,16 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Flaming Phantom": "Essence of a fire spirit. Burns eternally.",
   "Phantom": "Spectral residue from defeated ghosts.",
   
-  // Sacks
-  "White Sack": "A clean white sack for storing flour or grains.",
-  "Brown Sack": "A sturdy burlap sack for transporting goods.",
-  "Flour Sack": "A sack filled with finely ground flour.",
-  "Grain Sack": "A heavy sack containing dried grains.",
+  // Crowns and Tiaras
+  "Gold Crown": "A magnificent golden crown adorned with precious gems. Extremely rare. +50 DEF",
+  "Silver Tiara": "An elegant silver tiara fit for nobility. Very rare. +45 DEF",
+  "Crown": "A regal crown symbolizing power and authority.",
+  "Tiara": "An ornate headpiece of royal lineage.",
   
-  // Summoning Items
-  "Summoning Circle": "A mystical circle used to summon creatures from other realms.",
-  "Red Summoning Circle": "A powerful red rune circle for summoning fire-aligned beings.",
-  "Purple Summoning Circle": "An arcane purple circle for summoning shadow entities.",
-  "Summoning Rune": "Ancient runes inscribed for creature summoning rituals.",
+  // Amulets
+  "Red Amulet": "A powerful amulet pulsing with crimson energy. +30 MP, +15 ATK",
+  "Purple Amulet": "A mystical amulet radiating arcane power. +40 MP, +10 DEF",
+  "Amulet": "A magical amulet imbued with ancient enchantments.",
 
   "Owl": "Feathers and talons from a mystical owl.",
 };
