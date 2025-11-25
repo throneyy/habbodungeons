@@ -36,6 +36,11 @@ import swampLurker from "@/assets/swamp-lurker.png";
 import infernalHound from "@/assets/infernal-hound.png";
 import iceGorgon from "@/assets/ice-gorgon.png";
 import phoenix from "@/assets/phoenix.png";
+import slumberBear from "@/assets/slumber-bear.gif";
+import gryphon from "@/assets/gryphon.png";
+import emeraldDrake from "@/assets/emerald-drake.png";
+import azureDragon from "@/assets/azure-dragon.png";
+import ancientTreant from "@/assets/ancient-treant.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -66,6 +71,11 @@ const ENEMY_SPRITES: Record<string, string> = {
   "infernal-hound.png": infernalHound,
   "ice-gorgon.png": iceGorgon,
   "phoenix.png": phoenix,
+  "slumber-bear.gif": slumberBear,
+  "gryphon.png": gryphon,
+  "emerald-drake.png": emeraldDrake,
+  "azure-dragon.png": azureDragon,
+  "ancient-treant.png": ancientTreant,
 };
 
 interface Monster {
@@ -214,6 +224,31 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
     type: "Mythical Beast",
     description: "A legendary bird wreathed in eternal flames, reborn from its own ashes. Its fiery wings can scorch entire rooms, and it possesses devastating fire magic.",
     difficulty: "Epic"
+  },
+  "Slumber Bear": {
+    type: "Magical Beast",
+    description: "A massive hibernating bear infused with dream magic. Its drowsy appearance belies its ferocious power when awakened. Those who disturb its slumber face crushing strength and sleep-inducing spells.",
+    difficulty: "Rare"
+  },
+  "Gryphon": {
+    type: "Mythical Beast",
+    description: "A majestic creature combining the nobility of an eagle with the might of a lion. Its razor-sharp talons and powerful beak make it a formidable aerial predator.",
+    difficulty: "Epic"
+  },
+  "Emerald Drake": {
+    type: "Dragon",
+    description: "A young green dragon with mastery over nature and poison. Its venomous breath can corrupt the land itself, and its scales shimmer like precious emeralds.",
+    difficulty: "Epic"
+  },
+  "Azure Dragon": {
+    type: "Dragon",
+    description: "An elegant blue dragon with command over water and lightning. Its serpentine form dances through the air as it calls down thunderbolts and tidal waves upon its foes.",
+    difficulty: "Legendary"
+  },
+  "Ancient Treant": {
+    type: "Elemental Construct",
+    description: "A towering tree-like guardian animated by primal nature magic. Its wooden limbs possess immense strength, and it can command the very roots of the earth to entangle enemies.",
+    difficulty: "Rare"
   }
 };
 
