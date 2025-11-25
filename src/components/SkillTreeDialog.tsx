@@ -15,6 +15,7 @@ interface SkillTreeDialogProps {
   fishingLevel: number;
   gardeningLevel: number;
   unlockedSkills: string[];
+  lastSyncTime?: string;
   onSkillsUpdated?: () => void;
 }
 
@@ -24,6 +25,7 @@ export function SkillTreeDialog({
   fishingLevel,
   gardeningLevel,
   unlockedSkills,
+  lastSyncTime,
   onSkillsUpdated,
 }: SkillTreeDialogProps) {
   const [syncing, setSyncing] = useState(false);
@@ -51,7 +53,7 @@ export function SkillTreeDialog({
 
       if (error) throw error;
 
-      toast.success(`Skills synced! Fishing: ${data.fishingLevel}, Gardening: ${data.gardeningLevel}`);
+      toast.success(`Skills synced! Fishing: Lv${data.fishingLevel} (${data.fishingXp} XP), Gardening: Lv${data.gardeningLevel} (${data.gardeningXp} XP)`);
       
       if (onSkillsUpdated) {
         onSkillsUpdated();
@@ -131,21 +133,28 @@ export function SkillTreeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
-              <span className="text-2xl">🌟</span>
-              Skill Trees
-            </DialogTitle>
-            <Button 
-              onClick={handleSyncSkills} 
-              disabled={syncing}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-              {syncing ? 'Syncing...' : 'Sync from Habbo'}
-            </Button>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <span className="text-2xl">🌟</span>
+                Skill Trees
+              </DialogTitle>
+              <Button 
+                onClick={handleSyncSkills} 
+                disabled={syncing}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync from Habbo Origins'}
+              </Button>
+            </div>
+            {lastSyncTime && (
+              <p className="text-xs text-muted-foreground">
+                Last synced: {new Date(lastSyncTime).toLocaleString()}
+              </p>
+            )}
           </div>
         </DialogHeader>
 

@@ -19,8 +19,11 @@ interface Profile {
   habbo_username: string | null;
   habbo_profile_json: any;
   fishing_level?: number;
+  fishing_xp?: number;
   gardening_level?: number;
+  gardening_xp?: number;
   unlocked_skills?: string[];
+  last_habbo_skill_sync?: string;
 }
 
 interface PlayerStats {
@@ -249,7 +252,7 @@ const Dashboard = () => {
 
       toast({ 
         title: "Skills synced!", 
-        description: `Fishing: ${data.fishingLevel}, Gardening: ${data.gardeningLevel}` 
+        description: `Fishing: Lv${data.fishingLevel} (${data.fishingXp} XP) | Gardening: Lv${data.gardeningLevel} (${data.gardeningXp} XP)` 
       });
 
       // Reload data to show updated skills
@@ -594,14 +597,15 @@ const Dashboard = () => {
       </div>
 
       {/* Skill Tree Dialog */}
-      <SkillTreeDialog
-        open={showSkillTree}
-        onOpenChange={setShowSkillTree}
-        fishingLevel={profile?.fishing_level || 0}
-        gardeningLevel={profile?.gardening_level || 0}
-        unlockedSkills={profile?.unlocked_skills || []}
-        onSkillsUpdated={loadData}
-      />
+        <SkillTreeDialog
+          open={showSkillTree}
+          onOpenChange={setShowSkillTree}
+          fishingLevel={profile?.fishing_level || 0}
+          gardeningLevel={profile?.gardening_level || 0}
+          unlockedSkills={profile?.unlocked_skills || []}
+          lastSyncTime={profile?.last_habbo_skill_sync}
+          onSkillsUpdated={loadData}
+        />
     </AppLayout>
   );
 };

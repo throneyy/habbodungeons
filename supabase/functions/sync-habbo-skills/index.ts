@@ -42,7 +42,6 @@ function getUnlockedSkills(fishingLevel: number, gardeningLevel: number): string
     .map(skill => skill.id);
 }
 
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -72,63 +71,74 @@ serve(async (req) => {
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile?.habbo_username) {
-      throw new Error('No Habbo account linked');
+    if (profileError || !profile) {
+      throw new Error('Profile not found');
     }
 
-    const habboUsername = profile.habbo_username;
-    
-    console.log('Syncing skills for:', habboUsername);
+    if (!profile.habbo_origins_id) {
+      throw new Error('No Habbo Origins ID linked. Please link your Habbo account first.');
+    }
 
+    const habboOriginsId = profile.habbo_origins_id;
+    const habboUsername = profile.habbo_username || 'Unknown';
+    
+    console.log(`Syncing skills for ${habboUsername} (ID: ${habboOriginsId})`);
+
+    // Fetch fishing skills from Habbo Origins API
     let fishingLevel = 0;
-    let gardeningLevel = 0;
-
-    // Fetch skill levels from bobba.me API (the only reliable source for Origins skills)
-    // Implement retry logic with exponential backoff since API can be temporarily unavailable
-    const maxRetries = 3;
-    const baseDelay = 1000; // 1 second
+    let fishingXp = 0;
     
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        console.log(`Attempt ${attempt + 1}/${maxRetries}: Fetching skills from bobba.me for: ${habboUsername}`);
-        
-        const bobbaResponse = await fetch(
-          `https://api.bobba.me/habboGET?username=${encodeURIComponent(habboUsername)}`,
-          {
-            headers: {
-              'Accept': 'application/json',
-            },
-          }
-        );
-        
-        if (bobbaResponse.ok) {
-          const skillsData = await bobbaResponse.json();
-          console.log('Skills data from bobba.me:', JSON.stringify(skillsData));
+    try {
+      console.log('Fetching fishing skills from Habbo Origins API...');
+      const fishingResponse = await fetch(
+        `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboOriginsId)}?skill=fishing`,
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
 
-          fishingLevel = skillsData.mainDetails?.fishingLevel || 0;
-          gardeningLevel = skillsData.mainDetails?.gardeningLevel || 0;
-          console.log(`SUCCESS: Parsed levels - Fishing: ${fishingLevel}, Gardening: ${gardeningLevel}`);
-          break; // Success, exit retry loop
-        } else {
-          const errorText = await bobbaResponse.text();
-          console.warn(`Bobba API returned status ${bobbaResponse.status}: ${errorText}`);
-          
-          if (attempt < maxRetries - 1) {
-            const delay = baseDelay * Math.pow(2, attempt);
-            console.log(`Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } else {
-            throw new Error(`Bobba API failed after ${maxRetries} attempts. Status: ${bobbaResponse.status}`);
-          }
-        }
-      } catch (error: any) {
-        console.error(`Attempt ${attempt + 1} failed:`, error);
-        
-        if (attempt >= maxRetries - 1) {
-          throw new Error(`Unable to fetch skills: ${error.message}. The bobba.me API appears to be temporarily unavailable. Please try again in a few minutes.`);
-        }
+      if (fishingResponse.ok) {
+        const fishingData = await fishingResponse.json();
+        console.log('Fishing data:', JSON.stringify(fishingData));
+        fishingLevel = fishingData.level || 0;
+        fishingXp = fishingData.experience || 0;
+      } else {
+        console.warn(`Fishing API returned status ${fishingResponse.status}`);
       }
+    } catch (error: any) {
+      console.error('Error fetching fishing skills:', error.message);
     }
+
+    // Fetch gardening skills from Habbo Origins API
+    let gardeningLevel = 0;
+    let gardeningXp = 0;
+    
+    try {
+      console.log('Fetching gardening skills from Habbo Origins API...');
+      const gardeningResponse = await fetch(
+        `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboOriginsId)}?skill=gardening`,
+        {
+          headers: {
+            'Accept': 'application/json',
+          },
+        }
+      );
+
+      if (gardeningResponse.ok) {
+        const gardeningData = await gardeningResponse.json();
+        console.log('Gardening data:', JSON.stringify(gardeningData));
+        gardeningLevel = gardeningData.level || 0;
+        gardeningXp = gardeningData.experience || 0;
+      } else {
+        console.warn(`Gardening API returned status ${gardeningResponse.status}`);
+      }
+    } catch (error: any) {
+      console.error('Error fetching gardening skills:', error.message);
+    }
+
+    console.log(`Parsed levels - Fishing: ${fishingLevel} (${fishingXp} XP), Gardening: ${gardeningLevel} (${gardeningXp} XP)`);
 
     // Calculate unlocked skills
     const unlockedSkills = getUnlockedSkills(fishingLevel, gardeningLevel);
@@ -138,7 +148,9 @@ serve(async (req) => {
       .from('profiles')
       .update({
         fishing_level: fishingLevel,
+        fishing_xp: fishingXp,
         gardening_level: gardeningLevel,
+        gardening_xp: gardeningXp,
         last_habbo_skill_sync: new Date().toISOString(),
         unlocked_skills: unlockedSkills
       })
@@ -150,13 +162,15 @@ serve(async (req) => {
       throw updateError;
     }
 
-    console.log('Skills synced successfully:', unlockedSkills.length, 'skills unlocked');
+    console.log(`Skills synced successfully: ${unlockedSkills.length} skills unlocked`);
 
     return new Response(
       JSON.stringify({
         success: true,
         fishingLevel,
+        fishingXp,
         gardeningLevel,
+        gardeningXp,
         unlockedSkills,
         profile: updatedProfile
       }),
