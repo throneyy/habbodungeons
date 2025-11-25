@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Shield, Upload, Save, Trash2, ArrowLeft, RefreshCw, Image } from "lucide-react";
+import { Shield, Upload, Save, Trash2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 interface EnemySprite {
@@ -13,16 +13,6 @@ interface EnemySprite {
   enemy_name: string;
   sprite_filename: string;
   updated_at: string;
-}
-
-interface GeneratedIcon {
-  id: string;
-  item_name: string;
-  item_type: string;
-  storage_path: string;
-  prompt_used: string;
-  created_at: string;
-  regenerate_requested: boolean;
 }
 
 const AdminPanel = () => {
@@ -36,8 +26,6 @@ const AdminPanel = () => {
     sprite_filename: "",
   });
   const [newSprite, setNewSprite] = useState({ enemy_name: "", sprite_filename: "" });
-  const [generatedIcons, setGeneratedIcons] = useState<GeneratedIcon[]>([]);
-  const [regeneratingIcons, setRegeneratingIcons] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     checkAdminStatus();
@@ -68,7 +56,6 @@ const AdminPanel = () => {
 
       setIsAdmin(true);
       loadSprites();
-      loadGeneratedIcons();
     } catch (error) {
       console.error("Error checking admin status:", error);
       navigate("/");
@@ -90,71 +77,6 @@ const AdminPanel = () => {
     }
 
     setSprites(data || []);
-  };
-
-  const loadGeneratedIcons = async () => {
-    const { data, error } = await supabase
-      .from("generated_icons")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast.error("Failed to load generated icons");
-      console.error(error);
-      return;
-    }
-
-    setGeneratedIcons(data || []);
-  };
-
-  const handleRegenerateIcon = async (icon: GeneratedIcon) => {
-    setRegeneratingIcons(prev => new Set(prev).add(icon.id));
-    
-    try {
-      // Mark for regeneration
-      await supabase
-        .from('generated_icons')
-        .update({ regenerate_requested: true })
-        .eq('id', icon.id);
-
-      const { data, error } = await supabase.functions.invoke('generate-item-icon', {
-        body: { 
-          itemName: icon.item_name,
-          itemType: icon.item_type
-        }
-      });
-
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-
-      toast.success(`Icon regenerated for ${icon.item_name}`);
-      loadGeneratedIcons();
-    } catch (error: any) {
-      toast.error(`Failed to regenerate icon: ${error.message}`);
-      console.error(error);
-    } finally {
-      setRegeneratingIcons(prev => {
-        const next = new Set(prev);
-        next.delete(icon.id);
-        return next;
-      });
-    }
-  };
-
-  const handleDeleteGeneratedIcon = async (id: string) => {
-    const { error } = await supabase
-      .from("generated_icons")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      toast.error("Failed to delete generated icon");
-      console.error(error);
-      return;
-    }
-
-    toast.success("Generated icon deleted");
-    loadGeneratedIcons();
   };
 
   const handleEdit = (sprite: EnemySprite) => {
@@ -249,95 +171,13 @@ const AdminPanel = () => {
           </Button>
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
-            <h1 className="text-3xl font-bold">Admin Panel</h1>
+            <h1 className="text-3xl font-bold">Admin Panel - Enemy Sprites</h1>
           </div>
         </div>
 
-        {/* Generated Icons Section */}
         <Card className="mb-8">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Image className="h-5 w-5 text-primary" />
-              <CardTitle>AI-Generated Item Icons</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Icons automatically generated for items without sprites using Banana Nano AI.
-            </p>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Preview</TableHead>
-                  <TableHead>Item Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {generatedIcons.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      No generated icons yet. Icons will appear here as items are used in-game.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  generatedIcons.map((icon) => {
-                    const { data: publicUrl } = supabase.storage
-                      .from('item-icons')
-                      .getPublicUrl(icon.storage_path);
-                    
-                    return (
-                      <TableRow key={icon.id}>
-                        <TableCell>
-                          <img 
-                            src={publicUrl.publicUrl} 
-                            alt={icon.item_name}
-                            className="w-12 h-12 object-contain pixel-icon"
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">{icon.item_name}</TableCell>
-                        <TableCell>{icon.item_type}</TableCell>
-                        <TableCell>
-                          {new Date(icon.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleRegenerateIcon(icon)}
-                              disabled={regeneratingIcons.has(icon.id)}
-                            >
-                              {regeneratingIcons.has(icon.id) ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <RefreshCw className="h-4 w-4" />
-                              )}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteGeneratedIcon(icon.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Enemy Sprites Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Enemy Sprites - Add New</CardTitle>
+            <CardTitle>Add New Enemy Sprite</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">

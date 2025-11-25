@@ -76,21 +76,11 @@ export const STORE_ITEMS: StoreItem[] = [
   {
     id: 'rusty-sword',
     name: 'Rusty Sword',
-    description: "An old, rusty sword. It's seen better days but still sharp enough to be useful. (+5 ATK, +2 DEF)",
-    sprite: '', // Will use AI-generated icon
+    description: 'Basic weapon for beginners',
+    sprite: 'fighters-sword.png',
     category: 'weapon',
     goldPrice: 50,
     silverPrice: 5,
-    itemType: 'weapon'
-  },
-  {
-    id: 'ice-dagger',
-    name: 'Ice Dagger',
-    description: 'A frost-enchanted dagger that chills enemies (+8 ATK, +5 DEF)',
-    sprite: '', // Will use AI-generated icon
-    category: 'weapon',
-    goldPrice: 120,
-    silverPrice: 12,
     itemType: 'weapon'
   },
   {

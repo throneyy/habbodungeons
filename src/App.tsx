@@ -19,7 +19,6 @@ import PlayerProfile from "./pages/PlayerProfile";
 import MonsterManual from "./pages/MonsterManual";
 import SpriteEditor from "./pages/SpriteEditor";
 import Store from "./pages/Store";
-import TestIconGeneration from "./pages/TestIconGeneration";
 
 const queryClient = new QueryClient();
 
@@ -45,7 +44,6 @@ const App = () => (
           <Route path="/monster-manual" element={<MonsterManual />} />
           <Route path="/sprite-editor" element={<SpriteEditor />} />
           <Route path="/store" element={<Store />} />
-          <Route path="/test-icon" element={<TestIconGeneration />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
