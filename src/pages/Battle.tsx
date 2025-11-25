@@ -1904,8 +1904,8 @@ const Battle = () => {
     return (
       <div className="min-h-screen bg-background relative flex items-center justify-center">
         <div 
-          className="fixed inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
-          style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '125%' }}
+          className="fixed inset-0 opacity-30 bg-no-repeat brightness-75"
+          style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '125%', backgroundPosition: 'calc(50% + 20px) center' }}
         />
         
         <div className="relative z-10 p-8 max-w-2xl w-full">
@@ -2011,8 +2011,8 @@ const Battle = () => {
       <>
       <div className="min-h-screen bg-background relative">
         <div 
-          className="fixed inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
-          style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '125%' }}
+          className="fixed inset-0 opacity-30 bg-no-repeat brightness-75"
+          style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '125%', backgroundPosition: 'calc(50% + 20px) center' }}
         />
         
         <div className="relative z-10 p-8">
