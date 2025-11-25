@@ -13,7 +13,6 @@ export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
   "frozen-goblin.png": "left",
   "glacial-imp.png": "right",  // Flipped to face right
   "ice-shade.png": "left",
-  "giant-rat.png": "left",
   "skeleton.png": "left",
   "undead-habbo.png": "left",
   "werewolf.png": "left",
