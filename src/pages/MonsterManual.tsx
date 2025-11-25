@@ -305,10 +305,10 @@ export default function MonsterManual() {
   return (
     <AppLayout>
       <div className="py-8 space-y-6">
-        <HabboPanel className="bg-gradient-to-br from-destructive/20 to-primary/20 relative overflow-hidden">
+        <HabboPanel className="relative overflow-hidden">
           <div 
             className="absolute inset-0 opacity-15 bg-center bg-no-repeat pointer-events-none"
-            style={{ backgroundImage: `url(${ancientJailImage})`, backgroundSize: '140%' }}
+            style={{ backgroundImage: `url(${ancientJailImage})`, backgroundSize: '125%' }}
           />
           <div className="space-y-3 relative z-10">
             <img 
