@@ -79,66 +79,81 @@ serve(async (req) => {
       throw new Error('No Habbo Origins ID linked. Please link your Habbo account first.');
     }
 
-    const habboOriginsId = profile.habbo_origins_id;
     const habboUsername = profile.habbo_username || 'Unknown';
     
-    console.log(`Syncing skills for ${habboUsername} (ID: ${habboOriginsId})`);
+    console.log(`Syncing skills for ${habboUsername}`);
 
-    // Fetch fishing skills from Habbo Origins API
+    // Step 1: Fetch uniqueId from Habbo Origins API
+    console.log(`Fetching uniqueId for ${habboUsername}...`);
+    const userResponse = await fetch(
+      `https://origins.habbo.com/api/public/users?name=${encodeURIComponent(habboUsername)}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!userResponse.ok) {
+      throw new Error(`Failed to fetch user data from Habbo Origins. Status: ${userResponse.status}`);
+    }
+
+    const userData = await userResponse.json();
+    console.log('User data response:', JSON.stringify(userData));
+
+    const uniqueId = userData.uniqueId;
+    if (!uniqueId) {
+      throw new Error('No uniqueId found in Habbo Origins response');
+    }
+
+    console.log(`Found uniqueId: ${uniqueId}`);
+
+    // Update profile with uniqueId for future use
+    await supabase
+      .from('profiles')
+      .update({ habbo_origins_id: uniqueId })
+      .eq('id', user.id);
+
+    // Step 2: Fetch skills array from Habbo Origins API
+    console.log(`Fetching skills for uniqueId: ${uniqueId}...`);
+    const skillsResponse = await fetch(
+      `https://origins.habbo.com/api/public/skills/${encodeURIComponent(uniqueId)}`,
+      {
+        headers: {
+          'Accept': 'application/json',
+        },
+      }
+    );
+
+    if (!skillsResponse.ok) {
+      throw new Error(`Failed to fetch skills from Habbo Origins. Status: ${skillsResponse.status}`);
+    }
+
+    const skillsArray = await skillsResponse.json();
+    console.log('Skills array response:', JSON.stringify(skillsArray));
+
+    // Parse fishing and gardening from the skills array
     let fishingLevel = 0;
     let fishingXp = 0;
-    
-    try {
-      console.log('Fetching fishing skills from Habbo Origins API...');
-      const fishingResponse = await fetch(
-        `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboOriginsId)}?skill=fishing`,
-        {
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      );
-
-      if (fishingResponse.ok) {
-        const fishingData = await fishingResponse.json();
-        console.log('Fishing data:', JSON.stringify(fishingData));
-        fishingLevel = fishingData.level || 0;
-        fishingXp = fishingData.experience || 0;
-      } else {
-        console.warn(`Fishing API returned status ${fishingResponse.status}`);
-      }
-    } catch (error: any) {
-      console.error('Error fetching fishing skills:', error.message);
-    }
-
-    // Fetch gardening skills from Habbo Origins API
     let gardeningLevel = 0;
     let gardeningXp = 0;
-    
-    try {
-      console.log('Fetching gardening skills from Habbo Origins API...');
-      const gardeningResponse = await fetch(
-        `https://origins.habbo.com/api/public/skills/${encodeURIComponent(habboOriginsId)}?skill=gardening`,
-        {
-          headers: {
-            'Accept': 'application/json',
-          },
-        }
-      );
 
-      if (gardeningResponse.ok) {
-        const gardeningData = await gardeningResponse.json();
-        console.log('Gardening data:', JSON.stringify(gardeningData));
-        gardeningLevel = gardeningData.level || 0;
-        gardeningXp = gardeningData.experience || 0;
-      } else {
-        console.warn(`Gardening API returned status ${gardeningResponse.status}`);
+    if (Array.isArray(skillsArray)) {
+      const fishingSkill = skillsArray.find((s: any) => s.skill === 'fishing');
+      const gardeningSkill = skillsArray.find((s: any) => s.skill === 'gardening');
+
+      if (fishingSkill) {
+        fishingLevel = fishingSkill.level || 0;
+        fishingXp = fishingSkill.xp || 0;
       }
-    } catch (error: any) {
-      console.error('Error fetching gardening skills:', error.message);
+
+      if (gardeningSkill) {
+        gardeningLevel = gardeningSkill.level || 0;
+        gardeningXp = gardeningSkill.xp || 0;
+      }
     }
 
-    console.log(`Parsed levels - Fishing: ${fishingLevel} (${fishingXp} XP), Gardening: ${gardeningLevel} (${gardeningXp} XP)`);
+    console.log(`Parsed levels - Fishing: Lv${fishingLevel} (${fishingXp} XP), Gardening: Lv${gardeningLevel} (${gardeningXp} XP)`);
 
     // Calculate unlocked skills
     const unlockedSkills = getUnlockedSkills(fishingLevel, gardeningLevel);
