@@ -47,7 +47,7 @@ export default function Store() {
 
       // Load material quantities
       const materialQuantities: Record<string, number> = {};
-      const materialNames = ['Runestones', 'Pouch of Frost-Kissed Dust', 'Stick Pile', 'Crystal Shards', 'Cloth Squares'];
+      const materialNames = ['Runestones', 'Pouch of Frost-Kissed Dust', 'Stick Pile', 'Crystal Shards', 'Cloth Squares', 'Herbs'];
       materialNames.forEach(name => {
         const item = inventory?.find(i => i.item_name === name);
         materialQuantities[name] = item?.quantity || 0;
@@ -365,7 +365,7 @@ export default function Store() {
                 <span className="text-sm text-muted-foreground">Gold</span>
               </div>
               <div className="flex items-center gap-2">
-                <img src="/src/assets/gold-coins.png" alt="Silver" className="w-8 h-8 pixel-icon opacity-70" />
+                <img src="/src/assets/metal-ingot.png" alt="Silver" className="w-8 h-8 pixel-icon" />
                 <span className="text-2xl font-bold">{silver}</span>
                 <span className="text-sm text-muted-foreground">Silver</span>
               </div>

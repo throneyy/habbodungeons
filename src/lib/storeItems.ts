@@ -155,16 +155,6 @@ export const STORE_ITEMS: StoreItem[] = [
     itemType: 'material'
   },
   {
-    id: 'metal-ingot',
-    name: 'Metal Ingot',
-    description: 'Refined metal for crafting',
-    sprite: 'metal-ingot.png',
-    category: 'material',
-    goldPrice: 25,
-    silverPrice: 3,
-    itemType: 'material'
-  },
-  {
     id: 'herb',
     name: 'Herb',
     description: 'Medicinal plant',

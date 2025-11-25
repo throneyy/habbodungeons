@@ -24,7 +24,8 @@ const AVAILABLE_MATERIALS = [
   'Pouch of Frost-Kissed Dust',
   'Stick Pile',
   'Crystal Shards',
-  'Cloth Squares'
+  'Cloth Squares',
+  'Herbs'
 ];
 
 const ALL_BOOKS = [
@@ -139,7 +140,8 @@ export function getMaterialImage(itemName: string): string {
     'Pouch of Frost-Kissed Dust': '/src/assets/pouch.png',
     'Stick Pile': '/src/assets/stick-pile.png',
     'Crystal Shards': '/src/assets/crystal-shards.png',
-    'Cloth Squares': '/src/assets/cloth-squares.png'
+    'Cloth Squares': '/src/assets/cloth-squares.png',
+    'Herbs': '/src/assets/herb.png'
   };
   return imageMap[itemName] || '/src/assets/mystical-icon.png';
 }
