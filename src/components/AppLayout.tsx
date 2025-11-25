@@ -13,7 +13,7 @@ export const AppLayout = ({ children }: AppLayoutProps) => {
       <SnowFall />
       <div 
         className="fixed inset-0 opacity-20 bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '50%' }}
+        style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '80%' }}
       />
       
       <div className="relative z-10 p-4">
