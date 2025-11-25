@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import React from 'react';
 import { Nameplate } from './Nameplate';
 import { EnemySprite } from './EnemySprite';
 import explosionHit from '@/assets/explosion-hit.gif';
@@ -34,7 +35,7 @@ const ARENA_MARGIN = {
   right: 100    // Right margin for player positioning
 };
 
-export const EntitySprite = ({
+export const EntitySprite = React.memo(({
   id,
   type,
   x,
@@ -247,4 +248,4 @@ export const EntitySprite = ({
       )}
     </div>
   );
-};
+});
