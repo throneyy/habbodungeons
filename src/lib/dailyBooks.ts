@@ -3,6 +3,7 @@ import bookOfRatsImg from "@/assets/book-of-rats.png";
 import bookOfDrakesImg from "@/assets/book-of-drakes.png";
 import bookOfPhoenixesImg from "@/assets/book-of-phoenixes.png";
 import bookOfGoblinsImg from "@/assets/book-of-goblins.png";
+import bookOfGryphonsImg from "@/assets/book-of-gryphons.png";
 
 export interface MaterialCost {
   itemName: string;
@@ -61,6 +62,13 @@ const ALL_BOOKS = [
     description: 'Command the mighty slumber bears. These gentle giants awaken to protect their allies.',
     sprite: bookOfGoblinsImg,
     summonType: 'Slumber Bear'
+  },
+  {
+    id: 'book_of_gryphons',
+    name: 'Book of Gryphons',
+    description: 'Summon noble gryphons. These legendary guardians combine the strength of lions with the majesty of eagles.',
+    sprite: bookOfGryphonsImg,
+    summonType: 'Gryphon'
   }
 ];
 
