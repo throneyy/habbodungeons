@@ -238,7 +238,7 @@ export const EntitySprite = React.memo(({
       {/* Floating damage number */}
       {showDamage && damage && damage > 0 && (
         <div 
-          className="absolute -top-16 left-1/2 -translate-x-1/2 text-4xl font-bold text-red-500 pointer-events-none"
+          className="absolute -top-16 left-1/2 -translate-x-1/2 text-4xl font-bold text-red-500 pointer-events-none font-volter"
           style={{ 
             textShadow: '3px 3px 6px rgba(0,0,0,1), -2px -2px 4px rgba(255,255,255,0.8)',
             animation: 'floatUp 1s ease-out',
