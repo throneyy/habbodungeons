@@ -218,9 +218,9 @@ serve(async (req) => {
       .filter((e: any) => e?.message && typeof e.message === 'string' && e.type !== 'choice' && e.type !== 'dice_success' && e.type !== 'dice_failure')
       .slice(-3);
     
-    const currentLocationContext = narrativeEvents.length > 0 
+    const lastConsequence = narrativeEvents.length > 0 
       ? narrativeEvents[narrativeEvents.length - 1].message 
-      : roomDescription;
+      : null;
 
     const aiPrompt = `You are a JRPG dungeon master for "The Shattered Frostkeep", creating exciting story encounters in a frozen dungeon.
 
@@ -233,10 +233,10 @@ Room description: ${roomDescription}
 ${currentRoom.enemy ? `\n**CRITICAL: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\nYou MUST incorporate this EXACT enemy into your story if creating an encounter that could lead to combat. Do NOT invent different enemies.` : ''}
 ${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
 
-## CURRENT EXACT LOCATION (PRESERVE ALL DETAILS):
-"${currentLocationContext}"
+## WHAT JUST HAPPENED (THIS IS THE IMMEDIATE PRESENT):
+${lastConsequence ? `"${lastConsequence}"` : `"${roomDescription}"`}
 
-## RECENT NARRATIVE EVENTS (YOU MUST CONTINUE FROM THE CURRENT LOCATION ABOVE):
+## RECENT EVENTS LEADING TO THIS MOMENT:
 ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'string').map((e: any, idx: number) => `${idx + 1}. ${e.message}`).join('\n')}
 
 ⚠️ CRITICAL TEXT FORMATTING:
@@ -244,12 +244,13 @@ ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'st
 - Use only standard ASCII punctuation that renders correctly in pixel fonts.
 
 ⚠️ CRITICAL NARRATIVE CONTINUITY RULES:
-1. Your storyText MUST begin in the EXACT location described above: "${currentLocationContext.substring(0, 100)}..."
-2. DO NOT simplify, paraphrase, or change environmental descriptions (e.g., "narrow waterlogged passage" must stay "narrow waterlogged passage", not become "narrow passage")
-3. PRESERVE all adjectives, details, and atmospheric descriptions from the current location
-4. You can ADD new details or developments, but NEVER remove or simplify existing ones
-5. If the last description says "knee-deep water", your story MUST acknowledge that knee-deep water
-6. Environmental consistency is MORE important than creative variation - players notice when details change
+1. Your storyText continues IMMEDIATELY from "WHAT JUST HAPPENED" above - that is the PRESENT MOMENT
+2. DO NOT reintroduce the scene or restate what already happened
+3. DO NOT write "As the..." or "After..." - the consequence JUST occurred, NOW describe what happens NEXT
+4. Your first sentence should pick up the story EXACTLY where the last event left off
+5. Example: If last event was "debris falls, obscuring vision" → Your story: "A large creature detaches from the wall..."
+6. Example: If last event was "you enter a chamber" → Your story: "The chamber stretches before you..."
+7. The player is ALREADY in the moment described in "WHAT JUST HAPPENED" - don't re-describe it, continue it
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
 **DICE CHECKS ARE REQUIRED FOR:**
@@ -313,13 +314,12 @@ If an action contains these words, it MUST have diceRequired: true:
 - "dispel", "disrupt", "manipulate", "analyze", "decipher"
 
 ## Story Structure Rules
-1. CRITICAL NARRATIVE CONTINUITY (TOP PRIORITY): 
-   - Your storyText MUST maintain the EXACT environmental details from the current location
-   - NEVER simplify descriptions: "narrow waterlogged passage" cannot become "narrow passage"
-   - NEVER remove adjectives: keep "knee-deep", "waterlogged", "frost-covered", etc.
-   - You can ADD new details but NEVER remove or paraphrase existing ones
-   - Environmental consistency matters more than creative variation
-   - Players notice when "the icy chamber with frozen stalactites" becomes "the cold room"
+1. CRITICAL NARRATIVE FLOW (TOP PRIORITY): 
+   - Your storyText continues IMMEDIATELY from the last event in "WHAT JUST HAPPENED"
+   - DO NOT restate or reintroduce - the player is already IN that moment
+   - First sentence should seamlessly continue the action/atmosphere
+   - Example flow: "debris falls" → "Through the settling dust, a shape emerges..."
+   - NOT: "As the debris settles..." (that restates the last event)
 
 2. Create varied, unpredictable encounters:
    - Enemy encounters (~35%): May include dialogue options before combat
@@ -361,11 +361,11 @@ If an action contains these words, it MUST have diceRequired: true:
 
 ## Response Format
 **CRITICAL: You MUST return ONLY a valid JSON object with this structure:**
-- storyText: string (100-200 words describing what's happening NOW, directly building from the last action)
+- storyText: string (100-200 words describing what happens NEXT, continuing seamlessly from the last event)
 - choices: array of 2-4 choice objects, each with id, label, diceRequired boolean, and if dice: diceDC number and skillType string
 - itemsGained: array (usually empty)
 
-IMPORTANT: The storyText should feel like a continuation of the last event, not a new disconnected scene. Reference what just happened when appropriate.
+IMPORTANT: Your storyText should continue the action/scene from "WHAT JUST HAPPENED" - don't restart or reintroduce the scene.
 
 Example choice with dice: {"id": "choice1", "label": "Search for clues [Dice Check: DC 16]", "diceRequired": true, "diceDC": 16, "skillType": "investigation"}
 Example choice without dice: {"id": "choice2", "label": "Attack immediately", "diceRequired": false}
