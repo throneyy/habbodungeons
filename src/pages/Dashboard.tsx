@@ -4,8 +4,10 @@ import { HabboPanel } from "@/components/HabboPanel";
 import { StatBar } from "@/components/StatBar";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { DailyLeaderboard } from "@/components/DailyLeaderboard";
+import { ClassSelection } from "@/components/ClassSelection";
 import { getItemImage, getItemDescription } from "@/lib/itemAssets";
 import { SkillTreeDialog } from "@/components/SkillTreeDialog";
+import { getArchetypeById } from "@/lib/classArchetypes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,10 @@ interface Profile {
   gardening_xp?: number;
   unlocked_skills?: string[];
   last_habbo_skill_sync?: string;
+  custom_class_name?: string;
+  custom_class_description?: string;
+  custom_class_archetype?: string;
+  class_id?: string;
 }
 
 interface PlayerStats {
@@ -59,6 +65,7 @@ const Dashboard = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSkillTree, setShowSkillTree] = useState(false);
+  const [editingClass, setEditingClass] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -306,6 +313,40 @@ const Dashboard = () => {
            name.includes("potatoes");
   };
 
+  const handleClassUpdate = async (classData: {
+    customClassName: string;
+    customClassDescription: string;
+    customClassArchetype: string;
+    classId: string;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          custom_class_name: classData.customClassName,
+          custom_class_description: classData.customClassDescription,
+          custom_class_archetype: classData.customClassArchetype,
+          class_id: classData.classId,
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({ title: "Class updated successfully!" });
+      setEditingClass(false);
+      await loadData();
+    } catch (error: any) {
+      toast({
+        title: "Failed to update class",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -440,6 +481,65 @@ const Dashboard = () => {
             )}
           </div>
         </HabboPanel>
+
+        {/* Player Class */}
+        {profile?.habbo_username && (
+          <HabboPanel title="Class & Role">
+            {editingClass ? (
+              <ClassSelection
+                onComplete={handleClassUpdate}
+                onCancel={() => setEditingClass(false)}
+                initialData={{
+                  customClassName: profile.custom_class_name || "",
+                  customClassDescription: profile.custom_class_description || "",
+                  customClassArchetype: profile.custom_class_archetype || "",
+                }}
+                showCancel={true}
+              />
+            ) : profile.custom_class_name ? (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl">
+                        {getArchetypeById(profile.custom_class_archetype || "")?.icon || "⚔️"}
+                      </span>
+                      <div>
+                        <h3 className="text-2xl font-black">{profile.custom_class_name}</h3>
+                        <p className="text-muted-foreground">
+                          Archetype: {getArchetypeById(profile.custom_class_archetype || "")?.name}
+                        </p>
+                      </div>
+                    </div>
+                    {profile.custom_class_description && (
+                      <p className="text-sm italic border-l-4 border-primary pl-4 py-2 bg-muted rounded-r">
+                        {profile.custom_class_description}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingClass(true)}
+                    className="font-bold border-2 border-habbo-dark"
+                  >
+                    Edit Class
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center space-y-4 py-6">
+                <p className="text-muted-foreground">You haven't created your class yet</p>
+                <Button
+                  onClick={() => setEditingClass(true)}
+                  className="font-bold border-4 border-habbo-dark"
+                >
+                  Create Your Class
+                </Button>
+              </div>
+            )}
+          </HabboPanel>
+        )}
 
         {/* Search Habbo Players */}
         <div className="bg-card border-4 border-habbo-dark rounded-xl p-4 shadow-lg">

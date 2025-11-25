@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { ClassSelection } from "@/components/ClassSelection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ const LinkHabbo = () => {
   const [habboProfile, setHabboProfile] = useState<HabboProfile | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
   const [showVerification, setShowVerification] = useState(false);
+  const [showClassSelection, setShowClassSelection] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const generateCode = () => {
@@ -98,7 +100,8 @@ const LinkHabbo = () => {
       if (updateError) throw updateError;
 
       toast({ title: "Habbo Origins account verified and linked successfully!" });
-      navigate("/dashboard");
+      setShowVerification(false);
+      setShowClassSelection(true);
     } catch (error: any) {
       toast({
         title: "Verification failed",
@@ -109,10 +112,46 @@ const LinkHabbo = () => {
     setLoading(false);
   };
 
+  const handleClassComplete = async (classData: {
+    customClassName: string;
+    customClassDescription: string;
+    customClassArchetype: string;
+    classId: string;
+  }) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          custom_class_name: classData.customClassName,
+          custom_class_description: classData.customClassDescription,
+          custom_class_archetype: classData.customClassArchetype,
+          class_id: classData.classId,
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast({ title: "Class created successfully!" });
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast({
+        title: "Failed to save class",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
-        <HabboPanel title="Link Your Habbo Origins Account">
+        {showClassSelection ? (
+          <ClassSelection onComplete={handleClassComplete} />
+        ) : (
+          <HabboPanel title="Link Your Habbo Origins Account">
           <div className="space-y-6">
             {!showVerification ? (
               <div className="space-y-2">
@@ -199,6 +238,7 @@ const LinkHabbo = () => {
             </Button>
           </div>
         </HabboPanel>
+        )}
       </div>
     </AppLayout>
   );
