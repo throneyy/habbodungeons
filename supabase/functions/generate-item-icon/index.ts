@@ -165,16 +165,16 @@ function generatePrompt(itemName: string, itemType: string, description?: string
   if (itemType.toLowerCase() === 'weapon') {
     // Special prompt for Rusty Sword
     if (itemName.toLowerCase() === 'rusty sword') {
-      return "Rusty brown weathered sword weapon with orange rust spots, isometric 45-degree angle view, 35x68 pixels, ACTUAL transparent PNG with true alpha channel - DO NOT draw checkerboard pattern, DO NOT draw gray/white grid, DO NOT include any background at all, weapon floating on completely empty transparent background (rgba 0,0,0,0), clean pixel art style, vibrant colors. Background must be 100% transparent alpha channel. Do NOT render transparency checkerboard. Do NOT draw background grid. The weapon should float on nothing.";
+      return "Rusty brown weathered sword weapon with orange rust spots, isometric 45-degree angle view, 35x68 pixels, SOLID TRANSPARENT BACKGROUND - do not draw anything in the background, not even transparency indicators. Leave background completely empty. Use PNG with invisible alpha channel. The background should be completely blank/void/nothing - just the weapon object on empty space. DO NOT DRAW: checkerboard, grid pattern, gray squares, white squares, transparency visualization, background texture. Clean pixel art weapon only.";
     }
     
     // Special prompt for Ice Dagger
     if (itemName.toLowerCase() === 'ice dagger') {
-      return "Blue icy frost dagger weapon with ice crystals, isometric 45-degree angle view, 35x68 pixels, ACTUAL transparent PNG with true alpha channel - DO NOT draw checkerboard pattern, DO NOT draw gray/white grid, DO NOT include any background at all, weapon floating on completely empty transparent background (rgba 0,0,0,0), clean pixel art style, vibrant colors. Background must be 100% transparent alpha channel. Do NOT render transparency checkerboard. Do NOT draw background grid. The weapon should float on nothing.";
+      return "Blue icy frost dagger weapon with ice crystals, isometric 45-degree angle view, 35x68 pixels, SOLID TRANSPARENT BACKGROUND - do not draw anything in the background, not even transparency indicators. Leave background completely empty. Use PNG with invisible alpha channel. The background should be completely blank/void/nothing - just the weapon object on empty space. DO NOT DRAW: checkerboard, grid pattern, gray squares, white squares, transparency visualization, background texture. Clean pixel art weapon only.";
     }
     
-    // Generic weapon prompt - weapon only, no mannequin
-    return `${itemName} weapon sprite, isometric 45-degree angle view, 35x68 pixels, ACTUAL transparent PNG with true alpha channel - DO NOT draw checkerboard pattern, DO NOT draw gray/white grid, DO NOT include any background at all, weapon floating on completely empty transparent background (rgba 0,0,0,0), clean pixel art style, vibrant colors. Background must be 100% transparent alpha channel.`;
+    // Generic weapon prompt - weapon only, no background patterns
+    return `${itemName} weapon sprite, isometric 45-degree angle view, 35x68 pixels, SOLID TRANSPARENT BACKGROUND - do not draw anything in the background, not even transparency indicators. Leave background completely empty. Use PNG with invisible alpha channel. The background should be completely blank/void/nothing - just the weapon object on empty space. DO NOT DRAW: checkerboard, grid pattern, gray squares, white squares, transparency visualization, background texture. Clean pixel art weapon only.`;
   }
   
   // Non-weapon items use standard icon style
