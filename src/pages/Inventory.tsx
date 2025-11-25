@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { HabboPanel } from "@/components/HabboPanel";
+import { ItemIcon } from "@/components/ItemIcon";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -283,13 +284,15 @@ const Inventory = () => {
                         item.is_equipped ? "border-primary bg-primary/10" : "border-habbo-dark bg-muted"
                       }`}
                     >
-                        <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            {getItemImage(item.item_name) ? (
-                              <img src={getItemImage(item.item_name)} alt={item.item_name} className="h-8 pixelated" style={{ width: 'auto' }} />
-                            ) : (
-                              <Sword className="w-5 h-5" />
-                            )}
+                            <ItemIcon 
+                              itemName={item.item_name}
+                              itemType={item.item_type}
+                              sprite={getItemImage(item.item_name)?.split('/').pop() || ''}
+                              description={getItemDescription(item.item_name)}
+                              className="h-8 w-auto"
+                            />
                             <div>
                               <p className="font-bold">{item.item_name}</p>
                               <p className="text-xs text-muted-foreground">Weapon</p>
@@ -335,20 +338,19 @@ const Inventory = () => {
                         </div>
                       </div>
                     </TooltipTrigger>
-                    {getItemImage(item.item_name) && (
-                      <TooltipContent side="top" className="bg-background border-2 border-border p-2">
-                        <img 
-                          src={getItemImage(item.item_name)} 
-                          alt={item.item_name} 
-                          className="h-24 pixelated mx-auto" 
-                          style={{ width: 'auto' }}
-                        />
-                        <p className="text-center mt-2 font-bold">{item.item_name}</p>
-                        <p className="text-center text-xs text-muted-foreground mt-1">
-                          {getItemDescription(item.item_name)}
-                        </p>
-                      </TooltipContent>
-                    )}
+                    <TooltipContent side="top" className="bg-background border-2 border-border p-2">
+                      <ItemIcon 
+                        itemName={item.item_name}
+                        itemType={item.item_type}
+                        sprite={getItemImage(item.item_name)?.split('/').pop() || ''}
+                        description={getItemDescription(item.item_name)}
+                        className="h-24 w-auto mx-auto"
+                      />
+                      <p className="text-center mt-2 font-bold">{item.item_name}</p>
+                      <p className="text-center text-xs text-muted-foreground mt-1">
+                        {getItemDescription(item.item_name)}
+                      </p>
+                    </TooltipContent>
                   </Tooltip>
                 ))}
               </div>
