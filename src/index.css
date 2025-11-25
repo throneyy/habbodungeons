@@ -17,7 +17,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Dungeon color palette - dark atmospheric theme */
-    --background: 220 30% 10%;
+    --background: 220 35% 12%;
     --foreground: 0 0% 90%;
 
     --card: 220 25% 15%;
@@ -64,7 +64,7 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 220 30% 8%;
+    --background: 220 35% 12%;
     --foreground: 0 0% 92%;
 
     --card: 220 25% 12%;
