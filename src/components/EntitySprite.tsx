@@ -56,16 +56,45 @@ export const EntitySprite = React.memo(({
   const [animatePosition, setAnimatePosition] = useState({ x, y });
   const [avatarAction, setAvatarAction] = useState<'std' | 'wlk' | 'crr'>('std');
   const [showMovementEffect, setShowMovementEffect] = useState(false);
+  const [showPushbackEffect, setShowPushbackEffect] = useState(false);
 
+  // Damage animation with delay for turn-based sequencing
   useEffect(() => {
     if (damage !== undefined && damage > 0) {
-      setShowDamage(true);
-      const timer = setTimeout(() => {
-        setShowDamage(false);
-      }, 1000);
-      return () => clearTimeout(timer);
+      // Delay damage display so attacker animation plays first
+      const damageDelay = isAttacking ? 0 : 500;
+      
+      const showTimer = setTimeout(() => {
+        setShowDamage(true);
+        setShowPushbackEffect(true);
+        
+        // Pushback animation
+        const pushbackDistance = type === 'player' ? 0.3 : -0.3;
+        setAnimatePosition({ 
+          x: x + pushbackDistance, 
+          y: y 
+        });
+        
+        // Return to normal position
+        const returnTimer = setTimeout(() => {
+          setAnimatePosition({ x, y });
+          setShowPushbackEffect(false);
+        }, 300);
+        
+        // Hide damage after animation
+        const hideTimer = setTimeout(() => {
+          setShowDamage(false);
+        }, 1000);
+        
+        return () => {
+          clearTimeout(returnTimer);
+          clearTimeout(hideTimer);
+        };
+      }, damageDelay);
+      
+      return () => clearTimeout(showTimer);
     }
-  }, [damage, id]);
+  }, [damage, id, isAttacking, type, x, y]);
 
   // Attack animation for players
   useEffect(() => {
@@ -147,8 +176,8 @@ export const EntitySprite = React.memo(({
       }}
       className="drop-shadow-2xl"
     >
-      {/* Movement effect under feet */}
-      {showMovementEffect && (
+      {/* Movement effect under feet - for attacking or taking damage */}
+      {(showMovementEffect || showPushbackEffect) && (
         <img
           src={hitBump}
           alt="Movement effect"
