@@ -379,12 +379,19 @@ serve(async (req) => {
       ],
     };
 
-    // Get skills for current player
+    // Get skills for current player - always fetch for the authenticated user
     const { data: currentUserProfile } = await supabaseAdmin
       .from("profiles")
       .select("unlocked_skills, fishing_level, gardening_level")
       .eq("id", user.id)
       .single();
+
+    console.log("Loaded profile for skills:", {
+      userId: user.id,
+      fishingLevel: currentUserProfile?.fishing_level,
+      gardeningLevel: currentUserProfile?.gardening_level,
+      hasProfile: !!currentUserProfile
+    });
 
     // Determine which skills should be unlocked based on levels
     const fishingLevel = currentUserProfile?.fishing_level || 0;
@@ -398,11 +405,24 @@ serve(async (req) => {
       })
       .map(skill => skill.id);
 
+    console.log("Calculated unlocked skills:", {
+      fishingLevel,
+      gardeningLevel,
+      unlockedSkillIds,
+      totalDefinitions: SKILL_DEFINITIONS.length
+    });
+
     const availableSkills = getAvailableSkills(
       unlockedSkillIds,
       currentPlayer.current_mp,
       battle.used_skills || []
     );
+
+    console.log("Available skills for battle:", {
+      totalAvailable: availableSkills.length,
+      currentMp: currentPlayer.current_mp,
+      usedSkills: battle.used_skills || []
+    });
 
     const battleData = {
       enemy: enemyState,
