@@ -75,11 +75,11 @@ serve(async (req) => {
       throw new Error('Profile not found');
     }
 
-    if (!profile.habbo_origins_id) {
-      throw new Error('No Habbo Origins ID linked. Please link your Habbo account first.');
+    if (!profile.habbo_username) {
+      throw new Error('No Habbo username linked. Please link your Habbo account first.');
     }
 
-    const habboUsername = profile.habbo_username || 'Unknown';
+    const habboUsername = profile.habbo_username;
     
     console.log(`Syncing skills for ${habboUsername}`);
 
