@@ -160,6 +160,11 @@ serve(async (req) => {
 function generatePrompt(itemName: string, itemType: string, description?: string): string {
   const baseStyle = "Habbo Hotel isometric pixel art style, 45-degree angle, colorful, retro game aesthetic, clean outlines, simple shading, game item icon, vibrant colors, black background";
   
+  // Special prompt for Rusty Sword
+  if (itemName.toLowerCase() === 'rusty sword') {
+    return "Rusty Sword in Habbo Hotel pixel art style, isometric view at 45-degree angle, weathered brown-orange blade with rust spots, simple medieval sword, game item icon, vibrant retro colors, clean outlines, simple shading, 64x64px resolution, black background";
+  }
+  
   switch (itemType.toLowerCase()) {
     case 'weapon':
       return `${itemName} weapon in ${baseStyle}, fantasy RPG weapon, glowing effects`;

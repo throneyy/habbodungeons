@@ -76,8 +76,8 @@ export const STORE_ITEMS: StoreItem[] = [
   {
     id: 'rusty-sword',
     name: 'Rusty Sword',
-    description: 'Basic weapon for beginners',
-    sprite: 'fighters-sword.png',
+    description: "An old, rusty sword. It's seen better days but still sharp enough to be useful. (+5 ATK, +2 DEF)",
+    sprite: '', // Will use AI-generated icon
     category: 'weapon',
     goldPrice: 50,
     silverPrice: 5,
