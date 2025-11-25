@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import SnowFall from "./SnowFall";
 import { MainNav } from "./MainNav";
-import dungeonBg from "@/assets/ice-pool-isometric.png";
+import dungeonBg from "@/assets/icedungeon.png";
 
 interface AppLayoutProps {
   children: ReactNode;
