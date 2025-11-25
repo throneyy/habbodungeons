@@ -36,13 +36,6 @@ export const MainNav = () => {
           <Button
             variant="secondary"
             className="border-2 border-habbo-dark font-bold shadow-md"
-            onClick={() => navigate("/")}
-          >
-            Home
-          </Button>
-          <Button
-            variant="secondary"
-            className="border-2 border-habbo-dark font-bold shadow-md"
             onClick={() => navigate("/monster-manual")}
           >
             Monsters
@@ -60,14 +53,6 @@ export const MainNav = () => {
             onClick={() => navigate("/inventory")}
           >
             Inventory
-          </Button>
-          <Button
-            variant="secondary"
-            className="border-2 border-habbo-dark font-bold shadow-md"
-            onClick={() => navigate("/store")}
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Store
           </Button>
           {user ? (
             <Button
