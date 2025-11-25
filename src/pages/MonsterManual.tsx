@@ -18,7 +18,6 @@ import glacialImp from "@/assets/glacial-imp.png";
 import frozenGoblin from "@/assets/frozen-goblin.png";
 import frostMutant from "@/assets/frost-mutant.png";
 import frostWraith from "@/assets/frost-wraith.png";
-import iceShade from "@/assets/ice-shade.png";
 import undeadHabbo from "@/assets/undead-habbo.png";
 import frostRat from "@/assets/frost-rat.gif";
 import goblinTrio from "@/assets/goblin-trio.png";
@@ -55,7 +54,6 @@ const ENEMY_SPRITES: Record<string, string> = {
   "frozen-goblin.png": frozenGoblin,
   "frost-mutant.png": frostMutant,
   "frost-wraith.png": frostWraith,
-  "ice-shade.png": iceShade,
   "undead-habbo.png": undeadHabbo,
   "frost-rat.gif": frostRat,
   "goblin-trio.png": goblinTrio,
@@ -124,11 +122,6 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
     type: "Undead",
     description: "Former adventurers who fell to the dungeon's curse, now shambling husks seeking to spread their fate.",
     difficulty: "Uncommon"
-  },
-  "Ice Shade": {
-    type: "Undead Spirit",
-    description: "Spectral beings made of frozen mist, they drain the warmth from living creatures.",
-    difficulty: "Rare"
   },
   "Frost Wraith": {
     type: "Undead Spirit",
