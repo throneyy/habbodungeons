@@ -14,6 +14,7 @@ import frostkeepMerchantTitle from "@/assets/frostkeep-merchant-title.gif";
 import { getDailyBooks, getMaterialImage, type DailyBook } from "@/lib/dailyBooks";
 import { Sparkles } from "lucide-react";
 import { getNPCById } from "@/lib/npcData";
+import { getItemImage } from "@/lib/itemAssets";
 
 export default function Store() {
   const navigate = useNavigate();
@@ -136,13 +137,10 @@ export default function Store() {
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center justify-center h-20">
                 <img 
-                  src={`/src/assets/${item.sprite}`}
+                  src={getItemImage(item.name)}
                   alt={item.name}
                   className="pixel-icon max-h-20"
                   style={{ width: 'auto', height: 'auto' }}
-                  onError={(e) => {
-                    e.currentTarget.src = '/src/assets/mystical-icon.png';
-                  }}
                 />
               </div>
               <h4 className="font-bold text-sm text-center">{item.name}</h4>
@@ -176,13 +174,10 @@ export default function Store() {
         <TooltipContent>
           <div className="flex flex-col items-center gap-2">
             <img 
-              src={`/src/assets/${item.sprite}`}
+              src={getItemImage(item.name)}
               alt={item.name}
               className="pixel-icon"
               style={{ width: 'auto', height: 'auto', maxHeight: '150px' }}
-              onError={(e) => {
-                e.currentTarget.src = '/src/assets/mystical-icon.png';
-              }}
             />
             <p className="font-bold">{item.name}</p>
             <p className="text-sm">{item.description}</p>
