@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { LogOut, Link, Users, Gift, RefreshCw, Shield, Sparkles, ShoppingCart } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import interiorRoom from "@/assets/interior-room.png";
-import playerDashboardTitle from "@/assets/player-dashboard-title.gif";
+import playerDashboardTitle from "@/assets/player-dashboard-title-new.gif";
 
 interface Profile {
   username: string;

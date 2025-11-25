@@ -5,7 +5,7 @@ import { HabboPanel } from "@/components/HabboPanel";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { EnemySprite } from "@/components/EnemySprite";
 import { toast } from "sonner";
-import monsterManualTitle from "@/assets/monster-manual-title.png";
+import monsterManualTitle from "@/assets/monster-manual-title-new.gif";
 import ancientJailImage from "@/assets/ancient-jail.png";
 
 // Import enemy sprites

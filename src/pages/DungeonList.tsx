@@ -8,7 +8,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Users, ArrowLeft } from "lucide-react";
 import winterLandscape from "@/assets/winter-landscape.jpg";
-import serverBrowserTitle from "@/assets/server-browser.gif";
+import dungeonsTitle from "@/assets/dungeons-title.gif";
 
 interface Server {
   id: string;
@@ -252,8 +252,8 @@ const DungeonList = () => {
           {/* Content */}
           <div className="relative z-10 flex items-center justify-between">
             <img 
-              src={serverBrowserTitle} 
-              alt="Server Browser" 
+              src={dungeonsTitle} 
+              alt="Dungeons" 
               className="pixel-icon"
               style={{ imageRendering: 'pixelated' }}
             />
