@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy, ScrollText, Volume2 } from "lucide-react";
-import dungeonBg from "@/assets/ice-pool-isometric.png";
+import dungeonBg from "@/assets/icedungeon.png";
 import explosionHit from "@/assets/explosion-hit.gif";
 import hitBump from "@/assets/hit-bump.gif";
 
