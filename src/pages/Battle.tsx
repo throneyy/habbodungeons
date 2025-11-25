@@ -3037,9 +3037,9 @@ const Battle = () => {
                           variant={selectedItem === item.item_name ? "default" : "outline"}
                           onClick={() => setSelectedItem(item.item_name)}
                           className="font-bold text-xs h-auto py-2"
-                          title={item.item_type === 'scroll' ? 'Scroll - Automatic success, no dice needed' : 'Consumable item'}
+                          title="Consumable - Automatic success, no dice needed"
                         >
-                          {item.item_name} ({item.quantity})
+                          {item.item_type === 'scroll' ? '📜' : '🧪'} {item.item_name} ({item.quantity})
                           {item.item_type === 'scroll' && <span className="ml-1 text-[10px] text-primary">📜</span>}
                         </Button>
                       ))}
@@ -3052,19 +3052,19 @@ const Battle = () => {
                 </div>
               )}
 
-              {/* Dice Input Section - Hidden for scrolls */}
+              {/* Dice Input Section - Hidden for consumables */}
               {(() => {
                 const selectedItemData = inventory.find(item => item.item_name === selectedItem);
-                const isScroll = selectedItemData?.item_type === 'scroll';
+                const isConsumable = selectedItemData?.item_type === 'consumable' || selectedItemData?.item_type === 'scroll';
                 
-                if (selectedAction === 'item' && isScroll) {
+                if (selectedAction === 'item' && isConsumable) {
                   return (
                     <div className="p-4 bg-primary/20 border-2 border-primary rounded-lg">
                       <p className="font-bold text-primary text-center">
-                        📜 Scrolls don't require dice rolls!
+                        ✨ Consumables don't require dice rolls!
                       </p>
                       <p className="text-sm text-center mt-2">
-                        Scrolls automatically succeed and use your turn.
+                        Consumable items automatically succeed and use your turn.
                       </p>
                     </div>
                   );
