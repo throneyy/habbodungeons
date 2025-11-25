@@ -29,6 +29,9 @@ import longFeathers from "@/assets/long-feathers.png";
 import crystals from "@/assets/crystals.png";
 import werewolf from "@/assets/werewolf.png";
 import flamingPhantom from "@/assets/flaming-phantom.png";
+import elixirPotion from "@/assets/elixir-potion.png";
+import royalArmor from "@/assets/royal-armor.png";
+import royalSword from "@/assets/royal-sword.png";
 
 import victoryTrophy from "@/assets/victory-trophy.png";
 import rareTreasureChest from "@/assets/rare-treasure-chest.png";
@@ -59,6 +62,9 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Potion": potion,
   "Ether": elixer,
   "Elixer": elixer,
+  "Elixir Potion": elixirPotion,
+  "Royal Armor": royalArmor,
+  "Royal Sword": royalSword,
   "Everyday Supply Chest": everydaySupplyChest,
   "Rare Treasure Chest": rareTreasureChest,
   "Fighters Sword": fightersSword,
@@ -165,6 +171,7 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Rusty Sword": "A weathered blade that's seen better days. Basic but reliable.",
   "Fighters Sword": "A well-crafted blade for seasoned warriors. +15 ATK",
   "Warriors Sword": "A masterwork weapon forged for champions. +25 ATK",
+  "Royal Sword": "A legendary blade fit for royalty. Incredibly rare. +40 ATK",
   "Mage Staff": "Channels magical energy for devastating spells. +10 ATK, +20 MP",
   "Powerful Mage Staff": "An ancient staff pulsing with arcane power. +20 ATK, +40 MP",
   "Bow & Arrow": "Strike enemies from afar with precision. +12 ATK",
@@ -183,12 +190,14 @@ export const ITEM_DESCRIPTIONS: Record<string, string> = {
   "Horned Helmet": "An intimidating helm with curved horns. +12 DEF",
   "Iron Helmet": "Standard iron headgear for warriors. +10 DEF",
   "Iron Leg Armour": "Protective plating for your legs. +10 DEF",
+  "Royal Armor": "Legendary armor forged for kings. Incredibly rare. +35 DEF",
   
   // Consumables - Healing
   "Potion": "Restores 50 HP. A staple for any adventurer.",
   "Potion of Minor Healing": "Heals minor wounds. Restores 30 HP.",
   "Elixer": "Restores 50 MP. Essential for spellcasters.",
   "Elixir": "Restores 50 MP. Essential for spellcasters.",
+  "Elixir Potion": "A powerful elixir that fully restores MP. Very rare.",
   "Ether": "Replenishes magical energy. Restores 40 MP.",
   
   // Consumables - Food
