@@ -161,16 +161,21 @@ serve(async (req) => {
 });
 
 function generatePrompt(itemName: string, itemType: string, description?: string): string {
-  const baseStyle = "Habbo Hotel isometric pixel art style, 45-degree angle, colorful, retro game aesthetic, clean outlines, simple shading, game item icon, vibrant colors, black background";
-  
-  // Special prompt for Rusty Sword
-  if (itemName.toLowerCase() === 'rusty sword') {
-    return "A rusty medieval sword in Habbo Hotel isometric pixel art style, 45-degree angle view, brown-orange weathered blade with visible rust patches, simple straight sword design matching Fighters Sword aesthetic, clean pixel outlines, bold colors, minimal shading, game item icon, centered on black background, 64x64 pixels";
+  // Weapon sprites must match fighters-sword.png and mage-staff.png style
+  if (itemType.toLowerCase() === 'weapon') {
+    // Special prompt for Rusty Sword
+    if (itemName.toLowerCase() === 'rusty sword') {
+      return "Rusty brown weathered sword with orange rust spots held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, character facing forward-left, weapon clearly visible in hand";
+    }
+    
+    // Generic weapon prompt with mannequin
+    return `${itemName} held by white Habbo Hotel pixel art mannequin character, 35x68 pixels, transparent background PNG, isometric view at 45-degree angle, clean pixel art, bold colors, weapon details visible, character facing forward-left, Habbo style character sprite`;
   }
   
+  // Non-weapon items use standard icon style
+  const baseStyle = "Habbo Hotel isometric pixel art style, 45-degree angle, colorful, retro game aesthetic, clean outlines, simple shading, game item icon, vibrant colors, black background, 64x64 pixels";
+  
   switch (itemType.toLowerCase()) {
-    case 'weapon':
-      return `${itemName} weapon in ${baseStyle}, fantasy RPG weapon, glowing effects`;
     case 'armor':
     case 'helmet':
     case 'chest':
