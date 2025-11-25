@@ -41,6 +41,7 @@ import gryphon from "@/assets/gryphon.png";
 import emeraldDrake from "@/assets/emerald-drake.png";
 import azureDragon from "@/assets/azure-dragon.png";
 import ancientTreant from "@/assets/ancient-treant.png";
+import wolfPup from "@/assets/wolf-pup.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -76,6 +77,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "emerald-drake.png": emeraldDrake,
   "azure-dragon.png": azureDragon,
   "ancient-treant.png": ancientTreant,
+  "wolf-pup.png": wolfPup,
 };
 
 interface Monster {
@@ -249,6 +251,11 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
     type: "Elemental Construct",
     description: "A towering tree-like guardian animated by primal nature magic. Its wooden limbs possess immense strength, and it can command the very roots of the earth to entangle enemies.",
     difficulty: "Rare"
+  },
+  "Wolf Pup": {
+    type: "Beast",
+    description: "A young, ravenous wolf cub separated from its pack. Despite its small size, it fights with surprising ferocity and razor-sharp teeth, driven by hunger and survival instinct.",
+    difficulty: "Common"
   }
 };
 
