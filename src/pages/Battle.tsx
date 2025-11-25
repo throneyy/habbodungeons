@@ -859,6 +859,11 @@ const Battle = () => {
       }
       
       if (data?.battleData) {
+        console.log("🔍 Setting battleData from backend. Has dungeon?", !!data.battleData.dungeon);
+        console.log("🔍 Dungeon data:", data.battleData.dungeon ? 
+          `width=${data.battleData.dungeon.width}, height=${data.battleData.dungeon.height}, entities=${data.battleData.dungeon.entities?.length}` : 
+          "MISSING!");
+        
         setBattleData(data.battleData);
         
         // Track room index for realtime updates
@@ -2763,7 +2768,19 @@ const Battle = () => {
       <div className="relative h-screen flex flex-col">
         {/* Battle Stage Area - 65% of screen */}
         <div className="relative h-[65vh]">
-          {battleData?.dungeon ? (
+          {(() => {
+            console.log("🎨 Render check: battleData exists?", !!battleData, "dungeon exists?", !!battleData?.dungeon);
+            if (battleData?.dungeon) {
+              console.log("✅ Rendering DungeonBoard with dungeon:", {
+                width: battleData.dungeon.width,
+                height: battleData.dungeon.height,
+                entityCount: battleData.dungeon.entities?.length
+              });
+            } else {
+              console.log("❌ Cannot render DungeonBoard - dungeon is missing from battleData");
+            }
+            return battleData?.dungeon;
+          })() ? (
             <DungeonBoard 
               dungeon={{
                 ...battleData.dungeon,
