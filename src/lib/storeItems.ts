@@ -3,7 +3,7 @@ export interface StoreItem {
   name: string;
   description: string;
   sprite: string;
-  category: 'consumable' | 'weapon' | 'material';
+  category: 'consumable' | 'weapon' | 'armor' | 'material';
   goldPrice: number;
   silverPrice: number;
   itemType: string;
@@ -304,7 +304,7 @@ export const STORE_ITEMS: StoreItem[] = [
     name: 'Royal Armor',
     description: 'Legendary armor forged for kings (+35 DEF)',
     sprite: 'royal-armor.png',
-    category: 'weapon',
+    category: 'armor',
     goldPrice: 5000,
     silverPrice: 50000,
     itemType: 'armor'
@@ -314,7 +314,7 @@ export const STORE_ITEMS: StoreItem[] = [
     name: 'Gold Crown',
     description: 'Magnificent golden crown adorned with gems (+50 DEF)',
     sprite: 'white-sack.png',
-    category: 'weapon',
+    category: 'armor',
     goldPrice: 8000,
     silverPrice: 80000,
     itemType: 'armor'
@@ -324,7 +324,7 @@ export const STORE_ITEMS: StoreItem[] = [
     name: 'Silver Tiara',
     description: 'Elegant silver tiara fit for nobility (+45 DEF)',
     sprite: 'brown-sack.png',
-    category: 'weapon',
+    category: 'armor',
     goldPrice: 7000,
     silverPrice: 70000,
     itemType: 'armor'
@@ -366,7 +366,7 @@ export const STORE_ITEMS: StoreItem[] = [
     name: 'Blue Robes',
     description: 'Mystical robes that enhance magical power (+10 DEF, +10 MP)',
     sprite: 'blue-robes.png',
-    category: 'weapon',
+    category: 'armor',
     goldPrice: 25,
     silverPrice: 250,
     itemType: 'armor'
@@ -376,7 +376,7 @@ export const STORE_ITEMS: StoreItem[] = [
     name: 'Red Robes',
     description: 'Enchanted robes infused with fire magic (+10 DEF, +5 ATK)',
     sprite: 'red-robes.png',
-    category: 'weapon',
+    category: 'armor',
     goldPrice: 25,
     silverPrice: 250,
     itemType: 'armor'
