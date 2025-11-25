@@ -10,7 +10,7 @@ type EnemyDirection = "left" | "right";
  * Default scale is 1.0 (100%). Values < 1.0 shrink the sprite.
  */
 export const ENEMY_SCALE_FACTORS: Record<string, number> = {
-  "skeleton.png": 0.4, // Skeleton Warrior is too large, scale to 40%
+  "skeleton.png": 0.25, // Skeleton Warrior is too large, scale to 40%
 };
 
 export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
