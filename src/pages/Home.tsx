@@ -92,7 +92,7 @@ const Home = () => {
         <HabboPanel className="bg-gradient-to-br from-primary/30 to-secondary/30 overflow-hidden relative">
           <div 
             className="absolute inset-0 opacity-15 bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '140%' }}
+            style={{ backgroundImage: `url(${icyMountainForest})`, backgroundSize: '140%' }}
           />
           <div className="space-y-6 py-8 relative z-10">
             <img 
