@@ -384,19 +384,19 @@ export default function Store() {
         </HabboPanel>
 
         <HabboPanel title="⚗️ Consumables" className="mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getCategoryItems('consumable').map(renderItemCard)}
           </div>
         </HabboPanel>
 
         <HabboPanel title="⚔️ Weapons" className="mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getCategoryItems('weapon').map(renderItemCard)}
           </div>
         </HabboPanel>
 
         <HabboPanel title="🔨 Materials" className="mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {getCategoryItems('material').map(renderItemCard)}
           </div>
         </HabboPanel>
