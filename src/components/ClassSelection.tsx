@@ -67,8 +67,7 @@ export const ClassSelection = ({
                     : "bg-card hover:bg-muted"
                 }`}
               >
-                <div className="text-4xl mb-2">{archetype.icon}</div>
-                <div className="font-bold text-sm">{archetype.name}</div>
+                <div className="font-bold text-lg">{archetype.name}</div>
               </button>
             ))}
           </div>

@@ -501,9 +501,6 @@ const Dashboard = () => {
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-3">
-                      <span className="text-4xl">
-                        {getArchetypeById(profile.custom_class_archetype || "")?.icon || "⚔️"}
-                      </span>
                       <div>
                         <h3 className="text-2xl font-black">{profile.custom_class_name}</h3>
                         <p className="text-muted-foreground">
