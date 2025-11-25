@@ -108,7 +108,7 @@ export const ITEM_ASSETS: Record<string, string> = {
   "Blade": rustySword,
   "Sword": fightersSword,
   "Longsword": warriorsSword,
-  "Longsword Sprite": longswordSprite,
+  "Knight's Longsword": longswordSprite,
   "Shortsword": fightersSword,
   "Greatsword": warriorsSword,
   "Royal Sword": royalSword,

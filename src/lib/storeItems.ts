@@ -72,7 +72,7 @@ export const STORE_ITEMS: StoreItem[] = [
     silverPrice: 20,
     itemType: 'consumable'
   },
-  // Weapons
+  // Weapons (organized by price)
   {
     id: 'rusty-sword',
     name: 'Rusty Sword',
@@ -81,6 +81,16 @@ export const STORE_ITEMS: StoreItem[] = [
     category: 'weapon',
     goldPrice: 5,
     silverPrice: 50,
+    itemType: 'weapon'
+  },
+  {
+    id: 'bow-and-arrow',
+    name: 'Bow & Arrow',
+    description: 'Ranged weapon (+12 ATK)',
+    sprite: 'bow-and-arrow.png',
+    category: 'weapon',
+    goldPrice: 18,
+    silverPrice: 180,
     itemType: 'weapon'
   },
   {
@@ -104,13 +114,23 @@ export const STORE_ITEMS: StoreItem[] = [
     itemType: 'weapon'
   },
   {
-    id: 'bow-and-arrow',
-    name: 'Bow & Arrow',
-    description: 'Ranged weapon (+12 ATK)',
-    sprite: 'bow-and-arrow.png',
+    id: 'longsword',
+    name: "Knight's Longsword",
+    description: 'A versatile blade favored by knights (+18 ATK)',
+    sprite: 'longsword.png',
     category: 'weapon',
-    goldPrice: 18,
-    silverPrice: 180,
+    goldPrice: 30,
+    silverPrice: 300,
+    itemType: 'weapon'
+  },
+  {
+    id: 'royal-sword',
+    name: 'Royal Sword',
+    description: 'Legendary blade fit for royalty (+40 ATK)',
+    sprite: 'royal-sword.png',
+    category: 'weapon',
+    goldPrice: 5000,
+    silverPrice: 50000,
     itemType: 'weapon'
   },
   // Materials
@@ -288,16 +308,26 @@ export const STORE_ITEMS: StoreItem[] = [
     silverPrice: 55,
     itemType: 'scroll'
   },
-  // Very Rare Items
+  // Armor (organized by price)
   {
-    id: 'royal-sword',
-    name: 'Royal Sword',
-    description: 'Legendary blade fit for royalty (+40 ATK)',
-    sprite: 'royal-sword.png',
-    category: 'weapon',
-    goldPrice: 5000,
-    silverPrice: 50000,
-    itemType: 'weapon'
+    id: 'blue-robes',
+    name: 'Blue Robes',
+    description: 'Mystical robes that enhance magical power (+10 DEF, +10 MP)',
+    sprite: 'blue-robes.png',
+    category: 'armor',
+    goldPrice: 25,
+    silverPrice: 250,
+    itemType: 'armor'
+  },
+  {
+    id: 'red-robes',
+    name: 'Red Robes',
+    description: 'Enchanted robes infused with fire magic (+10 DEF, +5 ATK)',
+    sprite: 'red-robes.png',
+    category: 'armor',
+    goldPrice: 25,
+    silverPrice: 250,
+    itemType: 'armor'
   },
   {
     id: 'royal-armor',
@@ -307,26 +337,6 @@ export const STORE_ITEMS: StoreItem[] = [
     category: 'armor',
     goldPrice: 5000,
     silverPrice: 50000,
-    itemType: 'armor'
-  },
-  {
-    id: 'gold-crown',
-    name: 'Gold Crown',
-    description: 'Magnificent golden crown adorned with gems (+50 DEF)',
-    sprite: 'white-sack.png',
-    category: 'armor',
-    goldPrice: 8000,
-    silverPrice: 80000,
-    itemType: 'armor'
-  },
-  {
-    id: 'silver-tiara',
-    name: 'Silver Tiara',
-    description: 'Elegant silver tiara fit for nobility (+45 DEF)',
-    sprite: 'brown-sack.png',
-    category: 'armor',
-    goldPrice: 7000,
-    silverPrice: 70000,
     itemType: 'armor'
   },
   {
@@ -349,36 +359,24 @@ export const STORE_ITEMS: StoreItem[] = [
     silverPrice: 60000,
     itemType: 'accessory'
   },
-  // New Weapons
   {
-    id: 'longsword',
-    name: 'Longsword Sprite',
-    description: 'A versatile blade favored by knights (+18 ATK)',
-    sprite: 'longsword.png',
-    category: 'weapon',
-    goldPrice: 30,
-    silverPrice: 300,
-    itemType: 'weapon'
-  },
-  // New Armor
-  {
-    id: 'blue-robes',
-    name: 'Blue Robes',
-    description: 'Mystical robes that enhance magical power (+10 DEF, +10 MP)',
-    sprite: 'blue-robes.png',
+    id: 'silver-tiara',
+    name: 'Silver Tiara',
+    description: 'Elegant silver tiara fit for nobility (+45 DEF)',
+    sprite: 'brown-sack.png',
     category: 'armor',
-    goldPrice: 25,
-    silverPrice: 250,
+    goldPrice: 7000,
+    silverPrice: 70000,
     itemType: 'armor'
   },
   {
-    id: 'red-robes',
-    name: 'Red Robes',
-    description: 'Enchanted robes infused with fire magic (+10 DEF, +5 ATK)',
-    sprite: 'red-robes.png',
+    id: 'gold-crown',
+    name: 'Gold Crown',
+    description: 'Magnificent golden crown adorned with gems (+50 DEF)',
+    sprite: 'white-sack.png',
     category: 'armor',
-    goldPrice: 25,
-    silverPrice: 250,
+    goldPrice: 8000,
+    silverPrice: 80000,
     itemType: 'armor'
   }
 ];
