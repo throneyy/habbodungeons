@@ -34,6 +34,7 @@ import frostBrute from "@/assets/frost-brute.png";
 import voidStalker from "@/assets/void-stalker.png";
 import swampLurker from "@/assets/swamp-lurker.png";
 import infernalHound from "@/assets/infernal-hound.png";
+import iceGorgon from "@/assets/ice-gorgon.png";
 
 const ENEMY_SPRITES: Record<string, string> = {
   "skeleton.png": skeleton,
@@ -62,6 +63,7 @@ const ENEMY_SPRITES: Record<string, string> = {
   "void-stalker.png": voidStalker,
   "swamp-lurker.png": swampLurker,
   "infernal-hound.png": infernalHound,
+  "ice-gorgon.png": iceGorgon,
 };
 
 interface Monster {
@@ -200,6 +202,11 @@ const MONSTER_DESCRIPTIONS: Record<string, { type: string; description: string; 
     type: "Fiend",
     description: "A demonic beast wreathed in dark flames. These hounds hunt in packs and their bites carry both fire and shadow magic.",
     difficulty: "Uncommon"
+  },
+  "Ice Gorgon": {
+    type: "Elemental Construct",
+    description: "A crystalline sentinel formed from enchanted ice and ancient magic. Its petrifying gaze can freeze enemies solid, while its body radiates an aura of absolute cold.",
+    difficulty: "Rare"
   }
 };
 
