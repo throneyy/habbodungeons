@@ -300,6 +300,8 @@ const Battle = () => {
   const turnAdvanceAttemptedRef = useRef(false);
   const battleLogRef = useRef<HTMLDivElement>(null);
   const previousBattleStatusRef = useRef<string | null>(null);
+  const animationActiveRef = useRef(false);
+  const lastReloadTimeRef = useRef(0);
   
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
@@ -430,7 +432,18 @@ const Battle = () => {
     });
   };
 
+  // Preload battle animation assets
+  const preloadBattleAssets = () => {
+    const imagesToPreload = [explosionHit, hitBump];
+    imagesToPreload.forEach(src => {
+      const img = new Image();
+      img.src = src;
+    });
+    console.log('Battle animations preloaded');
+  };
+
   useEffect(() => {
+    preloadBattleAssets();
     loadBattle();
     loadProfile();
     loadCurrentUser();
@@ -527,11 +540,19 @@ const Battle = () => {
               return;
             }
             
-            // Skip reload if animations are active
-            if (attackingEntityId || targetEntityId || damageDealt) {
+            // Skip reload if animations are active (use ref to avoid stale closure)
+            if (animationActiveRef.current) {
               console.log('Combat animations active, skipping reload to prevent screen flash');
               return;
             }
+            
+            // Debounce rapid reloads
+            const now = Date.now();
+            if (now - lastReloadTimeRef.current < 2000) {
+              console.log('Debouncing reload, too soon after last reload');
+              return;
+            }
+            lastReloadTimeRef.current = now;
             
             // Check if this is a room progression (victory transition) - if so, skip reload
             // The handleResolveTurn function will handle showing the victory modal
@@ -1701,6 +1722,9 @@ const Battle = () => {
       return;
     }
 
+    // Block realtime updates during animations
+    animationActiveRef.current = true;
+
     // Trigger attack animation - player attacks enemy
     if (currentUserId && battleData?.dungeon) {
       const enemyEntity = battleData.dungeon.entities.find(e => e.type === 'enemy');
@@ -1787,7 +1811,15 @@ const Battle = () => {
             setTimeout(() => {
               console.log("Resetting playerHit to FALSE");
               setPlayerHit(false);
+              
+              // All animations complete - unblock realtime updates
+              animationActiveRef.current = false;
             }, 600);
+          }, 1000);
+        } else {
+          // No enemy counterattack - unblock immediately after player attack completes
+          setTimeout(() => {
+            animationActiveRef.current = false;
           }, 1000);
         }
         
@@ -1818,6 +1850,8 @@ const Battle = () => {
         description: error.message,
         variant: "destructive",
       });
+      // Unblock on error
+      animationActiveRef.current = false;
     }
     setLoading(false);
   };
