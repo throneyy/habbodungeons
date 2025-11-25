@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { Swords, Shield, Sparkles, Package, Users, Plus, Copy, ScrollText, Volume2 } from "lucide-react";
-import dungeonBg from "@/assets/dungeon-bg-isometric.png";
+import dungeonBg from "@/assets/ice-pool-isometric.webp";
 import explosionHit from "@/assets/explosion-hit.gif";
 import hitBump from "@/assets/hit-bump.gif";
 
@@ -1904,7 +1904,7 @@ const Battle = () => {
     return (
       <div className="min-h-screen bg-background relative flex items-center justify-center">
         <div 
-          className="fixed inset-0 opacity-20 bg-center bg-no-repeat"
+          className="fixed inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
           style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '80%' }}
         />
         
@@ -2011,7 +2011,7 @@ const Battle = () => {
       <>
       <div className="min-h-screen bg-background relative">
         <div 
-          className="fixed inset-0 opacity-20 bg-center bg-no-repeat"
+          className="fixed inset-0 opacity-30 bg-center bg-no-repeat brightness-75"
           style={{ backgroundImage: `url(${dungeonBg})`, backgroundSize: '80%' }}
         />
         
