@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import bookcaseImage from "@/assets/medieval-bookcase.gif";
 import { getDailyBooks, getMaterialImage, type DailyBook } from "@/lib/dailyBooks";
 import { Sparkles } from "lucide-react";
+import { getNPCById } from "@/lib/npcData";
 
 export default function Store() {
   const navigate = useNavigate();
@@ -342,43 +343,73 @@ export default function Store() {
     );
   }
 
+  const merchantNPC = getNPCById("merchant");
+
   return (
     <AppLayout>
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         <HabboPanel title="🏪 The Frostkeep Merchant" className="mb-6">
-          <div className="flex flex-col items-center gap-6">
-            {/* Bookcase Centerpiece */}
-            <div className="flex justify-center py-4">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* Left Side - Bookcase */}
+            <div className="flex-shrink-0">
               <img 
                 src={bookcaseImage} 
                 alt="Merchant's Bookcase" 
                 className="pixel-icon"
-                style={{ width: 'auto', height: 'auto', maxWidth: '300px' }}
+                style={{ width: 'auto', height: 'auto', maxWidth: '280px' }}
               />
             </div>
-            
-            {/* Currency Display */}
-            <div className="flex items-center justify-center gap-8 w-full">
-              <div className="flex items-center gap-2">
-                <img src="/src/assets/gold-coins.png" alt="Gold" className="pixel-icon" />
-                <span className="text-2xl font-bold">{goldCoins}</span>
-                <span className="text-sm text-muted-foreground">Gold</span>
+
+            {/* Center/Right Side - Dynamic Content */}
+            <div className="flex-1 flex flex-col gap-6">
+              {/* Merchant NPC & Dialogue */}
+              <div className="flex flex-col md:flex-row items-center gap-4 bg-primary/5 border-2 border-primary/20 rounded-lg p-4">
+                <div className="flex-shrink-0">
+                  <img 
+                    src={merchantNPC?.sprite} 
+                    alt={merchantNPC?.name}
+                    className="pixel-icon"
+                    style={{ width: 'auto', height: 'auto', maxHeight: '120px' }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-lg text-primary mb-1">{merchantNPC?.name}</h3>
+                  <p className="text-xs text-muted-foreground mb-2">{merchantNPC?.title}</p>
+                  <div className="bg-card border-2 border-border rounded-lg p-3 relative">
+                    <div className="absolute -left-2 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-border"></div>
+                    <p className="text-sm italic">"{merchantNPC?.greeting}"</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <img src="/src/assets/metal-ingot.png" alt="Silver" className="pixel-icon" />
-                <span className="text-2xl font-bold">{silver}</span>
-                <span className="text-sm text-muted-foreground">Silver</span>
+
+              {/* Currency Display */}
+              <div className="flex items-center justify-center gap-8 bg-background/50 border-2 border-border rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                  <img src="/src/assets/gold-coins.png" alt="Gold" className="pixel-icon" />
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-bold leading-none">{goldCoins}</span>
+                    <span className="text-xs text-muted-foreground">Gold</span>
+                  </div>
+                </div>
+                <div className="h-12 w-px bg-border"></div>
+                <div className="flex items-center gap-2">
+                  <img src="/src/assets/metal-ingot.png" alt="Silver" className="pixel-icon" />
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-bold leading-none">{silver}</span>
+                    <span className="text-xs text-muted-foreground">Silver</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            {/* Navigation Buttons */}
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={() => navigate("/inventory")}>
-                View Inventory
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/dashboard")}>
-                Back to Dashboard
-              </Button>
+
+              {/* Navigation Buttons */}
+              <div className="flex gap-2 justify-center">
+                <Button variant="secondary" onClick={() => navigate("/inventory")}>
+                  View Inventory
+                </Button>
+                <Button variant="outline" onClick={() => navigate("/dashboard")}>
+                  Back to Dashboard
+                </Button>
+              </div>
             </div>
           </div>
         </HabboPanel>
