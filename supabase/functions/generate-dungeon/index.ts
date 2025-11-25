@@ -181,6 +181,9 @@ const ENEMY_POOL = [
   }
 ];
 
+// Enemy name lookup map
+const ENEMY_MAP = new Map(ENEMY_POOL.map(e => [e.name, e]));
+
 const BOSS_POOL = [
   {
     name: "Frost Wraith",
@@ -275,6 +278,88 @@ const FIRE_DRAKE = {
   baseSpd: 12
 };
 
+// Dungeon templates with consistent enemy-story pairings
+const DUNGEON_TEMPLATES = [
+  {
+    id: "goblin_raid",
+    name: "Goblin Raid",
+    allowedEnemies: ["Frozen Goblin", "Goblin Trio", "Glacial Imp", "Giant Rat"],
+    allowedBosses: ["Frost Brute", "Ice Knight Commander"],
+    themeKeywords: ["goblin", "raid", "stolen", "captive", "bandits", "thieves"],
+    storyHint: "goblins, imps, or raiders"
+  },
+  {
+    id: "undead_curse",
+    name: "Undead Curse",
+    allowedEnemies: ["Skeleton Warrior", "Frost Undead", "Flaming Phantom", "Ice Shade"],
+    allowedBosses: ["Frost Wraith", "Mystic Shaman"],
+    themeKeywords: ["undead", "curse", "spirit", "haunt", "necro", "dead", "tomb"],
+    storyHint: "undead, spirits, or cursed creatures"
+  },
+  {
+    id: "beast_hunt",
+    name: "Beast Hunt",
+    allowedEnemies: ["Frost Wolf", "Ice Tiger", "Frost Werewolf", "Infernal Hound"],
+    allowedBosses: ["Blood Dragon", "Fire Drake"],
+    themeKeywords: ["beast", "predator", "hunt", "wild", "feral", "creature"],
+    storyHint: "beasts, wolves, or predators"
+  },
+  {
+    id: "void_incursion",
+    name: "Void Incursion",
+    allowedEnemies: ["Void Stalker", "Ice Shade", "Flaming Phantom", "Ice Elemental"],
+    allowedBosses: ["Frost Wraith", "Iced Stone Dragon"],
+    themeKeywords: ["void", "shadow", "dark", "portal", "dimension", "rift"],
+    storyHint: "void creatures, shadows, or dimensional beings"
+  },
+  {
+    id: "elemental_chaos",
+    name: "Elemental Chaos",
+    allowedEnemies: ["Ice Elemental", "Ice Guardian", "Ice Shade", "Flaming Phantom"],
+    allowedBosses: ["Iced Stone Dragon", "Mystic Shaman"],
+    themeKeywords: ["elemental", "magic", "arcane", "crystal", "rune", "sorcery"],
+    storyHint: "elementals or magical constructs"
+  },
+  {
+    id: "spider_nest",
+    name: "Spider Nest",
+    allowedEnemies: ["Frostbite Spider", "Giant Rat", "Glacial Imp", "Ice Shade"],
+    allowedBosses: ["Frost Wraith", "Ice Knight Commander"],
+    themeKeywords: ["spider", "nest", "web", "swarm", "infestation", "crawl"],
+    storyHint: "spiders, vermin, or crawling creatures"
+  },
+  {
+    id: "corrupted_guardians",
+    name: "Corrupted Guardians",
+    allowedEnemies: ["Ice Guardian", "Frost Brute", "Frost Mutant", "Ice Elemental"],
+    allowedBosses: ["Ice Knight Commander", "Iced Stone Dragon"],
+    themeKeywords: ["guard", "sentinel", "protect", "fortress", "citadel", "corrupt"],
+    storyHint: "corrupted guardians or sentinels"
+  },
+  {
+    id: "swamp_terror",
+    name: "Swamp Terror",
+    allowedEnemies: ["Swamp Lurker", "Frost Mutant", "Giant Rat", "Frostbite Spider"],
+    allowedBosses: ["Blood Dragon", "Frost Brute"],
+    themeKeywords: ["swamp", "marsh", "bog", "lurk", "rot", "decay"],
+    storyHint: "swamp creatures or lurkers"
+  }
+];
+
+// Deterministic template selection based on npcId + timestamp
+function selectDungeonTemplate(npcId: string, userId: string): typeof DUNGEON_TEMPLATES[0] {
+  // Create a simple hash from npcId + userId for deterministic selection
+  const hashInput = `${npcId}-${userId}-${Date.now()}`;
+  let hash = 0;
+  for (let i = 0; i < hashInput.length; i++) {
+    const char = hashInput.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  const index = Math.abs(hash) % DUNGEON_TEMPLATES.length;
+  return DUNGEON_TEMPLATES[index];
+}
+
 // NPC Data for quest generation
 const NPC_DATA: Record<string, any> = {
   warrior: {
@@ -328,8 +413,8 @@ const NPC_DATA: Record<string, any> = {
   }
 };
 
-// Helper function to get random enemy
-function getRandomEnemy(playerLevel: number, isBoss: boolean = false) {
+// Helper function to get random enemy from allowed list
+function getRandomEnemy(playerLevel: number, isBoss: boolean = false, allowedEnemies?: string[], allowedBosses?: string[]) {
   // Rare spawns only for boss encounters
   if (isBoss) {
     const rareRoll = Math.random();
@@ -345,20 +430,36 @@ function getRandomEnemy(playerLevel: number, isBoss: boolean = false) {
       };
     }
     
-    const boss = BOSS_POOL[Math.floor(Math.random() * BOSS_POOL.length)];
+    // Filter bosses by allowed list if provided
+    let bossPool = BOSS_POOL;
+    if (allowedBosses && allowedBosses.length > 0) {
+      bossPool = BOSS_POOL.filter(b => allowedBosses.includes(b.name));
+      if (bossPool.length === 0) bossPool = BOSS_POOL; // Fallback if no matches
+    }
+    
+    const boss = bossPool[Math.floor(Math.random() * bossPool.length)];
     return {
       ...boss,
       hp: boss.baseHp + (playerLevel * 5),
+      maxHp: boss.baseHp + (playerLevel * 5),
       atk: boss.baseAtk + Math.floor(playerLevel * 1.5),
       def: boss.baseDef + Math.floor(playerLevel * 1.2),
       spd: boss.baseSpd + Math.floor(playerLevel * 0.8)
     };
   }
   
-  const enemy = ENEMY_POOL[Math.floor(Math.random() * ENEMY_POOL.length)];
+  // Filter enemies by allowed list if provided
+  let enemyPool = ENEMY_POOL;
+  if (allowedEnemies && allowedEnemies.length > 0) {
+    enemyPool = ENEMY_POOL.filter(e => allowedEnemies.includes(e.name));
+    if (enemyPool.length === 0) enemyPool = ENEMY_POOL; // Fallback if no matches
+  }
+  
+  const enemy = enemyPool[Math.floor(Math.random() * enemyPool.length)];
   return {
     ...enemy,
     hp: enemy.baseHp + (playerLevel * 3),
+    maxHp: enemy.baseHp + (playerLevel * 3),
     atk: enemy.baseAtk + Math.floor(playerLevel * 1.2),
     def: enemy.baseDef + playerLevel,
     spd: enemy.baseSpd + Math.floor(playerLevel * 0.5)
@@ -428,6 +529,10 @@ serve(async (req) => {
 
     const playerLevel = stats?.level || 1;
 
+    // Select dungeon template for consistent enemy-story pairing
+    const template = selectDungeonTemplate(npcId, user.id);
+    console.log(`Selected template: ${template.name}`);
+
     // Call AI to generate dungeon story and structure (but not enemies)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -463,6 +568,11 @@ CRITICAL: The quest objective should be specific and tied to the story, NOT just
 - Retrieve the ancient scroll before it's destroyed
 - Seal the corrupted portal in the throne room
 - Find evidence of the traitor's identity
+
+IMPORTANT ENEMY CONSISTENCY:
+- You will encounter ${template.storyHint} in this dungeon
+- Make sure your story and room descriptions reference these enemy types
+- Avoid mentioning enemy types that don't fit this theme
 
 Give me:
 - A dungeon name (short and punchy, not "The Epic Quest of...")
@@ -549,7 +659,7 @@ Make it feel dangerous, not dramatic.`
     const dungeonStructure = JSON.parse(toolCall.function.arguments);
     console.log("Parsed dungeon:", dungeonStructure.dungeonName);
 
-    // Add enemies and events from static pool
+    // Add enemies and events from template's allowed pool
     const rooms = dungeonStructure.rooms.map((room: any, index: number) => {
       // First room has no enemy (exploration)
       if (index === 0) {
@@ -560,9 +670,9 @@ Make it feel dangerous, not dramatic.`
         };
       }
       
-      // Last room gets the boss
+      // Last room gets the boss from template's allowed bosses
       if (index === dungeonStructure.rooms.length - 1) {
-        const bossEnemy = getRandomEnemy(playerLevel, true);
+        const bossEnemy = getRandomEnemy(playerLevel, true, template.allowedEnemies, template.allowedBosses);
         return {
           ...room,
           enemy: bossEnemy,
@@ -617,7 +727,8 @@ Make it feel dangerous, not dramatic.`
       
       // All other middle rooms: 100% combat
       // First middle room: 70% combat (0.30-1.00)
-      const enemy = getRandomEnemy(playerLevel, false);
+      // Use template's allowed enemies for consistency
+      const enemy = getRandomEnemy(playerLevel, false, template.allowedEnemies);
       return {
         ...room,
         enemy,
