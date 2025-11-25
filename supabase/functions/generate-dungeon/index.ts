@@ -6,6 +6,52 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Dungeon templates for consistent story-enemy matching
+const DUNGEON_TEMPLATES = [
+  {
+    id: 'goblin_raid',
+    name: 'Goblin Raid',
+    questTheme: 'Rescue the kidnapped merchant from goblin captors',
+    allowedEnemyNames: ['Frozen Goblin', 'Goblin Trio', 'Glacial Imp', 'Giant Rat'],
+    bossName: 'Frost Brute'
+  },
+  {
+    id: 'undead_curse',
+    name: 'Undead Curse',
+    questTheme: 'Purge the undead corruption from the cursed tomb',
+    allowedEnemyNames: ['Skeleton Warrior', 'Frost Undead', 'Flaming Phantom', 'Ice Shade'],
+    bossName: 'Frost Wraith'
+  },
+  {
+    id: 'beast_hunt',
+    name: 'Beast Hunt',
+    questTheme: 'Hunt down the pack of feral beasts terrorizing the region',
+    allowedEnemyNames: ['Frost Wolf', 'Ice Tiger', 'Frost Werewolf', 'Infernal Hound'],
+    bossName: 'Blood Dragon'
+  },
+  {
+    id: 'void_incursion',
+    name: 'Void Incursion',
+    questTheme: 'Seal the void portal before dark entities consume the realm',
+    allowedEnemyNames: ['Void Stalker', 'Ice Shade', 'Flaming Phantom', 'Ice Elemental'],
+    bossName: 'Iced Stone Dragon'
+  },
+  {
+    id: 'elemental_chaos',
+    name: 'Elemental Chaos',
+    questTheme: 'Restore balance to the rampaging elemental forces',
+    allowedEnemyNames: ['Ice Elemental', 'Ice Guardian', 'Ice Shade', 'Flaming Phantom'],
+    bossName: 'Mystic Shaman'
+  },
+  {
+    id: 'spider_nest',
+    name: 'Spider Nest',
+    questTheme: 'Exterminate the spider infestation before it spreads',
+    allowedEnemyNames: ['Frostbite Spider', 'Giant Rat', 'Glacial Imp', 'Ice Shade'],
+    bossName: 'Ice Knight Commander'
+  }
+];
+
 // Static enemy pool with sprites
 const ENEMY_POOL = [
   {
@@ -181,9 +227,6 @@ const ENEMY_POOL = [
   }
 ];
 
-// Enemy name lookup map
-const ENEMY_MAP = new Map(ENEMY_POOL.map(e => [e.name, e]));
-
 const BOSS_POOL = [
   {
     name: "Frost Wraith",
@@ -278,88 +321,6 @@ const FIRE_DRAKE = {
   baseSpd: 12
 };
 
-// Dungeon templates with consistent enemy-story pairings
-const DUNGEON_TEMPLATES = [
-  {
-    id: "goblin_raid",
-    name: "Goblin Raid",
-    allowedEnemies: ["Frozen Goblin", "Goblin Trio", "Glacial Imp", "Giant Rat"],
-    allowedBosses: ["Frost Brute", "Ice Knight Commander"],
-    themeKeywords: ["goblin", "raid", "stolen", "captive", "bandits", "thieves"],
-    storyHint: "goblins, imps, or raiders"
-  },
-  {
-    id: "undead_curse",
-    name: "Undead Curse",
-    allowedEnemies: ["Skeleton Warrior", "Frost Undead", "Flaming Phantom", "Ice Shade"],
-    allowedBosses: ["Frost Wraith", "Mystic Shaman"],
-    themeKeywords: ["undead", "curse", "spirit", "haunt", "necro", "dead", "tomb"],
-    storyHint: "undead, spirits, or cursed creatures"
-  },
-  {
-    id: "beast_hunt",
-    name: "Beast Hunt",
-    allowedEnemies: ["Frost Wolf", "Ice Tiger", "Frost Werewolf", "Infernal Hound"],
-    allowedBosses: ["Blood Dragon", "Fire Drake"],
-    themeKeywords: ["beast", "predator", "hunt", "wild", "feral", "creature"],
-    storyHint: "beasts, wolves, or predators"
-  },
-  {
-    id: "void_incursion",
-    name: "Void Incursion",
-    allowedEnemies: ["Void Stalker", "Ice Shade", "Flaming Phantom", "Ice Elemental"],
-    allowedBosses: ["Frost Wraith", "Iced Stone Dragon"],
-    themeKeywords: ["void", "shadow", "dark", "portal", "dimension", "rift"],
-    storyHint: "void creatures, shadows, or dimensional beings"
-  },
-  {
-    id: "elemental_chaos",
-    name: "Elemental Chaos",
-    allowedEnemies: ["Ice Elemental", "Ice Guardian", "Ice Shade", "Flaming Phantom"],
-    allowedBosses: ["Iced Stone Dragon", "Mystic Shaman"],
-    themeKeywords: ["elemental", "magic", "arcane", "crystal", "rune", "sorcery"],
-    storyHint: "elementals or magical constructs"
-  },
-  {
-    id: "spider_nest",
-    name: "Spider Nest",
-    allowedEnemies: ["Frostbite Spider", "Giant Rat", "Glacial Imp", "Ice Shade"],
-    allowedBosses: ["Frost Wraith", "Ice Knight Commander"],
-    themeKeywords: ["spider", "nest", "web", "swarm", "infestation", "crawl"],
-    storyHint: "spiders, vermin, or crawling creatures"
-  },
-  {
-    id: "corrupted_guardians",
-    name: "Corrupted Guardians",
-    allowedEnemies: ["Ice Guardian", "Frost Brute", "Frost Mutant", "Ice Elemental"],
-    allowedBosses: ["Ice Knight Commander", "Iced Stone Dragon"],
-    themeKeywords: ["guard", "sentinel", "protect", "fortress", "citadel", "corrupt"],
-    storyHint: "corrupted guardians or sentinels"
-  },
-  {
-    id: "swamp_terror",
-    name: "Swamp Terror",
-    allowedEnemies: ["Swamp Lurker", "Frost Mutant", "Giant Rat", "Frostbite Spider"],
-    allowedBosses: ["Blood Dragon", "Frost Brute"],
-    themeKeywords: ["swamp", "marsh", "bog", "lurk", "rot", "decay"],
-    storyHint: "swamp creatures or lurkers"
-  }
-];
-
-// Deterministic template selection based on npcId + timestamp
-function selectDungeonTemplate(npcId: string, userId: string): typeof DUNGEON_TEMPLATES[0] {
-  // Create a simple hash from npcId + userId for deterministic selection
-  const hashInput = `${npcId}-${userId}-${Date.now()}`;
-  let hash = 0;
-  for (let i = 0; i < hashInput.length; i++) {
-    const char = hashInput.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  const index = Math.abs(hash) % DUNGEON_TEMPLATES.length;
-  return DUNGEON_TEMPLATES[index];
-}
-
 // NPC Data for quest generation
 const NPC_DATA: Record<string, any> = {
   warrior: {
@@ -413,8 +374,8 @@ const NPC_DATA: Record<string, any> = {
   }
 };
 
-// Helper function to get random enemy from allowed list
-function getRandomEnemy(playerLevel: number, isBoss: boolean = false, allowedEnemies?: string[], allowedBosses?: string[]) {
+// Helper function to get random enemy
+function getRandomEnemy(playerLevel: number, isBoss: boolean = false, allowedEnemyNames?: string[], templateBossName?: string) {
   // Rare spawns only for boss encounters
   if (isBoss) {
     const rareRoll = Math.random();
@@ -430,14 +391,18 @@ function getRandomEnemy(playerLevel: number, isBoss: boolean = false, allowedEne
       };
     }
     
-    // Filter bosses by allowed list if provided
-    let bossPool = BOSS_POOL;
-    if (allowedBosses && allowedBosses.length > 0) {
-      bossPool = BOSS_POOL.filter(b => allowedBosses.includes(b.name));
-      if (bossPool.length === 0) bossPool = BOSS_POOL; // Fallback if no matches
+    // Use template's specified boss if provided
+    let boss;
+    if (templateBossName) {
+      boss = BOSS_POOL.find(b => b.name === templateBossName);
+      if (!boss) {
+        console.warn(`Template boss ${templateBossName} not found, using random`);
+        boss = BOSS_POOL[Math.floor(Math.random() * BOSS_POOL.length)];
+      }
+    } else {
+      boss = BOSS_POOL[Math.floor(Math.random() * BOSS_POOL.length)];
     }
     
-    const boss = bossPool[Math.floor(Math.random() * bossPool.length)];
     return {
       ...boss,
       hp: boss.baseHp + (playerLevel * 5),
@@ -448,11 +413,14 @@ function getRandomEnemy(playerLevel: number, isBoss: boolean = false, allowedEne
     };
   }
   
-  // Filter enemies by allowed list if provided
+  // Filter enemies by template's allowed list
   let enemyPool = ENEMY_POOL;
-  if (allowedEnemies && allowedEnemies.length > 0) {
-    enemyPool = ENEMY_POOL.filter(e => allowedEnemies.includes(e.name));
-    if (enemyPool.length === 0) enemyPool = ENEMY_POOL; // Fallback if no matches
+  if (allowedEnemyNames && allowedEnemyNames.length > 0) {
+    enemyPool = ENEMY_POOL.filter(e => allowedEnemyNames.includes(e.name));
+    if (enemyPool.length === 0) {
+      console.warn('No enemies matched template filter, using full pool');
+      enemyPool = ENEMY_POOL;
+    }
   }
   
   const enemy = enemyPool[Math.floor(Math.random() * enemyPool.length)];
@@ -529,9 +497,12 @@ serve(async (req) => {
 
     const playerLevel = stats?.level || 1;
 
-    // Select dungeon template for consistent enemy-story pairing
-    const template = selectDungeonTemplate(npcId, user.id);
-    console.log(`Selected template: ${template.name}`);
+    // Select template using npcId modulo
+    const npcIds = ['warrior', 'merchant', 'scholar', 'maiden', 'guard', 'mage', 'knight'];
+    const npcIndex = npcIds.indexOf(npcId);
+    const templateIndex = (npcIndex >= 0 ? npcIndex : 0) % DUNGEON_TEMPLATES.length;
+    const template = DUNGEON_TEMPLATES[templateIndex];
+    console.log(`Selected template: ${template.name} for NPC: ${npcId}`);
 
     // Call AI to generate dungeon story and structure (but not enemies)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -562,17 +533,15 @@ DUNGEON REQUIREMENTS:
 Your specialty: ${npc.questTheme}
 Your usual work: ${npc.questTypes.join(', ')}
 
-CRITICAL: The quest objective should be specific and tied to the story, NOT just "defeat the boss" or "clear the dungeon". Examples:
-- Recover the stolen artifact from the Ice Lord
-- Rescue the kidnapped merchant from goblin captors
-- Retrieve the ancient scroll before it's destroyed
-- Seal the corrupted portal in the throne room
-- Find evidence of the traitor's identity
+QUEST THEME: ${template.questTheme}
 
-IMPORTANT ENEMY CONSISTENCY:
-- You will encounter ${template.storyHint} in this dungeon
-- Make sure your story and room descriptions reference these enemy types
-- Avoid mentioning enemy types that don't fit this theme
+CRITICAL: The quest objective should match this theme. Structure the dungeon around this specific goal.
+
+ENEMY CONSISTENCY:
+- Enemies in this dungeon: ${template.allowedEnemyNames.join(', ')}
+- Boss: ${template.bossName}
+- Make sure your story references these specific enemy types
+- Do NOT mention other creature types
 
 Give me:
 - A dungeon name (short and punchy, not "The Epic Quest of...")
@@ -670,9 +639,9 @@ Make it feel dangerous, not dramatic.`
         };
       }
       
-      // Last room gets the boss from template's allowed bosses
+      // Last room gets the boss from template
       if (index === dungeonStructure.rooms.length - 1) {
-        const bossEnemy = getRandomEnemy(playerLevel, true, template.allowedEnemies, template.allowedBosses);
+        const bossEnemy = getRandomEnemy(playerLevel, true, template.allowedEnemyNames, template.bossName);
         return {
           ...room,
           enemy: bossEnemy,
@@ -727,8 +696,8 @@ Make it feel dangerous, not dramatic.`
       
       // All other middle rooms: 100% combat
       // First middle room: 70% combat (0.30-1.00)
-      // Use template's allowed enemies for consistency
-      const enemy = getRandomEnemy(playerLevel, false, template.allowedEnemies);
+      // Filter enemies by template's allowed list
+      const enemy = getRandomEnemy(playerLevel, false, template.allowedEnemyNames);
       return {
         ...room,
         enemy,
