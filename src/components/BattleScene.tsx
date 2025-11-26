@@ -14,6 +14,10 @@ import { HelpCircle } from 'lucide-react';
 interface BattleSceneProps {
   initialBattleState: BattleState;
   backgroundUrl?: string;
+  isGridEditorActive?: boolean;
+  showGridOverlay?: boolean;
+  enabledCells?: Array<{ x: number; y: number }>;
+  onEnabledCellsChange?: (cells: Array<{ x: number; y: number }>) => void;
 }
 
 function battleReducer(state: BattleState, action: any): BattleState {
@@ -95,7 +99,14 @@ function battleReducer(state: BattleState, action: any): BattleState {
   }
 }
 
-export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState, backgroundUrl }) => {
+export const BattleScene: React.FC<BattleSceneProps> = ({ 
+  initialBattleState, 
+  backgroundUrl,
+  isGridEditorActive = false,
+  showGridOverlay = true,
+  enabledCells = [],
+  onEnabledCellsChange,
+}) => {
   const [state, dispatch] = useReducer(battleReducer, initialBattleState);
   const [showTutorial, setShowTutorial] = useState(false);
   
@@ -157,7 +168,24 @@ export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState, ba
         How to Play
       </Button>
       
-      <BattleStage state={state} dispatch={dispatch} backgroundUrl={backgroundUrl} />
+      <BattleStage 
+        state={state} 
+        dispatch={dispatch} 
+        backgroundUrl={backgroundUrl}
+        isGridEditorActive={isGridEditorActive}
+        showGridOverlay={showGridOverlay}
+        enabledCells={enabledCells}
+        onGridCellClick={(x, y) => {
+          if (onEnabledCellsChange) {
+            const isCellEnabled = enabledCells.some(cell => cell.x === x && cell.y === y);
+            if (isCellEnabled) {
+              onEnabledCellsChange(enabledCells.filter(cell => !(cell.x === x && cell.y === y)));
+            } else {
+              onEnabledCellsChange([...enabledCells, { x, y }]);
+            }
+          }
+        }}
+      />
       
       {state.phase === 'selectingAction' && currentCombatant.type === 'player' && (
         <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-20 bg-cyan-900/90 border-2 border-cyan-500 rounded-lg px-6 py-3">
