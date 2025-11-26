@@ -144,8 +144,21 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch }) => 
   };
 
   return (
-    <div className="relative w-full aspect-video bg-gradient-to-b from-slate-800 to-slate-900 overflow-hidden rounded-lg border-4 border-slate-700">
-      <div className="absolute left-1/2 top-1/3 transform -translate-x-1/2">
+    <div className="relative w-full aspect-video overflow-hidden rounded-lg border-4 border-slate-700">
+      {/* Dungeon Background */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-90"
+        style={{ 
+          backgroundImage: `url('/src/assets/ice-pool-isometric.webp')`,
+          backgroundSize: '110%',
+          backgroundPosition: 'center',
+        }}
+      />
+      
+      {/* Dark overlay for better sprite contrast */}
+      <div className="absolute inset-0 bg-black/30" />
+      
+      <div className="absolute left-1/2 top-1/3 transform -translate-x-1/2 z-10">
         {renderTiles()}
         
         {allCombatants.map((combatant) => {
@@ -158,13 +171,19 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch }) => 
           const screenPos = getScreenPositionStyle(animState.pos.x, animState.pos.y);
 
           if (combatant.type === 'enemy') {
+            const spriteUrl = combatant.sprite || '/src/assets/ice-guardian.png';
             return (
               <div
                 key={combatant.id}
-                className="absolute w-24 h-36 bg-red-600 rounded-lg border-2 border-red-800 flex items-center justify-center transform -translate-x-1/2 -translate-y-full"
+                className="absolute transform -translate-x-1/2 -translate-y-full"
                 style={screenPos}
               >
-                <span className="text-white text-xs font-bold">{combatant.name}</span>
+                <img
+                  src={spriteUrl}
+                  alt={combatant.name}
+                  className="pixelated max-h-32 w-auto"
+                  style={{ imageRendering: 'pixelated' }}
+                />
               </div>
             );
           } else if (combatant.type === 'player' && combatant.figureString) {
