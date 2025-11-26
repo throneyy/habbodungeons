@@ -19,6 +19,7 @@ import PlayerProfile from "./pages/PlayerProfile";
 import MonsterManual from "./pages/MonsterManual";
 import SpriteEditor from "./pages/SpriteEditor";
 import Store from "./pages/Store";
+import BattleSim from "./pages/BattleSim";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/monster-manual" element={<MonsterManual />} />
           <Route path="/sprite-editor" element={<SpriteEditor />} />
           <Route path="/store" element={<Store />} />
+          <Route path="/battle-sim" element={<BattleSim />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
