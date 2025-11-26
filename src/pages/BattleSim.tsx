@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BattleScene } from "@/components/BattleScene";
 import { BattleState, Combatant } from "@/lib/Utils/types";
