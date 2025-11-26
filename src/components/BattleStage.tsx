@@ -94,37 +94,24 @@ export const BattleStage: React.FC<BattleStageProps> = ({
             const screenPos = gridToScreen(enemy.position);
             const finalX = screenPos.x + gridOffset.x;
             const finalY = screenPos.y + gridOffset.y;
-            const zIndex = 10 + enemy.position.y; // Higher base z-index for visibility
+            const zIndex = calculateZIndex(enemy.position);
             const spriteFilename = enemy.spriteUrl.split("/").pop() || "";
             
             return (
-              <div
+              <EnemySpriteComponent
                 key={enemy.id}
-                className="absolute"
-                style={{
-                  left: `${finalX}px`,
-                  top: `${finalY}px`,
-                  zIndex,
-                  transform: 'translate(-50%, -100%) scale(1.5)',
-                  transformOrigin: 'bottom center',
-                  border: '2px solid red', // DEBUG: Remove after testing
+                spriteUrl={enemy.spriteUrl}
+                spriteFilename={spriteFilename}
+                name={enemy.name}
+                position={enemy.position}
+                shouldFace="right"
+                screenX={finalX}
+                screenY={finalY}
+                zIndex={zIndex}
+                onClick={() => {
+                  console.log("Clicked enemy:", enemy.name);
                 }}
-              >
-                <EnemySpriteComponent
-                  spriteUrl={enemy.spriteUrl}
-                  spriteFilename={spriteFilename}
-                  name={enemy.name}
-                  position={enemy.position}
-                  shouldFace="right"
-                  screenX={0}
-                  screenY={0}
-                  zIndex={0}
-                  onClick={() => {
-                    console.log("Clicked enemy:", enemy.name);
-                  }}
-                  style={{ position: 'relative' }}
-                />
-              </div>
+              />
             );
           })}
           
@@ -133,7 +120,7 @@ export const BattleStage: React.FC<BattleStageProps> = ({
             const screenPos = gridToScreen(combatant.position);
             const finalX = screenPos.x + gridOffset.x;
             const finalY = screenPos.y + gridOffset.y;
-            const zIndex = 10 + combatant.position.y; // Higher base z-index for visibility
+            const zIndex = calculateZIndex(combatant.position);
             
             // Calculate direction toward nearest enemy
             const nearestEnemy = enemies[0];
@@ -153,21 +140,18 @@ export const BattleStage: React.FC<BattleStageProps> = ({
                 style={{
                   left: `${finalX}px`,
                   top: `${finalY}px`,
-                  zIndex,
-                  transform: 'translate(-50%, -100%) scale(1.5)',
-                  transformOrigin: 'bottom center',
-                  border: '2px solid green', // DEBUG: Remove after testing
+                  zIndex: zIndex + 1000,
+                  transform: 'translate(-50%, -100%)',
                 }}
               >
                 <img
                   src={avatarUrl}
-                  alt={`${combatant.name} Avatar`}
-                  className="habbo-avatar-sprite max-h-24 w-auto drop-shadow-lg"
+                  alt={combatant.name}
+                  className="pixelated max-h-24 w-auto drop-shadow-lg"
                   style={{ imageRendering: "pixelated" }}
                   onError={(e) => {
                     e.currentTarget.onerror = null;
-                    e.currentTarget.style.display = 'none';
-                    console.error(`Failed to load avatar for ${combatant.name} at URL: ${avatarUrl}`);
+                    e.currentTarget.src = "/src/assets/npc-warrior.png";
                   }}
                 />
                 <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/80 px-2 py-1 rounded text-xs text-white whitespace-nowrap">
