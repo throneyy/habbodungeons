@@ -10,6 +10,10 @@ interface BattleStageProps {
   state: BattleState;
   dispatch: React.Dispatch<any>;
   backgroundUrl?: string;
+  isGridEditorActive?: boolean;
+  showGridOverlay?: boolean;
+  enabledCells?: Array<{ x: number; y: number }>;
+  onGridCellClick?: (x: number, y: number) => void;
 }
 
 type AnimatedPosition = {
@@ -38,7 +42,15 @@ const getDirectionName = (from: GridPosition, to: GridPosition): DirectionName =
 const getHabboAvatarUrl = (username: string) =>
   `https://lookup.thequackory.com/habbo-imaging/${encodeURIComponent(username)}?hotel=COM&size=s&action=std&gesture=std&direction=4&head_direction=4&service=official`;
 
-export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch, backgroundUrl }) => {
+export const BattleStage: React.FC<BattleStageProps> = ({ 
+  state, 
+  dispatch, 
+  backgroundUrl,
+  isGridEditorActive = false,
+  showGridOverlay = true,
+  enabledCells = [],
+  onGridCellClick,
+}) => {
   const { allCombatants, partyIds, gridCols, gridRows, phase } = state;
   const currentCombatant = allCombatants.find(c => c.id === state.turnOrder[state.currentTurnIndex]);
   const isPlayerTurn = currentCombatant && currentCombatant.type === 'player';
@@ -66,18 +78,44 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch, backg
     );
   }, [allCombatants.length]);
 
-  const blockingTiles = useMemo(() => 
-    allCombatants.map(c => c.position).filter(p => !isSamePosition(p, currentCombatant?.position || {x:-1, y:-1}))
-  , [allCombatants, currentCombatant]);
+  const blockingTiles = useMemo(() => {
+    // If using grid editor, only include tiles that are enabled
+    const baseTiles = allCombatants.map(c => c.position).filter(p => !isSamePosition(p, currentCombatant?.position || {x:-1, y:-1}));
+    
+    if (isGridEditorActive || enabledCells.length > 0) {
+      // When grid editor is active or we have enabled cells, treat disabled cells as blocking
+      return baseTiles;
+    }
+    
+    return baseTiles;
+  }, [allCombatants, currentCombatant, isGridEditorActive, enabledCells]);
 
   const { reachable, paths } = useMemo(() => {
     if (state.phase !== 'selectingTile' || state.selectedAction !== 'move' || !currentCombatant) {
       return { reachable: [], paths: new Map<string, GridPosition | null>() };
     }
-    return findReachableTiles(currentCombatant.position, currentCombatant.moveRange, gridCols, gridRows, blockingTiles);
-  }, [state.phase, state.selectedAction, currentCombatant, gridCols, gridRows, blockingTiles]);
+    
+    // Calculate reachable tiles considering enabled cells
+    const result = findReachableTiles(currentCombatant.position, currentCombatant.moveRange, gridCols, gridRows, blockingTiles);
+    
+    // If we have enabled cells configured, filter reachable tiles to only include enabled ones
+    if (enabledCells.length > 0 && !isGridEditorActive) {
+      const filteredReachable = result.reachable.filter(tile => 
+        enabledCells.some(enabled => enabled.x === tile.x && enabled.y === tile.y)
+      );
+      return { reachable: filteredReachable, paths: result.paths };
+    }
+    
+    return result;
+  }, [state.phase, state.selectedAction, currentCombatant, gridCols, gridRows, blockingTiles, enabledCells, isGridEditorActive]);
 
   const handleTileClick = (targetPos: GridPosition) => {
+    // Grid editor mode
+    if (isGridEditorActive && onGridCellClick) {
+      onGridCellClick(targetPos.x, targetPos.y);
+      return;
+    }
+    
     if (!currentCombatant || !isPlayerTurn) return;
 
     if (state.phase === 'selectingTile') {
@@ -122,16 +160,33 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch, backg
         const pos: GridPosition = { x, y };
         const screenPos = getScreenPositionStyle(x, y);
         
+        const isCellEnabled = enabledCells.length === 0 || enabledCells.some(cell => cell.x === x && cell.y === y);
         const isReachableMove = state.selectedAction === 'move' && reachable.some(p => isSamePosition(p, pos));
         const enemyAtPos = allCombatants.find(c => c.type === 'enemy' && isSamePosition(c.position, pos));
         const isAttackableEnemy = state.selectedAction === 'attack' && currentCombatant && enemyAtPos && getDistance(currentCombatant.position, pos) <= 1;
         
-        let tileClass = 'absolute cursor-pointer transition-all border border-slate-600/30';
+        let tileClass = 'absolute cursor-pointer transition-all';
         
-        if (isReachableMove) {
-          tileClass = 'absolute cursor-pointer transition-all bg-cyan-500/40 hover:bg-cyan-400/60 border-2 border-cyan-300 shadow-lg shadow-cyan-500/50';
-        } else if (isAttackableEnemy) {
-          tileClass = 'absolute cursor-pointer transition-all bg-red-500/50 hover:bg-red-400/70 border-2 border-red-300 shadow-lg shadow-red-500/50 animate-pulse';
+        if (isGridEditorActive) {
+          // Grid editor mode
+          tileClass += isCellEnabled 
+            ? ' bg-green-500/30 hover:bg-green-400/50 border-2 border-green-400' 
+            : ' bg-red-500/20 hover:bg-red-400/30 border-2 border-red-600/50';
+        } else if (!showGridOverlay) {
+          // Grid hidden
+          tileClass += ' border-0';
+        } else {
+          // Normal battle mode
+          tileClass += ' border border-slate-600/30';
+          
+          if (isReachableMove && isCellEnabled) {
+            tileClass += ' bg-cyan-500/40 hover:bg-cyan-400/60 border-2 border-cyan-300 shadow-lg shadow-cyan-500/50';
+          } else if (isAttackableEnemy) {
+            tileClass += ' bg-red-500/50 hover:bg-red-400/70 border-2 border-red-300 shadow-lg shadow-red-500/50 animate-pulse';
+          } else if (!isCellEnabled) {
+            // Disabled cell - show as blocked
+            tileClass += ' bg-gray-900/50 border-gray-700';
+          }
         }
         
         tiles.push(
@@ -144,7 +199,13 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch, backg
               height: `${TILE_HEIGHT}px`,
             }}
             onClick={() => handleTileClick(pos)}
-          />
+          >
+            {isGridEditorActive && (
+              <div className="text-[8px] text-white/70 absolute top-0 left-0 p-0.5">
+                {x},{y}
+              </div>
+            )}
+          </div>
         );
       }
     }

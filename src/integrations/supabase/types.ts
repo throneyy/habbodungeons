@@ -228,6 +228,47 @@ export type Database = {
         }
         Relationships: []
       }
+      grid_configurations: {
+        Row: {
+          background_url: string
+          created_at: string
+          dungeon_id: string | null
+          enabled_cells: Json
+          grid_cols: number
+          grid_rows: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          background_url: string
+          created_at?: string
+          dungeon_id?: string | null
+          enabled_cells?: Json
+          grid_cols?: number
+          grid_rows?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          background_url?: string
+          created_at?: string
+          dungeon_id?: string | null
+          enabled_cells?: Json
+          grid_cols?: number
+          grid_rows?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grid_configurations_dungeon_id_fkey"
+            columns: ["dungeon_id"]
+            isOneToOne: false
+            referencedRelation: "dungeons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory: {
         Row: {
           created_at: string
