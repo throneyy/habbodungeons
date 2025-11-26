@@ -65,7 +65,7 @@ export function getVisibleTileBounds(
 }
 
 /**
- * Calculate grid center offset for centering the dungeon
+ * Calculate grid offset for left-aligned positioning
  */
 export function calculateGridCenterOffset(
   gridCols: number,
@@ -73,11 +73,9 @@ export function calculateGridCenterOffset(
   containerWidth: number,
   containerHeight: number
 ): { x: number; y: number } {
-  const gridScreenWidth = gridCols * ISO_TILE_WIDTH;
-  const gridScreenHeight = gridRows * ISO_TILE_HEIGHT;
-  
+  // LEFT-ALIGN: Fixed padding from left edge
   return {
-    x: (containerWidth - gridScreenWidth) / 2 + (gridCols * ISO_TILE_WIDTH) / 2,
-    y: (containerHeight - gridScreenHeight) / 2,
+    x: 100, // Fixed left padding
+    y: 80,  // Top padding to avoid clipping
   };
 }
