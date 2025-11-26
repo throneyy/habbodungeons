@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, Plus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Combatant } from "@/lib/Utils/types";
+import { getEnemySpriteUrl } from "@/lib/enemySprites";
 
 interface Enemy {
   id: string;
@@ -119,7 +120,7 @@ export const BattleSimControls = ({ onStartBattle }: BattleSimControlsProps) => 
       atk: 15,
       def: 5,
       spd: 3,
-      sprite: `/src/assets/${enemy.sprite_filename}`,
+      sprite: getEnemySpriteUrl(enemy.sprite_filename),
       position: { x: 6, y: 1 + index },
       moveRange: 2,
       skills: [],
@@ -221,7 +222,7 @@ export const BattleSimControls = ({ onStartBattle }: BattleSimControlsProps) => 
               {selectedEnemies.map((enemy, index) => (
                 <div key={`${enemy.id}-${index}`} className="flex items-center gap-2 p-2 border border-border rounded">
                   <img
-                    src={`/src/assets/${enemy.sprite_filename}`}
+                    src={getEnemySpriteUrl(enemy.sprite_filename)}
                     alt={enemy.enemy_name}
                     className="w-16 h-16 object-contain pixelated"
                   />
