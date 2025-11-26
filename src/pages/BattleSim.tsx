@@ -4,10 +4,12 @@ import { BattleScene } from "@/components/BattleScene";
 import { BattleState, Combatant } from "@/lib/Utils/types";
 import { useNavigate } from "react-router-dom";
 import { BattleSimControls } from "@/components/BattleSimControls";
+import { supabase } from "@/integrations/supabase/client";
 
 const BattleSim = () => {
   const navigate = useNavigate();
   const [battleState, setBattleState] = useState<BattleState | null>(null);
+  const [backgroundUrl, setBackgroundUrl] = useState<string | undefined>(undefined);
 
   const handleStartBattle = (players: Combatant[], enemies: Combatant[]) => {
     const allCombatants = [...players, ...enemies];
@@ -29,6 +31,22 @@ const BattleSim = () => {
     };
 
     setBattleState(initialBattleState);
+
+    // Load a dungeon background image from the database (fallback to default if none found)
+    (async () => {
+      const { data, error } = await supabase
+        .from("dungeons")
+        .select("ai_background_url")
+        .eq("is_featured", true)
+        .not("ai_background_url", "is", null)
+        .limit(1);
+
+      if (!error && data && data.length > 0 && data[0].ai_background_url) {
+        setBackgroundUrl(data[0].ai_background_url as string);
+      } else {
+        setBackgroundUrl(undefined);
+      }
+    })();
   };
 
   return (
@@ -47,7 +65,7 @@ const BattleSim = () => {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-6xl">
           {battleState ? (
-            <BattleScene initialBattleState={battleState} />
+            <BattleScene initialBattleState={battleState} backgroundUrl={backgroundUrl} />
           ) : (
             <div className="text-center text-muted-foreground p-8">
               <p className="text-xl mb-2">Configure your battle above and click "Start Battle"</p>
