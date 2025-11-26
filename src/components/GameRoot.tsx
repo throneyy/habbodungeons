@@ -59,7 +59,8 @@ export const GameRoot: React.FC = () => {
       position: { x: 6, y: 2 },
       moveRange: 2,
       skills: [],
-      isDefending: false,
+      isDefending: false
+        sprite: '/src/assets/creatures/goblin.png',,
     };
 
     const enemy2: Combatant = {
@@ -77,6 +78,7 @@ export const GameRoot: React.FC = () => {
       moveRange: 2,
       skills: [],
       isDefending: false,
+        sprite: '/src/assets/creatures/orc.png',
     };
 
     const allCombatants = [player1, player2, enemy1, enemy2];
