@@ -102,5 +102,11 @@ export const GameRoot: React.FC = () => {
 
   const initialBattleState = createInitialBattleState();
 
-  return <BattleScene initialBattleState={initialBattleState} />;
+  return (
+    <div className="w-screen h-screen flex items-center justify-center bg-slate-200">
+      <div className="w-4/5 h-4/5 border-4 border-slate-900 shadow-2xl">
+        <BattleScene initialBattleState={initialBattleState} />
+      </div>
+    </div>
+  );
 };

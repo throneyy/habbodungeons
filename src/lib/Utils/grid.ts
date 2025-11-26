@@ -10,16 +10,16 @@ export function toIsometricScreenPos(gridPos: GridPosition, gridCols: number, gr
   const { x, y } = gridPos;
   
   // Isometric projection formula
-  const isoX = (x - y) * (TILE_WIDTH / 2);
-  const isoY = (x + y) * (TILE_HEIGHT / 2);
+  const pixelX = (x * TILE_WIDTH / 2) - (y * TILE_WIDTH / 2);
+  const pixelY = (x * TILE_HEIGHT / 2) + (y * TILE_HEIGHT / 2);
   
   // Center the grid on screen
   const offsetX = (gridCols * TILE_WIDTH) / 2;
-  const offsetY = 50; // Top padding
+  const offsetY = 50;
   
   return {
-    x: isoX + offsetX,
-    y: isoY + offsetY,
+    x: pixelX + offsetX,
+    y: pixelY + offsetY,
   };
 }
 
@@ -38,6 +38,16 @@ export function getManhattanDistance(a: GridPosition, b: GridPosition): number {
 }
 
 /**
+ * Helper to check position equality
+ */
+export const isSamePosition = (p1: GridPosition, p2: GridPosition) => p1.x === p2.x && p1.y === p2.y;
+
+/**
+ * Get distance (alias for getManhattanDistance)
+ */
+export const getDistance = getManhattanDistance;
+
+/**
  * Get all adjacent positions (4-directional)
  */
 export function getAdjacentPositions(pos: GridPosition): GridPosition[] {
@@ -51,6 +61,7 @@ export function getAdjacentPositions(pos: GridPosition): GridPosition[] {
 
 /**
  * BFS to find all reachable tiles within movement range
+ * Returns both the reachable tiles and the parent map for pathfinding
  */
 export function findReachableTiles(
   startPos: GridPosition,
@@ -58,21 +69,23 @@ export function findReachableTiles(
   gridCols: number,
   gridRows: number,
   occupiedPositions: GridPosition[]
-): GridPosition[] {
+): { reachable: GridPosition[]; paths: Map<string, GridPosition | null> } {
   const reachable: GridPosition[] = [];
   const visited = new Set<string>();
   const queue: Array<{ pos: GridPosition; dist: number }> = [{ pos: startPos, dist: 0 }];
+  const paths = new Map<string, GridPosition | null>();
   
   const posKey = (p: GridPosition) => `${p.x},${p.y}`;
   const isOccupied = (p: GridPosition) => 
     occupiedPositions.some(op => op.x === p.x && op.y === p.y);
   
   visited.add(posKey(startPos));
+  paths.set(posKey(startPos), null);
   
   while (queue.length > 0) {
     const { pos, dist } = queue.shift()!;
     
-    if (dist <= moveRange) {
+    if (dist > 0 && dist <= moveRange) {
       reachable.push(pos);
     }
     
@@ -88,13 +101,14 @@ export function findReachableTiles(
           !isOccupied(nextPos)
         ) {
           visited.add(key);
+          paths.set(key, pos);
           queue.push({ pos: nextPos, dist: dist + 1 });
         }
       }
     }
   }
   
-  return reachable;
+  return { reachable, paths };
 }
 
 /**
@@ -122,7 +136,7 @@ export function findPath(
     
     // Found destination
     if (current.x === endPos.x && current.y === endPos.y) {
-      return reconstructPath(startPos, endPos, parent);
+      return reconstructPath(endPos, parent);
     }
     
     const adjacent = getAdjacentPositions(current);
@@ -149,26 +163,21 @@ export function findPath(
  * Reconstruct path from BFS parent map
  */
 export function reconstructPath(
-  start: GridPosition,
-  end: GridPosition,
-  parent: Map<string, GridPosition>
+  target: GridPosition,
+  paths: Map<string, GridPosition | null>
 ): GridPosition[] {
   const path: GridPosition[] = [];
   const posKey = (p: GridPosition) => `${p.x},${p.y}`;
   
-  let current = end;
-  
-  while (current.x !== start.x || current.y !== start.y) {
-    path.unshift(current);
-    const key = posKey(current);
-    const prev = parent.get(key);
-    
-    if (!prev) break;
-    current = prev;
+  let current: GridPosition | null = target;
+  while (current) {
+    path.push(current);
+    const parentPos = paths.get(posKey(current));
+    if (parentPos === null || !parentPos) break;
+    current = parentPos;
   }
   
-  path.unshift(start);
-  return path;
+  return path.reverse();
 }
 
 /**
