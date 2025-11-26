@@ -10,6 +10,7 @@ import { getManhattanDistance } from '../lib/Utils/grid';
 
 interface BattleSceneProps {
   initialBattleState: BattleState;
+  backgroundUrl?: string;
 }
 
 function battleReducer(state: BattleState, action: any): BattleState {
@@ -91,7 +92,7 @@ function battleReducer(state: BattleState, action: any): BattleState {
   }
 }
 
-export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState }) => {
+export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState, backgroundUrl }) => {
   const [state, dispatch] = useReducer(battleReducer, initialBattleState);
   
   const currentCombatant = useMemo(() => 
@@ -138,7 +139,7 @@ export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState }) 
 
   return (
     <div className="flex flex-col h-full w-full">
-      <BattleStage state={state} dispatch={dispatch} />
+      <BattleStage state={state} dispatch={dispatch} backgroundUrl={backgroundUrl} />
       
       <div className="flex w-full min-h-[120px] border-t-4 border-slate-700">
         <div className="flex-1">

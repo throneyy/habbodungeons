@@ -3,15 +3,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { GridPosition, Combatant, BattleState } from '../lib/Utils/types';
 import { toIsometricScreenPos, findReachableTiles, reconstructPath, isSamePosition, getDistance } from '../lib/Utils/grid';
-import { HabboAvatarSprite } from './HabboAvatarSprite';
 import { DirectionName, TILE_WIDTH, TILE_HEIGHT } from '../lib/Utils/habbo';
 
 interface BattleStageProps {
   state: BattleState;
   dispatch: React.Dispatch<any>;
+  backgroundUrl?: string;
 }
 
-type AnimatedPosition = { 
+type AnimatedPosition = {
   combatantId: string; 
   pos: GridPosition; 
   isMoving: boolean; 
@@ -34,7 +34,10 @@ const getDirectionName = (from: GridPosition, to: GridPosition): DirectionName =
   return "down";
 };
 
-export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch }) => {
+const getHabboAvatarUrl = (username: string) =>
+  `https://lookup.thequackory.com/habbo-imaging/${encodeURIComponent(username)}?hotel=COM&size=s&action=std&gesture=std&direction=4&head_direction=4&service=official`;
+
+export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch, backgroundUrl }) => {
   const { allCombatants, partyIds, gridCols, gridRows, phase } = state;
   const currentCombatant = allCombatants.find(c => c.id === state.turnOrder[state.currentTurnIndex]);
   const isPlayerTurn = currentCombatant && currentCombatant.type === 'player';
@@ -149,7 +152,7 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch }) => 
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-90"
         style={{ 
-          backgroundImage: `url('/src/assets/ice-pool-isometric.webp')`,
+          backgroundImage: `url(${backgroundUrl || '/src/assets/icedungeon.png'})`,
           backgroundSize: '110%',
           backgroundPosition: 'center',
         }}
@@ -183,20 +186,30 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch }) => 
                   alt={combatant.name}
                   className="pixelated max-h-32 w-auto"
                   style={{ imageRendering: 'pixelated' }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/src/assets/ice-guardian.png';
+                  }}
                 />
               </div>
             );
-          } else if (combatant.type === 'player' && combatant.figureString) {
+          } else if (combatant.type === 'player') {
+            const avatarUrl = getHabboAvatarUrl(combatant.name);
             return (
               <div 
                 key={combatant.id}
-                className="absolute"
+                className="absolute transform -translate-x-1/2 -translate-y-full"
                 style={screenPos}
               >
-                <HabboAvatarSprite
-                  figureString={combatant.figureString}
-                  direction={animState.direction}
-                  isWalking={animState.isMoving}
+                <img
+                  src={avatarUrl}
+                  alt={combatant.name}
+                  className="pixelated max-h-24 w-auto"
+                  style={{ imageRendering: 'pixelated' }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = '/src/assets/npc-warrior.png';
+                  }}
                 />
               </div>
             );
