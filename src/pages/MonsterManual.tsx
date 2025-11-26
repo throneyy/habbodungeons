@@ -335,7 +335,11 @@ export default function MonsterManual() {
                         spriteUrl={sprite}
                         spriteFilename={monster.sprite_filename}
                         name={monster.enemy_name}
+                        position={{ x: 0, y: 0 }}
                         shouldFace="left"
+                        screenX={0}
+                        screenY={0}
+                        zIndex={10}
                         className="pixel-icon max-h-full max-w-full object-contain"
                         style={{
                           transform: `scale(${

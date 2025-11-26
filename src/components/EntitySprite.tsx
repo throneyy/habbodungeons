@@ -245,7 +245,11 @@ export const EntitySprite = React.memo(({
             spriteUrl={imageUrl}
             spriteFilename={spriteFilename || sprite?.split('/').pop()}
             name={name}
+            position={{ x: 0, y: 0 }}
             shouldFace="right"
+            screenX={0}
+            screenY={0}
+            zIndex={10}
             className="select-none pointer-events-none"
             style={{
               width: `${spriteSize}px`,
