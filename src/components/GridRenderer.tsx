@@ -1,6 +1,6 @@
 // components/GridRenderer.tsx - Optimized large grid renderer
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { DungeonGrid, GridPosition, getTileAt } from '@/lib/gridSystem';
 import { gridToScreen, calculateZIndex, ISO_TILE_WIDTH, ISO_TILE_HEIGHT } from '@/lib/isometricUtils';
 
@@ -21,8 +21,6 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
   onTileClick,
   showGridLines = true,
 }) => {
-  const [hoveredTile, setHoveredTile] = useState<GridPosition | null>(null);
-  
   const tileElements = useMemo(() => {
     const elements: JSX.Element[] = [];
     
@@ -41,16 +39,15 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
           (h) => h.x === tile.position.x && h.y === tile.position.y
         );
         
-        const isHovered = hoveredTile?.x === tile.position.x && hoveredTile?.y === tile.position.y;
+        let bgColor = 'bg-slate-800/10';
+        if (tile.variant === 'ice') bgColor = 'bg-cyan-500/5';
+        if (tile.variant === 'stone') bgColor = 'bg-slate-700/10';
+        if (tile.variant === 'crystal') bgColor = 'bg-blue-400/15';
+        if (tile.variant === 'chasm') bgColor = 'bg-black/30';
+        if (!tile.walkable) bgColor = 'bg-red-900/20';
         
-        // Walkability-based coloring: RED = walkable, BLUE = blocked
-        let tileColor: string;
         if (isHighlighted) {
-          tileColor = 'rgba(0, 255, 255, 0.4)'; // Cyan for highlighted
-        } else if (tile.walkable) {
-          tileColor = isHovered ? 'rgba(255, 77, 77, 0.6)' : 'rgba(255, 77, 77, 0.15)'; // RED
-        } else {
-          tileColor = isHovered ? 'rgba(0, 68, 255, 0.35)' : 'rgba(0, 68, 255, 0.15)'; // BLUE
+          bgColor = 'bg-cyan-400/40';
         }
         
         const borderClass = showGridLines ? 'border border-slate-600/20' : '';
@@ -58,25 +55,24 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
         elements.push(
           <div
             key={tile.id}
-            className={`absolute ${borderClass} cursor-pointer transition-colors`}
+            className={`absolute ${bgColor} ${borderClass} cursor-pointer transition-all hover:bg-cyan-300/30`}
             style={{
               left: `${finalX}px`,
               top: `${finalY}px`,
               width: `${ISO_TILE_WIDTH}px`,
               height: `${ISO_TILE_HEIGHT}px`,
               zIndex,
-              backgroundColor: tileColor,
+              transform: 'rotateX(60deg) rotateZ(45deg)',
+              transformOrigin: 'center',
             }}
             onClick={() => onTileClick?.(tile.position)}
-            onMouseEnter={() => setHoveredTile(tile.position)}
-            onMouseLeave={() => setHoveredTile(null)}
           />
         );
       }
     }
     
     return elements;
-  }, [grid, offsetX, offsetY, highlightedTiles, showGridLines, onTileClick, hoveredTile]);
+  }, [grid, offsetX, offsetY, highlightedTiles, showGridLines, onTileClick]);
   
   return <>{tileElements}</>;
 };

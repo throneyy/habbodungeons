@@ -56,27 +56,6 @@ export function getWalkFrameUrls(figureString: string, direction: number): strin
 }
 
 // Isometric conversion constants for the grid
-export const TILE_WIDTH = 32; // Horizontal pixel width of a single tile
+export const TILE_WIDTH = 32; // Horizontal pixel width of a single tileexport const TILE_HEIGHT = 32; // Vertical pixel height of a tile
+60;
 export const TILE_HEIGHT = 16; // Vertical pixel height of a single tile
-
-/**
- * Calculate Habbo direction (0-7) from movement vector
- * 0=N, 1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW
- */
-export function getDirectionFromVector(dx: number, dy: number): number {
-  if (dx === 0 && dy === 0) return 4; // Default south
-  
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-  
-  // Map angle to 8 directions
-  if (angle >= -22.5 && angle < 22.5) return 2;    // East (right)
-  if (angle >= 22.5 && angle < 67.5) return 3;     // Southeast
-  if (angle >= 67.5 && angle < 112.5) return 4;    // South (down)
-  if (angle >= 112.5 && angle < 157.5) return 5;   // Southwest
-  if (angle >= 157.5 || angle < -157.5) return 6;  // West (left)
-  if (angle >= -157.5 && angle < -112.5) return 7; // Northwest
-  if (angle >= -112.5 && angle < -67.5) return 0;  // North (up)
-  if (angle >= -67.5 && angle < -22.5) return 1;   // Northeast
-  
-  return 4; // Default south
-}

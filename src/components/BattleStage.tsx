@@ -7,7 +7,6 @@ import { gridToScreen, calculateZIndex, calculateGridCenterOffset } from "../lib
 import { GridRenderer } from "./GridRenderer";
 import { EnemySprite as EnemySpriteComponent } from "./EnemySprite";
 import { getEnemySpriteUrl as getEnemySprite } from "../lib/enemySprites";
-import { getHabboFrameUrl, getDirectionFromVector } from "../lib/Utils/habbo";
 
 interface BattleStageProps {
   state: BattleState;
@@ -28,7 +27,7 @@ export const BattleStage: React.FC<BattleStageProps> = ({
   showGridOverlay = true,
   enabledCells = [],
   onGridCellClick,
-  gridSize = { cols: 30, rows: 30 },
+  gridSize = { cols: 40, rows: 40 },
 }) => {
   const { allCombatants, partyIds, phase } = state;
   const currentCombatant = allCombatants.find((c) => c.id === state.turnOrder[state.currentTurnIndex]);
@@ -72,7 +71,7 @@ export const BattleStage: React.FC<BattleStageProps> = ({
       {/* Dark overlay for better sprite contrast */}
       <div className="absolute inset-0 bg-slate-900/40" />
 
-      <div className="absolute inset-0 overflow-hidden flex items-start justify-start">
+      <div className="absolute inset-0 overflow-auto">
         <div className="relative min-w-full min-h-full">
           {/* Grid Renderer */}
           {showGridOverlay && (
@@ -121,17 +120,7 @@ export const BattleStage: React.FC<BattleStageProps> = ({
             const finalX = screenPos.x + gridOffset.x;
             const finalY = screenPos.y + gridOffset.y;
             const zIndex = calculateZIndex(combatant.position);
-            
-            // Calculate direction toward nearest enemy
-            const nearestEnemy = enemies[0];
-            const dx = nearestEnemy ? nearestEnemy.position.x - combatant.position.x : 0;
-            const dy = nearestEnemy ? nearestEnemy.position.y - combatant.position.y : 0;
-            const direction = getDirectionFromVector(dx, dy);
-            
-            // Use figureString if available, otherwise fallback to username lookup
-            const avatarUrl = (combatant as any).figureString
-              ? getHabboFrameUrl((combatant as any).figureString, { direction, action: 'std', size: 's' })
-              : `https://lookup.thequackory.com/habbo-imaging/${encodeURIComponent(combatant.name)}?hotel=COM&size=s&action=std&gesture=std&direction=${direction}&head_direction=${direction}&service=official`;
+            const avatarUrl = `https://lookup.thequackory.com/habbo-imaging/${encodeURIComponent(combatant.name)}?hotel=COM&size=s&action=std&gesture=std&direction=4&head_direction=4&service=official`;
             
             return (
               <div
