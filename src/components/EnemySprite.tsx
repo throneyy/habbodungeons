@@ -1,48 +1,67 @@
+import React from 'react';
+import { GridPosition } from '@/lib/gridSystem';
 import { getEnemyBaseDirection, getEnemyScaleFactor } from '@/lib/enemyDirections';
 
 interface EnemySpriteProps {
   spriteUrl: string;
   spriteFilename?: string;
   name?: string;
-  shouldFace: 'left' | 'right';
+  position: GridPosition;
+  shouldFace?: 'left' | 'right';
+  screenX: number;
+  screenY: number;
+  zIndex: number;
+  onClick?: () => void;
   className?: string;
   style?: React.CSSProperties;
-  alt?: string;
 }
 
-export const EnemySprite = ({
+export const EnemySprite: React.FC<EnemySpriteProps> = ({
   spriteUrl,
   spriteFilename,
   name,
-  shouldFace,
+  position,
+  shouldFace = 'right',
+  screenX,
+  screenY,
+  zIndex,
+  onClick,
   className = '',
-  style = {},
-  alt,
-}: EnemySpriteProps) => {
-  // Extract filename from URL if not provided
+  style,
+}) => {
   const filename = spriteFilename || spriteUrl.split('/').pop() || '';
-  
-  // Get the base direction from our lookup table
   const baseDirection = getEnemyBaseDirection(filename);
-  
-  // Get the scale factor for this enemy
   const scaleFactor = getEnemyScaleFactor(filename);
-  
-  // Flip only if base direction differs from desired direction
   const needsFlip = baseDirection !== shouldFace;
   
   return (
-    <img
-      src={spriteUrl}
-      alt={alt || name || 'Enemy'}
-      className={`${className} pixelated`}
+    <div
+      className={`absolute cursor-pointer ${className}`}
       style={{
-        imageRendering: 'pixelated',
-        transform: `${needsFlip ? 'scaleX(-1)' : ''} ${scaleFactor !== 1.0 ? `scale(${scaleFactor})` : ''}`.trim(),
-        transformOrigin: 'center',
-        objectFit: 'contain',
+        left: `${screenX}px`,
+        top: `${screenY}px`,
+        zIndex: zIndex + 1000,
+        transform: 'translate(-50%, -100%)',
         ...style,
       }}
-    />
+      onClick={onClick}
+    >
+      <img
+        src={spriteUrl}
+        alt={name || 'Enemy'}
+        className="pixelated max-h-32 w-auto drop-shadow-lg"
+        style={{
+          imageRendering: 'pixelated',
+          transform: `${needsFlip ? 'scaleX(-1)' : ''} ${scaleFactor !== 1.0 ? `scale(${scaleFactor})` : ''}`.trim(),
+          transformOrigin: 'center',
+          objectFit: 'contain',
+        }}
+      />
+      {name && (
+        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/80 px-2 py-1 rounded text-xs text-white whitespace-nowrap">
+          {name}
+        </div>
+      )}
+    </div>
   );
 };
