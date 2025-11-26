@@ -28,6 +28,7 @@ export type Combatant = {
   def: number;
   spd: number;
   figureString?: string; // For Habbo avatars
+  sprite?: string; // For enemy sprites
   position: GridPosition;
   moveRange: number;
   skills: Skill[];

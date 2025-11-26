@@ -25,7 +25,7 @@ export function getHabboFrameUrl(
   figureString: string,
   options: { direction: number; action?: string; size?: 's' | 'm' | 'b'; gesture?: string }
 ): string {
-  const { direction, action = 'std', size = 'b', gesture = 'std' } = options;
+  const { direction, action = 'std', size = 's', gesture = 'std' } = options;
   const hotel = 'COM'; // Assuming COM for origins
   const service = 'official'; // or 'habboden'
   
