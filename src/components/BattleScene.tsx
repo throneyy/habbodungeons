@@ -1,12 +1,15 @@
 // Components/BattleScene.tsx
 
-import React, { useReducer, useEffect, useMemo } from 'react';
+import React, { useReducer, useEffect, useMemo, useState } from 'react';
 import { BattleState, Combatant } from '../lib/Utils/types';
 import { EnemyPanel } from './UI/EnemyPanel';
 import { TurnPanel } from './UI/TurnPanel';
 import { PlayerPanel } from './UI/PlayerPanel';
 import { BattleStage } from './BattleStage';
 import { getManhattanDistance } from '../lib/Utils/grid';
+import { BattleTutorial } from './BattleTutorial';
+import { Button } from './ui/button';
+import { HelpCircle } from 'lucide-react';
 
 interface BattleSceneProps {
   initialBattleState: BattleState;
@@ -94,6 +97,7 @@ function battleReducer(state: BattleState, action: any): BattleState {
 
 export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState, backgroundUrl }) => {
   const [state, dispatch] = useReducer(battleReducer, initialBattleState);
+  const [showTutorial, setShowTutorial] = useState(false);
   
   const currentCombatant = useMemo(() => 
     state.allCombatants.find(c => c.id === state.turnOrder[state.currentTurnIndex])
@@ -138,8 +142,46 @@ export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState, ba
   }
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full relative">
+      {/* Tutorial Overlay */}
+      {showTutorial && <BattleTutorial onClose={() => setShowTutorial(false)} />}
+      
+      {/* Help Button */}
+      <Button
+        onClick={() => setShowTutorial(true)}
+        variant="outline"
+        size="sm"
+        className="absolute top-4 right-4 z-20 flex items-center gap-2"
+      >
+        <HelpCircle className="w-4 h-4" />
+        How to Play
+      </Button>
+      
       <BattleStage state={state} dispatch={dispatch} backgroundUrl={backgroundUrl} />
+      
+      {state.phase === 'selectingAction' && currentCombatant.type === 'player' && (
+        <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-20 bg-cyan-900/90 border-2 border-cyan-500 rounded-lg px-6 py-3">
+          <p className="text-white font-bold text-center">
+            💡 It's {currentCombatant.name}'s turn! Choose an action below ⬇️
+          </p>
+        </div>
+      )}
+      
+      {state.phase === 'selectingTile' && state.selectedAction === 'move' && (
+        <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-20 bg-blue-900/90 border-2 border-blue-500 rounded-lg px-6 py-3">
+          <p className="text-white font-bold text-center">
+            👣 Click a highlighted BLUE tile to move there
+          </p>
+        </div>
+      )}
+      
+      {state.phase === 'selectingTile' && state.selectedAction === 'attack' && (
+        <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-20 bg-red-900/90 border-2 border-red-500 rounded-lg px-6 py-3">
+          <p className="text-white font-bold text-center">
+            ⚔️ Click a highlighted RED enemy to attack them!
+          </p>
+        </div>
+      )}
       
       <div className="flex w-full min-h-[120px] border-t-4 border-slate-700">
         <div className="flex-1">

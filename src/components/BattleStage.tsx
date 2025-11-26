@@ -4,6 +4,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { GridPosition, Combatant, BattleState } from '../lib/Utils/types';
 import { toIsometricScreenPos, findReachableTiles, reconstructPath, isSamePosition, getDistance } from '../lib/Utils/grid';
 import { DirectionName, TILE_WIDTH, TILE_HEIGHT } from '../lib/Utils/habbo';
+import { EnemySprite } from './EnemySprite';
 
 interface BattleStageProps {
   state: BattleState;
@@ -120,23 +121,27 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch, backg
       for (let x = 0; x < gridCols; x++) {
         const pos: GridPosition = { x, y };
         const screenPos = getScreenPositionStyle(x, y);
-        const isTargetable = (
-          (state.selectedAction === 'move' && reachable.some(p => isSamePosition(p, pos))) ||
-          (state.selectedAction === 'attack' && currentCombatant && getDistance(currentCombatant.position, pos) <= 1)
-        );
-        const hasEnemy = allCombatants.some(c => c.id !== currentCombatant?.id && isSamePosition(c.position, pos));
+        
+        const isReachableMove = state.selectedAction === 'move' && reachable.some(p => isSamePosition(p, pos));
+        const enemyAtPos = allCombatants.find(c => c.type === 'enemy' && isSamePosition(c.position, pos));
+        const isAttackableEnemy = state.selectedAction === 'attack' && currentCombatant && enemyAtPos && getDistance(currentCombatant.position, pos) <= 1;
+        
+        let tileClass = 'absolute cursor-pointer transition-all border border-slate-600/30';
+        
+        if (isReachableMove) {
+          tileClass = 'absolute cursor-pointer transition-all bg-cyan-500/40 hover:bg-cyan-400/60 border-2 border-cyan-300 shadow-lg shadow-cyan-500/50';
+        } else if (isAttackableEnemy) {
+          tileClass = 'absolute cursor-pointer transition-all bg-red-500/50 hover:bg-red-400/70 border-2 border-red-300 shadow-lg shadow-red-500/50 animate-pulse';
+        }
         
         tiles.push(
           <div
             key={`${x}-${y}`}
-            className={`absolute cursor-pointer transition-all ${
-              isTargetable ? 'bg-cyan-500/30 hover:bg-cyan-400/40' : ''
-            } ${hasEnemy ? 'bg-red-500/40' : ''}`}
+            className={tileClass}
             style={{
               ...screenPos,
               width: `${TILE_WIDTH}px`,
               height: `${TILE_HEIGHT}px`,
-              border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
             onClick={() => handleTileClick(pos)}
           />
@@ -174,22 +179,19 @@ export const BattleStage: React.FC<BattleStageProps> = ({ state, dispatch, backg
           const screenPos = getScreenPositionStyle(animState.pos.x, animState.pos.y);
 
           if (combatant.type === 'enemy') {
-            const spriteUrl = combatant.sprite || '/src/assets/ice-guardian.png';
+            const spriteFilename = combatant.sprite?.split('/').pop() || 'ice-guardian.png';
             return (
               <div
                 key={combatant.id}
                 className="absolute transform -translate-x-1/2 -translate-y-full"
                 style={screenPos}
               >
-                <img
-                  src={spriteUrl}
-                  alt={combatant.name}
-                  className="pixelated max-h-32 w-auto"
-                  style={{ imageRendering: 'pixelated' }}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = '/src/assets/ice-guardian.png';
-                  }}
+                <EnemySprite
+                  spriteUrl={combatant.sprite || ''}
+                  spriteFilename={spriteFilename}
+                  name={combatant.name}
+                  shouldFace="right"
+                  className="max-h-32 w-auto"
                 />
               </div>
             );
