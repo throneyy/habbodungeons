@@ -1,240 +1,188 @@
 // Components/BattleScene.tsx
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { BattleState, Combatant, GridPosition, BattlePhase } from '../lib/Utils/types';
-import { findReachableTiles, getManhattanDistance } from '../lib/Utils/grid';
-import { BattleStage } from './BattleStage';
+import React, { useReducer, useEffect, useMemo } from 'react';
+import { BattleState, Combatant } from '../lib/Utils/types';
 import { EnemyPanel } from './UI/EnemyPanel';
 import { TurnPanel } from './UI/TurnPanel';
 import { PlayerPanel } from './UI/PlayerPanel';
+import { BattleStage } from './BattleStage';
+import { getManhattanDistance } from '../lib/Utils/grid';
 
 interface BattleSceneProps {
   initialBattleState: BattleState;
 }
 
-export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState }) => {
-  const [battleState, setBattleState] = useState<BattleState>(initialBattleState);
-  const [reachableTiles, setReachableTiles] = useState<GridPosition[]>([]);
-  const [selectedTile, setSelectedTile] = useState<GridPosition | null>(null);
+function battleReducer(state: BattleState, action: any): BattleState {
+  const currentCombatant = state.allCombatants.find(c => c.id === state.turnOrder[state.currentTurnIndex]);
 
-  // Get current combatant
-  const currentCombatant = useMemo(() => {
-    const currentId = battleState.turnOrder[battleState.currentTurnIndex];
-    return battleState.allCombatants.find(c => c.id === currentId) || null;
-  }, [battleState.turnOrder, battleState.currentTurnIndex, battleState.allCombatants]);
+  switch (action.type) {
+    case 'SET_PHASE':
+      return { ...state, phase: action.phase };
 
-  // Split combatants into players and enemies
-  const players = useMemo(
-    () => battleState.allCombatants.filter(c => battleState.partyIds.includes(c.id)),
-    [battleState.allCombatants, battleState.partyIds]
-  );
-
-  const enemies = useMemo(
-    () => battleState.allCombatants.filter(c => battleState.enemyIds.includes(c.id)),
-    [battleState.allCombatants, battleState.enemyIds]
-  );
-
-  // Handle action selection
-  const handleAction = (action: 'move' | 'attack' | 'skill' | 'defend' | 'item') => {
-    if (!currentCombatant) return;
-
-    if (action === 'move') {
-      // Show reachable tiles
-      const occupied = battleState.allCombatants
-        .filter(c => c.id !== currentCombatant.id)
-        .map(c => c.position);
+    case 'START_ACTION':
+      if (!currentCombatant || currentCombatant.type !== 'player' || state.phase !== 'selectingAction') return state;
       
-      const tiles = findReachableTiles(
-        currentCombatant.position,
-        currentCombatant.moveRange,
-        battleState.gridCols,
-        battleState.gridRows,
-        occupied
-      );
-      
-      setReachableTiles(tiles);
-      setBattleState(prev => ({ ...prev, phase: 'selectingTile', selectedAction: 'move' }));
-    } else if (action === 'attack') {
-      setBattleState(prev => ({ ...prev, phase: 'selectingTile', selectedAction: 'attack' }));
-    } else if (action === 'defend') {
-      // Execute defend action
-      setBattleState(prev => ({
-        ...prev,
-        allCombatants: prev.allCombatants.map(c =>
-          c.id === currentCombatant.id ? { ...c, isDefending: true } : c
-        ),
-      }));
-      endTurn();
-    }
-  };
-
-  // Handle tile click
-  const handleTileClick = (pos: GridPosition) => {
-    if (battleState.phase !== 'selectingTile' || !currentCombatant) return;
-
-    if (battleState.selectedAction === 'move') {
-      // Check if tile is reachable
-      const isReachable = reachableTiles.some(t => t.x === pos.x && t.y === pos.y);
-      if (isReachable) {
-        // Move combatant
-        setBattleState(prev => ({
-          ...prev,
-          allCombatants: prev.allCombatants.map(c =>
-            c.id === currentCombatant.id ? { ...c, position: pos } : c
-          ),
-          phase: 'idle',
-          selectedAction: null,
-        }));
-        setReachableTiles([]);
-        endTurn();
+      if (action.action === 'move' || action.action === 'attack' || action.action === 'skill') {
+        return { 
+          ...state, 
+          phase: 'selectingTile', 
+          selectedAction: action.action, 
+          selectedSkillId: action.skillId || null 
+        };
       }
-    } else if (battleState.selectedAction === 'attack') {
-      // Check if there's an enemy at this position
-      const target = battleState.allCombatants.find(
-        c => c.position.x === pos.x && c.position.y === pos.y && c.type !== currentCombatant.type
-      );
+      return state;
+
+    case 'RESOLVE_ACTION':
+      if (!currentCombatant || state.phase === 'animating') return state;
       
-      if (target) {
-        const distance = getManhattanDistance(currentCombatant.position, target.position);
-        if (distance <= 1) {
-          // Execute attack
-          executeAttack(currentCombatant, target);
+      let nextState = { ...state };
+      let updatedCombatants = nextState.allCombatants.map(c => {
+        if (c.id === currentCombatant.id) {
+          return { ...c, isDefending: false };
+        }
+        return c;
+      });
+      
+      const currentActor = updatedCombatants.find(c => c.id === currentCombatant.id)!;
+
+      if (action.actionType === 'move') {
+        currentActor.position = action.targetPos;
+      } else if (action.actionType === 'defend') {
+        currentActor.isDefending = true;
+      } else if (action.actionType === 'attack' || action.actionType === 'skill') {
+        const target = updatedCombatants.find(c => c.id === action.targetId);
+        if (target) {
+          let damage = currentActor.atk - target.def;
+          if (target.isDefending) damage = Math.max(1, Math.floor(damage / 2));
+          damage = Math.max(1, damage);
+          target.hp -= damage;
+          console.log(`${currentActor.name} deals ${damage} damage to ${target.name}!`);
         }
       }
-    }
-  };
+      
+      nextState.allCombatants = updatedCombatants;
 
-  // Execute attack
-  const executeAttack = (attacker: Combatant, target: Combatant) => {
-    const damage = Math.max(1, attacker.atk - target.def);
-    
-    setBattleState(prev => ({
-      ...prev,
-      allCombatants: prev.allCombatants.map(c =>
-        c.id === target.id ? { ...c, hp: Math.max(0, c.hp - damage) } : c
-      ),
-      phase: 'resolving',
-      selectedAction: null,
-    }));
+      let nextIndex = (nextState.currentTurnIndex + 1) % nextState.turnOrder.length;
+      let nextActor = nextState.allCombatants.find(c => c.id === nextState.turnOrder[nextIndex]);
 
-    setReachableTiles([]);
-    
-    setTimeout(() => {
-      checkBattleEnd();
-      endTurn();
-    }, 1000);
-  };
+      while (nextActor && nextActor.hp <= 0) {
+        nextIndex = (nextIndex + 1) % nextState.turnOrder.length;
+        nextActor = nextState.allCombatants.find(c => c.id === nextState.turnOrder[nextIndex]);
+        if (nextIndex === state.currentTurnIndex) break;
+      }
 
-  // End turn
-  const endTurn = () => {
-    setBattleState(prev => {
-      const nextIndex = (prev.currentTurnIndex + 1) % prev.turnOrder.length;
+      const aliveEnemies = nextState.allCombatants.filter(c => c.type === 'enemy' && c.hp > 0).length;
+      const alivePlayers = nextState.allCombatants.filter(c => c.type === 'player' && c.hp > 0).length;
+
+      if (aliveEnemies === 0 || alivePlayers === 0) {
+        return { ...nextState, phase: 'finished', selectedAction: null, selectedSkillId: null };
+      }
+
       return {
-        ...prev,
+        ...nextState,
         currentTurnIndex: nextIndex,
         phase: 'selectingAction',
-        allCombatants: prev.allCombatants.map(c => ({ ...c, isDefending: false })),
+        selectedAction: null,
+        selectedSkillId: null,
       };
-    });
-  };
 
-  // Check if battle has ended
-  const checkBattleEnd = () => {
-    const allPlayersDead = players.every(p => p.hp <= 0);
-    const allEnemiesDead = enemies.every(e => e.hp <= 0);
+    default:
+      return state;
+  }
+}
 
-    if (allPlayersDead || allEnemiesDead) {
-      setBattleState(prev => ({ ...prev, phase: 'finished' }));
-    }
-  };
+export const BattleScene: React.FC<BattleSceneProps> = ({ initialBattleState }) => {
+  const [state, dispatch] = useReducer(battleReducer, initialBattleState);
+  
+  const currentCombatant = useMemo(() => 
+    state.allCombatants.find(c => c.id === state.turnOrder[state.currentTurnIndex])
+  , [state.turnOrder, state.currentTurnIndex, state.allCombatants]);
 
-  // Auto-play enemy turns
+  const enemyCombatants = useMemo(() => 
+    state.allCombatants.filter(c => c.type === 'enemy' && c.hp > 0)
+  , [state.allCombatants]);
+
+  const playerCombatants = useMemo(() => 
+    state.allCombatants.filter(c => c.type === 'player' && c.hp > 0)
+  , [state.allCombatants]);
+
   useEffect(() => {
-    if (currentCombatant?.type === 'enemy' && battleState.phase === 'selectingAction') {
-      // Simple AI: attack nearest player
+    if (state.phase === 'selectingAction' && currentCombatant && currentCombatant.type === 'enemy') {
+      dispatch({ type: 'SET_PHASE', phase: 'resolving' });
+      
       setTimeout(() => {
-        const nearestPlayer = players.reduce((nearest, player) => {
-          const dist = getManhattanDistance(currentCombatant.position, player.position);
-          const nearestDist = nearest
-            ? getManhattanDistance(currentCombatant.position, nearest.position)
-            : Infinity;
-          return dist < nearestDist ? player : nearest;
-        }, null as Combatant | null);
-
-        if (nearestPlayer) {
-          const distance = getManhattanDistance(currentCombatant.position, nearestPlayer.position);
+        const target = state.allCombatants.find(c => c.type === 'player' && c.hp > 0);
+        
+        if (target) {
+          const distance = getManhattanDistance(currentCombatant.position, target.position);
+          
           if (distance <= 1) {
-            executeAttack(currentCombatant, nearestPlayer);
+            console.log(`${currentCombatant.name} attacks ${target.name}!`);
+            dispatch({ type: 'RESOLVE_ACTION', actionType: 'attack', targetId: target.id });
           } else {
-            endTurn();
+            const dx = Math.sign(target.position.x - currentCombatant.position.x);
+            const dy = Math.sign(target.position.y - currentCombatant.position.y);
+            const newPos = { x: currentCombatant.position.x + dx, y: currentCombatant.position.y + dy };
+            
+            console.log(`${currentCombatant.name} moves to x:${newPos.x}, y:${newPos.y}`);
+            dispatch({ type: 'RESOLVE_ACTION', actionType: 'move', targetPos: newPos });
           }
-        } else {
-          endTurn();
         }
       }, 1000);
     }
-  }, [currentCombatant, battleState.phase]);
+  }, [state.phase, currentCombatant, state.allCombatants]);
+
+  if (!currentCombatant) {
+    return <div className="p-4">Loading battle...</div>;
+  }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-4 text-center">
-          Tactical Battle System
-        </h1>
+    <div className="flex flex-col h-full w-full">
+      <BattleStage state={state} dispatch={dispatch} />
+      
+      <div className="flex w-full min-h-[120px] border-t-4 border-slate-700">
+        <div className="flex-1">
+          <EnemyPanel enemies={enemyCombatants} />
+        </div>
+        <div className="flex-1 border-l-2 border-r-2 border-slate-700">
+          <TurnPanel
+            currentCombatant={currentCombatant}
+            phase={state.phase}
+            turnOrder={state.turnOrder}
+            allCombatants={state.allCombatants}
+          />
+        </div>
+        <div className="flex-1">
+          <PlayerPanel
+            players={playerCombatants}
+            currentCombatantId={currentCombatant.id}
+            onAction={(action) => {
+              if (action === 'defend') {
+                dispatch({ type: 'RESOLVE_ACTION', actionType: 'defend' });
+              } else {
+                dispatch({ type: 'START_ACTION', action });
+              }
+            }}
+            canAct={currentCombatant.type === 'player' && state.phase === 'selectingAction'}
+          />
+        </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Left Panel - Players */}
-          <div className="lg:col-span-1">
-            <PlayerPanel
-              players={players}
-              currentCombatantId={currentCombatant?.id || null}
-              onAction={handleAction}
-              canAct={currentCombatant?.type === 'player' && battleState.phase === 'selectingAction'}
-            />
-          </div>
-
-          {/* Center - Battle Stage */}
-          <div className="lg:col-span-2 space-y-4">
-            <TurnPanel
-              currentCombatant={currentCombatant}
-              phase={battleState.phase}
-              turnOrder={battleState.turnOrder}
-              allCombatants={battleState.allCombatants}
-            />
-            
-            <BattleStage
-              gridCols={battleState.gridCols}
-              gridRows={battleState.gridRows}
-              combatants={battleState.allCombatants}
-              reachableTiles={reachableTiles}
-              onTileClick={handleTileClick}
-              highlightedTile={selectedTile}
-            />
-          </div>
-
-          {/* Right Panel - Enemies */}
-          <div className="lg:col-span-1">
-            <EnemyPanel enemies={enemies} />
+      {state.phase === 'finished' && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-slate-800 border-4 border-slate-700 rounded-lg p-8 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              {enemyCombatants.length === 0 ? 'Victory!' : 'Defeat...'}
+            </h2>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold"
+            >
+              Restart Battle
+            </button>
           </div>
         </div>
-
-        {/* Battle End */}
-        {battleState.phase === 'finished' && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center">
-            <div className="bg-slate-800 border-4 border-slate-700 rounded-lg p-8 text-center">
-              <h2 className="text-3xl font-bold text-white mb-4">
-                {enemies.every(e => e.hp <= 0) ? 'Victory!' : 'Defeat...'}
-              </h2>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold"
-              >
-                Restart Battle
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 };
