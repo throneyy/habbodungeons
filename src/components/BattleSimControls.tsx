@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Plus, X } from "lucide-react";
@@ -38,7 +37,7 @@ export const BattleSimControls = ({ onStartBattle }: BattleSimControlsProps) => 
   const [partyMembers, setPartyMembers] = useState<PartyMember[]>([]);
   const [selectedEnemies, setSelectedEnemies] = useState<Enemy[]>([]);
   const [newUsername, setNewUsername] = useState("");
-  const [selectedEnemyId, setSelectedEnemyId] = useState<string>("");
+  const [selectedEnemyId, setSelectedEnemyId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     loadEnemies();
@@ -135,7 +134,7 @@ export const BattleSimControls = ({ onStartBattle }: BattleSimControlsProps) => 
     setPartyMembers([]);
     setSelectedEnemies([]);
     setNewUsername("");
-    setSelectedEnemyId("");
+    setSelectedEnemyId(undefined);
   };
 
   return (
