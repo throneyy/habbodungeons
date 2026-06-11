@@ -10,17 +10,51 @@ const corsHeaders = {
 const GENERATION_LOCK_TIMEOUT_MS = 45000;
 const GENERATION_POLL_INTERVAL_MS = 1000;
 
+const isGenerationMarker = (node: any) => node?.generating === true;
+
 const isRealStoryNodeForRoom = (node: any, roomIndex: number) => {
   return !!node &&
     node.generating !== true &&
     typeof node.storyText === "string" &&
     node.storyText.trim().length > 0 &&
+    Array.isArray(node.choices) &&
+    node.choices.length > 0 &&
     (node.roomIndex === undefined || node.roomIndex === roomIndex);
 };
 
 const isStaleGenerationMarker = (node: any) => {
   const timestamp = typeof node?.timestamp === "number" ? node.timestamp : 0;
   return !timestamp || Date.now() - timestamp > GENERATION_LOCK_TIMEOUT_MS;
+};
+
+const getMarkerStoryText = (node: any) => {
+  return typeof node?.storyText === "string" && node.storyText.trim().length > 0
+    ? node.storyText.trim()
+    : null;
+};
+
+const isInFlightGenerationMarker = (node: any) => {
+  return isGenerationMarker(node) && node.status === "generating" && !isStaleGenerationMarker(node);
+};
+
+const normalizeChoices = (choices: any[]) => {
+  const fallbackPrefix = crypto.randomUUID();
+
+  return choices
+    .filter((choice) => choice && typeof choice.label === "string" && choice.label.trim().length > 0)
+    .slice(0, 4)
+    .map((choice, index) => {
+      const diceRequired = choice.diceRequired === true;
+      return {
+        id: typeof choice.id === "string" && choice.id.trim().length > 0
+          ? choice.id.trim()
+          : `${fallbackPrefix}-${index + 1}`,
+        label: choice.label.trim().replace(/—/g, "--"),
+        diceRequired,
+        ...(diceRequired && typeof choice.diceDC === "number" ? { diceDC: choice.diceDC } : {}),
+        ...(diceRequired && typeof choice.skillType === "string" ? { skillType: choice.skillType } : {}),
+      };
+    });
 };
 
 const waitForGeneratedStoryNode = async (client: any, battleStateId: string, roomIndex: number) => {
@@ -195,9 +229,17 @@ serve(async (req) => {
       battleState.current_story_node = null;
     }
 
+    const dungeonJsonPreview = battleState.dungeons.dungeon_json as any;
+    const currentRoomPreview = dungeonJsonPreview.rooms?.[battleState.current_room_index];
+    const roomDescriptionPreview = currentRoomPreview?.description || "You enter a mysterious chamber.";
+    const pendingMarkerForThisRoom = isGenerationMarker(battleState.current_story_node) &&
+      battleState.current_story_node.roomIndex === battleState.current_room_index &&
+      battleState.current_story_node.status === "pending";
+    const markerStoryText = getMarkerStoryText(battleState.current_story_node);
+
     // RACE CONDITION PREVENTION: Set a temporary marker to claim this generation
     // Use admin client for atomic update to bypass RLS
-    if (battleState.current_story_node?.generating === true && !isStaleGenerationMarker(battleState.current_story_node)) {
+    if (isInFlightGenerationMarker(battleState.current_story_node)) {
       console.log("Another request is already generating story, waiting for result...");
       const generatedStoryNode = await waitForGeneratedStoryNode(clientToUse, battleState.id, battleState.current_room_index);
 
@@ -211,7 +253,7 @@ serve(async (req) => {
       throw new Error("Story is still generating. Please wait a moment and try again.");
     }
 
-    if (battleState.current_story_node?.generating === true && isStaleGenerationMarker(battleState.current_story_node)) {
+    if (isGenerationMarker(battleState.current_story_node) && !pendingMarkerForThisRoom && isStaleGenerationMarker(battleState.current_story_node)) {
       console.log("Clearing stale story generation marker");
       await supabaseAdmin
         .from("battle_states")
@@ -221,14 +263,26 @@ serve(async (req) => {
       battleState.current_story_node = null;
     }
 
-    const tempMarker = { generating: true, roomIndex: battleState.current_room_index, timestamp: Date.now() };
-    const { data: updateCheck, error: claimError } = await supabaseAdmin
+    const tempMarker = {
+      generating: true,
+      status: "generating",
+      roomIndex: battleState.current_room_index,
+      timestamp: Date.now(),
+      storyText: markerStoryText || roomDescriptionPreview,
+    };
+    let claimQuery = supabaseAdmin
       .from("battle_states")
       .update({ current_story_node: tempMarker })
       .eq("id", battleState.id)
-      .is("current_story_node", null)
-      .select()
-      .maybeSingle();
+      .eq("current_room_index", battleState.current_room_index);
+
+    claimQuery = pendingMarkerForThisRoom
+      ? claimQuery
+        .eq("current_story_node->>status", "pending")
+        .eq("current_story_node->>roomIndex", String(battleState.current_room_index))
+      : claimQuery.is("current_story_node", null);
+
+    const { data: updateCheck, error: claimError } = await claimQuery.select().maybeSingle();
     
     // If update failed or returned null, another request already claimed it
     if (claimError || !updateCheck) {
@@ -291,6 +345,7 @@ serve(async (req) => {
     const currentRoom = dungeonJson.rooms?.[context.roomIndex];
     const questObjective = dungeonJson.questObjective || "Complete the dungeon";
     const roomDescription = currentRoom?.description || "You enter a mysterious chamber.";
+    const visibleStoryText = markerStoryText || roomDescription;
 
     // --- Persistent narrative memory (durable across rooms) ---
     // This is the fix for stories "losing context": instead of only the last few
@@ -323,6 +378,7 @@ Theme: ${battleState.dungeons.theme}
 Current room: ${context.roomIndex + 1}/${dungeonJson.rooms?.length || 10}
 Room type: ${currentRoom.room_type}
 Room description: ${roomDescription}
+Visible story text already shown to the player: ${visibleStoryText}
 ${currentRoom.enemy ? `\n**CRITICAL ENEMY CONSTRAINT: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\n\n⚠️ MANDATORY RULE FOR COMBAT CHOICES:\n- If you create ANY choice that involves fighting, attacking, or combat, the choice MUST say "Fight ${currentRoom.enemy.name}" or "Attack ${currentRoom.enemy.name}"\n- NEVER write "Fight Ice Shade" or any other enemy name unless that is the EXACT enemy in this room\n- If this room has "${currentRoom.enemy.name}", ALL combat choices must reference "${currentRoom.enemy.name}"\n- Example: "Fight ${currentRoom.enemy.name}!" or "Attack the ${currentRoom.enemy.name}!"\n- DO NOT invent different enemies. Use "${currentRoom.enemy.name}" or write non-combat choices.` : ''}
 ${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
 
@@ -345,13 +401,11 @@ ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'st
 - Use only standard ASCII punctuation that renders correctly in pixel fonts.
 
 ⚠️ CRITICAL NARRATIVE CONTINUITY RULES:
-1. Your storyText continues IMMEDIATELY from "WHAT JUST HAPPENED" above - that is the PRESENT MOMENT
-2. DO NOT reintroduce the scene or restate what already happened
-3. DO NOT write "As the..." or "After..." - the consequence JUST occurred, NOW describe what happens NEXT
-4. Your first sentence should pick up the story EXACTLY where the last event left off
-5. Example: If last event was "debris falls, obscuring vision" → Your story: "A large creature detaches from the wall..."
-6. Example: If last event was "you enter a chamber" → Your story: "The chamber stretches before you..."
-7. The player is ALREADY in the moment described in "WHAT JUST HAPPENED" - don't re-describe it, continue it
+1. Keep storyText EXACTLY equal to the visible story text already shown to the player.
+2. Generate choices that match that visible text and the current room.
+3. DO NOT replace the visible story with a new paragraph while choices are being prepared.
+4. DO NOT reintroduce the scene or restate what already happened.
+5. The player is ALREADY in the moment described in "WHAT JUST HAPPENED" - don't re-describe it, continue through choices only.
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
 **DICE CHECKS ARE REQUIRED FOR:**
@@ -571,10 +625,18 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
       }
     }
 
-    // Store story node in battle state to prevent regeneration
-    // Use the same client that was used to fetch the battle state (admin for servers, regular for solo)
+    const normalizedChoices = normalizeChoices(Array.isArray(storyNode?.choices) ? storyNode.choices : []);
+    if (normalizedChoices.length < 2) {
+      throw new Error("AI response did not include enough usable choices");
+    }
+
+    // Store story node in battle state to prevent regeneration.
+    // The visible story text is preserved so the UI never swaps the narrative
+    // while choices are being prepared.
     storyNode = {
       ...storyNode,
+      storyText: visibleStoryText.replace(/—/g, "--"),
+      choices: normalizedChoices,
       roomIndex: battleState.current_room_index,
       generatedAt: new Date().toISOString(),
     };

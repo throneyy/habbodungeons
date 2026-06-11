@@ -16,6 +16,15 @@ const isRealStoryNodeForRoom = (node: any, roomIndex: number) => {
     (node.roomIndex === undefined || node.roomIndex === roomIndex);
 };
 
+const buildPendingStoryNode = (roomIndex: number, storyText: string) => ({
+  generating: true,
+  status: "pending",
+  roomIndex,
+  timestamp: Date.now(),
+  storyText: String(storyText || "").replace(/—/g, "--"),
+  choices: [],
+});
+
 const jsonResponse = (body: any, status = 200) => new Response(
   JSON.stringify(body),
   { headers: { ...corsHeaders, "Content-Type": "application/json" }, status },
@@ -654,10 +663,13 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
       console.log(`Story choice: Advancing turn from ${user.id} to ${turnOrder[nextIndex]}`);
     }
 
-    // Set story node to generating marker to prevent race conditions
-    // The actual story will be generated when the battle page loads
-    updateData.current_story_node = { generating: true, roomIndex: newRoomIndex, timestamp: Date.now() };
-    console.log("Set story node to generating marker after story choice");
+    // Preserve the just-resolved consequence as the visible story while choices
+    // are generated separately. This prevents the UI from replacing the shown
+    // narrative with a brand-new paragraph before choices appear.
+    updateData.current_story_node = sanitizedOutcome.triggersBattle
+      ? null
+      : buildPendingStoryNode(newRoomIndex, consequenceWithItems);
+    console.log("Set pending story node after story choice");
 
     // Set up enemy if battle is triggered
     if (sanitizedOutcome.triggersBattle) {

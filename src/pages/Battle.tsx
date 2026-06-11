@@ -90,9 +90,10 @@ interface BattleLogEntry {
 
 // Helper function to get the latest narrative from battle log or story node
 const getLatestNarrative = (battleData: BattleData): string => {
-  // CRITICAL: When current_story_node exists, it's the source of truth for BOTH storyText AND choices
-  // This ensures narrative text and choices are always in sync (from the same story node)
-  if (isStoryNodeReadyForRoom(battleData.current_story_node, battleData.room_index)) {
+  // CRITICAL: current_story_node is the source of truth for visible narrative.
+  // Pending generation markers intentionally preserve the resolved consequence
+  // while choices are being prepared, so do not fall back to a different log line.
+  if (isStoryNodeForRoom(battleData.current_story_node, battleData.room_index) && typeof battleData.current_story_node.storyText === "string") {
     return battleData.current_story_node.storyText;
   }
   
@@ -114,13 +115,18 @@ const getLatestNarrative = (battleData: BattleData): string => {
 
 const isGeneratingStoryNode = (node: any): boolean => node?.generating === true;
 
-const isStoryNodeReadyForRoom = (node: any, roomIndex?: number): node is StoryNode => {
+const isStoryNodeForRoom = (node: any, roomIndex?: number): boolean => {
   return !!node &&
+    (roomIndex === undefined || node.roomIndex === undefined || node.roomIndex === roomIndex);
+};
+
+const isStoryNodeReadyForRoom = (node: any, roomIndex?: number): node is StoryNode => {
+  return isStoryNodeForRoom(node, roomIndex) &&
     node.generating !== true &&
     typeof node.storyText === "string" &&
     node.storyText.trim().length > 0 &&
     Array.isArray(node.choices) &&
-    (roomIndex === undefined || node.roomIndex === undefined || node.roomIndex === roomIndex);
+    node.choices.length > 0;
 };
 
 interface PlayerStats {
@@ -312,6 +318,7 @@ const Battle = () => {
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
   const storyLoadInFlightRef = useRef(false);
+  const storyChoiceInFlightRef = useRef(false);
   const [treasureClaimed, setTreasureClaimed] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<StoryNode['choices'][0] | null>(null);
   const [storyDice, setStoryDice] = useState<number[]>([1, 1, 1, 1, 1]);
@@ -952,7 +959,7 @@ const Battle = () => {
             setStoryNode(null);
           } else {
             // Only generate new story node if one doesn't exist
-            await loadStoryNode();
+            await loadStoryNode(data.battleData.room_index);
           }
         } else {
           // Clear story node and trigger combat panel animation for battle mode
@@ -1237,7 +1244,7 @@ const Battle = () => {
     }
   };
 
-  const loadStoryNode = async () => {
+  const loadStoryNode = async (expectedRoomIndex?: number) => {
     if (storyLoadInFlightRef.current) {
       console.log("Story node request already in flight, skipping duplicate call");
       return;
@@ -1251,6 +1258,7 @@ const Battle = () => {
     
     storyLoadInFlightRef.current = true;
     setStoryLoading(true);
+    const requestedRoomIndex = expectedRoomIndex ?? battleData?.room_index;
     try {
       console.log("Loading story node for battleId:", id);
       
@@ -1277,9 +1285,15 @@ const Battle = () => {
         throw error;
       }
       
-      if (data?.storyNode) {
+      if (data?.storyNode && isStoryNodeReadyForRoom(data.storyNode, requestedRoomIndex)) {
         console.log("Story node loaded successfully");
         setStoryNode(data.storyNode);
+        setBattleData((prev) => {
+          if (!prev || !isStoryNodeForRoom(data.storyNode, prev.room_index)) return prev;
+          return { ...prev, current_story_node: data.storyNode };
+        });
+      } else if (data?.storyNode) {
+        console.log("Ignoring story node for stale room", data.storyNode.roomIndex, "requested", requestedRoomIndex);
       } else {
         console.error("No story node in response:", data);
         throw new Error("No story node returned from server");
@@ -1304,7 +1318,7 @@ const Battle = () => {
       ? storyNode
       : null;
 
-    if (!currentNode || storyLoading) return;
+    if (!currentNode || storyLoading || storyChoiceInFlightRef.current) return;
 
     const choice = currentNode.choices.find((c) => c.id === choiceId);
     if (!choice) return;
@@ -1316,6 +1330,7 @@ const Battle = () => {
     }
 
     setStoryLoading(true);
+    storyChoiceInFlightRef.current = true;
     try {
       const { data, error } = await supabase.functions.invoke("resolve-story-choice", {
         body: {
@@ -1417,9 +1432,8 @@ const Battle = () => {
 
       // Reload battle to get updated state (only if not complete)
       if (shouldReloadBattle) {
-        // Clear loading state BEFORE reload to prevent UI flicker
-        setStoryLoading(false);
         await loadBattle();
+        setStoryLoading(false);
       } else {
         setStoryLoading(false);
       }
@@ -1442,6 +1456,7 @@ const Battle = () => {
         });
       }
     } finally {
+      storyChoiceInFlightRef.current = false;
       // Reset dice input state
       setSelectedChoice(null);
       setStoryDice([1, 1, 1, 1, 1]);
@@ -2039,6 +2054,8 @@ const Battle = () => {
     // CRITICAL: Use battleData.current_story_node directly for choices to stay in sync with narrative
     const activeStoryNode = isStoryNodeReadyForRoom(battleData?.current_story_node, battleData?.room_index)
       ? battleData.current_story_node
+      : isStoryNodeReadyForRoom(storyNode, battleData?.room_index) && storyNode.storyText === currentStoryText
+      ? storyNode
       : null;
 
     return (
