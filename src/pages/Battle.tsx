@@ -691,8 +691,9 @@ const Battle = () => {
     const storyNode = battleData.current_story_node as any;
     
     // Check if backend set generating marker after resolving a choice
-    if (storyNode.generating === true && !storyLoading) {
+    if (isGeneratingStoryNode(storyNode) && !storyLoading) {
       console.log('Detected story node generation marker, loading next story node...');
+      setStoryNode(null);
       loadStoryNode();
     }
   }, [battleData?.current_story_node, storyLoading]);
