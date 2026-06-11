@@ -134,6 +134,29 @@ serve(async (req) => {
 
     if (!battleState) throw new Error("Battle state not found");
 
+    const currentStoryNode = battleState.current_story_node as any;
+    if (!isRealStoryNodeForRoom(currentStoryNode, battleState.current_room_index)) {
+      return jsonResponse({ error: "Story choices are still being prepared. Please wait a moment." }, 409);
+    }
+
+    const serverChoice = currentStoryNode.choices.find((choice: any) => choice?.id === choiceId);
+    if (!serverChoice) {
+      return jsonResponse({ error: "That choice is no longer available. Please use the current story choices." }, 409);
+    }
+
+    if (storyText && storyText !== currentStoryNode.storyText) {
+      return jsonResponse({ error: "Story has changed. Please use the current story choices." }, 409);
+    }
+
+    const canonicalChoiceLabel = typeof serverChoice.label === "string" ? serverChoice.label : choiceLabel;
+    const canonicalDiceDC = typeof serverChoice.diceDC === "number" ? serverChoice.diceDC : diceDC;
+    const canonicalSkillType = typeof serverChoice.skillType === "string" ? serverChoice.skillType : skillType;
+    const canonicalDiceRequired = serverChoice.diceRequired === true;
+
+    if (canonicalDiceRequired && (!Array.isArray(diceRoll) || typeof canonicalDiceDC !== "number")) {
+      return jsonResponse({ error: "This choice requires a dice roll before it can be resolved." }, 400);
+    }
+
     // For party/server battles, check if it's the player's turn
     const isPartyBattle = !!battleState.party_id || !!battleState.server_id;
     if (isPartyBattle) {
