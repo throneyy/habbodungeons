@@ -1430,8 +1430,6 @@ const Battle = () => {
 
       // Reload battle to get updated state (only if not complete)
       if (shouldReloadBattle) {
-        // Clear loading state BEFORE reload to prevent UI flicker
-        setStoryLoading(false);
         await loadBattle();
       } else {
         setStoryLoading(false);
