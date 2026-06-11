@@ -287,7 +287,22 @@ serve(async (req) => {
     }
 
     // Determine mode: check if enemy is defeated or if we're in story mode
-    const enemyState = battle.current_enemy_state;
+    let enemyState = battle.current_enemy_state;
+    const savedEnemyMissing = !enemyState?.name || enemyState.name === "None" || enemyState.name === "Unknown" || enemyState.current_hp <= 0;
+    if (currentRoom.enemy && savedEnemyMissing) {
+      enemyState = {
+        ...currentRoom.enemy,
+        current_hp: currentRoom.enemy.hp,
+        max_hp: currentRoom.enemy.hp,
+        mode: "story",
+        status_effects: [],
+      };
+      await supabaseAdmin
+        .from("battle_states")
+        .update({ current_enemy_state: enemyState })
+        .eq("id", battle.id)
+        .eq("current_room_index", actualRoomIndex);
+    }
     // If enemy has no HP or is named "None"/"Unknown", force story mode
     const hasValidEnemy = enemyState.current_hp > 0 && enemyState.name !== "None" && enemyState.name !== "Unknown";
     const mode = hasValidEnemy ? enemyState.mode || "battle" : "story";
