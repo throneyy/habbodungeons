@@ -625,10 +625,18 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
       }
     }
 
-    // Store story node in battle state to prevent regeneration
-    // Use the same client that was used to fetch the battle state (admin for servers, regular for solo)
+    const normalizedChoices = normalizeChoices(Array.isArray(storyNode?.choices) ? storyNode.choices : []);
+    if (normalizedChoices.length < 2) {
+      throw new Error("AI response did not include enough usable choices");
+    }
+
+    // Store story node in battle state to prevent regeneration.
+    // The visible story text is preserved so the UI never swaps the narrative
+    // while choices are being prepared.
     storyNode = {
       ...storyNode,
+      storyText: visibleStoryText.replace(/—/g, "--"),
+      choices: normalizedChoices,
       roomIndex: battleState.current_room_index,
       generatedAt: new Date().toISOString(),
     };
