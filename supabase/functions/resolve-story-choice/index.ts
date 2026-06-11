@@ -378,24 +378,73 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
       questObjective: (battleState.dungeons.dungeon_json as any)?.questObjective || storyMemory.questObjective || null,
     };
 
-    // If a battle is requested, check if current room has an enemy
-    // If there's an enemy in the room, always trigger the battle even if AI mentioned wrong enemy name
-    // This ensures boss rooms and battle rooms actually trigger combat
+    // Detect whether the player picked an unmistakably combat-flavored action.
+    const labelLower = (canonicalChoiceLabel || "").toLowerCase();
+    const playerChoseCombat =
+      labelLower.includes("attack") ||
+      labelLower.includes("fight") ||
+      labelLower.includes("strike") ||
+      labelLower.includes("combat") ||
+      labelLower.includes("engage") ||
+      labelLower.includes("battle") ||
+      labelLower.includes("slay") ||
+      labelLower.includes("charge at") ||
+      labelLower.includes("draw your weapon") ||
+      labelLower.includes("draw weapon");
+
+    // Helper: pull a themed enemy template from any battle room in this dungeon
+    // so we can spawn a real fight when the player explicitly chose combat in a
+    // story room that has no enemy of its own.
+    const findThemedEnemyTemplate = (): any | null => {
+      const rooms: any[] = Array.isArray(dungeon?.rooms) ? dungeon.rooms : [];
+      // Prefer the next upcoming battle room's enemy (thematically closest)
+      for (let i = currentRoomIndex + 1; i < rooms.length; i++) {
+        if (rooms[i]?.enemy) return rooms[i].enemy;
+      }
+      // Otherwise look backwards
+      for (let i = currentRoomIndex - 1; i >= 0; i--) {
+        if (rooms[i]?.enemy) return rooms[i].enemy;
+      }
+      return null;
+    };
+
+    // If a battle is requested, check if current room has an enemy.
+    // If there's an enemy in the room, always trigger the battle even if AI mentioned wrong enemy name.
+    // If there's no enemy but the player explicitly chose combat, spawn a themed encounter.
     if (sanitizedOutcome.triggersBattle && (!currentRoom || !currentRoom.enemy)) {
-      console.log("Story choice requested a battle, but current room has no enemy. Keeping this as a story event only.");
-      sanitizedOutcome.triggersBattle = false;
+      if (playerChoseCombat) {
+        const template = findThemedEnemyTemplate();
+        if (template && currentRoom) {
+          console.log(`Story room has no enemy, but player chose combat. Spawning themed encounter: ${template.name}`);
+          currentRoom.enemy = { ...template };
+          sanitizedOutcome.progressRoom = false;
+        } else {
+          console.log("Story choice requested a battle, no themed enemy available. Falling back to generic foe.");
+          sanitizedOutcome.progressRoom = false;
+        }
+      } else {
+        console.log("Story choice requested a battle, but current room has no enemy. Keeping this as a story event only.");
+        sanitizedOutcome.triggersBattle = false;
+      }
     } else if (sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy) {
       console.log(`Battle triggered! Room has enemy: ${currentRoom.enemy.name}`);
       // Ensure we're battling the actual room enemy, not what the AI might have mentioned
-    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && canonicalChoiceLabel && 
-               (canonicalChoiceLabel.toLowerCase().includes('attack') || 
-                canonicalChoiceLabel.toLowerCase().includes('fight') ||
-                canonicalChoiceLabel.toLowerCase().includes('strike') ||
-                canonicalChoiceLabel.toLowerCase().includes('combat'))) {
+    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && playerChoseCombat) {
       // If user chose to attack but AI didn't trigger battle, force it if room has enemy
       console.log(`Forcing battle because user chose combat action and room has enemy: ${currentRoom.enemy.name}`);
       sanitizedOutcome.triggersBattle = true;
       sanitizedOutcome.progressRoom = false; // Stay in current room for battle
+    } else if (!sanitizedOutcome.triggersBattle && playerChoseCombat && currentRoom && !currentRoom.enemy) {
+      // Player chose combat in a story room with no enemy - spawn a themed encounter
+      const template = findThemedEnemyTemplate();
+      if (template) {
+        console.log(`Player chose combat in story room. Spawning themed encounter: ${template.name}`);
+        currentRoom.enemy = { ...template };
+        sanitizedOutcome.triggersBattle = true;
+        sanitizedOutcome.progressRoom = false;
+        // Overwrite the no-combat narrative the AI invented
+        sanitizedOutcome.consequenceText = `The air shifts. A ${template.name} emerges to block your path - combat is joined!`;
+      }
     } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && sanitizedOutcome.consequenceText) {
       // Check if the AI narrative describes combat starting even if it didn't flag it
       const combatPhrases = [
