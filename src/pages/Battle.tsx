@@ -12,7 +12,7 @@ import { PartyWipeDialog } from "@/components/PartyWipeDialog";
 import { ItemTooltip } from "@/components/ItemTooltip";
 import { QuestDetailsDialog } from "@/components/QuestDetailsDialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { DungeonBoard } from "@/components/DungeonBoard";
+import { DungeonBoardTiled as DungeonBoard } from "@/components/DungeonBoardTiled";
 import { SkillMenu } from "@/components/SkillMenu";
 import { SKILL_DEFINITIONS } from "@/lib/skillDefinitions";
 import { supabase } from "@/integrations/supabase/client";
@@ -2879,7 +2879,14 @@ const Battle = () => {
                   spriteFilename: entity.sprite, // Preserve original filename for direction lookup
                   sprite: entity.type === 'enemy' && entity.sprite
                     ? (ENEMY_SPRITES[entity.sprite] || entity.sprite)
-                    : entity.sprite
+                    : entity.sprite,
+                  figureString: (entity as any).figureString
+                    ?? (entity.type === 'player'
+                      ? (battleData?.players?.find(p => (p as any).userId === entity.id) as any)?.figureString
+                      : undefined)
+                    ?? (entity.type === 'player' && (entity as any).id === currentUserId
+                      ? profile?.habbo_profile_json?.figureString
+                      : undefined),
                 }))
               }}
               backgroundImageUrl={dungeonBackground || dungeonBg}
