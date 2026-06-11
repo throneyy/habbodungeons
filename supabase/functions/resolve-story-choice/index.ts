@@ -432,8 +432,8 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
     let newLevel = partyStats.level;
     
     // Award XP for successful dice checks
-    if (diceRoll && canonicalDiceDC) {
-      const checkSuccess = diceRoll >= diceDC;
+    if (diceCheckResult) {
+      const checkSuccess = diceCheckResult.success;
       if (checkSuccess) {
         // XP based on DC difficulty (5-20 XP)
         const checkXP = Math.floor(canonicalDiceDC / 2) + 5;
