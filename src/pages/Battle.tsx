@@ -1431,6 +1431,7 @@ const Battle = () => {
       // Reload battle to get updated state (only if not complete)
       if (shouldReloadBattle) {
         await loadBattle();
+        setStoryLoading(false);
       } else {
         setStoryLoading(false);
       }
