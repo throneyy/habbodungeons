@@ -90,9 +90,10 @@ interface BattleLogEntry {
 
 // Helper function to get the latest narrative from battle log or story node
 const getLatestNarrative = (battleData: BattleData): string => {
-  // CRITICAL: When current_story_node exists, it's the source of truth for BOTH storyText AND choices
-  // This ensures narrative text and choices are always in sync (from the same story node)
-  if (isStoryNodeReadyForRoom(battleData.current_story_node, battleData.room_index)) {
+  // CRITICAL: current_story_node is the source of truth for visible narrative.
+  // Pending generation markers intentionally preserve the resolved consequence
+  // while choices are being prepared, so do not fall back to a different log line.
+  if (isStoryNodeForRoom(battleData.current_story_node, battleData.room_index) && typeof battleData.current_story_node.storyText === "string") {
     return battleData.current_story_node.storyText;
   }
   
@@ -114,13 +115,18 @@ const getLatestNarrative = (battleData: BattleData): string => {
 
 const isGeneratingStoryNode = (node: any): boolean => node?.generating === true;
 
-const isStoryNodeReadyForRoom = (node: any, roomIndex?: number): node is StoryNode => {
+const isStoryNodeForRoom = (node: any, roomIndex?: number): boolean => {
   return !!node &&
+    (roomIndex === undefined || node.roomIndex === undefined || node.roomIndex === roomIndex);
+};
+
+const isStoryNodeReadyForRoom = (node: any, roomIndex?: number): node is StoryNode => {
+  return isStoryNodeForRoom(node, roomIndex) &&
     node.generating !== true &&
     typeof node.storyText === "string" &&
     node.storyText.trim().length > 0 &&
     Array.isArray(node.choices) &&
-    (roomIndex === undefined || node.roomIndex === undefined || node.roomIndex === roomIndex);
+    node.choices.length > 0;
 };
 
 interface PlayerStats {
