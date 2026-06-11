@@ -10,17 +10,51 @@ const corsHeaders = {
 const GENERATION_LOCK_TIMEOUT_MS = 45000;
 const GENERATION_POLL_INTERVAL_MS = 1000;
 
+const isGenerationMarker = (node: any) => node?.generating === true;
+
 const isRealStoryNodeForRoom = (node: any, roomIndex: number) => {
   return !!node &&
     node.generating !== true &&
     typeof node.storyText === "string" &&
     node.storyText.trim().length > 0 &&
+    Array.isArray(node.choices) &&
+    node.choices.length > 0 &&
     (node.roomIndex === undefined || node.roomIndex === roomIndex);
 };
 
 const isStaleGenerationMarker = (node: any) => {
   const timestamp = typeof node?.timestamp === "number" ? node.timestamp : 0;
   return !timestamp || Date.now() - timestamp > GENERATION_LOCK_TIMEOUT_MS;
+};
+
+const getMarkerStoryText = (node: any) => {
+  return typeof node?.storyText === "string" && node.storyText.trim().length > 0
+    ? node.storyText.trim()
+    : null;
+};
+
+const isInFlightGenerationMarker = (node: any) => {
+  return isGenerationMarker(node) && node.status === "generating" && !isStaleGenerationMarker(node);
+};
+
+const normalizeChoices = (choices: any[]) => {
+  const fallbackPrefix = crypto.randomUUID();
+
+  return choices
+    .filter((choice) => choice && typeof choice.label === "string" && choice.label.trim().length > 0)
+    .slice(0, 4)
+    .map((choice, index) => {
+      const diceRequired = choice.diceRequired === true;
+      return {
+        id: typeof choice.id === "string" && choice.id.trim().length > 0
+          ? choice.id.trim()
+          : `${fallbackPrefix}-${index + 1}`,
+        label: choice.label.trim().replace(/—/g, "--"),
+        diceRequired,
+        ...(diceRequired && typeof choice.diceDC === "number" ? { diceDC: choice.diceDC } : {}),
+        ...(diceRequired && typeof choice.skillType === "string" ? { skillType: choice.skillType } : {}),
+      };
+    });
 };
 
 const waitForGeneratedStoryNode = async (client: any, battleStateId: string, roomIndex: number) => {
