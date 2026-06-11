@@ -29,7 +29,6 @@ import {
 import {
   gridToScreen,
   calculateZIndex,
-  calculateGridCenterOffset,
   ISO_TILE_WIDTH,
   ISO_TILE_HEIGHT,
 } from "@/lib/isometricUtils";
