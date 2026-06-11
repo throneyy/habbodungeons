@@ -305,20 +305,10 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
             transformOrigin: "center center",
           }}
         >
-          {/* Background, sized to the same box as the tiles -> stays in sync. */}
-          {backgroundImageUrl && (
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage: `url(${backgroundImageUrl})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                imageRendering: "pixelated",
-              }}
-            />
-          )}
-          <div className="absolute inset-0 bg-slate-900/35" />
+          {/* Background image temporarily disabled - it never lined up with the
+              isometric tiles. The plain dark backdrop on the outer wrapper now
+              acts as the arena floor until we have proper tile-aligned art. */}
+          <div className="absolute inset-0 bg-slate-900/20" />
 
           {/* Tile grid (clip-path diamonds, click no-op for now). */}
           <GridRenderer
