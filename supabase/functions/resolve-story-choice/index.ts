@@ -183,7 +183,7 @@ serve(async (req) => {
 
     const playerName = profile?.habbo_username || profile?.username?.split('@')[0] || 'Player';
 
-    console.log("Resolving choice:", choiceLabel);
+    console.log("Resolving choice:", canonicalChoiceLabel);
 
     // Get the current room's enemy info for context
     const dungeon = battleState.dungeons.dungeon_json as any;
@@ -200,16 +200,16 @@ serve(async (req) => {
 
     // Calculate dice check result if applicable
     let diceCheckResult = null;
-    if (diceRoll && diceDC) {
+    if (diceRoll && canonicalDiceDC) {
       const diceTotal = diceRoll.reduce((sum: number, die: number) => sum + die, 0);
-      const success = diceTotal >= diceDC;
-      const margin = diceTotal - diceDC;
+      const success = diceTotal >= canonicalDiceDC;
+      const margin = diceTotal - canonicalDiceDC;
       diceCheckResult = {
         success,
         total: diceTotal,
-        dc: diceDC,
+        dc: canonicalDiceDC,
         margin,
-        skillType: skillType || "check"
+        skillType: canonicalSkillType || "check"
       };
       console.log("Dice check result:", diceCheckResult);
     }
@@ -233,7 +233,7 @@ serve(async (req) => {
 
     const aiPrompt = `You are resolving a player's story choice in a dungeon crawler game.
 
-PLAYER CHOICE: "${choiceLabel}"
+PLAYER CHOICE: "${canonicalChoiceLabel}"
 DUNGEON: ${battleState.dungeons.name} (${battleState.dungeons.theme} theme)
 CURRENT ROOM: ${currentRoom?.description || 'Unknown'}
 
