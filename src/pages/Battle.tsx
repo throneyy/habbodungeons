@@ -311,6 +311,7 @@ const Battle = () => {
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
+  const storyLoadInFlightRef = useRef(false);
   const [treasureClaimed, setTreasureClaimed] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<StoryNode['choices'][0] | null>(null);
   const [storyDice, setStoryDice] = useState<number[]>([1, 1, 1, 1, 1]);
