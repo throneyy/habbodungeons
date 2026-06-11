@@ -205,6 +205,7 @@ serve(async (req) => {
           current_enemy_state: initialEnemyState,
           battle_log: [modifiedRooms[0].description],
           current_story_node: null,
+          story_memory: {},
           is_active: true,
         })
         .eq('id', existingBattle.id);
