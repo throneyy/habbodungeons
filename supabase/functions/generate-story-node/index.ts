@@ -345,6 +345,7 @@ serve(async (req) => {
     const currentRoom = dungeonJson.rooms?.[context.roomIndex];
     const questObjective = dungeonJson.questObjective || "Complete the dungeon";
     const roomDescription = currentRoom?.description || "You enter a mysterious chamber.";
+    const visibleStoryText = markerStoryText || roomDescription;
 
     // --- Persistent narrative memory (durable across rooms) ---
     // This is the fix for stories "losing context": instead of only the last few
@@ -377,6 +378,7 @@ Theme: ${battleState.dungeons.theme}
 Current room: ${context.roomIndex + 1}/${dungeonJson.rooms?.length || 10}
 Room type: ${currentRoom.room_type}
 Room description: ${roomDescription}
+Visible story text already shown to the player: ${visibleStoryText}
 ${currentRoom.enemy ? `\n**CRITICAL ENEMY CONSTRAINT: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\n\n⚠️ MANDATORY RULE FOR COMBAT CHOICES:\n- If you create ANY choice that involves fighting, attacking, or combat, the choice MUST say "Fight ${currentRoom.enemy.name}" or "Attack ${currentRoom.enemy.name}"\n- NEVER write "Fight Ice Shade" or any other enemy name unless that is the EXACT enemy in this room\n- If this room has "${currentRoom.enemy.name}", ALL combat choices must reference "${currentRoom.enemy.name}"\n- Example: "Fight ${currentRoom.enemy.name}!" or "Attack the ${currentRoom.enemy.name}!"\n- DO NOT invent different enemies. Use "${currentRoom.enemy.name}" or write non-combat choices.` : ''}
 ${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
 
@@ -399,13 +401,11 @@ ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'st
 - Use only standard ASCII punctuation that renders correctly in pixel fonts.
 
 ⚠️ CRITICAL NARRATIVE CONTINUITY RULES:
-1. Your storyText continues IMMEDIATELY from "WHAT JUST HAPPENED" above - that is the PRESENT MOMENT
-2. DO NOT reintroduce the scene or restate what already happened
-3. DO NOT write "As the..." or "After..." - the consequence JUST occurred, NOW describe what happens NEXT
-4. Your first sentence should pick up the story EXACTLY where the last event left off
-5. Example: If last event was "debris falls, obscuring vision" → Your story: "A large creature detaches from the wall..."
-6. Example: If last event was "you enter a chamber" → Your story: "The chamber stretches before you..."
-7. The player is ALREADY in the moment described in "WHAT JUST HAPPENED" - don't re-describe it, continue it
+1. Keep storyText EXACTLY equal to the visible story text already shown to the player.
+2. Generate choices that match that visible text and the current room.
+3. DO NOT replace the visible story with a new paragraph while choices are being prepared.
+4. DO NOT reintroduce the scene or restate what already happened.
+5. The player is ALREADY in the moment described in "WHAT JUST HAPPENED" - don't re-describe it, continue through choices only.
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
 **DICE CHECKS ARE REQUIRED FOR:**
