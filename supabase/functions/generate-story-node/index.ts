@@ -185,6 +185,16 @@ serve(async (req) => {
       });
     }
 
+    if (battleState.current_story_node && battleState.current_story_node.generating !== true) {
+      console.log("Clearing stale story node from a different room before generation");
+      await supabaseAdmin
+        .from("battle_states")
+        .update({ current_story_node: null })
+        .eq("id", battleState.id)
+        .eq("current_room_index", battleState.current_room_index);
+      battleState.current_story_node = null;
+    }
+
     // RACE CONDITION PREVENTION: Set a temporary marker to claim this generation
     // Use admin client for atomic update to bypass RLS
     if (battleState.current_story_node?.generating === true && !isStaleGenerationMarker(battleState.current_story_node)) {
@@ -197,6 +207,8 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+
+      throw new Error("Story is still generating. Please wait a moment and try again.");
     }
 
     const tempMarker = { generating: true, roomIndex: battleState.current_room_index, timestamp: Date.now() };
