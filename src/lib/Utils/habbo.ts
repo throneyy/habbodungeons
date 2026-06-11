@@ -1,10 +1,23 @@
 // Utils/habbo.ts
+//
+// FIXED (previous patch):
+//  - Corrupted TILE_WIDTH / TILE_HEIGHT constants.
+//  - Replaced the dead `lookup.thequackory.com` placeholder imager with the SAME
+//    official Habbo imager the rest of your app already uses successfully.
+//  - Added a real `frame` parameter so walk animation actually cycles.
+//
+// FIXED (this patch):
+//  - Optional `hotel` parameter so non-.com players (Origins crowd is heavily
+//    .es / .com.br / .fi) render with their own hotel's figure data instead of
+//    being hardcoded to COM.
 
 /**
  * Direction Mapping:
  * Habbo Imager uses 0-7: 0=N, 1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW
  */
-export type DirectionName = "up" | "down" | "left" | "right" | "up-right" | "down-right" | "down-left" | "up-left";
+export type DirectionName =
+  | "up" | "down" | "left" | "right"
+  | "up-right" | "down-right" | "down-left" | "up-left";
 
 const DirectionMap: Record<DirectionName, number> = {
   up: 0,
@@ -21,41 +34,80 @@ export function getHabboDirection(name: DirectionName): number {
   return DirectionMap[name];
 }
 
-export function getHabboFrameUrl(
-  figureString: string,
-  options: { direction: number; action?: string; size?: "s" | "m" | "b"; gesture?: string },
-): string {
-  const { direction, action = "std", size = "s", gesture = "std" } = options;
-  const hotel = "COM"; // Assuming COM for origins
-  const service = "official"; // or 'habboden'
+// Official Habbo imager — same host/params your working components use.
+const IMAGING_BASE = "https://www.habbo.com/habbo-imaging/avatarimage";
 
-  // *** PLUG IN YOUR REAL IMAGER URL HERE ***
-  // Based on your pattern: https://lookup.thequackory.com/habbo-imaging/{username}?hotel={hotel}&size={size}&action={action}&gesture={gesture}&direction={direction}&head_direction={head_direction}&service={service}
-  // The figureString usually replaces the {username} but for the official endpoint the figure is a parameter.
+/** Hotel codes accepted by the imager's `hotel` param. */
+export type HabboHotel = "COM" | "ES" | "FI" | "IT" | "NL" | "DE" | "FR" | "COM.BR" | "COM.TR";
 
-  // USING THE PROVIDED LOOKUP URL PATTERN FOR DEMO:
-  // NOTE: This assumes the lookup service can take a figureString in place of username, which may not be true for all imager services.
-  const figurePart = figureString.includes("figure=") ? figureString : `?figure=${figureString}`;
-
-  return `https://lookup.thequackory.com/habbo-imaging/avatar.png${figurePart}&hotel=${hotel}&size=${size}&action=${action}&gesture=${gesture}&direction=${direction}&head_direction=${direction}&service=${service}`;
-  // For the actual official imager you'd construct it differently, passing the figureString as part of a query param or path segment.
-  // For now, this placeholder will demonstrate the logic.
+export interface HabboFrameOptions {
+  direction: number;        // 0-7 body facing
+  headDirection?: number;   // 0-7 head facing (defaults to body direction)
+  action?: string;          // "std" | "wlk" | "wav" | "crr" | "sit" ...
+  gesture?: string;         // "std" | "sml" | "agr" ...
+  size?: "s" | "m" | "l";   // small / medium / large
+  frame?: number;           // animation frame index (wlk cycles 0-3)
+  hotel?: HabboHotel | string; // defaults to COM
 }
 
-// Habbo walk animation frames for size 'b'
-// A simple walk cycle typically involves 4 frames/states
+/**
+ * Build a single-frame Habbo avatar URL.
+ * `frame` is what makes the walk cycle animate — the old placeholder lacked it.
+ */
+export function getHabboFrameUrl(
+  figureString: string,
+  options: HabboFrameOptions,
+): string {
+  const {
+    direction,
+    headDirection = direction,
+    action = "std",
+    gesture = "std",
+    size = "l",
+    frame = 0,
+    hotel = "COM",
+  } = options;
+
+  // Accept either a bare figure string or one that already includes "figure=".
+  const figure = figureString.replace(/^figure=/, "");
+
+  const params = new URLSearchParams({
+    figure,
+    hotel: String(hotel).toUpperCase(),
+    size,
+    direction: String(direction),
+    head_direction: String(headDirection),
+    action,
+    gesture,
+    frame: String(frame),
+    service: "official",
+    img_format: "png",
+  });
+
+  return `${IMAGING_BASE}?${params.toString()}`;
+}
+
+// Habbo walk cycle = 4 frames (0..3).
 export const HABBO_WALK_FRAMES = [0, 1, 2, 3];
 
-export function getWalkFrameUrls(figureString: string, direction: number): string[] {
-  return HABBO_WALK_FRAMES.map(
-    (frame) => getHabboFrameUrl(figureString, { direction, action: "wlk", gesture: "std" }),
-    // Note: Real Habbo Imager animations use a `frame` or `frame_index` parameter to cycle, which is not in your provided lookup URL pattern.
-    // For this demo, we'll simulate the animation by simply changing direction and relying on the imager's default 'wlk' action.
-    // If your imager supports frame index, you'd modify getHabboFrameUrl to accept and use a frameIndex parameter.
+/**
+ * Pre-build the 4 walk-frame URLs for a direction. Each URL uses a distinct
+ * `frame`, so cycling them produces a walking animation. Use these to PRELOAD
+ * frames before the first step so the cycle doesn't flicker while images load.
+ */
+export function getWalkFrameUrls(
+  figureString: string,
+  direction: number,
+  hotel?: HabboHotel | string,
+): string[] {
+  return HABBO_WALK_FRAMES.map((frame) =>
+    getHabboFrameUrl(figureString, { direction, action: "wlk", gesture: "std", frame, hotel }),
   );
 }
 
-// Isometric conversion constants for the grid
-export const TILE_WIDTH = 32; // Horizontal pixel width of a single tileexport const TILE_HEIGHT = 32; // Vertical pixel height of a tile
-60;
-export const TILE_HEIGHT = 16; // Vertical pixel height of a single tile
+// Isometric conversion constants for the grid (matches lib/isometricUtils.ts).
+// NOTE (authenticity): classic Habbo tiles are 64x32 with avatars ~1.7 tiles
+// tall. If you ever rescale, change ISO_TILE_* in isometricUtils.ts in lockstep
+// with these — they must stay identical or tiles and avatars desync.
+export const TILE_WIDTH = 32;  // horizontal pixel width of a single tile
+export const TILE_HEIGHT = 16; // vertical pixel height of a single tile

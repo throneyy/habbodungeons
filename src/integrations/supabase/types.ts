@@ -28,6 +28,7 @@ export type Database = {
           is_active: boolean
           party_id: string | null
           server_id: string | null
+          story_memory: Json
           turn_order: Json | null
           updated_at: string
           used_skills: string[] | null
@@ -46,6 +47,7 @@ export type Database = {
           is_active?: boolean
           party_id?: string | null
           server_id?: string | null
+          story_memory?: Json
           turn_order?: Json | null
           updated_at?: string
           used_skills?: string[] | null
@@ -64,6 +66,7 @@ export type Database = {
           is_active?: boolean
           party_id?: string | null
           server_id?: string | null
+          story_memory?: Json
           turn_order?: Json | null
           updated_at?: string
           used_skills?: string[] | null
