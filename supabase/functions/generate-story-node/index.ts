@@ -36,7 +36,10 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
-    // Rate limiting check for story generation
+    // Rate limiting check for story generation (lightweight throttle).
+    // Room transitions legitimately fire generate-story-node back-to-back, so
+    // we use a short window and skip the throttle when the previous request
+    // is still in-flight (handled by the claim logic below).
     const { data: rateLimit } = await supabaseClient
       .from('rate_limits')
       .select('*')
@@ -47,17 +50,23 @@ serve(async (req) => {
     const now = Date.now();
     if (rateLimit) {
       const timeSince = now - new Date(rateLimit.last_action_at).getTime();
-      if (timeSince < 5000) {
-        throw new Error('Please wait 5 seconds between story generations');
+      if (timeSince < 1500) {
+        console.log(`Rate limit hit (${timeSince}ms since last) - waiting briefly`);
+        await new Promise((r) => setTimeout(r, 1500 - timeSince));
       }
     }
 
-    // Update rate limit
-    await supabaseClient.from('rate_limits').upsert({
-      user_id: user.id,
-      action_type: 'story_generation',
-      last_action_at: new Date().toISOString(),
-    });
+    // Update rate limit (upsert with explicit conflict target to avoid 409s)
+    await supabaseClient
+      .from('rate_limits')
+      .upsert(
+        {
+          user_id: user.id,
+          action_type: 'story_generation',
+          last_action_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,action_type' }
+      );
 
     // Validate battleId
     if (!battleId || battleId === "undefined" || battleId === "null" || typeof battleId !== 'string' || battleId.length === 0) {
