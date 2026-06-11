@@ -296,7 +296,7 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
     <div className="absolute inset-0 w-full h-full flex items-center justify-center">
       <div
         ref={wrapperRef}
-        className="relative h-[95%] max-h-[900px] mx-auto aspect-[10/16] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl bg-habbo-dark"
+        className="relative h-[95%] max-h-[900px] mx-auto aspect-[10/21] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl bg-habbo-dark"
       >
         {/* Native-size inner stage: tiles + bg live here, scaled together. */}
         <div
