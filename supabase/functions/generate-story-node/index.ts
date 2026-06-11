@@ -567,25 +567,29 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
       // resolving a player choice; pro was timing out and leaving pending markers.
       const aiAbort = new AbortController();
       const aiTimeout = setTimeout(() => aiAbort.abort(), 14000);
-      const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        signal: aiAbort.signal,
-        headers: {
-          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "user",
-              content: aiPrompt
-            }
-          ],
-          temperature: 0.7,
-        }),
-      });
-      clearTimeout(aiTimeout);
+      let aiResponse: Response;
+      try {
+        aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          signal: aiAbort.signal,
+          headers: {
+            "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              {
+                role: "user",
+                content: aiPrompt
+              }
+            ],
+            temperature: 0.7,
+          }),
+        });
+      } finally {
+        clearTimeout(aiTimeout);
+      }
 
       if (!aiResponse.ok) {
         throw new Error(`AI API error: ${aiResponse.status}`);
