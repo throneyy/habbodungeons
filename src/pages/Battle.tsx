@@ -1238,12 +1238,18 @@ const Battle = () => {
   };
 
   const loadStoryNode = async () => {
+    if (storyLoadInFlightRef.current) {
+      console.log("Story node request already in flight, skipping duplicate call");
+      return;
+    }
+
     if (!id) {
       console.error("Cannot load story node: battleId is undefined");
       setStoryLoading(false);
       return;
     }
     
+    storyLoadInFlightRef.current = true;
     setStoryLoading(true);
     try {
       console.log("Loading story node for battleId:", id);
@@ -1286,6 +1292,7 @@ const Battle = () => {
         variant: "destructive",
       });
     } finally {
+      storyLoadInFlightRef.current = false;
       setStoryLoading(false);
     }
   };
