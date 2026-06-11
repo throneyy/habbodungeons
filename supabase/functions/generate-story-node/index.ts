@@ -57,6 +57,40 @@ const normalizeChoices = (choices: any[]) => {
     });
 };
 
+const buildFallbackChoices = (currentRoom: any) => {
+  const enemyName = currentRoom?.enemy?.name || "the foe";
+  const roomType = currentRoom?.roomType || currentRoom?.room_type || "story";
+
+  if (currentRoom?.enemy) {
+    return normalizeChoices([
+      { id: "fallback-fight", label: `Attack ${enemyName}`, diceRequired: false },
+      { id: "fallback-study", label: `Study ${enemyName} for a weakness [Dice Check: DC 16]`, diceRequired: true, diceDC: 16, skillType: "perception" },
+      { id: "fallback-evade", label: "Try to slip around the danger [Dice Check: DC 17]", diceRequired: true, diceDC: 17, skillType: "stealth" },
+    ]);
+  }
+
+  if (roomType === "treasure") {
+    return normalizeChoices([
+      { id: "fallback-claim", label: "Claim the treasure", diceRequired: false },
+      { id: "fallback-inspect", label: "Inspect the chest for traps [Dice Check: DC 15]", diceRequired: true, diceDC: 15, skillType: "investigation" },
+    ]);
+  }
+
+  return normalizeChoices([
+    { id: "fallback-continue", label: "Continue deeper into the dungeon", diceRequired: false },
+    { id: "fallback-search", label: "Search the icy passage for clues [Dice Check: DC 15]", diceRequired: true, diceDC: 15, skillType: "investigation" },
+    { id: "fallback-listen", label: "Pause and listen for movement [Dice Check: DC 14]", diceRequired: true, diceDC: 14, skillType: "perception" },
+  ]);
+};
+
+const buildFallbackStoryNode = (visibleStoryText: string, roomIndex: number, currentRoom: any) => ({
+  storyText: visibleStoryText.replace(/—/g, "--"),
+  choices: buildFallbackChoices(currentRoom),
+  roomIndex,
+  generatedAt: new Date().toISOString(),
+  fallback: true,
+});
+
 const waitForGeneratedStoryNode = async (client: any, battleStateId: string, roomIndex: number) => {
   const startedAt = Date.now();
 
@@ -527,45 +561,56 @@ Example choice without dice: {"id": "choice2", "label": "Attack immediately", "d
 
 DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JSON OBJECT.`;
 
-    // Call Lovable AI
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro", // Using more capable Gemini model for better narrative continuity
-        messages: [
-          {
-            role: "user",
-            content: aiPrompt
-          }
-        ],
-        temperature: 0.8,
-      }),
-    });
+    let storyNode;
+    try {
+      // Call Lovable AI. Use flash here so the choice panel returns quickly after
+      // resolving a player choice; pro was timing out and leaving pending markers.
+      const aiAbort = new AbortController();
+      const aiTimeout = setTimeout(() => aiAbort.abort(), 14000);
+      let aiResponse: Response;
+      try {
+        aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          signal: aiAbort.signal,
+          headers: {
+            "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-flash",
+            messages: [
+              {
+                role: "user",
+                content: aiPrompt
+              }
+            ],
+            temperature: 0.7,
+          }),
+        });
+      } finally {
+        clearTimeout(aiTimeout);
+      }
 
-    if (!aiResponse.ok) {
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
+      if (!aiResponse.ok) {
+        throw new Error(`AI API error: ${aiResponse.status}`);
+      }
 
-    const aiData = await aiResponse.json();
-    console.log("AI response:", aiData);
+      const aiData = await aiResponse.json();
+      console.log("AI response:", aiData);
 
-    // Check for API errors in the response
-    const choice = aiData.choices?.[0];
-    if (choice?.error) {
-      const errorMsg = choice.error.message || "Unknown AI API error";
-      const errorCode = choice.error.code || 500;
-      console.error("AI API returned error:", choice.error);
-      throw new Error(`AI API error (${errorCode}): ${errorMsg}`);
-    }
+      // Check for API errors in the response
+      const choice = aiData.choices?.[0];
+      if (choice?.error) {
+        const errorMsg = choice.error.message || "Unknown AI API error";
+        const errorCode = choice.error.code || 500;
+        console.error("AI API returned error:", choice.error);
+        throw new Error(`AI API error (${errorCode}): ${errorMsg}`);
+      }
 
-    let storyContent = choice?.message?.content || "";
-    if (!storyContent || storyContent.trim().length === 0) {
-      throw new Error("AI API returned empty content");
-    }
+      let storyContent = choice?.message?.content || "";
+      if (!storyContent || storyContent.trim().length === 0) {
+        throw new Error("AI API returned empty content");
+      }
     
     console.log("Raw AI content:", storyContent.substring(0, 200) + "...");
     
@@ -587,11 +632,10 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
       .replace(/—/g, '--')       // Replace em dashes with double hyphens (pixel font fix)
       .replace(/"(\w+)"\s+"([^"]*)"/g, '"$1": "$2"');  // Fix missing colons: "label" "text" -> "label": "text"
 
-    let storyNode;
-    let parseAttempts = 0;
-    const maxAttempts = 3;
+      let parseAttempts = 0;
+      const maxAttempts = 3;
 
-    while (parseAttempts < maxAttempts) {
+      while (parseAttempts < maxAttempts) {
       try {
         storyNode = JSON.parse(storyContent);
         break; // Success!
@@ -623,11 +667,20 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
           storyContent = storyContent.replace(/"(\w+)"\s*"([^"]*)"/g, '"$1": "$2"');
         }
       }
-    }
+      }
 
-    const normalizedChoices = normalizeChoices(Array.isArray(storyNode?.choices) ? storyNode.choices : []);
-    if (normalizedChoices.length < 2) {
-      throw new Error("AI response did not include enough usable choices");
+      const normalizedChoices = normalizeChoices(Array.isArray(storyNode?.choices) ? storyNode.choices : []);
+      if (normalizedChoices.length < 2) {
+        throw new Error("AI response did not include enough usable choices");
+      }
+
+      storyNode = {
+        ...storyNode,
+        choices: normalizedChoices,
+      };
+    } catch (generationError) {
+      console.error("Story AI generation failed, using fallback choices:", generationError);
+      storyNode = buildFallbackStoryNode(visibleStoryText, battleState.current_room_index, currentRoom);
     }
 
     // Store story node in battle state to prevent regeneration.
@@ -636,9 +689,8 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
     storyNode = {
       ...storyNode,
       storyText: visibleStoryText.replace(/—/g, "--"),
-      choices: normalizedChoices,
       roomIndex: battleState.current_room_index,
-      generatedAt: new Date().toISOString(),
+      generatedAt: storyNode.generatedAt || new Date().toISOString(),
     };
 
     let updateQuery = clientToUse
