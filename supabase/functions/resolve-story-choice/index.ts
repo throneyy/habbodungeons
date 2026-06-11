@@ -16,6 +16,15 @@ const isRealStoryNodeForRoom = (node: any, roomIndex: number) => {
     (node.roomIndex === undefined || node.roomIndex === roomIndex);
 };
 
+const buildPendingStoryNode = (roomIndex: number, storyText: string) => ({
+  generating: true,
+  status: "pending",
+  roomIndex,
+  timestamp: Date.now(),
+  storyText: String(storyText || "").replace(/—/g, "--"),
+  choices: [],
+});
+
 const jsonResponse = (body: any, status = 200) => new Response(
   JSON.stringify(body),
   { headers: { ...corsHeaders, "Content-Type": "application/json" }, status },
