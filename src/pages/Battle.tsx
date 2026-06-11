@@ -2874,20 +2874,51 @@ const Battle = () => {
             <DungeonBoard 
               dungeon={{
                 ...(battleData?.dungeon || cachedDungeon)!,
-                entities: (battleData?.dungeon || cachedDungeon)!.entities.map(entity => ({
-                  ...entity,
-                  spriteFilename: entity.sprite, // Preserve original filename for direction lookup
-                  sprite: entity.type === 'enemy' && entity.sprite
-                    ? (ENEMY_SPRITES[entity.sprite] || entity.sprite)
-                    : entity.sprite,
-                  figureString: (entity as any).figureString
-                    ?? (entity.type === 'player'
-                      ? (battleData?.players?.find(p => (p as any).userId === entity.id) as any)?.figureString
-                      : undefined)
-                    ?? (entity.type === 'player' && (entity as any).id === currentUserId
-                      ? profile?.habbo_profile_json?.figureString
-                      : undefined),
-                }))
+                entities: (battleData?.dungeon || cachedDungeon)!.entities.map(entity => {
+                  const e: any = entity;
+                  // Try every plausible match key between this entity and the
+                  // battleData.players list (id, userId, slotId, username).
+                  const matchedPlayer = entity.type === 'player'
+                    ? (battleData?.players as any[] | undefined)?.find(p =>
+                        p.userId === e.id ||
+                        p.id === e.id ||
+                        (e.slotId && p.slotId === e.slotId) ||
+                        (e.username && p.username === e.username))
+                    : undefined;
+                  const figureString = e.figureString
+                    ?? (e as any).figure_string
+                    ?? matchedPlayer?.figureString
+                    ?? (matchedPlayer as any)?.figure_string
+                    ?? (entity.type === 'player' && (
+                          e.id === currentUserId ||
+                          e.userId === currentUserId ||
+                          e.username === profile?.habbo_username
+                        )
+                          ? profile?.habbo_profile_json?.figureString
+                          : undefined);
+                  if (entity.type === 'player') {
+                    // eslint-disable-next-line no-console
+                    console.log('[Battle] resolved player entity', {
+                      entity_id: e.id,
+                      slotId: e.slotId,
+                      username: e.username,
+                      currentUserId,
+                      matchedPlayer,
+                      rawFigure: e.figureString,
+                      figureString,
+                      battleDataPlayerCount: battleData?.players?.length,
+                      battleDataPlayerKeys: battleData?.players?.[0] ? Object.keys(battleData.players[0] as any) : null,
+                    });
+                  }
+                  return {
+                    ...entity,
+                    spriteFilename: entity.sprite,
+                    sprite: entity.type === 'enemy' && entity.sprite
+                      ? (ENEMY_SPRITES[entity.sprite] || entity.sprite)
+                      : entity.sprite,
+                    figureString,
+                  };
+                })
               }}
               backgroundImageUrl={dungeonBackground || dungeonBg}
               attackingEntityId={attackingEntityId}
