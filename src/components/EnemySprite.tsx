@@ -49,7 +49,7 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({
       <img
         src={spriteUrl}
         alt={name || 'Enemy'}
-        className="pixelated max-h-32 w-auto drop-shadow-lg"
+        className="pixelated max-h-24 w-auto drop-shadow-lg"
         style={{
           imageRendering: 'pixelated',
           transform: `${needsFlip ? 'scaleX(-1)' : ''} ${scaleFactor !== 1.0 ? `scale(${scaleFactor})` : ''}`.trim(),

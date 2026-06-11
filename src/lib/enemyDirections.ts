@@ -11,6 +11,15 @@ type EnemyDirection = "left" | "right";
  */
 export const ENEMY_SCALE_FACTORS: Record<string, number> = {
   "skeleton.png": 0.25, // Skeleton Warrior is too large, scale to 40%
+  // Oversized humanoid/boss sprites that otherwise dwarf the player avatar
+  "ice-guardian.png": 0.55,
+  "iced-stone-dragon.png": 0.6,
+  "fire-drake.png": 0.6,
+  "ice-knight-boss.png": 0.65,
+  "mystic-shaman-boss.png": 0.7,
+  "blood-dragon-boss.gif": 0.65,
+  "frost-brute.png": 0.75,
+  "frost-mutant.png": 0.75,
 };
 
 export const ENEMY_BASE_DIRECTIONS: Record<string, EnemyDirection> = {
