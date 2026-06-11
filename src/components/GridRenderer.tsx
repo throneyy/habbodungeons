@@ -1,10 +1,10 @@
 // components/GridRenderer.tsx - Optimized large grid renderer
 //
-// FIXED (previous patch): tiles are clip-path diamonds centered on their iso
-// points, so highlights line up under the avatars' feet.
-// FIXED (this patch): the pointer cursor + hover effect only appear on tiles
-// that are actually actionable (highlighted/reachable, or in editor mode) —
-// every tile used to advertise clickability even when clicking did nothing.
+// FIXED: tiles were positioned by an isometric projection AND given a
+// `rotateX(60deg) rotateZ(45deg)` CSS transform on top of it, so they never lined
+// up with the avatars (which are placed by the projection only). Each tile is now
+// a clip-path diamond centered on its isometric point, so highlighted reachable
+// tiles sit correctly under the avatars' feet.
 
 import React, { useMemo } from 'react';
 import { DungeonGrid, GridPosition, getTileAt } from '@/lib/gridSystem';
@@ -52,9 +52,6 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
         const finalY = screenPos.y + offsetY;
         const zIndex = calculateZIndex(tile.position);
         const isHighlighted = highlightSet.has(`${x},${y}`);
-        // Only advertise clickability where a click does something: reachable
-        // tiles during the move phase, or any tile in the grid editor.
-        const isActionable = isHighlighted || showGridLines;
 
         let bgColor = 'rgba(148, 163, 184, 0.10)';   // default slate
         if (tile.variant === 'ice') bgColor = 'rgba(6, 182, 212, 0.08)';
@@ -67,7 +64,7 @@ export const GridRenderer: React.FC<GridRendererProps> = ({
         elements.push(
           <div
             key={tile.id}
-            className={`absolute transition-colors ${isActionable ? 'cursor-pointer hover:brightness-125' : ''}`}
+            className="absolute cursor-pointer transition-colors hover:brightness-125"
             style={{
               left: `${finalX}px`,
               top: `${finalY}px`,

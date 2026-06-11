@@ -1,16 +1,13 @@
 // Components/HabboAvatarSprite.tsx
 //
-// FIXED (previous patch): cycled the imager `frame` param so walking animates.
-// FIXED (this patch):
-//  - Preloads all 4 walk frames for the current direction, so the first walk
-//    cycle doesn't flicker while each frame's image downloads mid-step.
-//  - Passes through an optional `hotel` so non-.com figures render correctly.
+// FIXED: this component used to compute a `frameIndex` but never used it, so the
+// walk animation never moved. It now cycles the imager `frame` parameter, so a
+// walking avatar actually animates. Anchored by the feet for grid placement.
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   getHabboFrameUrl,
   getHabboDirection,
-  getWalkFrameUrls,
   DirectionName,
   HABBO_WALK_FRAMES,
 } from '../lib/Utils/habbo';
@@ -23,8 +20,6 @@ interface HabboAvatarSpriteProps {
   /** Rendered height in px (sprite scales to this). */
   heightPx?: number;
   size?: 's' | 'm' | 'l';
-  /** Habbo hotel code, e.g. "COM", "ES", "COM.BR". Defaults to COM. */
-  hotel?: string;
 }
 
 const defaultAnimationSpeedMs = 150;
@@ -36,23 +31,9 @@ export const HabboAvatarSprite: React.FC<HabboAvatarSpriteProps> = ({
   animationSpeedMs = defaultAnimationSpeedMs,
   heightPx = 96,
   size = 'l',
-  hotel = 'COM',
 }) => {
   const [frameIndex, setFrameIndex] = useState(0);
   const habboDirection = getHabboDirection(direction);
-
-  // Preload the walk frames for this figure+direction so cycling them never
-  // shows a half-loaded image. The browser cache does the heavy lifting.
-  useEffect(() => {
-    const urls = getWalkFrameUrls(figureString, habboDirection, hotel);
-    const imgs = urls.map((u) => {
-      const img = new Image();
-      img.src = u;
-      return img;
-    });
-    // Keep references until cleanup so the requests aren't cancelled.
-    return () => { imgs.length = 0; };
-  }, [figureString, habboDirection, hotel]);
 
   useEffect(() => {
     if (!isWalking) {
@@ -73,9 +54,8 @@ export const HabboAvatarSprite: React.FC<HabboAvatarSpriteProps> = ({
       gesture: 'std',
       size,
       frame: isWalking ? HABBO_WALK_FRAMES[frameIndex] : 0,
-      hotel,
     });
-  }, [figureString, habboDirection, isWalking, frameIndex, size, hotel]);
+  }, [figureString, habboDirection, isWalking, frameIndex, size]);
 
   const spriteStyle: React.CSSProperties = {
     position: 'absolute',
