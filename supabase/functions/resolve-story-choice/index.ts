@@ -656,7 +656,7 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
 
     // Set story node to generating marker to prevent race conditions
     // The actual story will be generated when the battle page loads
-    updateData.current_story_node = { generating: true, timestamp: Date.now() };
+    updateData.current_story_node = { generating: true, roomIndex: newRoomIndex, timestamp: Date.now() };
     console.log("Set story node to generating marker after story choice");
 
     // Set up enemy if battle is triggered

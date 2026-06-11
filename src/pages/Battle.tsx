@@ -178,7 +178,7 @@ interface BattleData {
   current_story_node?: {
     generating?: boolean;
     roomIndex?: number;
-    storyText: string;
+    storyText?: string;
     choices?: Array<{
       id: string;
       label: string;
@@ -1300,7 +1300,9 @@ const Battle = () => {
   const handleStoryChoice = async (choiceId: string, skipDiceCheck = false) => {
     const currentNode = isStoryNodeReadyForRoom(battleData?.current_story_node, battleData?.room_index)
       ? battleData.current_story_node
-      : storyNode;
+      : isStoryNodeReadyForRoom(storyNode, battleData?.room_index)
+      ? storyNode
+      : null;
 
     if (!currentNode || storyLoading) return;
 
