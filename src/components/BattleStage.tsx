@@ -1,22 +1,17 @@
 // Components/BattleStage.tsx - Large grid tactical battle visualization
 //
-// FIXED (previous patch):
-//  - Player avatars use the animated HabboAvatarSprite with the official imager.
-//  - Reachable tiles highlight during the move phase; clicking one moves you;
-//    clicking an enemy in the attack phase attacks it.
-//
-// FIXED (this patch):
-//  - Habbos WALK now, they don't glide: movement animates tile-by-tile along a
-//    BFS path through walkable tiles (the old single CSS slide cut diagonally
-//    across the whole move — through walls and over chasms).
-//  - Depth sorting: players no longer float in front of every enemy. Both use
-//    the same isometric z formula, so standing behind something occludes you.
-//  - The default background is a proper Vite asset import ("/src/assets/..."
-//    string paths 404 in production builds).
+// FIXED:
+//  - Player avatars used the dead `lookup.thequackory.com` placeholder, so they
+//    rendered as a fallback PNG. Now they use the animated HabboAvatarSprite with
+//    the official imager, facing their movement direction and walking between tiles.
+//  - The "select a tile to move" phase did nothing: no reachable tiles were shown
+//    and tile clicks were only wired to the grid editor. Reachable tiles are now
+//    highlighted and clicking one moves the active player.
+//  - Clicking an enemy during the attack phase now actually attacks it.
 
 import React, { useMemo } from "react";
 import { GridPosition, Combatant, BattleState } from "../lib/Utils/types";
-import { generateLargeDungeonGrid, Enemy, findReachableTiles, getTileAt } from "../lib/gridSystem";
+import { generateLargeDungeonGrid, Enemy, findReachableTiles } from "../lib/gridSystem";
 import { gridToScreen, calculateZIndex, calculateGridCenterOffset } from "../lib/isometricUtils";
 import { getDirectionFromDelta } from "../lib/Utils/grid";
 import { DirectionName } from "../lib/Utils/habbo";
@@ -24,12 +19,8 @@ import { GridRenderer } from "./GridRenderer";
 import { HabboAvatarSprite } from "./HabboAvatarSprite";
 import { EnemySprite as EnemySpriteComponent } from "./EnemySprite";
 import { getEnemySpriteUrl as getEnemySprite } from "../lib/enemySprites";
-import defaultDungeonBg from "../assets/icedungeon.png";
 
 const DEFAULT_FIGURE = "hr-100-61.hd-180-1.ch-210-66.lg-270-82.sh-290-62";
-
-/** ms per tile step — close to the classic Habbo walk cadence. */
-const STEP_MS = 240;
 
 interface BattleStageProps {
   state: BattleState;
@@ -43,121 +34,42 @@ interface BattleStageProps {
 }
 
 /**
- * BFS path through walkable, unoccupied tiles (8-directional, like Habbo).
- * Returns the steps from start (exclusive) to goal (inclusive). Falls back to
- * a direct hop if no path exists so the token can never get stuck.
- */
-function findPath(
-  grid: ReturnType<typeof generateLargeDungeonGrid>,
-  start: GridPosition,
-  goal: GridPosition,
-  blocked: GridPosition[],
-): GridPosition[] {
-  const key = (p: GridPosition) => `${p.x},${p.y}`;
-  if (start.x === goal.x && start.y === goal.y) return [];
-
-  const blockedSet = new Set(blocked.map(key));
-  blockedSet.delete(key(goal));
-
-  const cameFrom = new Map<string, GridPosition>();
-  const visited = new Set<string>([key(start)]);
-  const queue: GridPosition[] = [start];
-  const dirs = [
-    { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
-    { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 },
-  ];
-
-  let guard = 0;
-  while (queue.length > 0 && guard++ < 8000) {
-    const cur = queue.shift()!;
-    if (cur.x === goal.x && cur.y === goal.y) {
-      const path: GridPosition[] = [];
-      let node: GridPosition | undefined = cur;
-      while (node && !(node.x === start.x && node.y === start.y)) {
-        path.unshift(node);
-        node = cameFrom.get(key(node));
-      }
-      return path;
-    }
-    for (const d of dirs) {
-      const np = { x: cur.x + d.x, y: cur.y + d.y };
-      const nk = key(np);
-      if (visited.has(nk) || blockedSet.has(nk)) continue;
-      const tile = getTileAt(grid, np);
-      if (!tile || !tile.walkable) continue;
-      visited.add(nk);
-      cameFrom.set(nk, cur);
-      queue.push(np);
-    }
-  }
-  return [goal]; // no path: hop directly rather than freeze
-}
-
-/**
- * A single player token that walks tile-by-tile along a real path, facing each
- * step's direction — Habbos walk, they don't glide.
+ * A single player token that animates between tiles and faces its movement
+ * direction. Tracks its previous grid position to derive facing + walk state.
  */
 const PlayerToken: React.FC<{
   combatant: Combatant;
-  grid: ReturnType<typeof generateLargeDungeonGrid>;
-  blocked: GridPosition[];
-  toScreen: (pos: GridPosition) => { x: number; y: number };
+  screenX: number;
+  screenY: number;
+  zIndex: number;
   isActive: boolean;
-}> = ({ combatant, grid, blocked, toScreen, isActive }) => {
-  const [renderPos, setRenderPos] = React.useState<GridPosition>(combatant.position);
-  const renderPosRef = React.useRef<GridPosition>(combatant.position);
+}> = ({ combatant, screenX, screenY, zIndex, isActive }) => {
+  const prevPos = React.useRef<GridPosition>(combatant.position);
   const [direction, setDirection] = React.useState<DirectionName>("down-left");
   const [isWalking, setIsWalking] = React.useState(false);
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   React.useEffect(() => {
-    const from = renderPosRef.current;
-    const to = combatant.position;
-    if (from.x === to.x && from.y === to.y) return;
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    const path = findPath(grid, from, to, blocked);
-    setIsWalking(true);
-
-    let i = 0;
-    let cur = from;
-    const step = () => {
-      if (i >= path.length) {
-        setIsWalking(false);
-        timerRef.current = null;
-        return;
-      }
-      const next = path[i];
-      const dir = getDirectionFromDelta(next.x - cur.x, next.y - cur.y) as DirectionName;
+    const prev = prevPos.current;
+    const next = combatant.position;
+    if (prev.x !== next.x || prev.y !== next.y) {
+      const dir = getDirectionFromDelta(next.x - prev.x, next.y - prev.y) as DirectionName;
       setDirection(dir);
-      renderPosRef.current = next;
-      setRenderPos(next);
-      cur = next;
-      i++;
-      timerRef.current = setTimeout(step, STEP_MS);
-    };
-    step();
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      setIsWalking(true);
+      prevPos.current = next;
+      const t = setTimeout(() => setIsWalking(false), 420); // match CSS slide
+      return () => clearTimeout(t);
+    }
   }, [combatant.position.x, combatant.position.y]);
-
-  const screen = toScreen(renderPos);
-  // Same depth formula as enemies (+1 so the avatar sits above its own tile,
-  // but still sorts correctly against everything else on the grid).
-  const zIndex = calculateZIndex(renderPos) + 1;
 
   return (
     <div
       className="absolute"
       style={{
-        left: `${screen.x}px`,
-        top: `${screen.y}px`,
-        zIndex,
-        // One smooth slide per tile step; the walk frames animate inside it.
-        transition: `left ${STEP_MS}ms linear, top ${STEP_MS}ms linear`,
+        left: `${screenX}px`,
+        top: `${screenY}px`,
+        zIndex: zIndex + 1000,
+        // Smooth slide between tiles; the walk frames animate during this window.
+        transition: "left 0.4s ease-in-out, top 0.4s ease-in-out",
       }}
     >
       <HabboAvatarSprite
@@ -201,14 +113,6 @@ export const BattleStage: React.FC<BattleStageProps> = ({
     [gridSize.cols, gridSize.rows]
   );
 
-  const toScreen = React.useCallback(
-    (pos: GridPosition) => {
-      const s = gridToScreen(pos);
-      return { x: s.x + gridOffset.x, y: s.y + gridOffset.y };
-    },
-    [gridOffset.x, gridOffset.y]
-  );
-
   const enemies: Enemy[] = useMemo(
     () =>
       allCombatants
@@ -221,7 +125,7 @@ export const BattleStage: React.FC<BattleStageProps> = ({
           spriteUrl: c.sprite || getEnemySprite(c.name.toLowerCase().replace(/\s+/g, "-") + ".png"),
           hp: c.hp,
           maxHp: c.maxHp,
-          level: (c as any).level ?? 1,
+          level: 1,
         })),
     [allCombatants]
   );
@@ -262,11 +166,11 @@ export const BattleStage: React.FC<BattleStageProps> = ({
 
   return (
     <div className="relative w-full aspect-video overflow-hidden rounded-lg border-4 border-slate-700">
-      {/* Dungeon Background (imported asset so production builds resolve it) */}
+      {/* Dungeon Background */}
       <div
         className="absolute inset-0 bg-cover bg-center opacity-90"
         style={{
-          backgroundImage: `url(${backgroundUrl || defaultDungeonBg})`,
+          backgroundImage: `url(${backgroundUrl || "/src/assets/icedungeon.png"})`,
           backgroundSize: "125%",
           backgroundPosition: "center",
         }}
@@ -291,8 +195,10 @@ export const BattleStage: React.FC<BattleStageProps> = ({
 
           {/* Enemy Sprites */}
           {enemies.map((enemy) => {
-            const screenPos = toScreen(enemy.position);
-            const zIndex = calculateZIndex(enemy.position) + 1;
+            const screenPos = gridToScreen(enemy.position);
+            const finalX = screenPos.x + gridOffset.x;
+            const finalY = screenPos.y + gridOffset.y;
+            const zIndex = calculateZIndex(enemy.position);
             const spriteFilename = enemy.spriteUrl.split("/").pop() || "";
 
             return (
@@ -303,28 +209,30 @@ export const BattleStage: React.FC<BattleStageProps> = ({
                 name={enemy.name}
                 position={enemy.position}
                 shouldFace="right"
-                screenX={screenPos.x}
-                screenY={screenPos.y}
+                screenX={finalX}
+                screenY={finalY}
                 zIndex={zIndex}
                 onClick={() => handleEnemyClick(enemy.id, enemy.name)}
               />
             );
           })}
 
-          {/* Player Sprites (walk tile-by-tile, facing each step) */}
+          {/* Player Sprites (animated, facing movement direction) */}
           {allCombatants
             .filter((c) => c.type === "player")
             .map((combatant) => {
-              const blocked = allCombatants
-                .filter((c) => c.id !== combatant.id)
-                .map((c) => c.position);
+              const screenPos = gridToScreen(combatant.position);
+              const finalX = screenPos.x + gridOffset.x;
+              const finalY = screenPos.y + gridOffset.y;
+              const zIndex = calculateZIndex(combatant.position);
+
               return (
                 <PlayerToken
                   key={combatant.id}
                   combatant={combatant}
-                  grid={dungeonGrid}
-                  blocked={blocked}
-                  toScreen={toScreen}
+                  screenX={finalX}
+                  screenY={finalY}
+                  zIndex={zIndex}
                   isActive={currentCombatant?.id === combatant.id}
                 />
               );
