@@ -7,6 +7,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const isRealStoryNodeForRoom = (node: any, roomIndex: number) => {
+  return !!node &&
+    node.generating !== true &&
+    typeof node.storyText === "string" &&
+    node.storyText.trim().length > 0 &&
+    Array.isArray(node.choices) &&
+    (node.roomIndex === undefined || node.roomIndex === roomIndex);
+};
+
+const jsonResponse = (body: any, status = 200) => new Response(
+  JSON.stringify(body),
+  { headers: { ...corsHeaders, "Content-Type": "application/json" }, status },
+);
+
 // Function to find matching sprite based on enemy name from database
 async function findEnemySprite(enemyName: string, supabaseClient: any): Promise<string> {
   if (!enemyName) return "skeleton.png";
