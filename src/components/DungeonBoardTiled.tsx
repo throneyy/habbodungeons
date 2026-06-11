@@ -29,42 +29,43 @@ import {
 import {
   gridToScreen,
   calculateZIndex,
-  calculateGridCenterOffset,
   ISO_TILE_WIDTH,
   ISO_TILE_HEIGHT,
 } from "@/lib/isometricUtils";
 import { DirectionName } from "@/lib/Utils/habbo";
 import { getDirectionFromDelta, findPath } from "@/lib/Utils/grid";
 
-const GRID_COLS = 12;
-const GRID_ROWS = 8;
+// Rotated 90° from the original 12x8: now 8 wide, 12 deep so the grid runs
+// "into the screen" instead of across it.
+const GRID_COLS = 8;
+const GRID_ROWS = 12;
 
-// Native iso bounding box for a 12x8 grid (before CSS scaling). We render
-// everything (tiles + bg + sprites) inside a box of this size, then scale that
-// whole box to fit the container, which is how the bg stays locked to the grid.
+// Tight iso bounding box of the diamond. width = (cols+rows) * tileW/2,
+// height = (cols+rows-1) * tileH/2 + tileH.
 const STAGE_W = (GRID_COLS + GRID_ROWS) * (ISO_TILE_WIDTH / 2); // 320
-const STAGE_H = (GRID_COLS + GRID_ROWS) * (ISO_TILE_HEIGHT / 2) + ISO_TILE_HEIGHT; // 176
+const STAGE_H = (GRID_COLS + GRID_ROWS - 1) * (ISO_TILE_HEIGHT / 2) + ISO_TILE_HEIGHT; // 168
 
 const DEFAULT_FIGURE = "hr-100-61.hd-180-1.ch-210-66.lg-270-82.sh-290-62";
 
-// Where each player slot lives on a 12x8 grid (diagonal on the right side).
+// On the rotated 8x12 grid, players cluster near the front (high y, high x)
+// and enemies near the back (low y, low x). Tiles chosen so a screen-diagonal
+// line of party members sits on the right edge of the diamond.
 const PLAYER_SLOT_TILES: GridPosition[] = [
-  { x: 9, y: 3 },
-  { x: 10, y: 2 },
-  { x: 10, y: 4 },
-  { x: 9, y: 5 },
-  { x: 8, y: 3 },
-  { x: 8, y: 5 },
+  { x: 6, y: 8 },
+  { x: 7, y: 7 },
+  { x: 5, y: 9 },
+  { x: 7, y: 9 },
+  { x: 5, y: 7 },
+  { x: 6, y: 10 },
 ];
 
-// Enemy slots (left side, mirroring the player diagonal).
 const ENEMY_SLOT_TILES: GridPosition[] = [
-  { x: 3, y: 4 },
-  { x: 2, y: 3 },
-  { x: 2, y: 5 },
-  { x: 4, y: 3 },
-  { x: 4, y: 5 },
-  { x: 3, y: 2 },
+  { x: 1, y: 3 },
+  { x: 2, y: 2 },
+  { x: 0, y: 4 },
+  { x: 2, y: 4 },
+  { x: 0, y: 2 },
+  { x: 1, y: 5 },
 ];
 
 interface DungeonEntity {
@@ -224,8 +225,13 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
     return g;
   }, []);
 
+  // Center the iso diamond's bounding box exactly inside the stage box.
+  // raw bbox: left = -(rows-1)*tileW/2, top = 0, width = STAGE_W, height = STAGE_H.
   const offset = useMemo(
-    () => calculateGridCenterOffset(GRID_COLS, GRID_ROWS, STAGE_W, STAGE_H),
+    () => ({
+      x: (GRID_ROWS - 1) * (ISO_TILE_WIDTH / 2),
+      y: 0,
+    }),
     [],
   );
 
