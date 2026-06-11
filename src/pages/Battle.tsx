@@ -959,7 +959,7 @@ const Battle = () => {
             setStoryNode(null);
           } else {
             // Only generate new story node if one doesn't exist
-            await loadStoryNode();
+            await loadStoryNode(data.battleData.room_index);
           }
         } else {
           // Clear story node and trigger combat panel animation for battle mode
@@ -1244,7 +1244,7 @@ const Battle = () => {
     }
   };
 
-  const loadStoryNode = async () => {
+  const loadStoryNode = async (expectedRoomIndex?: number) => {
     if (storyLoadInFlightRef.current) {
       console.log("Story node request already in flight, skipping duplicate call");
       return;
@@ -1258,7 +1258,7 @@ const Battle = () => {
     
     storyLoadInFlightRef.current = true;
     setStoryLoading(true);
-    const requestedRoomIndex = battleData?.room_index;
+    const requestedRoomIndex = expectedRoomIndex ?? battleData?.room_index;
     try {
       console.log("Loading story node for battleId:", id);
       
