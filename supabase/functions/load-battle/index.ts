@@ -433,6 +433,7 @@ serve(async (req) => {
       dungeon_difficulty: battle.dungeons.difficulty,
       quest_objective: dungeonData.questObjective || null,
       intro_text: dungeonData.introText || null,
+      room_index: actualRoomIndex,
       room_description: currentRoom.description || "",
       room_type: currentRoom.roomType || "story",
       treasure_description: currentRoom.treasureDescription || null,
