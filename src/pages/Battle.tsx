@@ -1298,9 +1298,13 @@ const Battle = () => {
   };
 
   const handleStoryChoice = async (choiceId: string, skipDiceCheck = false) => {
-    if (!storyNode) return;
+    const currentNode = isStoryNodeReadyForRoom(battleData?.current_story_node, battleData?.room_index)
+      ? battleData.current_story_node
+      : storyNode;
 
-    const choice = storyNode.choices.find((c) => c.id === choiceId);
+    if (!currentNode || storyLoading) return;
+
+    const choice = currentNode.choices.find((c) => c.id === choiceId);
     if (!choice) return;
 
     // If choice requires dice and we haven't skipped the check, show dice input
@@ -1316,7 +1320,7 @@ const Battle = () => {
           battleId: id,
           choiceId: choice.id,
           choiceLabel: choice.label,
-          storyText: storyNode.storyText,
+          storyText: currentNode.storyText,
           diceRoll: choice.diceRequired ? storyDice : undefined,
           diceDC: choice.diceDC,
           skillType: choice.skillType || "check",
