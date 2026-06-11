@@ -7,6 +7,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ---------------------------------------------------------------------------
+// CHANGED IN THIS PATCH:
+//  - Generation claim actually works now. resolve-story-choice sets the node to
+//    NULL (not a marker), so the atomic `.is(null)` claim matches. Stale markers
+//    (>20s) can be taken over atomically. Losing requests POLL for the winner's
+//    result instead of falling through and double-generating (which doubled AI
+//    cost and added a guaranteed 2s delay to every room).
+//  - Encounter type is rolled SERVER-SIDE and dictated to the model (systems
+//    decide, the writer dresses) -- the old percentage list was just a vibe.
+//  - Final story write targets the battle row ID (was: every battle row for
+//    that user+dungeon, clobbering old runs).
+//  - server_players lookup uses the admin client (the comment claimed it did).
+//  - Prompt: fixed broken rule numbering, removed // comments inside JSON
+//    examples (a major source of unparseable responses), added chronicle
+//    memory, requests strict JSON via response_format.
+// ---------------------------------------------------------------------------
+
+const AI_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const CLAIM_STALE_MS = 20000;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -20,7 +40,7 @@ serve(async (req) => {
 
     const { battleId, lastChoice } = await req.json();
     const authHeader = req.headers.get("Authorization")!;
-    
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -36,6 +56,12 @@ serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
+    // Validate battleId BEFORE consuming the rate-limit budget
+    if (!battleId || battleId === "undefined" || battleId === "null" || typeof battleId !== 'string' || battleId.length === 0) {
+      console.error("Invalid battleId received:", battleId);
+      throw new Error(`Invalid battleId provided: ${battleId}`);
+    }
+
     // Rate limiting check for story generation
     const { data: rateLimit } = await supabaseClient
       .from('rate_limits')
@@ -48,22 +74,18 @@ serve(async (req) => {
     if (rateLimit) {
       const timeSince = now - new Date(rateLimit.last_action_at).getTime();
       if (timeSince < 5000) {
-        throw new Error('Please wait 5 seconds between story generations');
+        return new Response(
+          JSON.stringify({ error: 'Please wait 5 seconds between story generations' }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+        );
       }
     }
 
-    // Update rate limit
     await supabaseClient.from('rate_limits').upsert({
       user_id: user.id,
       action_type: 'story_generation',
       last_action_at: new Date().toISOString(),
     });
-
-    // Validate battleId
-    if (!battleId || battleId === "undefined" || battleId === "null" || typeof battleId !== 'string' || battleId.length === 0) {
-      console.error("Invalid battleId received:", battleId);
-      throw new Error(`Invalid battleId provided: ${battleId}`);
-    }
 
     console.log("Generating story node for battleId:", battleId, "userId:", user.id);
 
@@ -76,15 +98,12 @@ serve(async (req) => {
       .maybeSingle();
 
     const serverId = serverMember?.server_id || null;
-    console.log('User server status:', { serverId, hasServer: !!serverId });
 
     // Get battle state - check server first, then user
-    // Use admin client for server battles to ensure we can read/write
     let battleState = null;
     const clientToUse = serverId ? supabaseAdmin : supabaseClient;
-    
+
     if (serverId) {
-      console.log('Looking for server battle:', serverId);
       const { data, error } = await clientToUse
         .from("battle_states")
         .select("*, dungeons(*)")
@@ -92,14 +111,12 @@ serve(async (req) => {
         .eq("server_id", serverId)
         .eq("is_active", true)
         .maybeSingle();
-      
       if (error) {
         console.error("Battle state error:", error);
         throw error;
       }
       battleState = data;
     } else {
-      console.log('Looking for solo battle');
       const { data, error } = await clientToUse
         .from("battle_states")
         .select("*, dungeons(*)")
@@ -108,14 +125,13 @@ serve(async (req) => {
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      
       if (error) {
         console.error("Battle state error:", error);
         throw error;
       }
       battleState = data;
     }
-    
+
     if (!battleState) {
       console.error("Battle state not found for dungeonId:", battleId);
       throw new Error(`Battle state not found. Please start the dungeon first.`);
@@ -123,115 +139,204 @@ serve(async (req) => {
 
     console.log("Battle state loaded:", battleState.id, "Room:", battleState.current_room_index);
 
-    // Check if there's already a story node for this room (prevent regeneration)
-    // But make sure it's a real story node, not the temporary "generating" marker
-    if (battleState.current_story_node && 
+    const storyNodeResponse = (node: any) =>
+      new Response(JSON.stringify({ storyNode: node }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
+    // If a real story node already exists for this room, return it (no regen)
+    if (battleState.current_story_node &&
         !battleState.current_story_node.generating &&
         battleState.current_story_node.storyText) {
       console.log("Returning existing story node for room", battleState.current_room_index);
-      return new Response(JSON.stringify({ storyNode: battleState.current_story_node }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return storyNodeResponse(battleState.current_story_node);
     }
 
-    // RACE CONDITION PREVENTION: Set a temporary marker to claim this generation
-    // Use admin client for atomic update to bypass RLS
-    const tempMarker = { generating: true, timestamp: Date.now() };
-    const { data: updateCheck, error: claimError } = await supabaseAdmin
+    // -----------------------------------------------------------------------
+    // GENERATION CLAIM (fixed):
+    //   1. Atomically claim when the node is NULL (the normal post-choice state
+    //      now that resolve-story-choice nulls it).
+    //   2. If someone else holds a claim, take it over only if it's stale.
+    //   3. Otherwise POLL for their result -- never fall through and generate a
+    //      duplicate (the old code did exactly that after a pointless 2s nap).
+    // -----------------------------------------------------------------------
+    const claimId = crypto.randomUUID();
+    const marker = { generating: true, timestamp: Date.now(), claimId };
+    let ownsGeneration = false;
+
+    const { data: claim1 } = await supabaseAdmin
       .from("battle_states")
-      .update({ current_story_node: tempMarker })
+      .update({ current_story_node: marker })
       .eq("id", battleState.id)
       .is("current_story_node", null)
-      .select()
+      .select("id")
       .maybeSingle();
-    
-    // If update failed or returned null, another request already claimed it
-    if (claimError || !updateCheck) {
-      console.log("Another request is already generating story, fetching result...");
-      // Wait a bit and fetch the generated story
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      const { data: refetchedState } = await clientToUse
+    if (claim1) ownsGeneration = true;
+
+    if (!ownsGeneration) {
+      const { data: cur } = await supabaseAdmin
         .from("battle_states")
         .select("current_story_node")
         .eq("id", battleState.id)
         .single();
-      
-      if (refetchedState?.current_story_node && refetchedState.current_story_node.generating !== true) {
-        console.log("Returning story generated by concurrent request");
-        return new Response(JSON.stringify({ storyNode: refetchedState.current_story_node }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const node = cur?.current_story_node;
+
+      if (node && !node.generating && node.storyText) {
+        return storyNodeResponse(node); // someone already finished
+      }
+
+      // Stale claim (crashed generator or legacy marker)? Take over atomically:
+      // the filter on the old timestamp makes sure only one taker wins.
+      if (node?.generating && typeof node.timestamp === "number" && Date.now() - node.timestamp > CLAIM_STALE_MS) {
+        const { data: claim2 } = await supabaseAdmin
+          .from("battle_states")
+          .update({ current_story_node: marker })
+          .eq("id", battleState.id)
+          .eq("current_story_node->>timestamp", String(node.timestamp))
+          .select("id")
+          .maybeSingle();
+        if (claim2) ownsGeneration = true;
+      }
+
+      if (!ownsGeneration) {
+        // Poll for the winner's result (max ~9s), then tell the client to retry.
+        for (let i = 0; i < 6; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          const { data: poll } = await supabaseAdmin
+            .from("battle_states")
+            .select("current_story_node")
+            .eq("id", battleState.id)
+            .single();
+          const n = poll?.current_story_node;
+          if (n && !n.generating && n.storyText) {
+            console.log("Returning story generated by concurrent request");
+            return storyNodeResponse(n);
+          }
+        }
+        return new Response(
+          JSON.stringify({ error: "Story is still being generated, please retry in a moment." }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 409 }
+        );
       }
     }
-    
-    console.log("This request will generate the story node");
 
-    // Get party member stats - if server battle, get all members; otherwise just current user
-    let partyStats = [];
-    
-    if (battleState.server_id) {
-      // Get all server members' stats using admin client (bypass RLS)
-      const { data: serverPlayers } = await supabaseClient
-        .from('server_players')
-        .select('user_id')
-        .eq('server_id', battleState.server_id);
-      
-      if (serverPlayers && serverPlayers.length > 0) {
-        const userIds = serverPlayers.map(p => p.user_id);
-        const { data } = await supabaseAdmin
+    console.log("This request owns story generation, claimId:", claimId);
+
+    try {
+      // Get party member stats - if server battle, get all members; otherwise just current user
+      let partyStats = [];
+
+      if (battleState.server_id) {
+        // Admin client so RLS can't hide other members (the old code claimed
+        // this but used the anon client for the membership lookup).
+        const { data: serverPlayers } = await supabaseAdmin
+          .from('server_players')
+          .select('user_id')
+          .eq('server_id', battleState.server_id);
+
+        if (serverPlayers && serverPlayers.length > 0) {
+          const userIds = serverPlayers.map(p => p.user_id);
+          const { data } = await supabaseAdmin
+            .from("player_stats")
+            .select("*")
+            .in("user_id", userIds);
+          partyStats = data || [];
+        }
+      } else {
+        const { data } = await supabaseClient
           .from("player_stats")
           .select("*")
-          .in("user_id", userIds);
+          .eq("user_id", user.id);
         partyStats = data || [];
       }
-    } else {
-      // Solo battle - just get current user's stats
-      const { data } = await supabaseClient
-        .from("player_stats")
-        .select("*")
-        .eq("user_id", user.id);
-      partyStats = data || [];
-    }
 
-    const context = {
-      dungeon: {
-        name: battleState.dungeons.name,
-        theme: battleState.dungeons.theme,
-        difficulty: battleState.dungeons.difficulty,
-      },
-      roomIndex: battleState.current_room_index,
-      party: partyStats,
-      lastChoice: lastChoice || null,
-      recentEvents: (battleState.battle_log || []).slice(-6), // Increased from 3 to 6 for better context
-    };
+      const context = {
+        dungeon: {
+          name: battleState.dungeons.name,
+          theme: battleState.dungeons.theme,
+          difficulty: battleState.dungeons.difficulty,
+        },
+        roomIndex: battleState.current_room_index,
+        party: partyStats,
+        lastChoice: lastChoice || null,
+        recentEvents: (battleState.battle_log || []).slice(-6),
+      };
 
-    console.log("Generating story node with context:", context);
+      // Get quest context from dungeon JSON
+      const dungeonJson = battleState.dungeons.dungeon_json as any;
+      const roomsArr: any[] = Array.isArray(dungeonJson.rooms) ? dungeonJson.rooms : [];
+      const currentRoom = roomsArr[context.roomIndex];
+      const questObjective = dungeonJson.questObjective || "Complete the dungeon";
+      const roomDescription = currentRoom?.description || "You enter a mysterious chamber.";
+      const roomType = currentRoom?.room_type ?? currentRoom?.roomType ?? "unknown";
 
-    // Get quest context from dungeon JSON
-    const dungeonJson = battleState.dungeons.dungeon_json as any;
-    const currentRoom = dungeonJson.rooms?.[context.roomIndex];
-    const questObjective = dungeonJson.questObjective || "Complete the dungeon";
-    const roomDescription = currentRoom?.description || "You enter a mysterious chamber.";
-    
-    // Extract the most recent narrative description (not choices or dice rolls)
-    const narrativeEvents = (battleState.battle_log || [])
-      .filter((e: any) => e?.message && typeof e.message === 'string' && e.type !== 'choice' && e.type !== 'dice_success' && e.type !== 'dice_failure')
-      .slice(-3);
-    
-    const lastConsequence = narrativeEvents.length > 0 
-      ? narrativeEvents[narrativeEvents.length - 1].message 
-      : null;
+      // --- Persistent narrative memory (durable across rooms) ---
+      const storyMemory = (battleState.story_memory || {}) as any;
+      const storyBeats: string[] = Array.isArray(storyMemory.beats) ? storyMemory.beats : [];
+      const knownNpcs: Record<string, string> =
+        storyMemory.npcs && typeof storyMemory.npcs === "object" ? storyMemory.npcs : {};
+      const chronicle: string = typeof storyMemory.chronicle === "string" ? storyMemory.chronicle.trim() : "";
+      const storySoFar = storyBeats.length
+        ? storyBeats.map((b) => `- ${b}`).join("\n")
+        : "(the adventure has just begun)";
+      const knownCharacters = Object.keys(knownNpcs).length
+        ? Object.entries(knownNpcs).map(([name, note]) => `- ${name}: ${note}`).join("\n")
+        : "(none yet)";
 
-    const aiPrompt = `You are a JRPG dungeon master for "The Shattered Frostkeep", creating exciting story encounters in a frozen dungeon.
+      // Extract the most recent narrative description (not choices or dice rolls)
+      const narrativeEvents = (battleState.battle_log || [])
+        .filter((e: any) => e?.message && typeof e.message === 'string' && e.type !== 'choice' && e.type !== 'dice_success' && e.type !== 'dice_failure')
+        .slice(-3);
+
+      const lastConsequence = narrativeEvents.length > 0
+        ? narrativeEvents[narrativeEvents.length - 1].message
+        : null;
+
+      // ---------------------------------------------------------------------
+      // SERVER-ROLLED ENCOUNTER TYPE: the engine decides the scene type, the
+      // model writes it. (The old prompt gave the model percentage "guidelines"
+      // it was free to ignore -- pacing was vibes.)
+      // ---------------------------------------------------------------------
+      const isFinalRoom = context.roomIndex >= roomsArr.length - 1 && roomsArr.length > 0;
+      const hasEnemy = !!currentRoom?.enemy;
+      let encounterType: string;
+      if (isFinalRoom) {
+        encounterType = hasEnemy
+          ? "QUEST CLIMAX -- the quest objective is HERE, guarded by this room's enemy. Make the objective achievable in this scene."
+          : "QUEST CLIMAX -- the quest objective is HERE and achievable in this scene.";
+      } else if (hasEnemy) {
+        encounterType = "ENEMY ENCOUNTER -- build toward a possible fight with this room's configured enemy. Dialogue and avoidance choices (with dice) are allowed alongside direct combat.";
+      } else {
+        const r = Math.random();
+        encounterType =
+          r < 0.30 ? "ENVIRONMENTAL CHALLENGE -- a puzzle, trap, or hazard. No monsters."
+          : r < 0.55 ? "DISCOVERY -- lore, a clue, or a mysterious artifact. No combat."
+          : r < 0.75 ? "NPC MEETING -- an ally, merchant, or neutral party to interact with. No combat."
+          : r < 0.90 ? "REST OPPORTUNITY -- a safe spot; offer recovery-flavored choices. No combat."
+          : "QUEST PROGRESSION -- an event that directly advances the quest objective. No combat.";
+      }
+
+      const aiPrompt = `You are a JRPG dungeon master for "${battleState.dungeons.name}", running a ${battleState.dungeons.theme} themed dungeon. Stay true to THIS dungeon's name and theme -- do not rename it or import a different setting.
 
 Party stats: ${JSON.stringify(partyStats)}
 Dungeon: ${battleState.dungeons.name} (${battleState.dungeons.difficulty})
 Theme: ${battleState.dungeons.theme}
-Current room: ${context.roomIndex + 1}/${dungeonJson.rooms?.length || 10}
-Room type: ${currentRoom.room_type}
+Current room: ${context.roomIndex + 1}/${roomsArr.length || 10}
+Room type: ${roomType}
 Room description: ${roomDescription}
-${currentRoom.enemy ? `\n**CRITICAL ENEMY CONSTRAINT: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\n\n⚠️ MANDATORY RULE FOR COMBAT CHOICES:\n- If you create ANY choice that involves fighting, attacking, or combat, the choice MUST say "Fight ${currentRoom.enemy.name}" or "Attack ${currentRoom.enemy.name}"\n- NEVER write "Fight Ice Shade" or any other enemy name unless that is the EXACT enemy in this room\n- If this room has "${currentRoom.enemy.name}", ALL combat choices must reference "${currentRoom.enemy.name}"\n- Example: "Fight ${currentRoom.enemy.name}!" or "Attack the ${currentRoom.enemy.name}!"\n- DO NOT invent different enemies. Use "${currentRoom.enemy.name}" or write non-combat choices.` : ''}
+${currentRoom?.enemy ? `\n**CRITICAL ENEMY CONSTRAINT: This room contains the enemy "${currentRoom.enemy.name}": ${currentRoom.enemy.description}**\n\n⚠️ MANDATORY RULE FOR COMBAT CHOICES:\n- If you create ANY choice that involves fighting, attacking, or combat, the choice MUST say "Fight ${currentRoom.enemy.name}" or "Attack ${currentRoom.enemy.name}"\n- NEVER name any other enemy. ALL combat choices must reference "${currentRoom.enemy.name}"\n- DO NOT invent different enemies. Use "${currentRoom.enemy.name}" or write non-combat choices.` : ''}
 ${lastChoice ? `\nLast player action: ${lastChoice}` : ''}
+
+## THIS ROOM'S ENCOUNTER TYPE (decided by the game engine -- you MUST write this kind of scene):
+${encounterType}
+${chronicle ? `\n## EARLIER CHAPTERS (compressed summary of older events -- stay consistent):\n${chronicle}\n` : ''}
+## STORY SO FAR (durable memory -- you MUST stay consistent with these facts):
+${storySoFar}
+
+## KNOWN CHARACTERS (reuse their names and relationships; never contradict them):
+${knownCharacters}
+
+## QUEST OBJECTIVE (weave toward this): ${questObjective}
 
 ## WHAT JUST HAPPENED (THIS IS THE IMMEDIATE PRESENT):
 ${lastConsequence ? `"${lastConsequence}"` : `"${roomDescription}"`}
@@ -249,8 +354,7 @@ ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'st
 3. DO NOT write "As the..." or "After..." - the consequence JUST occurred, NOW describe what happens NEXT
 4. Your first sentence should pick up the story EXACTLY where the last event left off
 5. Example: If last event was "debris falls, obscuring vision" → Your story: "A large creature detaches from the wall..."
-6. Example: If last event was "you enter a chamber" → Your story: "The chamber stretches before you..."
-7. The player is ALREADY in the moment described in "WHAT JUST HAPPENED" - don't re-describe it, continue it
+6. The player is ALREADY in the moment described in "WHAT JUST HAPPENED" - don't re-describe it, continue it
 
 ## CRITICAL DICE MECHANIC INSTRUCTIONS
 **DICE CHECKS ARE REQUIRED FOR:**
@@ -268,7 +372,7 @@ ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'st
 
 **IMPORTANT:** If an action involves "search", "examine", "investigate", "look for", "find", or "discover" something non-obvious, it REQUIRES a dice check!
 
-- Dice checks use 5 six-sided dice (Habbo holodice): totals range from 5 (all 1s) to 30 (all 6s)
+- Dice checks use 5 six-sided dice (Habbo holodice): totals range from 5 (all 1s) to 30 (all 6s). The player's skill adds a small modifier (0-6) on top.
 - Set appropriate DC (difficulty class) based on the challenge:
   * Easy checks: DC 10-14 (e.g., intimidate weak goblin, search for obvious clues, identify common creature)
   * Medium checks: DC 15-19 (e.g., persuade suspicious guard, find hidden mechanism, dispel minor magic)
@@ -276,22 +380,12 @@ ${context.recentEvents.filter((e: any) => e?.message && typeof e.message === 'st
   * Very hard checks: DC 25-29 (e.g., reason with hostile boss, uncover master-crafted trap, master-level arcane work)
 - Always provide 3-5 options including both dice-required and direct action choices
 
-## DICE CHECK CHOICE FORMAT
-For choices requiring dice:
-{
-  "id": "unique_id",
-  "label": "Try to persuade the guard [Dice Check: DC 15]",
-  "diceRequired": true,
-  "diceDC": 15,
-  "skillType": "persuasion"  // or "intimidation", "deception", "insight", "investigation", "perception", etc.
-}
-
-For regular choices (no dice):
-{
-  "id": "unique_id", 
-  "label": "Attack immediately",
-  "diceRequired": false
-}
+## DICE CHECK CHOICE FORMAT (strict JSON, no comments)
+Choice requiring dice:
+{"id": "choice1", "label": "Try to persuade the guard [Dice Check: DC 15]", "diceRequired": true, "diceDC": 15, "skillType": "persuasion"}
+Valid skillType values: "persuasion", "intimidation", "deception", "insight", "investigation", "perception", "strength", "agility", "stealth", "endurance", "arcana", "lore".
+Choice without dice:
+{"id": "choice2", "label": "Attack immediately", "diceRequired": false}
 
 ## MANDATORY DICE CHECK EXAMPLES - THESE MUST HAVE DICE:
 ❌ WRONG: "Search the perimeter for hidden doors" (diceRequired: false)
@@ -303,9 +397,6 @@ For regular choices (no dice):
 ❌ WRONG: "Call out to the mage" (diceRequired: false)
 ✅ CORRECT: "Call out to demand passage [Dice Check: DC 15]" (diceRequired: true, diceDC: 15, skillType: "persuasion")
 
-❌ WRONG: "Try to break through the ice" (diceRequired: false)
-✅ CORRECT: "Force your way through the magical barrier [Dice Check: DC 22]" (diceRequired: true, diceDC: 22, skillType: "strength")
-
 If an action contains these words, it MUST have diceRequired: true:
 - "search", "look for", "find", "discover", "investigate", "examine", "inspect", "scout"
 - "persuade", "convince", "reason", "negotiate", "talk", "call out", "demand"
@@ -314,50 +405,13 @@ If an action contains these words, it MUST have diceRequired: true:
 - "dispel", "disrupt", "manipulate", "analyze", "decipher"
 
 ## Story Structure Rules
-1. CRITICAL NARRATIVE FLOW (TOP PRIORITY): 
-   - Your storyText continues IMMEDIATELY from the last event in "WHAT JUST HAPPENED"
-   - DO NOT restate or reintroduce - the player is already IN that moment
-   - First sentence should seamlessly continue the action/atmosphere
-   - Example flow: "debris falls" → "Through the settling dust, a shape emerges..."
-   - NOT: "As the debris settles..." (that restates the last event)
-
-2. Create varied, unpredictable encounters:
-   - Enemy encounters (~35%): May include dialogue options before combat
-   - Environmental challenges (~20%): Puzzles, traps, hazards
-   - NPCs/merchants (~15%): Allies, neutral parties, potential trades
-   - Discoveries (~15%): Lore, clues, mysterious artifacts
-   - Rest opportunities (~10%): Safe spots, camps, healing fountains
-   - Quest progression (~5%): Events directly related to achieving the quest objective
-
-3. When creating enemy encounters with dialogue:
-   - Describe the enemy's appearance, demeanor, and initial reaction
-   - Include at least one dialogue option with dice requirement
-   - Example: "A frost goblin blocks your path, eyeing you suspiciously..."
-
-4. Quest objective integration:
-     * "Try to reason with it [Dice Check: DC 12]" (diceRequired: true, diceDC: 12)
-     * "Intimidate it with your weapon [Dice Check: DC 14]" (diceRequired: true, diceDC: 14)
-     * "Attack immediately" (diceRequired: false)
-
-3. Narrative continuity:
-   - Reference previous choices when appropriate
-   - Throughout the dungeon, reference the quest objective (${questObjective})
-   - In the final room, the objective should be achievable (find the artifact, rescue the captive, etc.)
-   - Don't make every quest just "kill the boss" - the boss may guard the objective, but the objective itself is the goal
-   - Build tension toward achieving the quest goal
-   - Acknowledge party members in descriptions
-   - Maintain consistent tone and theme
-
-5. Item rewards (VERY RARE, ~5% of story choices):
-   - Only award items for exceptional discoveries or major victories
-   - Items MUST have valid format: { "name": "Iron Helmet", "quantity": 1, "type": "armor" }
-   - Never reward items for simple choices or basic exploration
-   - Typical rewards: story progression, XP, HP/MP restoration, information
-
-6. Consequences matter:
-   - Failed dice checks should have meaningful (but not game-ending) consequences
-   - Successful checks provide advantages: avoid combat, gain allies, learn secrets
-   - Some encounters should be unavoidable to maintain challenge
+1. NARRATIVE FLOW (TOP PRIORITY): continue immediately from "WHAT JUST HAPPENED"; do not restate or reintroduce; your first sentence seamlessly continues the action. Example flow: "debris falls" → "Through the settling dust, a shape emerges..." NOT "As the debris settles..."
+2. WRITE THE ENGINE'S SCENE: the encounter type above was chosen by the game engine. Do not change it to a different kind of scene.
+3. ENEMY DIALOGUE: when this room's enemy is present, you may offer dialogue choices before combat (with dice) alongside a direct "Attack" choice (no dice).
+4. QUEST INTEGRATION: reference the quest objective (${questObjective}) as the dungeon progresses; build tension toward it; in the final room it must be achievable. The boss may guard the objective, but the objective itself is the goal -- don't make every quest just "kill the boss".
+5. PARTY AWARENESS: acknowledge party members in descriptions; maintain a consistent tone and theme.
+6. ITEM REWARDS (VERY RARE, ~5% of story choices): only for exceptional discoveries or major victories. Items MUST have valid format: {"name": "Iron Helmet", "quantity": 1, "type": "armor"}. Never reward items for simple choices.
+7. CONSEQUENCES MATTER: failed dice checks have meaningful (but not game-ending) consequences; successful checks provide advantages (avoid combat, gain allies, learn secrets); some encounters are unavoidable.
 
 ## Response Format
 **CRITICAL: You MUST return ONLY a valid JSON object with this structure:**
@@ -365,134 +419,121 @@ If an action contains these words, it MUST have diceRequired: true:
 - choices: array of 2-4 choice objects, each with id, label, diceRequired boolean, and if dice: diceDC number and skillType string
 - itemsGained: array (usually empty)
 
-IMPORTANT: Your storyText should continue the action/scene from "WHAT JUST HAPPENED" - don't restart or reintroduce the scene.
+DO NOT include any explanatory text before or after the JSON. DO NOT include comments inside the JSON. RETURN ONLY THE JSON OBJECT.`;
 
-Example choice with dice: {"id": "choice1", "label": "Search for clues [Dice Check: DC 16]", "diceRequired": true, "diceDC": 16, "skillType": "investigation"}
-Example choice without dice: {"id": "choice2", "label": "Attack immediately", "diceRequired": false}
+      // Call Lovable AI
+      const aiResponse = await fetch(AI_GATEWAY, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-pro",
+          messages: [{ role: "user", content: aiPrompt }],
+          temperature: 0.8,
+          response_format: { type: "json_object" },
+        }),
+      });
 
-DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JSON OBJECT.`;
+      if (!aiResponse.ok) {
+        throw new Error(`AI API error: ${aiResponse.status}`);
+      }
 
-    // Call Lovable AI
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-pro", // Using more capable Gemini model for better narrative continuity
-        messages: [
-          {
-            role: "user",
-            content: aiPrompt
+      const aiData = await aiResponse.json();
+
+      const choice = aiData.choices?.[0];
+      if (choice?.error) {
+        const errorMsg = choice.error.message || "Unknown AI API error";
+        const errorCode = choice.error.code || 500;
+        console.error("AI API returned error:", choice.error);
+        throw new Error(`AI API error (${errorCode}): ${errorMsg}`);
+      }
+
+      let storyContent = choice?.message?.content || "";
+      if (!storyContent || storyContent.trim().length === 0) {
+        throw new Error("AI API returned empty content");
+      }
+
+      // Remove markdown code fences and any explanatory text
+      storyContent = storyContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+
+      const jsonMatch = storyContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        storyContent = jsonMatch[0];
+      }
+
+      storyContent = storyContent
+        .replace(/,\s*\]/g, ']')
+        .replace(/,\s*\}/g, '}')
+        .replace(/\n/g, ' ')
+        .replace(/\r/g, '')
+        .replace(/—/g, '--')
+        .replace(/"(\w+)"\s+"([^"]*)"/g, '"$1": "$2"');
+
+      let storyNode;
+      let parseAttempts = 0;
+      const maxAttempts = 3;
+
+      while (parseAttempts < maxAttempts) {
+        try {
+          storyNode = JSON.parse(storyContent);
+          break;
+        } catch (parseError) {
+          parseAttempts++;
+          console.error(`Parse attempt ${parseAttempts} failed:`, parseError);
+
+          if (parseAttempts === maxAttempts) {
+            console.error("Failed to parse AI response after all attempts. Content:", storyContent);
+            const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
+            throw new Error(`Invalid AI response format: ${errorMsg}`);
           }
-        ],
-        temperature: 0.8,
-      }),
-    });
 
-    if (!aiResponse.ok) {
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    console.log("AI response:", aiData);
-
-    // Check for API errors in the response
-    const choice = aiData.choices?.[0];
-    if (choice?.error) {
-      const errorMsg = choice.error.message || "Unknown AI API error";
-      const errorCode = choice.error.code || 500;
-      console.error("AI API returned error:", choice.error);
-      throw new Error(`AI API error (${errorCode}): ${errorMsg}`);
-    }
-
-    let storyContent = choice?.message?.content || "";
-    if (!storyContent || storyContent.trim().length === 0) {
-      throw new Error("AI API returned empty content");
-    }
-    
-    console.log("Raw AI content:", storyContent.substring(0, 200) + "...");
-    
-    // Remove markdown code fences and any explanatory text
-    storyContent = storyContent.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-    
-    // Try to extract JSON if it's wrapped in text - use greedy match to get the full object
-    const jsonMatch = storyContent.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      storyContent = jsonMatch[0];
-    }
-
-    // Clean up common JSON formatting issues
-    storyContent = storyContent
-      .replace(/,\s*\]/g, ']')  // Remove trailing commas before ]
-      .replace(/,\s*\}/g, '}')  // Remove trailing commas before }
-      .replace(/\n/g, ' ')       // Remove newlines that might break strings
-      .replace(/\r/g, '')        // Remove carriage returns
-      .replace(/—/g, '--')       // Replace em dashes with double hyphens (pixel font fix)
-      .replace(/"(\w+)"\s+"([^"]*)"/g, '"$1": "$2"');  // Fix missing colons: "label" "text" -> "label": "text"
-
-    let storyNode;
-    let parseAttempts = 0;
-    const maxAttempts = 3;
-
-    while (parseAttempts < maxAttempts) {
-      try {
-        storyNode = JSON.parse(storyContent);
-        break; // Success!
-      } catch (parseError) {
-        parseAttempts++;
-        console.error(`Parse attempt ${parseAttempts} failed:`, parseError);
-        
-        if (parseAttempts === maxAttempts) {
-          // Final attempt failed - log full content and throw
-          console.error("Failed to parse AI response after all attempts. Content:", storyContent);
-          const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
-          throw new Error(`Invalid AI response format: ${errorMsg}`);
-        }
-        
-        // Try progressively more aggressive cleaning
-        if (parseAttempts === 1) {
-          // Attempt 2: Fix missing colons more aggressively and escaped quotes
-          storyContent = storyContent
-            .replace(/"(\w+)"\s*"([^"]*)"/g, '"$1": "$2"')  // Fix missing colons
-            .replace(/\\"/g, '"')
-            .replace(/\\'/g, "'");
-        } else if (parseAttempts === 2) {
-          // Attempt 3: Extract just the outermost braces more carefully and fix colons again
-          const firstBrace = storyContent.indexOf('{');
-          const lastBrace = storyContent.lastIndexOf('}');
-          if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-            storyContent = storyContent.substring(firstBrace, lastBrace + 1);
+          if (parseAttempts === 1) {
+            storyContent = storyContent
+              .replace(/"(\w+)"\s*"([^"]*)"/g, '"$1": "$2"')
+              .replace(/\\"/g, '"')
+              .replace(/\\'/g, "'");
+          } else if (parseAttempts === 2) {
+            const firstBrace = storyContent.indexOf('{');
+            const lastBrace = storyContent.lastIndexOf('}');
+            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+              storyContent = storyContent.substring(firstBrace, lastBrace + 1);
+            }
+            storyContent = storyContent.replace(/"(\w+)"\s*"([^"]*)"/g, '"$1": "$2"');
           }
-          storyContent = storyContent.replace(/"(\w+)"\s*"([^"]*)"/g, '"$1": "$2"');
         }
       }
+
+      // Store the node on THIS battle row only, and only if we still own the
+      // claim (a stale-takeover winner may have already written its own node).
+      const { data: stored } = await supabaseAdmin
+        .from("battle_states")
+        .update({ current_story_node: storyNode })
+        .eq("id", battleState.id)
+        .eq("current_story_node->>claimId", claimId)
+        .select("id")
+        .maybeSingle();
+
+      if (!stored) {
+        console.warn("Claim was taken over during generation; returning our node anyway");
+      }
+
+      return storyNodeResponse(storyNode);
+    } catch (genError) {
+      // Release the claim so the next request can retry instead of waiting out
+      // the stale window.
+      try {
+        await supabaseAdmin
+          .from("battle_states")
+          .update({ current_story_node: null })
+          .eq("id", battleState.id)
+          .eq("current_story_node->>claimId", claimId);
+      } catch (releaseError) {
+        console.error("Failed to release generation claim:", releaseError);
+      }
+      throw genError;
     }
-
-    // Store story node in battle state to prevent regeneration
-    // Use the same client that was used to fetch the battle state (admin for servers, regular for solo)
-    let updateQuery = clientToUse
-      .from("battle_states")
-      .update({ current_story_node: storyNode })
-      .eq("dungeon_id", battleId);
-    
-    if (serverId) {
-      updateQuery = updateQuery.eq("server_id", serverId);
-    } else {
-      updateQuery = updateQuery.eq("user_id", user.id);
-    }
-    
-    const { error: updateError } = await updateQuery;
-
-    if (updateError) {
-      console.error("Failed to update story node:", updateError);
-    }
-
-
-    return new Response(JSON.stringify({ storyNode }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
   } catch (error) {
     console.error("Error in generate-story-node:", error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }), {
