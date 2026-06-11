@@ -229,9 +229,17 @@ serve(async (req) => {
       battleState.current_story_node = null;
     }
 
+    const dungeonJsonPreview = battleState.dungeons.dungeon_json as any;
+    const currentRoomPreview = dungeonJsonPreview.rooms?.[battleState.current_room_index];
+    const roomDescriptionPreview = currentRoomPreview?.description || "You enter a mysterious chamber.";
+    const pendingMarkerForThisRoom = isGenerationMarker(battleState.current_story_node) &&
+      battleState.current_story_node.roomIndex === battleState.current_room_index &&
+      battleState.current_story_node.status === "pending";
+    const markerStoryText = getMarkerStoryText(battleState.current_story_node);
+
     // RACE CONDITION PREVENTION: Set a temporary marker to claim this generation
     // Use admin client for atomic update to bypass RLS
-    if (battleState.current_story_node?.generating === true && !isStaleGenerationMarker(battleState.current_story_node)) {
+    if (isInFlightGenerationMarker(battleState.current_story_node)) {
       console.log("Another request is already generating story, waiting for result...");
       const generatedStoryNode = await waitForGeneratedStoryNode(clientToUse, battleState.id, battleState.current_room_index);
 
@@ -245,7 +253,7 @@ serve(async (req) => {
       throw new Error("Story is still generating. Please wait a moment and try again.");
     }
 
-    if (battleState.current_story_node?.generating === true && isStaleGenerationMarker(battleState.current_story_node)) {
+    if (isGenerationMarker(battleState.current_story_node) && !pendingMarkerForThisRoom && isStaleGenerationMarker(battleState.current_story_node)) {
       console.log("Clearing stale story generation marker");
       await supabaseAdmin
         .from("battle_states")
@@ -255,14 +263,26 @@ serve(async (req) => {
       battleState.current_story_node = null;
     }
 
-    const tempMarker = { generating: true, roomIndex: battleState.current_room_index, timestamp: Date.now() };
-    const { data: updateCheck, error: claimError } = await supabaseAdmin
+    const tempMarker = {
+      generating: true,
+      status: "generating",
+      roomIndex: battleState.current_room_index,
+      timestamp: Date.now(),
+      storyText: markerStoryText || roomDescriptionPreview,
+    };
+    let claimQuery = supabaseAdmin
       .from("battle_states")
       .update({ current_story_node: tempMarker })
       .eq("id", battleState.id)
-      .is("current_story_node", null)
-      .select()
-      .maybeSingle();
+      .eq("current_room_index", battleState.current_room_index);
+
+    claimQuery = pendingMarkerForThisRoom
+      ? claimQuery
+        .eq("current_story_node->>status", "pending")
+        .eq("current_story_node->>roomIndex", String(battleState.current_room_index))
+      : claimQuery.is("current_story_node", null);
+
+    const { data: updateCheck, error: claimError } = await claimQuery.select().maybeSingle();
     
     // If update failed or returned null, another request already claimed it
     if (claimError || !updateCheck) {
