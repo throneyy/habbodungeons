@@ -7,6 +7,50 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const GENERATION_LOCK_TIMEOUT_MS = 45000;
+const GENERATION_POLL_INTERVAL_MS = 1000;
+
+const isRealStoryNodeForRoom = (node: any, roomIndex: number) => {
+  return !!node &&
+    node.generating !== true &&
+    typeof node.storyText === "string" &&
+    node.storyText.trim().length > 0 &&
+    (node.roomIndex === undefined || node.roomIndex === roomIndex);
+};
+
+const isStaleGenerationMarker = (node: any) => {
+  const timestamp = typeof node?.timestamp === "number" ? node.timestamp : 0;
+  return !timestamp || Date.now() - timestamp > GENERATION_LOCK_TIMEOUT_MS;
+};
+
+const waitForGeneratedStoryNode = async (client: any, battleStateId: string, roomIndex: number) => {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < GENERATION_LOCK_TIMEOUT_MS) {
+    await new Promise((resolve) => setTimeout(resolve, GENERATION_POLL_INTERVAL_MS));
+
+    const { data: latestState, error } = await client
+      .from("battle_states")
+      .select("current_story_node,current_room_index")
+      .eq("id", battleStateId)
+      .maybeSingle();
+
+    if (error || !latestState || latestState.current_room_index !== roomIndex) {
+      return null;
+    }
+
+    if (isRealStoryNodeForRoom(latestState.current_story_node, roomIndex)) {
+      return latestState.current_story_node;
+    }
+
+    if (latestState.current_story_node?.generating === true && isStaleGenerationMarker(latestState.current_story_node)) {
+      return null;
+    }
+  }
+
+  return null;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
