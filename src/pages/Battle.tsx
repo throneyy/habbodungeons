@@ -2023,7 +2023,9 @@ const Battle = () => {
 
     const currentStoryText = battleData ? getLatestNarrative(battleData) : storyNode?.storyText || "";
     // CRITICAL: Use battleData.current_story_node directly for choices to stay in sync with narrative
-    const activeStoryNode = battleData?.current_story_node || null;
+    const activeStoryNode = isStoryNodeReadyForRoom(battleData?.current_story_node, battleData?.room_index)
+      ? battleData.current_story_node
+      : null;
 
     return (
       <>
