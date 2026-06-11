@@ -211,12 +211,22 @@ serve(async (req) => {
       throw new Error("Story is still generating. Please wait a moment and try again.");
     }
 
+    if (battleState.current_story_node?.generating === true && isStaleGenerationMarker(battleState.current_story_node)) {
+      console.log("Clearing stale story generation marker");
+      await supabaseAdmin
+        .from("battle_states")
+        .update({ current_story_node: null })
+        .eq("id", battleState.id)
+        .eq("current_room_index", battleState.current_room_index);
+      battleState.current_story_node = null;
+    }
+
     const tempMarker = { generating: true, roomIndex: battleState.current_room_index, timestamp: Date.now() };
     const { data: updateCheck, error: claimError } = await supabaseAdmin
       .from("battle_states")
       .update({ current_story_node: tempMarker })
       .eq("id", battleState.id)
-      .or(`current_story_node.is.null,current_story_node->>generating.eq.true`)
+      .is("current_story_node", null)
       .select()
       .maybeSingle();
     
