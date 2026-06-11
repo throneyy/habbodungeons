@@ -92,7 +92,7 @@ interface BattleLogEntry {
 const getLatestNarrative = (battleData: BattleData): string => {
   // CRITICAL: When current_story_node exists, it's the source of truth for BOTH storyText AND choices
   // This ensures narrative text and choices are always in sync (from the same story node)
-  if (battleData.current_story_node?.storyText) {
+  if (isStoryNodeReadyForRoom(battleData.current_story_node, battleData.room_index)) {
     return battleData.current_story_node.storyText;
   }
   
@@ -110,6 +110,17 @@ const getLatestNarrative = (battleData: BattleData): string => {
   
   // Final fallback to static room description
   return battleData.room_description;
+};
+
+const isGeneratingStoryNode = (node: any): boolean => node?.generating === true;
+
+const isStoryNodeReadyForRoom = (node: any, roomIndex?: number): node is StoryNode => {
+  return !!node &&
+    node.generating !== true &&
+    typeof node.storyText === "string" &&
+    node.storyText.trim().length > 0 &&
+    Array.isArray(node.choices) &&
+    (roomIndex === undefined || node.roomIndex === undefined || node.roomIndex === roomIndex);
 };
 
 interface PlayerStats {
