@@ -318,6 +318,7 @@ const Battle = () => {
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
   const storyLoadInFlightRef = useRef(false);
+  const storyChoiceInFlightRef = useRef(false);
   const [treasureClaimed, setTreasureClaimed] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<StoryNode['choices'][0] | null>(null);
   const [storyDice, setStoryDice] = useState<number[]>([1, 1, 1, 1, 1]);
@@ -1317,7 +1318,7 @@ const Battle = () => {
       ? storyNode
       : null;
 
-    if (!currentNode || storyLoading) return;
+    if (!currentNode || storyLoading || storyChoiceInFlightRef.current) return;
 
     const choice = currentNode.choices.find((c) => c.id === choiceId);
     if (!choice) return;
@@ -1329,6 +1330,7 @@ const Battle = () => {
     }
 
     setStoryLoading(true);
+    storyChoiceInFlightRef.current = true;
     try {
       const { data, error } = await supabase.functions.invoke("resolve-story-choice", {
         body: {
@@ -1454,6 +1456,7 @@ const Battle = () => {
         });
       }
     } finally {
+      storyChoiceInFlightRef.current = false;
       // Reset dice input state
       setSelectedChoice(null);
       setStoryDice([1, 1, 1, 1, 1]);
