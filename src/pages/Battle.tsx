@@ -943,9 +943,11 @@ const Battle = () => {
         if (data.battleData.mode === "story") {
           setShowCombatPanels(false);
           
-          // Use existing story node from battleData if available
-          if (data.battleData.current_story_node) {
+          // Use existing story node only when it belongs to this room and is fully generated
+          if (isStoryNodeReadyForRoom(data.battleData.current_story_node, data.battleData.room_index)) {
             setStoryNode(data.battleData.current_story_node);
+          } else if (isGeneratingStoryNode(data.battleData.current_story_node)) {
+            setStoryNode(null);
           } else {
             // Only generate new story node if one doesn't exist
             await loadStoryNode();
