@@ -168,6 +168,7 @@ interface BattleData {
   event_type?: string | null;
   event_amount?: number | null;
   event_description?: string | null;
+  room_index?: number;
   battle_log: BattleLogEntry[];
   mode?: "story" | "battle";
   battle_status?: "battle" | "won" | "lost" | "story" | "finished";
@@ -175,6 +176,8 @@ interface BattleData {
   currentTurnUserId?: string;
   turnOrder?: string[];
   current_story_node?: {
+    generating?: boolean;
+    roomIndex?: number;
     storyText: string;
     choices?: Array<{
       id: string;
@@ -224,6 +227,7 @@ interface Profile {
 }
 
 interface StoryNode {
+  roomIndex?: number;
   storyText: string;
   choices: Array<{ 
     id: string; 
