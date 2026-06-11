@@ -952,6 +952,11 @@ const Battle = () => {
         // If in story mode, load story node
         if (data.battleData.mode === "story") {
           setShowCombatPanels(false);
+          const isFixedActionRoom = data.battleData.room_type === 'treasure' || data.battleData.room_type === 'event';
+          if (isFixedActionRoom) {
+            setStoryNode(null);
+            return;
+          }
           
           // Use existing story node only when it belongs to this room and is fully generated
           if (isStoryNodeReadyForRoom(data.battleData.current_story_node, data.battleData.room_index)) {
@@ -1632,7 +1637,7 @@ const Battle = () => {
       // Get current battle state to increment room index
       let stateQuery = supabase
         .from("battle_states")
-        .select("current_room_index, server_id")
+        .select("current_room_index, server_id, dungeons!inner(dungeon_json)")
         .eq("dungeon_id", id)
         .eq("is_active", true);
 
@@ -1650,11 +1655,34 @@ const Battle = () => {
       
       if (battleState) {
         const { current_room_index, server_id } = battleState as any;
+        const nextRoom = (battleState as any).dungeons?.dungeon_json?.rooms?.[current_room_index + 1];
+        const nextEnemyState = nextRoom?.enemy
+          ? {
+              ...nextRoom.enemy,
+              current_hp: nextRoom.enemy.hp,
+              max_hp: nextRoom.enemy.hp,
+              mode: "story",
+              status_effects: [],
+            }
+          : {
+              name: "",
+              description: "",
+              sprite: "",
+              hp: 0,
+              current_hp: 0,
+              max_hp: 0,
+              atk: 0,
+              def: 0,
+              spd: 0,
+              mode: "story",
+              status_effects: [],
+            };
 
         const { error: updateError } = await supabase
           .from("battle_states")
           .update({ 
             current_room_index: current_room_index + 1,
+            current_enemy_state: nextEnemyState,
             current_story_node: null,
           })
           .eq("dungeon_id", id)
