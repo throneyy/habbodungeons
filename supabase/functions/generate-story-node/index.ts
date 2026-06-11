@@ -563,21 +563,23 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
 
     // Store story node in battle state to prevent regeneration
     // Use the same client that was used to fetch the battle state (admin for servers, regular for solo)
+    storyNode = {
+      ...storyNode,
+      roomIndex: battleState.current_room_index,
+      generatedAt: new Date().toISOString(),
+    };
+
     let updateQuery = clientToUse
       .from("battle_states")
       .update({ current_story_node: storyNode })
-      .eq("dungeon_id", battleId);
-    
-    if (serverId) {
-      updateQuery = updateQuery.eq("server_id", serverId);
-    } else {
-      updateQuery = updateQuery.eq("user_id", user.id);
-    }
+      .eq("id", battleState.id)
+      .eq("current_room_index", battleState.current_room_index);
     
     const { error: updateError } = await updateQuery;
 
     if (updateError) {
       console.error("Failed to update story node:", updateError);
+      throw updateError;
     }
 
 
