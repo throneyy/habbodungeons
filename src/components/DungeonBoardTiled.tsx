@@ -16,56 +16,57 @@
 // representation of entity positions; it does not mutate battle state.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { GridRenderer } from "./GridRenderer";
 import { HabboAvatarSprite } from "./HabboAvatarSprite";
 import { EnemySprite } from "./EnemySprite";
 import {
-  generateLargeDungeonGrid,
   GridPosition,
   getAdjacentPositions,
-  isValidGridPosition,
-  getTileAt,
 } from "@/lib/gridSystem";
-import {
-  gridToScreen,
-  calculateZIndex,
-  ISO_TILE_WIDTH,
-  ISO_TILE_HEIGHT,
-} from "@/lib/isometricUtils";
 import { DirectionName } from "@/lib/Utils/habbo";
 import { getDirectionFromDelta, findPath } from "@/lib/Utils/grid";
 
-// Rotated 90° from the original 12x8: now 8 wide, 12 deep so the grid runs
-// "into the screen" instead of across it.
-const GRID_COLS = 8;
-const GRID_ROWS = 12;
+// 12 wide × 8 deep grid, but drawn with a "tall" isometric projection so the
+// diamond's long axis runs vertically (i.e. rotated 90° from the classic wide
+// iso view we had before).
+const GRID_COLS = 12;
+const GRID_ROWS = 8;
 
-// Tight iso bounding box of the diamond. width = (cols+rows) * tileW/2,
-// height = (cols+rows-1) * tileH/2 + tileH.
-const STAGE_W = (GRID_COLS + GRID_ROWS) * (ISO_TILE_WIDTH / 2); // 320
-const STAGE_H = (GRID_COLS + GRID_ROWS - 1) * (ISO_TILE_HEIGHT / 2) + ISO_TILE_HEIGHT; // 168
+// Tall iso tile footprint (swap of the usual 32x16).
+const TILE_W = 16;
+const TILE_H = 32;
+
+// Local tall-iso projection. Long diagonal of the diamond is vertical.
+const projectTile = (x: number, y: number) => ({
+  x: (x - y) * (TILE_W / 2),
+  y: (x + y) * (TILE_H / 2),
+});
+const tileZ = (p: GridPosition) => Math.floor(p.x + p.y);
+
+// Tight bbox of the projected diamond.
+const STAGE_W = (GRID_COLS + GRID_ROWS) * (TILE_W / 2); // 160
+const STAGE_H = (GRID_COLS + GRID_ROWS - 1) * (TILE_H / 2) + TILE_H; // 336
 
 const DEFAULT_FIGURE = "hr-100-61.hd-180-1.ch-210-66.lg-270-82.sh-290-62";
 
-// On the rotated 8x12 grid, players cluster near the front (high y, high x)
-// and enemies near the back (low y, low x). Tiles chosen so a screen-diagonal
-// line of party members sits on the right edge of the diamond.
+// In the tall projection, high x = screen-right, high y = screen-left,
+// and both contribute to screen-down. Players cluster on the right edge of
+// the diamond (high x, low-to-mid y), enemies on the left edge (low x).
 const PLAYER_SLOT_TILES: GridPosition[] = [
-  { x: 6, y: 8 },
-  { x: 7, y: 7 },
-  { x: 5, y: 9 },
-  { x: 7, y: 9 },
-  { x: 5, y: 7 },
-  { x: 6, y: 10 },
+  { x: 10, y: 3 },
+  { x: 11, y: 2 },
+  { x: 11, y: 4 },
+  { x: 9, y: 3 },
+  { x: 9, y: 5 },
+  { x: 10, y: 5 },
 ];
 
 const ENEMY_SLOT_TILES: GridPosition[] = [
-  { x: 1, y: 3 },
-  { x: 2, y: 2 },
-  { x: 0, y: 4 },
-  { x: 2, y: 4 },
-  { x: 0, y: 2 },
-  { x: 1, y: 5 },
+  { x: 1, y: 4 },
+  { x: 0, y: 3 },
+  { x: 2, y: 3 },
+  { x: 0, y: 5 },
+  { x: 2, y: 5 },
+  { x: 1, y: 6 },
 ];
 
 interface DungeonEntity {
@@ -104,9 +105,13 @@ function adjacentTileTowards(
   from: GridPosition,
   blocked: GridPosition[],
 ): GridPosition {
-  const candidates = getAdjacentPositions(target).filter((p) =>
-    isValidGridPosition({ cols: GRID_COLS, rows: GRID_ROWS, tiles: [] }, p) &&
-    !blocked.some((b) => b.x === p.x && b.y === p.y),
+  const candidates = getAdjacentPositions(target).filter(
+    (p) =>
+      p.x >= 0 &&
+      p.x < GRID_COLS &&
+      p.y >= 0 &&
+      p.y < GRID_ROWS &&
+      !blocked.some((b) => b.x === p.x && b.y === p.y),
   );
   if (candidates.length === 0) return target;
   candidates.sort(
@@ -181,10 +186,10 @@ const PlayerToken: React.FC<{
     if (stepTimer.current) clearTimeout(stepTimer.current);
   }, []);
 
-  const screen = gridToScreen(currentTile);
+  const screen = projectTile(currentTile.x, currentTile.y);
   const left = screen.x + offsetX;
   const top = screen.y + offsetY;
-  const z = calculateZIndex(currentTile) + 1000;
+  const z = tileZ(currentTile) + 1000;
 
   return (
     <div
@@ -217,19 +222,11 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
-  // Static grid (no random unwalkable tiles for the real arena - we want a clean
-  // tactical floor that mirrors the dungeon art behind it).
-  const grid = useMemo(() => {
-    const g = generateLargeDungeonGrid(GRID_COLS, GRID_ROWS);
-    g.tiles = g.tiles.map((t) => ({ ...t, walkable: true, variant: "ice" as const }));
-    return g;
-  }, []);
-
-  // Center the iso diamond's bounding box exactly inside the stage box.
-  // raw bbox: left = -(rows-1)*tileW/2, top = 0, width = STAGE_W, height = STAGE_H.
+  // Center the diamond's bounding box inside the stage. Raw bbox left edge =
+  // -(rows-1) * TILE_W/2, raw top = 0; bbox already fills STAGE_W × STAGE_H.
   const offset = useMemo(
     () => ({
-      x: (GRID_ROWS - 1) * (ISO_TILE_WIDTH / 2),
+      x: (GRID_ROWS - 1) * (TILE_W / 2),
       y: 0,
     }),
     [],
@@ -299,7 +296,7 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
     <div className="absolute inset-0 w-full h-full flex items-center justify-center">
       <div
         ref={wrapperRef}
-        className="relative w-[95%] max-w-[1600px] mx-auto aspect-[16/10] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl bg-habbo-dark"
+        className="relative h-[95%] max-h-[900px] mx-auto aspect-[10/16] rounded-lg overflow-hidden border-4 border-border/50 shadow-2xl bg-habbo-dark"
       >
         {/* Native-size inner stage: tiles + bg live here, scaled together. */}
         <div
@@ -312,27 +309,42 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
           }}
         >
           {/* Background image temporarily disabled - it never lined up with the
-              isometric tiles. The plain dark backdrop on the outer wrapper now
-              acts as the arena floor until we have proper tile-aligned art. */}
+              isometric tiles. */}
           <div className="absolute inset-0 bg-slate-900/20" />
 
-          {/* Tile grid (clip-path diamonds, click no-op for now). */}
-          <GridRenderer
-            grid={grid}
-            offsetX={offset.x}
-            offsetY={offset.y}
-            highlightedTiles={[]}
-            showGridLines={false}
-          />
+          {/* Tall iso tile grid (clip-path diamonds, click no-op for now). */}
+          {Array.from({ length: GRID_ROWS }).flatMap((_, y) =>
+            Array.from({ length: GRID_COLS }).map((_, x) => {
+              const s = projectTile(x, y);
+              return (
+                <div
+                  key={`tile-${x}-${y}`}
+                  className="absolute"
+                  style={{
+                    left: `${s.x + offset.x}px`,
+                    top: `${s.y + offset.y}px`,
+                    width: `${TILE_W * 0.97}px`,
+                    height: `${TILE_H * 0.97}px`,
+                    transform: "translate(-50%, -50%)",
+                    clipPath:
+                      "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
+                    background: "rgba(6, 182, 212, 0.08)",
+                    boxShadow: "inset 0 0 0 1px rgba(148,163,184,0.10)",
+                    zIndex: tileZ({ x, y }),
+                  }}
+                />
+              );
+            }),
+          )}
 
           {/* Enemies */}
           {layout
             .filter(({ entity }) => entity.type === "enemy")
             .map(({ entity, tile }) => {
-              const screen = gridToScreen(tile);
+              const screen = projectTile(tile.x, tile.y);
               const finalX = screen.x + offset.x;
               const finalY = screen.y + offset.y;
-              const z = calculateZIndex(tile);
+              const z = tileZ(tile);
               const spriteUrl = entity.sprite || "";
               const filename =
                 entity.spriteFilename || (spriteUrl ? spriteUrl.split("/").pop() : "");
