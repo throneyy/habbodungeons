@@ -378,11 +378,11 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
     } else if (sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy) {
       console.log(`Battle triggered! Room has enemy: ${currentRoom.enemy.name}`);
       // Ensure we're battling the actual room enemy, not what the AI might have mentioned
-    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && choiceLabel && 
-               (choiceLabel.toLowerCase().includes('attack') || 
-                choiceLabel.toLowerCase().includes('fight') ||
-                choiceLabel.toLowerCase().includes('strike') ||
-                choiceLabel.toLowerCase().includes('combat'))) {
+    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && canonicalChoiceLabel && 
+               (canonicalChoiceLabel.toLowerCase().includes('attack') || 
+                canonicalChoiceLabel.toLowerCase().includes('fight') ||
+                canonicalChoiceLabel.toLowerCase().includes('strike') ||
+                canonicalChoiceLabel.toLowerCase().includes('combat'))) {
       // If user chose to attack but AI didn't trigger battle, force it if room has enemy
       console.log(`Forcing battle because user chose combat action and room has enemy: ${currentRoom.enemy.name}`);
       sanitizedOutcome.triggersBattle = true;
@@ -432,11 +432,11 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
     let newLevel = partyStats.level;
     
     // Award XP for successful dice checks
-    if (diceRoll && diceDC) {
+    if (diceRoll && canonicalDiceDC) {
       const checkSuccess = diceRoll >= diceDC;
       if (checkSuccess) {
         // XP based on DC difficulty (5-20 XP)
-        const checkXP = Math.floor(diceDC / 2) + 5;
+        const checkXP = Math.floor(canonicalDiceDC / 2) + 5;
         xpGained += checkXP;
         xpMessages.push(`+${checkXP} XP for passing the check!`);
       }
@@ -580,7 +580,7 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
     
     cleanedBattleLog.push({ 
       user_id: user.id, 
-      message: `${playerName} chose: ${choiceLabel}`,
+      message: `${playerName} chose: ${canonicalChoiceLabel}`,
       type: 'choice' 
     });
     
