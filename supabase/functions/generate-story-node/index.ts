@@ -565,8 +565,11 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
     try {
       // Call Lovable AI. Use flash here so the choice panel returns quickly after
       // resolving a player choice; pro was timing out and leaving pending markers.
+      const aiAbort = new AbortController();
+      const aiTimeout = setTimeout(() => aiAbort.abort(), 14000);
       const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
+        signal: aiAbort.signal,
         headers: {
           "Authorization": `Bearer ${LOVABLE_API_KEY}`,
           "Content-Type": "application/json",
@@ -582,6 +585,7 @@ DO NOT include any explanatory text before or after the JSON. RETURN ONLY THE JS
           temperature: 0.7,
         }),
       });
+      clearTimeout(aiTimeout);
 
       if (!aiResponse.ok) {
         throw new Error(`AI API error: ${aiResponse.status}`);
