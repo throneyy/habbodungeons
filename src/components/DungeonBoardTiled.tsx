@@ -226,8 +226,13 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
     return g;
   }, []);
 
+  // Center the iso diamond's bounding box exactly inside the stage box.
+  // raw bbox: left = -(rows-1)*tileW/2, top = 0, width = STAGE_W, height = STAGE_H.
   const offset = useMemo(
-    () => calculateGridCenterOffset(GRID_COLS, GRID_ROWS, STAGE_W, STAGE_H),
+    () => ({
+      x: (GRID_ROWS - 1) * (ISO_TILE_WIDTH / 2),
+      y: 0,
+    }),
     [],
   );
 
