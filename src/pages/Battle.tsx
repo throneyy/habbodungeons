@@ -92,7 +92,7 @@ interface BattleLogEntry {
 const getLatestNarrative = (battleData: BattleData): string => {
   // CRITICAL: When current_story_node exists, it's the source of truth for BOTH storyText AND choices
   // This ensures narrative text and choices are always in sync (from the same story node)
-  if (battleData.current_story_node?.storyText) {
+  if (isStoryNodeReadyForRoom(battleData.current_story_node, battleData.room_index)) {
     return battleData.current_story_node.storyText;
   }
   
@@ -110,6 +110,17 @@ const getLatestNarrative = (battleData: BattleData): string => {
   
   // Final fallback to static room description
   return battleData.room_description;
+};
+
+const isGeneratingStoryNode = (node: any): boolean => node?.generating === true;
+
+const isStoryNodeReadyForRoom = (node: any, roomIndex?: number): node is StoryNode => {
+  return !!node &&
+    node.generating !== true &&
+    typeof node.storyText === "string" &&
+    node.storyText.trim().length > 0 &&
+    Array.isArray(node.choices) &&
+    (roomIndex === undefined || node.roomIndex === undefined || node.roomIndex === roomIndex);
 };
 
 interface PlayerStats {
@@ -157,6 +168,7 @@ interface BattleData {
   event_type?: string | null;
   event_amount?: number | null;
   event_description?: string | null;
+  room_index?: number;
   battle_log: BattleLogEntry[];
   mode?: "story" | "battle";
   battle_status?: "battle" | "won" | "lost" | "story" | "finished";
@@ -164,7 +176,9 @@ interface BattleData {
   currentTurnUserId?: string;
   turnOrder?: string[];
   current_story_node?: {
-    storyText: string;
+    generating?: boolean;
+    roomIndex?: number;
+    storyText?: string;
     choices?: Array<{
       id: string;
       label: string;
@@ -213,6 +227,7 @@ interface Profile {
 }
 
 interface StoryNode {
+  roomIndex?: number;
   storyText: string;
   choices: Array<{ 
     id: string; 
@@ -296,6 +311,7 @@ const Battle = () => {
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
+  const storyLoadInFlightRef = useRef(false);
   const [treasureClaimed, setTreasureClaimed] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<StoryNode['choices'][0] | null>(null);
   const [storyDice, setStoryDice] = useState<number[]>([1, 1, 1, 1, 1]);
@@ -676,8 +692,9 @@ const Battle = () => {
     const storyNode = battleData.current_story_node as any;
     
     // Check if backend set generating marker after resolving a choice
-    if (storyNode.generating === true && !storyLoading) {
+    if (isGeneratingStoryNode(storyNode) && !storyLoading) {
       console.log('Detected story node generation marker, loading next story node...');
+      setStoryNode(null);
       loadStoryNode();
     }
   }, [battleData?.current_story_node, storyLoading]);
@@ -928,9 +945,11 @@ const Battle = () => {
         if (data.battleData.mode === "story") {
           setShowCombatPanels(false);
           
-          // Use existing story node from battleData if available
-          if (data.battleData.current_story_node) {
+          // Use existing story node only when it belongs to this room and is fully generated
+          if (isStoryNodeReadyForRoom(data.battleData.current_story_node, data.battleData.room_index)) {
             setStoryNode(data.battleData.current_story_node);
+          } else if (isGeneratingStoryNode(data.battleData.current_story_node)) {
+            setStoryNode(null);
           } else {
             // Only generate new story node if one doesn't exist
             await loadStoryNode();
@@ -1219,12 +1238,18 @@ const Battle = () => {
   };
 
   const loadStoryNode = async () => {
+    if (storyLoadInFlightRef.current) {
+      console.log("Story node request already in flight, skipping duplicate call");
+      return;
+    }
+
     if (!id) {
       console.error("Cannot load story node: battleId is undefined");
       setStoryLoading(false);
       return;
     }
     
+    storyLoadInFlightRef.current = true;
     setStoryLoading(true);
     try {
       console.log("Loading story node for battleId:", id);
@@ -1267,14 +1292,21 @@ const Battle = () => {
         variant: "destructive",
       });
     } finally {
+      storyLoadInFlightRef.current = false;
       setStoryLoading(false);
     }
   };
 
   const handleStoryChoice = async (choiceId: string, skipDiceCheck = false) => {
-    if (!storyNode) return;
+    const currentNode = isStoryNodeReadyForRoom(battleData?.current_story_node, battleData?.room_index)
+      ? battleData.current_story_node
+      : isStoryNodeReadyForRoom(storyNode, battleData?.room_index)
+      ? storyNode
+      : null;
 
-    const choice = storyNode.choices.find((c) => c.id === choiceId);
+    if (!currentNode || storyLoading) return;
+
+    const choice = currentNode.choices.find((c) => c.id === choiceId);
     if (!choice) return;
 
     // If choice requires dice and we haven't skipped the check, show dice input
@@ -1290,7 +1322,7 @@ const Battle = () => {
           battleId: id,
           choiceId: choice.id,
           choiceLabel: choice.label,
-          storyText: storyNode.storyText,
+          storyText: currentNode.storyText,
           diceRoll: choice.diceRequired ? storyDice : undefined,
           diceDC: choice.diceDC,
           skillType: choice.skillType || "check",
@@ -2005,7 +2037,9 @@ const Battle = () => {
 
     const currentStoryText = battleData ? getLatestNarrative(battleData) : storyNode?.storyText || "";
     // CRITICAL: Use battleData.current_story_node directly for choices to stay in sync with narrative
-    const activeStoryNode = battleData?.current_story_node || null;
+    const activeStoryNode = isStoryNodeReadyForRoom(battleData?.current_story_node, battleData?.room_index)
+      ? battleData.current_story_node
+      : null;
 
     return (
       <>

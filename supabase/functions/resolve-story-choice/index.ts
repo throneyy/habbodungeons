@@ -7,6 +7,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const isRealStoryNodeForRoom = (node: any, roomIndex: number) => {
+  return !!node &&
+    node.generating !== true &&
+    typeof node.storyText === "string" &&
+    node.storyText.trim().length > 0 &&
+    Array.isArray(node.choices) &&
+    (node.roomIndex === undefined || node.roomIndex === roomIndex);
+};
+
+const jsonResponse = (body: any, status = 200) => new Response(
+  JSON.stringify(body),
+  { headers: { ...corsHeaders, "Content-Type": "application/json" }, status },
+);
+
 // Function to find matching sprite based on enemy name from database
 async function findEnemySprite(enemyName: string, supabaseClient: any): Promise<string> {
   if (!enemyName) return "skeleton.png";
@@ -67,6 +81,11 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
     );
 
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
+
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
@@ -115,6 +134,29 @@ serve(async (req) => {
 
     if (!battleState) throw new Error("Battle state not found");
 
+    const currentStoryNode = battleState.current_story_node as any;
+    if (!isRealStoryNodeForRoom(currentStoryNode, battleState.current_room_index)) {
+      return jsonResponse({ error: "Story choices are still being prepared. Please wait a moment." }, 409);
+    }
+
+    const serverChoice = currentStoryNode.choices.find((choice: any) => choice?.id === choiceId);
+    if (!serverChoice) {
+      return jsonResponse({ error: "That choice is no longer available. Please use the current story choices." }, 409);
+    }
+
+    if (storyText && storyText !== currentStoryNode.storyText) {
+      return jsonResponse({ error: "Story has changed. Please use the current story choices." }, 409);
+    }
+
+    const canonicalChoiceLabel = typeof serverChoice.label === "string" ? serverChoice.label : choiceLabel;
+    const canonicalDiceDC = typeof serverChoice.diceDC === "number" ? serverChoice.diceDC : diceDC;
+    const canonicalSkillType = typeof serverChoice.skillType === "string" ? serverChoice.skillType : skillType;
+    const canonicalDiceRequired = serverChoice.diceRequired === true;
+
+    if (canonicalDiceRequired && (!Array.isArray(diceRoll) || typeof canonicalDiceDC !== "number")) {
+      return jsonResponse({ error: "This choice requires a dice roll before it can be resolved." }, 400);
+    }
+
     // For party/server battles, check if it's the player's turn
     const isPartyBattle = !!battleState.party_id || !!battleState.server_id;
     if (isPartyBattle) {
@@ -141,7 +183,7 @@ serve(async (req) => {
 
     const playerName = profile?.habbo_username || profile?.username?.split('@')[0] || 'Player';
 
-    console.log("Resolving choice:", choiceLabel);
+    console.log("Resolving choice:", canonicalChoiceLabel);
 
     // Get the current room's enemy info for context
     const dungeon = battleState.dungeons.dungeon_json as any;
@@ -158,16 +200,16 @@ serve(async (req) => {
 
     // Calculate dice check result if applicable
     let diceCheckResult = null;
-    if (diceRoll && diceDC) {
+    if (diceRoll && canonicalDiceDC) {
       const diceTotal = diceRoll.reduce((sum: number, die: number) => sum + die, 0);
-      const success = diceTotal >= diceDC;
-      const margin = diceTotal - diceDC;
+      const success = diceTotal >= canonicalDiceDC;
+      const margin = diceTotal - canonicalDiceDC;
       diceCheckResult = {
         success,
         total: diceTotal,
-        dc: diceDC,
+        dc: canonicalDiceDC,
         margin,
-        skillType: skillType || "check"
+        skillType: canonicalSkillType || "check"
       };
       console.log("Dice check result:", diceCheckResult);
     }
@@ -191,7 +233,7 @@ serve(async (req) => {
 
     const aiPrompt = `You are resolving a player's story choice in a dungeon crawler game.
 
-PLAYER CHOICE: "${choiceLabel}"
+PLAYER CHOICE: "${canonicalChoiceLabel}"
 DUNGEON: ${battleState.dungeons.name} (${battleState.dungeons.theme} theme)
 CURRENT ROOM: ${currentRoom?.description || 'Unknown'}
 
@@ -336,11 +378,11 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
     } else if (sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy) {
       console.log(`Battle triggered! Room has enemy: ${currentRoom.enemy.name}`);
       // Ensure we're battling the actual room enemy, not what the AI might have mentioned
-    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && choiceLabel && 
-               (choiceLabel.toLowerCase().includes('attack') || 
-                choiceLabel.toLowerCase().includes('fight') ||
-                choiceLabel.toLowerCase().includes('strike') ||
-                choiceLabel.toLowerCase().includes('combat'))) {
+    } else if (!sanitizedOutcome.triggersBattle && currentRoom && currentRoom.enemy && canonicalChoiceLabel && 
+               (canonicalChoiceLabel.toLowerCase().includes('attack') || 
+                canonicalChoiceLabel.toLowerCase().includes('fight') ||
+                canonicalChoiceLabel.toLowerCase().includes('strike') ||
+                canonicalChoiceLabel.toLowerCase().includes('combat'))) {
       // If user chose to attack but AI didn't trigger battle, force it if room has enemy
       console.log(`Forcing battle because user chose combat action and room has enemy: ${currentRoom.enemy.name}`);
       sanitizedOutcome.triggersBattle = true;
@@ -390,11 +432,11 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
     let newLevel = partyStats.level;
     
     // Award XP for successful dice checks
-    if (diceRoll && diceDC) {
-      const checkSuccess = diceRoll >= diceDC;
+    if (diceCheckResult) {
+      const checkSuccess = diceCheckResult.success;
       if (checkSuccess) {
         // XP based on DC difficulty (5-20 XP)
-        const checkXP = Math.floor(diceDC / 2) + 5;
+        const checkXP = Math.floor(canonicalDiceDC / 2) + 5;
         xpGained += checkXP;
         xpMessages.push(`+${checkXP} XP for passing the check!`);
       }
@@ -538,7 +580,7 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
     
     cleanedBattleLog.push({ 
       user_id: user.id, 
-      message: `${playerName} chose: ${choiceLabel}`,
+      message: `${playerName} chose: ${canonicalChoiceLabel}`,
       type: 'choice' 
     });
     
@@ -614,7 +656,7 @@ For "npcs", include any named character involved, as objects: { "name": "Captain
 
     // Set story node to generating marker to prevent race conditions
     // The actual story will be generated when the battle page loads
-    updateData.current_story_node = { generating: true, timestamp: Date.now() };
+    updateData.current_story_node = { generating: true, roomIndex: newRoomIndex, timestamp: Date.now() };
     console.log("Set story node to generating marker after story choice");
 
     // Set up enemy if battle is triggered
