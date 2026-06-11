@@ -2054,6 +2054,8 @@ const Battle = () => {
     // CRITICAL: Use battleData.current_story_node directly for choices to stay in sync with narrative
     const activeStoryNode = isStoryNodeReadyForRoom(battleData?.current_story_node, battleData?.room_index)
       ? battleData.current_story_node
+      : isStoryNodeReadyForRoom(storyNode, battleData?.room_index) && storyNode.storyText === currentStoryText
+      ? storyNode
       : null;
 
     return (
