@@ -1257,6 +1257,7 @@ const Battle = () => {
     
     storyLoadInFlightRef.current = true;
     setStoryLoading(true);
+    const requestedRoomIndex = battleData?.room_index;
     try {
       console.log("Loading story node for battleId:", id);
       
@@ -1283,9 +1284,15 @@ const Battle = () => {
         throw error;
       }
       
-      if (data?.storyNode) {
+      if (data?.storyNode && isStoryNodeReadyForRoom(data.storyNode, requestedRoomIndex)) {
         console.log("Story node loaded successfully");
         setStoryNode(data.storyNode);
+        setBattleData((prev) => {
+          if (!prev || !isStoryNodeForRoom(data.storyNode, prev.room_index)) return prev;
+          return { ...prev, current_story_node: data.storyNode };
+        });
+      } else if (data?.storyNode) {
+        console.log("Ignoring story node for stale room", data.storyNode.roomIndex, "requested", requestedRoomIndex);
       } else {
         console.error("No story node in response:", data);
         throw new Error("No story node returned from server");
