@@ -1246,20 +1246,20 @@ const Battle = () => {
   };
 
   const loadStoryNode = async (expectedRoomIndex?: number) => {
-    if (storyLoadInFlightRef.current) {
-      console.log("Story node request already in flight, skipping duplicate call");
-      return;
-    }
-
     if (!id) {
       console.error("Cannot load story node: battleId is undefined");
       setStoryLoading(false);
       return;
     }
-    
-    storyLoadInFlightRef.current = true;
-    setStoryLoading(true);
+
     const requestedRoomIndex = expectedRoomIndex ?? battleData?.room_index;
+    if (storyLoadInFlightRef.current === requestedRoomIndex) {
+      console.log("Story node request already in flight for this room, skipping duplicate call");
+      return;
+    }
+    
+    storyLoadInFlightRef.current = requestedRoomIndex ?? null;
+    setStoryLoading(true);
     try {
       console.log("Loading story node for battleId:", id);
       
@@ -1307,7 +1307,7 @@ const Battle = () => {
         variant: "destructive",
       });
     } finally {
-      storyLoadInFlightRef.current = false;
+      storyLoadInFlightRef.current = null;
       setStoryLoading(false);
     }
   };
