@@ -317,7 +317,7 @@ const Battle = () => {
   // Story mode states
   const [storyNode, setStoryNode] = useState<StoryNode | null>(null);
   const [storyLoading, setStoryLoading] = useState(false);
-  const storyLoadInFlightRef = useRef(false);
+  const storyLoadInFlightRef = useRef<number | null>(null);
   const storyChoiceInFlightRef = useRef(false);
   const [treasureClaimed, setTreasureClaimed] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState<StoryNode['choices'][0] | null>(null);
@@ -695,6 +695,7 @@ const Battle = () => {
   // Auto-generate next story node when story choice is resolved
   useEffect(() => {
     if (!battleData || !battleData.current_story_node) return;
+    if (battleData.room_type === 'treasure' || battleData.room_type === 'event') return;
     
     const storyNode = battleData.current_story_node as any;
     
@@ -702,7 +703,7 @@ const Battle = () => {
     if (isGeneratingStoryNode(storyNode) && !storyLoading) {
       console.log('Detected story node generation marker, loading next story node...');
       setStoryNode(null);
-      loadStoryNode();
+      loadStoryNode(battleData.room_index);
     }
   }, [battleData?.current_story_node, storyLoading]);
   const loadBattle = async (isRetry = false) => {
