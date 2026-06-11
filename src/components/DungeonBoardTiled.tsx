@@ -34,7 +34,7 @@ import {
   ISO_TILE_HEIGHT,
 } from "@/lib/isometricUtils";
 import { DirectionName } from "@/lib/Utils/habbo";
-import { getDirectionFromDelta } from "@/lib/Utils/grid";
+import { getDirectionFromDelta, findPath } from "@/lib/Utils/grid";
 
 const GRID_COLS = 12;
 const GRID_ROWS = 8;
@@ -121,27 +121,69 @@ const PlayerToken: React.FC<{
   tile: GridPosition;
   offsetX: number;
   offsetY: number;
-}> = ({ entity, tile, offsetX, offsetY }) => {
-  const prev = useRef<GridPosition>(tile);
+  blockedTiles: GridPosition[];
+}> = ({ entity, tile, offsetX, offsetY, blockedTiles }) => {
+  // The tile the sprite is *currently rendered on* (steps along a BFS path
+  // one tile at a time, ~500ms per step, Habbo-style).
+  const [currentTile, setCurrentTile] = useState<GridPosition>(tile);
   const [direction, setDirection] = useState<DirectionName>("down-left");
   const [isWalking, setIsWalking] = useState(false);
+  const stepTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pathRef = useRef<GridPosition[]>([]);
+  const STEP_MS = 500;
 
+  // When the target tile changes, compute a BFS path from where we currently
+  // are and start stepping along it.
   useEffect(() => {
-    const p = prev.current;
-    if (p.x !== tile.x || p.y !== tile.y) {
-      const dir = getDirectionFromDelta(tile.x - p.x, tile.y - p.y) as DirectionName;
-      setDirection(dir);
-      setIsWalking(true);
-      prev.current = tile;
-      const t = setTimeout(() => setIsWalking(false), 420);
-      return () => clearTimeout(t);
+    if (currentTile.x === tile.x && currentTile.y === tile.y) return;
+    // Don't treat our own current tile as blocked.
+    const blocked = blockedTiles.filter(
+      (b) =>
+        !(b.x === currentTile.x && b.y === currentTile.y) &&
+        !(b.x === tile.x && b.y === tile.y),
+    );
+    const path = findPath(currentTile, tile, GRID_COLS, GRID_ROWS, blocked);
+    if (!path || path.length < 2) {
+      // No path -> just snap.
+      setCurrentTile(tile);
+      return;
     }
+    pathRef.current = path.slice(1); // drop start tile
+    setIsWalking(true);
+
+    const step = () => {
+      const next = pathRef.current.shift();
+      if (!next) {
+        setIsWalking(false);
+        return;
+      }
+      setCurrentTile((prev) => {
+        const dir = getDirectionFromDelta(
+          next.x - prev.x,
+          next.y - prev.y,
+        ) as DirectionName;
+        setDirection(dir);
+        return next;
+      });
+      stepTimer.current = setTimeout(step, STEP_MS);
+    };
+    if (stepTimer.current) clearTimeout(stepTimer.current);
+    stepTimer.current = setTimeout(step, 0);
+
+    return () => {
+      if (stepTimer.current) clearTimeout(stepTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tile.x, tile.y]);
 
-  const screen = gridToScreen(tile);
+  useEffect(() => () => {
+    if (stepTimer.current) clearTimeout(stepTimer.current);
+  }, []);
+
+  const screen = gridToScreen(currentTile);
   const left = screen.x + offsetX;
   const top = screen.y + offsetY;
-  const z = calculateZIndex(tile) + 1000;
+  const z = calculateZIndex(currentTile) + 1000;
 
   return (
     <div
@@ -150,7 +192,7 @@ const PlayerToken: React.FC<{
         left: `${left}px`,
         top: `${top}px`,
         zIndex: z,
-        transition: "left 0.4s ease-in-out, top 0.4s ease-in-out",
+        transition: `left ${STEP_MS}ms linear, top ${STEP_MS}ms linear`,
         opacity: entity.isDead ? 0.35 : 1,
         filter: entity.isDead ? "grayscale(1)" : undefined,
       }}
@@ -322,15 +364,22 @@ export const DungeonBoardTiled: React.FC<DungeonBoardTiledProps> = ({
           {/* Players */}
           {layout
             .filter(({ entity }) => entity.type === "player")
-            .map(({ entity, tile }) => (
-              <PlayerToken
-                key={entity.id}
-                entity={entity}
-                tile={tile}
-                offsetX={offset.x}
-                offsetY={offset.y}
-              />
-            ))}
+            .map(({ entity, tile }) => {
+              // Block other entities' home tiles so pathfinding routes around them.
+              const blocked = layout
+                .filter((l) => l.entity.id !== entity.id && !l.entity.isDead)
+                .map((l) => l.tile);
+              return (
+                <PlayerToken
+                  key={entity.id}
+                  entity={entity}
+                  tile={tile}
+                  offsetX={offset.x}
+                  offsetY={offset.y}
+                  blockedTiles={blocked}
+                />
+              );
+            })}
         </div>
       </div>
     </div>
