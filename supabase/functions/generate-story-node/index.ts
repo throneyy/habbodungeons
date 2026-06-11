@@ -57,6 +57,40 @@ const normalizeChoices = (choices: any[]) => {
     });
 };
 
+const buildFallbackChoices = (currentRoom: any) => {
+  const enemyName = currentRoom?.enemy?.name || "the foe";
+  const roomType = currentRoom?.roomType || currentRoom?.room_type || "story";
+
+  if (currentRoom?.enemy) {
+    return normalizeChoices([
+      { id: "fallback-fight", label: `Attack ${enemyName}`, diceRequired: false },
+      { id: "fallback-study", label: `Study ${enemyName} for a weakness [Dice Check: DC 16]`, diceRequired: true, diceDC: 16, skillType: "perception" },
+      { id: "fallback-evade", label: "Try to slip around the danger [Dice Check: DC 17]", diceRequired: true, diceDC: 17, skillType: "stealth" },
+    ]);
+  }
+
+  if (roomType === "treasure") {
+    return normalizeChoices([
+      { id: "fallback-claim", label: "Claim the treasure", diceRequired: false },
+      { id: "fallback-inspect", label: "Inspect the chest for traps [Dice Check: DC 15]", diceRequired: true, diceDC: 15, skillType: "investigation" },
+    ]);
+  }
+
+  return normalizeChoices([
+    { id: "fallback-continue", label: "Continue deeper into the dungeon", diceRequired: false },
+    { id: "fallback-search", label: "Search the icy passage for clues [Dice Check: DC 15]", diceRequired: true, diceDC: 15, skillType: "investigation" },
+    { id: "fallback-listen", label: "Pause and listen for movement [Dice Check: DC 14]", diceRequired: true, diceDC: 14, skillType: "perception" },
+  ]);
+};
+
+const buildFallbackStoryNode = (visibleStoryText: string, roomIndex: number, currentRoom: any) => ({
+  storyText: visibleStoryText.replace(/—/g, "--"),
+  choices: buildFallbackChoices(currentRoom),
+  roomIndex,
+  generatedAt: new Date().toISOString(),
+  fallback: true,
+});
+
 const waitForGeneratedStoryNode = async (client: any, battleStateId: string, roomIndex: number) => {
   const startedAt = Date.now();
 
