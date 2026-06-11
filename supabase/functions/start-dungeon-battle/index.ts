@@ -204,6 +204,7 @@ serve(async (req) => {
           current_room_index: 0,
           current_enemy_state: initialEnemyState,
           battle_log: [modifiedRooms[0].description],
+          current_story_node: null,
           is_active: true,
         })
         .eq('id', existingBattle.id);
@@ -222,6 +223,7 @@ serve(async (req) => {
         current_room_index: 0,
         current_enemy_state: initialEnemyState,
         battle_log: [modifiedRooms[0].description],
+        current_story_node: null,
         is_active: true,
       });
       
