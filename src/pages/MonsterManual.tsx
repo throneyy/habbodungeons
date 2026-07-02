@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { HabboPanel } from "@/components/HabboPanel";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { EnemySprite } from "@/components/EnemySprite";
+import { getEnemyBaseDirection, getEnemyScaleFactor } from "@/lib/enemyDirections";
 import { toast } from "sonner";
 import monsterManualTitle from "@/assets/monster-manual-title-new.gif";
 import ancientJailImage from "@/assets/ancient-jail.png";
@@ -329,26 +329,28 @@ export default function MonsterManual() {
               <HabboPanel key={monster.id} className="bg-gradient-to-br from-card to-muted/20 hover:scale-105 transition-transform">
                 <div className="space-y-4">
                   {/* Monster Sprite */}
-                  <div className="flex justify-center items-center h-48 bg-background/50 rounded-lg border-2 border-habbo-dark p-4">
-                    {sprite ? (
-                      <EnemySprite
-                        spriteUrl={sprite}
-                        spriteFilename={monster.sprite_filename}
-                        name={monster.enemy_name}
-                        position={{ x: 0, y: 0 }}
-                        shouldFace="left"
-                        screenX={0}
-                        screenY={0}
-                        zIndex={10}
-                        className="pixel-icon max-h-full max-w-full object-contain"
-                        style={{
-                          transform: `scale(${
-                            monster.sprite_filename === 'frostbite-spider.png' ? '1.5' : 
-                            monster.sprite_filename === 'frost-rat.gif' ? '3.213' : '1'
-                          })`
-                        }}
-                      />
-                    ) : (
+                  <div className="flex justify-center items-center h-48 bg-background/50 rounded-lg border-2 border-habbo-dark p-4 overflow-hidden">
+                    {sprite ? (() => {
+                      const baseDir = getEnemyBaseDirection(monster.sprite_filename);
+                      const needsFlip = baseDir !== 'left';
+                      const scaleFactor = getEnemyScaleFactor(monster.sprite_filename);
+                      const displayScale =
+                        monster.sprite_filename === 'frostbite-spider.png' ? 1.5 :
+                        monster.sprite_filename === 'frost-rat.gif' ? 3.213 :
+                        scaleFactor;
+                      return (
+                        <img
+                          src={sprite}
+                          alt={monster.enemy_name}
+                          className="pixelated max-h-full max-w-full w-auto h-auto object-contain drop-shadow-lg"
+                          style={{
+                            imageRendering: 'pixelated',
+                            transform: `${needsFlip ? 'scaleX(-1) ' : ''}scale(${displayScale})`.trim(),
+                            transformOrigin: 'center',
+                          }}
+                        />
+                      );
+                    })() : (
                       <span className="text-[96px] text-muted-foreground font-['Volter'] leading-none">ª</span>
                     )}
                   </div>
