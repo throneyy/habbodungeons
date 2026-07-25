@@ -7,6 +7,10 @@
 import { preflight, json } from "../_shared/cors.ts";
 import { requireUser, userClient, serviceClient } from "../_shared/client.ts";
 
+// Must match js/config.js ADMIN_NAMES. The caller still needs a backend auth
+// session whose profile has a verified Habbo username in this allowlist.
+const ADMIN_HABBO_NAMES = new Set(["throney"]);
+
 const isInt = (n: unknown, lo: number, hi: number) =>
   Number.isInteger(n) && (n as number) >= lo && (n as number) <= hi;
 
@@ -44,6 +48,21 @@ Deno.serve(async (req) => {
   const user = await requireUser(req);
   if (!user) return json({ ok: false, reason: "sign in first" }, 401);
 
+  const svc = serviceClient();
+
+  const { data: profile } = await svc.from("profiles")
+    .select("habbo_username, habbo_verified_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  const isVerifiedAdminHabbo = !!profile?.habbo_verified_at &&
+    ADMIN_HABBO_NAMES.has(String(profile?.habbo_username ?? "").toLowerCase());
+  if (!isVerifiedAdminHabbo) return json({ ok: false, reason: "admin only" }, 403);
+
+  await svc.from("user_roles").upsert(
+    { user_id: user.id, role: "admin" },
+    { onConflict: "user_id,role" },
+  );
+
   // Authorize as admin explicitly (belt-and-braces with the RLS policy).
   const sb = userClient(req);
   const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user.id, _role: "admin" });
@@ -62,7 +81,6 @@ Deno.serve(async (req) => {
   const rooms = Object.entries(src);
   if (rooms.length > 20) return json({ ok: false, reason: "too many rooms" }, 400);
 
-  const svc = serviceClient();
   const results: Record<string, number> = {};
   try {
     for (const [roomId, props] of rooms) {

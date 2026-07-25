@@ -3,8 +3,12 @@
 // with a Supabase JWT, so on a successful motto match we just write the linked
 // Habbo onto their own profile row. Body: { name, code }.
 import { preflight, json } from "../_shared/cors.ts";
-import { requireUser, userClient } from "../_shared/client.ts";
+import { requireUser, serviceClient, userClient } from "../_shared/client.ts";
 import { fetchHabboProfile } from "../_shared/habbo.ts";
+
+// Server-side copy of js/config.js ADMIN_NAMES. This is authorization data, not
+// a secret: the Habbo name must still be proven by the live motto check below.
+const ADMIN_HABBO_NAMES = new Set(["throney"]);
 
 Deno.serve(async (req) => {
   const pre = preflight(req);
@@ -45,6 +49,17 @@ Deno.serve(async (req) => {
       habbo_profile_json: prof,
       updated_at: new Date().toISOString(),
     }).eq("id", user.id);
+
+    const svc = serviceClient();
+    const isAdminHabbo = ADMIN_HABBO_NAMES.has(String(prof.name ?? name).toLowerCase());
+    if (isAdminHabbo) {
+      await svc.from("user_roles").upsert(
+        { user_id: user.id, role: "admin" },
+        { onConflict: "user_id,role" },
+      );
+    } else {
+      await svc.from("user_roles").delete().eq("user_id", user.id).eq("role", "admin");
+    }
   }
 
   return json({
