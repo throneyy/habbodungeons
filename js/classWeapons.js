@@ -5,11 +5,14 @@
 //
 // Every entry:
 //   atk  - held during the 'atk' swing pose (js/avatar.js action()) — this is
-//          the MELEE (non-range) attack. Always set; classes with no
-//          confirmed weapon of their own fall back to the sword (fighter's
-//          default melee item). Mage's melee attack is the wand, not the
-//          spell book (the book is reserved for their ranged cast — see
-//          `bow` below).
+//          the MELEE (non-range) attack, used e.g. hitting the training
+//          dummy. Always set; classes with no confirmed weapon of their own
+//          fall back to the sword (fighter's default melee item). Mage's
+//          melee attack is the wand, not the spell book (the book is
+//          reserved for their ranged cast — see `bow` below). A ranger's
+//          `atk` is the bow too, same item as their `bow` pose — a ranger
+//          should never be seen swinging a sword, so there is no melee
+//          fallback for them; every attack pose they have holds the bow.
 //   idle - held whenever NOT mid-swing (the 'std' pose, and the off frame of
 //          the 'atk' cycle). Optional: only the cleric has one today (the
 //          lantern), so their Heal-adjacent stance reads as "support", not
@@ -30,11 +33,11 @@ export const CLASS_WEAPON = Object.freeze({
   fighter: { atk: ID.Sword },
   barbarian: { atk: ID.Bat },
   rogue: { atk: ID.Dagger },
-  ranger: { atk: ID.Sword, bow: ID.Bow },
+  ranger: { atk: ID.Bow, bow: ID.Bow },
   mage: { atk: ID.Wand, bow: ID.SpellBook },
   warlock: { atk: ID.TreeBranch },
   cleric: { atk: ID.Hammer, idle: ID.Lantern, bow: ID.SpellBook },
-  bard: { atk: ID.Sword }, // no confirmed bard-flavour item yet
+  bard: { atk: ID.Telescope },
 });
 
 export function weaponFor(classId) {

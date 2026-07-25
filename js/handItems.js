@@ -84,6 +84,7 @@ export function handItemId(name) {
 export const WEAPON_ITEMS = Object.freeze({
   111: 'Torch', // flame-topped rod — not currently assigned to a class
   118: 'TreeBranch', // gnarled wooden branch — warlock's focus
+  136: 'Telescope', // banded tapering tube — bard's attack pose
   140: 'Hammer', // square-headed mallet on a handle — cleric's attack pose
   142: 'Wand', // orb-topped wand — mage's melee (non-range) attack
   151: 'Lantern', // hooded lantern — cleric's idle/heal carry
