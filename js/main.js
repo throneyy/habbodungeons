@@ -944,7 +944,7 @@ function showMonsters() {
     <div class="hd-landing">
       <div class="hd-card">
         <div class="hd-card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 18px">
-          <span class="hd-logo">Monsters</span>
+          <img class="hd-logo-img" src="https://habbofont.net/font/habbo_ribbon/monsters.gif" alt="MONSTERS" onerror="this.outerHTML='<span class=\'hd-logo\'>Monsters</span>'" />
           <nav style="display:flex;flex-wrap:wrap;gap:8px">
             <button id="monBack" class="hd-btn hd-btn--white">← Landing</button>
             <button id="monDungeons" class="hd-btn">Dungeons</button>
