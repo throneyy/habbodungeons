@@ -1979,7 +1979,10 @@ async function startExplore() {
     const layouts = {};
     for (const r of exploreRooms) layouts[r.id] = r.props.map(serializeProp);
     const res = await AdminApi.saveLayouts(layouts);
-    saveBtn.textContent = res.ok ? 'Saved ✓' : `Failed: ${res.reason || 'error'}`;
+    const reason = res.reason === 'admin only'
+      ? 'sign in and re-link throney'
+      : res.reason || 'error';
+    saveBtn.textContent = res.ok ? 'Saved ✓' : `Failed: ${reason}`;
     if (!res.ok && !AdminApi.credential()) {
       // browser never captured the boot token: point at the one-time unlock
       // (own element: the walk status line would overwrite exploreStatus)
