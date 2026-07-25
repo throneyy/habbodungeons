@@ -234,6 +234,23 @@ export const Auth = {
     const { data } = await sb.auth.getUser();
     return data.user || null;
   },
+  // Guarantee a Supabase session exists (creating an anonymous one if needed)
+  // so Realtime + RLS-backed writes work without an email sign-in. Safe to
+  // call repeatedly; returns the current user or null if cloud is unreachable.
+  async ensureSession() {
+    const sb = await getSupabase();
+    if (!sb) return null;
+    const { data: { user } = { user: null } } = await sb.auth.getUser();
+    if (user) return user;
+    try {
+      const { data, error } = await sb.auth.signInAnonymously();
+      if (error) throw error;
+      return data?.user || null;
+    } catch (e) {
+      console.warn('[habbo-dungeons] anonymous sign-in failed:', e?.message || e);
+      return null;
+    }
+  },
   async signIn(email) {
     const sb = await getSupabase();
     if (!sb) return { ok: false, reason: 'Cloud unavailable (offline).' };

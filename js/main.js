@@ -1444,10 +1444,10 @@ function updateMpStatus() {
   const id = Identity.get();
   if (!id || !id.name) { el.textContent = ''; el.style.color = ''; return; }
   if (!net.active) {
-    el.textContent = '⚠ Multiplayer offline — sign in with email to see other players';
+    el.textContent = '⚠ Multiplayer offline - retrying';
     el.style.color = '#ffb84d';
     el.style.cursor = 'pointer';
-    el.onclick = () => showDashboard();
+    el.onclick = () => { Auth.ensureSession().finally(() => { net.connect(id); updateMpStatus(); }); };
     return;
   }
   if (!net.connected) {
@@ -1826,7 +1826,15 @@ async function startExplore() {
     });
   };
   const myId = Identity.get();
-  if (shouldConnectNet(myId)) net.connect(myId);
+  if (shouldConnectNet(myId)) {
+    // Mint an anonymous Supabase session (if needed) so Realtime works without
+    // requiring the player to sign in with email. The Habbo motto link is the
+    // player identity; the anon JWT is just the transport credential.
+    Auth.ensureSession().finally(() => {
+      net.connect(myId);
+      updateMpStatus();
+    });
+  }
   game.setRoom(exploreRooms[0]);
   if (net.active) net.join(game.room.id);
   updateMpStatus();
