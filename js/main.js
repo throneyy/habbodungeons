@@ -1750,6 +1750,7 @@ function leaveExplore() {
   party.detach();
   remote.detach();
   net.leaveRoom();
+  updateMpStatus();
   if (furniCat) furniCat.close();
   if (clothingCat) clothingCat.close();
   if (consumablesCat) consumablesCat.close();
