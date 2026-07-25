@@ -152,10 +152,17 @@ export class Net {
 // Supabase deploy, WebSocket in local Node dev.
 export const net = isSupabase() ? new SupabaseNet() : new Net();
 
-// Should this identity open a multiplayer connection? Supabase mode needs only a
+// Should this identity open a multiplayer connection? Requires a name AND a
+// figure — a name-only identity (a partially-written/legacy localStorage row,
+// or the unverified Identity.setFigure() quick-play path with no figure set)
+// must never reach the room channel: SupabaseNet broadcasts identity.figure
+// over presence verbatim, and a member with figure: '' spawns as a tracked
+// but permanently invisible Unit on every other client's screen (see
+// RemotePlayers.spawn in js/remotePlayers.js — confirmed live, see the
+// figureFlicker e2e diagnostic). Supabase mode additionally needs only the
 // linked Habbo (the JWT is the credential, checked inside connect); local dev
 // needs the HMAC session token from /api/link/verify.
 export function shouldConnectNet(identity) {
-  if (!identity || !identity.name) return false;
+  if (!identity || !identity.name || !identity.figure) return false;
   return isSupabase() ? true : !!identity.session;
 }

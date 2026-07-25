@@ -9,6 +9,7 @@
 import { Unit } from './units.js';
 import { avatarSpritesFor } from './sprites.js';
 import { tileToScreen } from './iso.js';
+import { DEFAULT_FIGURE } from './config.js';
 
 const HEAD_PX = { 1: 104, 0.5: 52 }; // bubble/name anchor above the head, by zoom
 
@@ -77,8 +78,24 @@ export class RemotePlayers {
     });
     unit.stats = null; // explore: no HP bar
     unit.remote = true;
-    unit.figure = member.figure || ''; // infostand render
-    if (member.figure) unit.sprites = avatarSpritesFor(member.figure, room.zoom === 1 ? 'm' : 's');
+    // A member with no figure should not happen — shouldConnectNet (js/net.js)
+    // now refuses to open a room connection without one — but presence is a
+    // network payload, not a type-checked call, so guard it anyway: without
+    // this fallback the unit is added to game.units and gets a name tag (it's
+    // fully "there") while unit.sprites stays unset forever, so it never
+    // draws a single pixel. Silently invisible, no error, nothing to debug.
+    // Fall back to a renderable default figure and say so loudly.
+    const figure = member.figure || DEFAULT_FIGURE;
+    if (!member.figure) {
+      console.warn(
+        `[habbo-dungeons] remote player "${member.name}" entered with no figure — ` +
+        'rendering the default figure instead of going invisible. This means their ' +
+        'client connected to multiplayer without a linked Habbo figure (see ' +
+        'shouldConnectNet in js/net.js).'
+      );
+    }
+    unit.figure = figure; // infostand render
+    unit.sprites = avatarSpritesFor(figure, room.zoom === 1 ? 'm' : 's');
     this.game.addUnit(unit);
     this.units.set(key, unit);
 
