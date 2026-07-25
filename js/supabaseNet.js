@@ -165,7 +165,11 @@ export class SupabaseNet {
     this._leaveRoomChannel();
     this._rosterSent = false;
     const ch = this.sb.channel(`room:${roomId}`, {
-      config: { broadcast: { self: false }, presence: { key: this.userId } },
+      config: {
+        private: true, // enforces realtime.messages RLS (room:% policy)
+        broadcast: { self: false, ack: false },
+        presence: { key: this.userId },
+      },
     });
     ch.on('presence', { event: 'sync' }, () => this._onPresenceSync(ch, roomId));
     ch.on('presence', { event: 'join' }, ({ newPresences }) => this._onPresenceJoin(newPresences));
