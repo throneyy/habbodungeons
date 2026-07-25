@@ -1,0 +1,110 @@
+// The 8 Habbo Dungeons classes, carried over from v1. Stats are level-1 base
+// values, tuned for readable tactics math (small numbers). Each class has a
+// combat ARCHETYPE that drives the rock-paper-scissors triangle:
+//
+//   melee  >  ranged  >  magic  >  melee
+//
+// (melee closes distance on archers; archers out-range casters; magic ignores
+// heavy armor). Support (cleric/bard) sits outside the triangle at neutral.
+//
+// move    = tiles per turn (Chebyshev/diagonal-aware, same as walking)
+// range   = max attack distance in tiles; min = closest (archers can't melee)
+export const CLASSES = {
+  fighter: {
+    name: 'Fighter', archetype: 'melee', color: '#c94f4f',
+    move: 4, range: 1, min: 1, maxHp: 34, atk: 11, def: 7, spd: 5,
+    blurb: 'Frontline blade-and-shield. Endures where others fall.',
+  },
+  barbarian: {
+    name: 'Barbarian', archetype: 'melee', color: '#a5642e',
+    move: 4, range: 1, min: 1, maxHp: 40, atk: 13, def: 4, spd: 4,
+    blurb: 'Raw fury over finesse. Huge damage, light on defense.',
+  },
+  rogue: {
+    name: 'Rogue', archetype: 'melee', color: '#6f5aa8',
+    move: 5, range: 1, min: 1, maxHp: 26, atk: 10, def: 4, spd: 8,
+    blurb: 'Fast striker. Great reach across the map, fragile.',
+  },
+  ranger: {
+    name: 'Ranger', archetype: 'ranged', color: '#4f9d5a',
+    move: 4, range: 3, min: 2, maxHp: 26, atk: 9, def: 4, spd: 6,
+    blurb: 'Bowfire from afar. Wants distance and high ground.',
+  },
+  mage: {
+    name: 'Mage', archetype: 'magic', color: '#4f8fd0',
+    move: 3, range: 3, min: 1, maxHp: 22, atk: 13, def: 2, spd: 4,
+    blurb: 'Glass cannon. Ignores armor, dies to a stiff breeze.',
+  },
+  warlock: {
+    name: 'Warlock', archetype: 'magic', color: '#8f4fb0',
+    move: 3, range: 3, min: 1, maxHp: 24, atk: 11, def: 3, spd: 4,
+    blurb: 'Cursed power. Steady magical damage at range.',
+  },
+  cleric: {
+    name: 'Cleric', archetype: 'support', color: '#d8c25a',
+    move: 4, range: 2, min: 1, maxHp: 28, atk: 7, def: 5, spd: 5,
+    blurb: 'Holy support. Mends allies with Heal.',
+    skill: { id: 'heal', name: 'Heal', kind: 'heal', target: 'ally', range: 2, power: 12 },
+  },
+  bard: {
+    name: 'Bard', archetype: 'support', color: '#d07fb0',
+    move: 4, range: 2, min: 1, maxHp: 26, atk: 7, def: 4, spd: 6,
+    blurb: "Battlefield songs. Inspire buffs an ally's next hit.",
+    skill: { id: 'inspire', name: 'Inspire', kind: 'buff', target: 'ally', range: 2, power: 5 },
+  },
+};
+
+// Archetype triangle multiplier applied to an attack.
+const BEATS = { melee: 'ranged', ranged: 'magic', magic: 'melee' };
+export function triangleMultiplier(attackerArch, defenderArch) {
+  if (attackerArch === 'support' || defenderArch === 'support') return 1;
+  if (BEATS[attackerArch] === defenderArch) return 1.25; // favorable
+  if (BEATS[defenderArch] === attackerArch) return 0.8; // unfavorable
+  return 1; // same archetype
+}
+
+// Height advantage: attacking downhill hits harder, uphill softer. Uses the
+// tile heights the two units stand on.
+export function heightMultiplier(attackerZ, targetZ) {
+  if (attackerZ > targetZ) return 1.2;
+  if (attackerZ < targetZ) return 0.85;
+  return 1;
+}
+
+// Chebyshev distance — matches our diagonal-1-cost movement grid, so a unit's
+// attack range is the same shape as its move range.
+export function tileDistance(x0, y0, x1, y1) {
+  return Math.max(Math.abs(x0 - x1), Math.abs(y0 - y1));
+}
+
+// Deterministic damage (no RNG in M1 — tactics first, dice later): floor of
+// base (atk minus def, min 1) scaled by the triangle and height multipliers.
+export function computeDamage(attacker, target) {
+  const atk = attacker.stats.atk + (attacker.buffAtk || 0); // Bard's Inspire
+  const base = Math.max(1, atk - target.stats.def);
+  const mult =
+    triangleMultiplier(attacker.cls.archetype, target.cls.archetype) *
+    heightMultiplier(attacker.tileZ, target.tileZ);
+  return Math.max(1, Math.round(base * mult));
+}
+
+// Simple tile line-of-sight for ranged attacks: walk the tiles between the two
+// units; a shot is blocked by the void, by a tile taller than BOTH endpoints
+// (a wall/pillar you can't shoot over), or by a blocker (furni props = cover).
+// Endpoints themselves are exempt.
+export function hasLineOfSight(room, x0, y0, x1, y1, z0, z1) {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+  if (steps <= 1) return true;
+  const ceil = Math.max(z0, z1);
+  for (let i = 1; i < steps; i++) {
+    const x = Math.round(x0 + (dx * i) / steps);
+    const y = Math.round(y0 + (dy * i) / steps);
+    const t = room.tile(x, y);
+    if (!t) return false; // over the void
+    if (t.z > ceil) return false; // blocked by a taller wall
+    if (room.blockers.has(`${x},${y}`)) return false; // furni cover
+  }
+  return true;
+}

@@ -1,71 +1,34 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// fetch-habbo-profile — public Origins profile lookup (server.js proxyOrigins).
+// Normalized to the shape js/habboApi.js + humanInfostand.js expect:
+//   { name, uniqueId, figureString, motto, online }
+// verify_jwt is off so the infostand can render a motto for any tapped player
+// even before that browser is fully authed; it never touches user data.
+// Query: ?name=NAME  (or JSON body { name } / { username }).
+import { preflight, json } from "../_shared/cors.ts";
+import { fetchHabboProfile } from "../_shared/habbo.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  const url = new URL(req.url);
+  let name = (url.searchParams.get("name") ?? "").trim();
+  if (!name && req.method === "POST") {
+    try {
+      const body = await req.json();
+      name = String(body?.name ?? body?.username ?? "").trim();
+    } catch { /* ignore */ }
   }
+  if (!name) return json({ error: "name required" }, 400);
 
-  try {
-    const { username, verificationCode } = await req.json();
+  const prof = await fetchHabboProfile(name);
+  if (!prof.ok) return json({ error: prof.reason }, prof.status === 404 ? 404 : 502);
 
-    if (!username) {
-      throw new Error("Username is required");
-    }
-
-    console.log(`Fetching Habbo Origins profile for username: ${username}`);
-    if (verificationCode) {
-      console.log(`Verification code provided: ${verificationCode}`);
-    }
-
-    // Fetch from Habbo Origins API for avatar/profile data
-    const response = await fetch(`https://origins.habbo.com/api/public/users?name=${encodeURIComponent(username)}`);
-    
-    console.log(`Habbo Origins API response status: ${response.status}`);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Habbo Origins API error response: ${errorText}`);
-      
-      if (response.status === 404) {
-        throw new Error("Habbo Origins user not found");
-      }
-      throw new Error(`Habbo Origins API returned status ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(`Habbo Origins API response data:`, data);
-
-    if (!data || !data.name) {
-      throw new Error("Invalid response from Habbo Origins API");
-    }
-
-    return new Response(
-      JSON.stringify({
-        profile: {
-          name: data.name,
-          figureString: data.figureString,
-          motto: data.motto || "",
-          uniqueId: data.uniqueId || null,
-          bouncerPlayerId: data.bouncerPlayerId || null,
-        },
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  } catch (error) {
-    console.error('Error fetching Habbo Origins profile:', error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-  }
+  return json({
+    name: prof.name,
+    uniqueId: prof.uniqueId,
+    figureString: prof.figureString,
+    motto: prof.motto,
+    online: prof.online,
+  });
 });

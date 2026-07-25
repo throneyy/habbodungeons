@@ -1,0 +1,1993 @@
+{
+  "tavern": [
+    {
+      "id": "vikings_flag_g",
+      "x": 1,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_barrel",
+      "x": 2,
+      "y": 1,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_barrel",
+      "x": 3,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_craftsman",
+      "x": 5,
+      "y": 1,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_frothydrink",
+      "x": 6,
+      "y": 1,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_herbs",
+      "x": 8,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_barrel",
+      "x": 9,
+      "y": 1,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_barrel",
+      "x": 10,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "vikings_flag_r",
+      "x": 11,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_divider",
+      "x": 2,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_divider",
+      "x": 3,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_divider",
+      "x": 4,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_divider",
+      "x": 6,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_divider",
+      "x": 7,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_divider",
+      "x": 8,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_divider",
+      "x": 9,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_sweetrolls",
+      "x": 4,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_sweetrolls",
+      "x": 7,
+      "y": 2,
+      "dir": 0
+    },
+    {
+      "id": "hween_c17_hangingroots",
+      "x": 1,
+      "y": 2,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "hween_c17_hangingroots",
+      "x": 11,
+      "y": 2,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "hween_c19_fireplace",
+      "x": 1,
+      "y": 4,
+      "dir": 2,
+      "tiles": [
+        {
+          "x": 1,
+          "y": 4
+        },
+        {
+          "x": 1,
+          "y": 5
+        }
+      ]
+    },
+    {
+      "id": "easter_c19_habshirecat",
+      "x": 1,
+      "y": 6,
+      "dir": 2
+    },
+    {
+      "id": "vikings_table_r",
+      "x": 3,
+      "y": 4,
+      "dir": 6,
+      "tiles": [
+        {
+          "x": 3,
+          "y": 4
+        },
+        {
+          "x": 3,
+          "y": 5
+        },
+        {
+          "x": 3,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "picnic_food1",
+      "x": 3,
+      "y": 4,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_sweetrolls",
+      "x": 3,
+      "y": 6,
+      "dir": 0
+    },
+    {
+      "id": "vikings_stool",
+      "x": 2,
+      "y": 5,
+      "dir": 2
+    },
+    {
+      "id": "vikings_stool",
+      "x": 4,
+      "y": 4,
+      "dir": 6
+    },
+    {
+      "id": "vikings_stool",
+      "x": 4,
+      "y": 6,
+      "dir": 6
+    },
+    {
+      "id": "vikings_table_r",
+      "x": 8,
+      "y": 4,
+      "dir": 6,
+      "tiles": [
+        {
+          "x": 8,
+          "y": 4
+        },
+        {
+          "x": 8,
+          "y": 5
+        },
+        {
+          "x": 8,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "picnic_food1",
+      "x": 8,
+      "y": 5,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_sweetrolls",
+      "x": 8,
+      "y": 4,
+      "dir": 0
+    },
+    {
+      "id": "vikings_stool",
+      "x": 7,
+      "y": 4,
+      "dir": 2
+    },
+    {
+      "id": "vikings_stool",
+      "x": 7,
+      "y": 6,
+      "dir": 2
+    },
+    {
+      "id": "vikings_stool",
+      "x": 9,
+      "y": 5,
+      "dir": 6
+    },
+    {
+      "id": "gothiccandelabra",
+      "x": 6,
+      "y": 4,
+      "dir": 0
+    },
+    {
+      "id": "gothiccandelabra",
+      "x": 6,
+      "y": 6,
+      "dir": 0
+    },
+    {
+      "id": "gothic_candles",
+      "x": 6,
+      "y": 3,
+      "dir": 0
+    },
+    {
+      "id": "easter_c19_wolf",
+      "x": 10,
+      "y": 6,
+      "dir": 2
+    },
+    {
+      "id": "vikings_torch",
+      "x": 11,
+      "y": 3,
+      "dir": 2
+    },
+    {
+      "id": "gothic_candles",
+      "x": 10,
+      "y": 8,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_bard",
+      "x": 1,
+      "y": 9,
+      "dir": 2
+    },
+    {
+      "id": "gothic_candles",
+      "x": 2,
+      "y": 8,
+      "dir": 0
+    },
+    {
+      "id": "vikings_table_r",
+      "x": 5,
+      "y": 8,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 5,
+          "y": 8
+        },
+        {
+          "x": 6,
+          "y": 8
+        },
+        {
+          "x": 7,
+          "y": 8
+        }
+      ]
+    },
+    {
+      "id": "picnic_food1",
+      "x": 6,
+      "y": 8,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_sweetrolls",
+      "x": 5,
+      "y": 8,
+      "dir": 0
+    },
+    {
+      "id": "vikings_stool",
+      "x": 5,
+      "y": 9,
+      "dir": 0
+    },
+    {
+      "id": "vikings_stool",
+      "x": 6,
+      "y": 9,
+      "dir": 0
+    },
+    {
+      "id": "vikings_stool",
+      "x": 7,
+      "y": 9,
+      "dir": 0
+    },
+    {
+      "id": "rp_arrow",
+      "x": 11,
+      "y": 6,
+      "dir": 2,
+      "walk": true,
+      "teleport": {
+        "room": "square"
+      }
+    }
+  ],
+  "square": [
+    {
+      "id": "fantasy_c22_building1",
+      "x": 1,
+      "y": 1,
+      "dir": 2,
+      "tiles": [
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 1,
+          "y": 2
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_guildhall",
+      "x": 1,
+      "y": 3,
+      "dir": 2,
+      "tiles": [
+        {
+          "x": 1,
+          "y": 3
+        },
+        {
+          "x": 1,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_archway",
+      "x": 1,
+      "y": 5,
+      "dir": 2,
+      "walk": true,
+      "teleport": {
+        "gate": true
+      },
+      "tiles": [
+        {
+          "x": 1,
+          "y": 5
+        },
+        {
+          "x": 1,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_balcony",
+      "x": 1,
+      "y": 7,
+      "dir": 2,
+      "tiles": [
+        {
+          "x": 1,
+          "y": 7
+        },
+        {
+          "x": 1,
+          "y": 8
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_shopsigns",
+      "x": 3,
+      "y": 3,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_barrel",
+      "x": 2,
+      "y": 4,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_tavern",
+      "x": 2,
+      "y": 1,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 2,
+          "y": 1
+        },
+        {
+          "x": 3,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_building2",
+      "x": 4,
+      "y": 1,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 4,
+          "y": 1
+        },
+        {
+          "x": 5,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_building1",
+      "x": 6,
+      "y": 1,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 6,
+          "y": 1
+        },
+        {
+          "x": 7,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_building1",
+      "x": 8,
+      "y": 1,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 8,
+          "y": 1
+        },
+        {
+          "x": 9,
+          "y": 1
+        }
+      ]
+    },
+    {
+      "id": "neopets_c25_moneytree",
+      "x": 12,
+      "y": 1,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 12,
+          "y": 1
+        },
+        {
+          "x": 13,
+          "y": 1
+        },
+        {
+          "x": 12,
+          "y": 2
+        },
+        {
+          "x": 13,
+          "y": 2
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_hangingflags",
+      "x": 6,
+      "y": 2,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "rp_arrow",
+      "x": 3,
+      "y": 2,
+      "dir": 2,
+      "walk": true,
+      "teleport": {
+        "room": "tavern"
+      }
+    },
+    {
+      "id": "fantasy_c22_marketstall",
+      "x": 7,
+      "y": 6,
+      "dir": 2,
+      "tiles": [
+        {
+          "x": 7,
+          "y": 6
+        },
+        {
+          "x": 8,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_marketgoods",
+      "x": 7,
+      "y": 7,
+      "dir": 4
+    },
+    {
+      "id": "fantasy_c22_marketgoods",
+      "x": 8,
+      "y": 7,
+      "dir": 4
+    },
+    {
+      "id": "fantasy_c22_strawcanopy",
+      "x": 1,
+      "y": 5,
+      "dir": 2,
+      "tiles": [
+        {
+          "x": 1,
+          "y": 5
+        },
+        {
+          "x": 2,
+          "y": 5
+        },
+        {
+          "x": 1,
+          "y": 6
+        },
+        {
+          "x": 2,
+          "y": 6
+        }
+      ]
+    },
+    {
+      "id": "neopets_c25_grass",
+      "x": 12,
+      "y": 1,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 12,
+          "y": 1
+        },
+        {
+          "x": 13,
+          "y": 1
+        },
+        {
+          "x": 12,
+          "y": 2
+        },
+        {
+          "x": 13,
+          "y": 2
+        }
+      ]
+    },
+    {
+      "id": "neopets_c25_grass",
+      "x": 12,
+      "y": 3,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 12,
+          "y": 3
+        },
+        {
+          "x": 13,
+          "y": 3
+        },
+        {
+          "x": 12,
+          "y": 4
+        },
+        {
+          "x": 13,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "neopets_c25_grass",
+      "x": 12,
+      "y": 4,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 12,
+          "y": 4
+        },
+        {
+          "x": 13,
+          "y": 4
+        },
+        {
+          "x": 12,
+          "y": 5
+        },
+        {
+          "x": 13,
+          "y": 5
+        }
+      ]
+    },
+    {
+      "id": "rp_arrow",
+      "x": 13,
+      "y": 7,
+      "dir": 4,
+      "walk": true,
+      "teleport": {
+        "room": "mirkwood"
+      }
+    },
+    {
+      "id": "easter_c20_mossydivider",
+      "x": 10,
+      "y": 6,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_mossydivider",
+      "x": 12,
+      "y": 6,
+      "dir": 0
+    },
+    {
+      "id": "hblooza_dirtfloor",
+      "x": 2,
+      "y": 6,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 2,
+          "y": 6
+        },
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 2,
+          "y": 7
+        },
+        {
+          "x": 3,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "id": "hblooza_dirtfloor",
+      "x": 9,
+      "y": 2,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 9,
+          "y": 2
+        },
+        {
+          "x": 10,
+          "y": 2
+        },
+        {
+          "x": 9,
+          "y": 3
+        },
+        {
+          "x": 10,
+          "y": 3
+        }
+      ]
+    },
+    {
+      "id": "hblooza_dirtfloor",
+      "x": 4,
+      "y": 6,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 4,
+          "y": 6
+        },
+        {
+          "x": 5,
+          "y": 6
+        },
+        {
+          "x": 4,
+          "y": 7
+        },
+        {
+          "x": 5,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "id": "hblooza_dirtfloor",
+      "x": 11,
+      "y": 4,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 11,
+          "y": 4
+        },
+        {
+          "x": 12,
+          "y": 4
+        },
+        {
+          "x": 11,
+          "y": 5
+        },
+        {
+          "x": 12,
+          "y": 5
+        }
+      ]
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 3,
+      "y": 7,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 11,
+      "y": 2,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "fantasy_c22_goblin",
+      "x": 11,
+      "y": 7,
+      "dir": 0
+    },
+    {
+      "id": "fantasy_c22_trainingdummy",
+      "x": 4,
+      "y": 11,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_trainingtarget",
+      "x": 4,
+      "y": 8,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_c22_arrows",
+      "x": 2,
+      "y": 9,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_mossydivider",
+      "x": 1,
+      "y": 10,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_mossydivider",
+      "x": 3,
+      "y": 10,
+      "dir": 0
+    },
+    {
+      "id": "country_patio",
+      "x": 6,
+      "y": 5,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 7,
+      "y": 5,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 8,
+      "y": 5,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 9,
+      "y": 5,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 6,
+      "y": 6,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 7,
+      "y": 6,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 8,
+      "y": 6,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 9,
+      "y": 6,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 6,
+      "y": 7,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 7,
+      "y": 7,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 8,
+      "y": 7,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 9,
+      "y": 7,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 6,
+      "y": 8,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 7,
+      "y": 8,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 8,
+      "y": 8,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "country_patio",
+      "x": 9,
+      "y": 8,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "fantasy_c22_sewers",
+      "x": 1,
+      "y": 10,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 1,
+          "y": 10
+        },
+        {
+          "x": 2,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "id": "fantasy_c22_adventureboard",
+      "x": 12,
+      "y": 7,
+      "dir": 2
+    },
+    {
+      "id": "fantasy_r22_regalhorse",
+      "x": 2,
+      "y": 7,
+      "dir": 2
+    }
+  ],
+  "mirkwood": [
+    {
+      "id": "hween_c19_birchtree",
+      "x": 1,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 1,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 3,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 3,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 5,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 5,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 7,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 7,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 9,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 9,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 11,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 11,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 13,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 15,
+      "y": 1,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 17,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 17,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 19,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 19,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 21,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 21,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 23,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 23,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 25,
+      "y": 1,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 25,
+      "y": 20,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 1,
+      "y": 3,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 26,
+      "y": 3,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 1,
+      "y": 5,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 26,
+      "y": 5,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 1,
+      "y": 7,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 26,
+      "y": 7,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 1,
+      "y": 9,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 26,
+      "y": 9,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 1,
+      "y": 11,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 26,
+      "y": 11,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 1,
+      "y": 13,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 26,
+      "y": 13,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 1,
+      "y": 15,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 26,
+      "y": 15,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 1,
+      "y": 17,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 26,
+      "y": 17,
+      "dir": 0
+    },
+    {
+      "id": "easter_c19_dirtpath",
+      "x": 14,
+      "y": 17,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 14,
+          "y": 17
+        },
+        {
+          "x": 14,
+          "y": 18
+        }
+      ]
+    },
+    {
+      "id": "easter_c19_dirtpath",
+      "x": 14,
+      "y": 15,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 14,
+          "y": 15
+        },
+        {
+          "x": 14,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "id": "easter_c19_dirtpath",
+      "x": 13,
+      "y": 13,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 13,
+          "y": 13
+        },
+        {
+          "x": 13,
+          "y": 14
+        }
+      ]
+    },
+    {
+      "id": "easter_c19_dirtpath",
+      "x": 13,
+      "y": 11,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 13,
+          "y": 11
+        },
+        {
+          "x": 13,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "id": "easter_c19_dirtpath",
+      "x": 14,
+      "y": 9,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 14,
+          "y": 9
+        },
+        {
+          "x": 14,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "id": "easter_c19_dirtpath",
+      "x": 14,
+      "y": 7,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 14,
+          "y": 7
+        },
+        {
+          "x": 14,
+          "y": 8
+        }
+      ]
+    },
+    {
+      "id": "easter_c20_waypointrocks",
+      "x": 12,
+      "y": 4,
+      "dir": 2
+    },
+    {
+      "id": "wisp_c23_willowisp",
+      "x": 14,
+      "y": 4,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_darkrock1",
+      "x": 15,
+      "y": 5,
+      "dir": 2
+    },
+    {
+      "id": "wisp_c23_starryfloor",
+      "x": 13,
+      "y": 5,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "wisp_c23_starryfloor",
+      "x": 14,
+      "y": 5,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "wisp_c23_lilwisp",
+      "x": 11,
+      "y": 7,
+      "dir": 2
+    },
+    {
+      "id": "wisp_c23_lilwisp",
+      "x": 16,
+      "y": 7,
+      "dir": 2
+    },
+    {
+      "id": "hween_r19_weepingwillow",
+      "x": 2,
+      "y": 6,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 2,
+          "y": 6
+        },
+        {
+          "x": 3,
+          "y": 6
+        },
+        {
+          "x": 2,
+          "y": 7
+        },
+        {
+          "x": 3,
+          "y": 7
+        }
+      ]
+    },
+    {
+      "id": "easter_c20_fishstream",
+      "x": 7,
+      "y": 8,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 7,
+          "y": 8
+        },
+        {
+          "x": 7,
+          "y": 9
+        }
+      ]
+    },
+    {
+      "id": "hween_c25_bedofmushrooms",
+      "x": 5,
+      "y": 10,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 5,
+          "y": 10
+        },
+        {
+          "x": 6,
+          "y": 10
+        },
+        {
+          "x": 7,
+          "y": 10
+        }
+      ]
+    },
+    {
+      "id": "easter_c20_darkrock",
+      "x": 5,
+      "y": 5,
+      "dir": 2
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 4,
+      "y": 12,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 5,
+      "y": 13,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_mossyfloor",
+      "x": 3,
+      "y": 15,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 3,
+          "y": 15
+        },
+        {
+          "x": 4,
+          "y": 15
+        },
+        {
+          "x": 3,
+          "y": 16
+        },
+        {
+          "x": 4,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "id": "hween_c25_weed3",
+      "x": 2,
+      "y": 13,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 5,
+      "y": 16,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 3,
+      "y": 17,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_bedofmushrooms",
+      "x": 6,
+      "y": 18,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 6,
+          "y": 18
+        },
+        {
+          "x": 7,
+          "y": 18
+        },
+        {
+          "x": 8,
+          "y": 18
+        }
+      ]
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 18,
+      "y": 8,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 19,
+      "y": 9,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 17,
+      "y": 10,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 19,
+      "y": 11,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 18,
+      "y": 12,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_foresttree",
+      "x": 21,
+      "y": 12,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 23,
+      "y": 9,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 24,
+      "y": 7,
+      "dir": 0
+    },
+    {
+      "id": "hween_c17_hangingroots",
+      "x": 20,
+      "y": 8,
+      "dir": 0
+    },
+    {
+      "id": "hween_c17_lichen",
+      "x": 21,
+      "y": 8,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "easter_c20_scatteredforestfloor",
+      "x": 17,
+      "y": 11,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 17,
+          "y": 11
+        },
+        {
+          "x": 18,
+          "y": 11
+        },
+        {
+          "x": 17,
+          "y": 12
+        },
+        {
+          "x": 18,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 22,
+      "y": 10,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed3",
+      "x": 24,
+      "y": 11,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 16,
+      "y": 10,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 25,
+      "y": 8,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "easter_c20_waypointrocks",
+      "x": 19,
+      "y": 4,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_darkrock",
+      "x": 24,
+      "y": 5,
+      "dir": 2
+    },
+    {
+      "id": "easter_c19_mushrooms",
+      "x": 17,
+      "y": 3,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c17_lichen",
+      "x": 22,
+      "y": 2,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 25,
+      "y": 4,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed3",
+      "x": 25,
+      "y": 6,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_mossyfloor",
+      "x": 15,
+      "y": 3,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 15,
+          "y": 3
+        },
+        {
+          "x": 16,
+          "y": 3
+        },
+        {
+          "x": 15,
+          "y": 4
+        },
+        {
+          "x": 16,
+          "y": 4
+        }
+      ]
+    },
+    {
+      "id": "easter_c20_scatteredforestfloor",
+      "x": 22,
+      "y": 2,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 22,
+          "y": 2
+        },
+        {
+          "x": 23,
+          "y": 2
+        },
+        {
+          "x": 22,
+          "y": 3
+        },
+        {
+          "x": 23,
+          "y": 3
+        }
+      ]
+    },
+    {
+      "id": "hween_c25_weed3",
+      "x": 8,
+      "y": 3,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 9,
+      "y": 4,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 2,
+      "y": 4,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 4,
+      "y": 3,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c17_shroomthing",
+      "x": 7,
+      "y": 6,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_rockboulders",
+      "x": 8,
+      "y": 13,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_waypointrocks",
+      "x": 10,
+      "y": 11,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_darkrock1",
+      "x": 19,
+      "y": 13,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_rockboulders",
+      "x": 21,
+      "y": 6,
+      "dir": 2
+    },
+    {
+      "id": "hween_c25_weed3",
+      "x": 11,
+      "y": 11,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 12,
+      "y": 12,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_mossyfloor",
+      "x": 9,
+      "y": 11,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 9,
+          "y": 11
+        },
+        {
+          "x": 10,
+          "y": 11
+        },
+        {
+          "x": 9,
+          "y": 12
+        },
+        {
+          "x": 10,
+          "y": 12
+        }
+      ]
+    },
+    {
+      "id": "hween_c25_bedofmushrooms",
+      "x": 9,
+      "y": 9,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 9,
+          "y": 9
+        },
+        {
+          "x": 10,
+          "y": 9
+        },
+        {
+          "x": 11,
+          "y": 9
+        }
+      ]
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 6,
+      "y": 15,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 9,
+      "y": 14,
+      "dir": 0
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 11,
+      "y": 3,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_fishstream",
+      "x": 22,
+      "y": 15,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 22,
+          "y": 15
+        },
+        {
+          "x": 22,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "id": "easter_c19_mushrooms",
+      "x": 20,
+      "y": 18,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 11,
+      "y": 16,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed3",
+      "x": 24,
+      "y": 18,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c17_lichen",
+      "x": 25,
+      "y": 19,
+      "dir": 0,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_weed1",
+      "x": 24,
+      "y": 16,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c25_bedofmushrooms",
+      "x": 18,
+      "y": 16,
+      "dir": 0,
+      "tiles": [
+        {
+          "x": 18,
+          "y": 16
+        },
+        {
+          "x": 19,
+          "y": 16
+        },
+        {
+          "x": 20,
+          "y": 16
+        }
+      ]
+    },
+    {
+      "id": "hween_c25_weed2",
+      "x": 16,
+      "y": 14,
+      "dir": 2,
+      "walk": true
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 10,
+      "y": 18,
+      "dir": 2
+    },
+    {
+      "id": "hween_c19_birchtree",
+      "x": 18,
+      "y": 19,
+      "dir": 0
+    },
+    {
+      "id": "easter_c20_darkrock",
+      "x": 23,
+      "y": 14,
+      "dir": 2
+    },
+    {
+      "id": "hween_c17_shroomthing",
+      "x": 25,
+      "y": 16,
+      "dir": 2
+    },
+    {
+      "id": "easter_c20_scatteredforestfloor",
+      "x": 7,
+      "y": 18,
+      "dir": 0,
+      "walk": true,
+      "tiles": [
+        {
+          "x": 7,
+          "y": 18
+        },
+        {
+          "x": 8,
+          "y": 18
+        },
+        {
+          "x": 7,
+          "y": 19
+        },
+        {
+          "x": 8,
+          "y": 19
+        }
+      ]
+    },
+    {
+      "id": "rp_arrow",
+      "x": 14,
+      "y": 20,
+      "dir": 4,
+      "walk": true,
+      "teleport": {
+        "room": "square"
+      }
+    }
+  ]
+}

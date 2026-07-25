@@ -1,0 +1,1865 @@
+/* Authentic old-school Habbo pixel font (Volter, the 2006 client font — NOT
+   the modern Ubuntu/Ubuntu Condensed). Committed locally in assets/fonts,
+   sourced via habbianos.github.io/fonts (Alynva's extraction). */
+@font-face {
+  font-family: 'Volter';
+  src: url('../assets/fonts/volter.otf');
+}
+@font-face {
+  font-family: 'Volter';
+  src: url('../assets/fonts/volter-bold.otf');
+  font-weight: bold;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  /* plain black stage — rooms and battles float on it (menu overlays lay
+     their own hd-page wallpaper on top) */
+  background: #000;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  color: #e8e0d0;
+}
+
+#game {
+  position: fixed;
+  inset: 0;
+  cursor: pointer;
+}
+
+/* battle HUD — white hd-card, same language as every other screen */
+#panel {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  width: 296px;
+  padding: 14px 16px;
+  color: #330;
+  background: #fff;
+  border: 1px solid #050a0e;
+  border-radius: 15px;
+  box-shadow: 0 2px 3px rgba(6, 19, 25, 0.7);
+  user-select: none;
+}
+
+#panel h1 {
+  font-size: 17px;
+  letter-spacing: 3px;
+  color: #9c3816;
+}
+
+#panel .sub {
+  font-size: 11px;
+  color: #776;
+  margin: 3px 0 12px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Minimal global reset: buttons carry NO chrome by default — every widget
+   (toolbar icons, infostand, catalogue…) styles its own. The classic brown
+   panel buttons are scoped below, so hovers never paint brown boxes over
+   icon buttons like .tb-icon / .infostand-close / .furni-cat-close. */
+button {
+  font: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* HUD buttons (End Turn, skills, debug explore bar): compact hd-btn look.
+   :where() keeps plain-`button` specificity so class'd buttons still win. */
+:where(#panel, #exploreBar) button {
+  font-size: 12px;
+  font-weight: bold;
+  padding: 7px 10px;
+  color: #330;
+  background: #fff;
+  border: 1px solid #050a0e;
+  border-radius: 12px;
+  box-shadow: 0 2px 0 1px rgba(0, 0, 0, 0.3);
+}
+:where(#panel, #exploreBar) button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 1px rgba(0, 0, 0, 0.25);
+}
+:where(#panel, #exploreBar) button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 1px rgba(0, 0, 0, 0.3);
+}
+:where(#panel, #exploreBar) button:disabled {
+  cursor: default;
+  color: #665f49;
+  background: #e7e0cf;
+  transform: none;
+  box-shadow: 0 2px 0 1px rgba(0, 0, 0, 0.3);
+}
+
+/* mode tabs */
+#modeTabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+#modeTabs button {
+  flex: 1;
+}
+#modeTabs button.active {
+  background: #f4d35e;
+  outline: 2px solid #8eda55;
+  outline-offset: -1px;
+}
+
+/* battle banner — an old-school 2006 Habbo chat bubble: white, 1px black
+   border, rounded, a little tail underneath, Volter 9px (crispified via the
+   SVG filter in index.html so the pixel font never anti-aliases). */
+.banner {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 14px;
+  padding: 4px 9px 5px;
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 7px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  font-weight: normal;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-align: left;
+  filter: url(#crispify);
+  -webkit-font-smoothing: none;
+}
+.banner b {
+  font-weight: bold; /* Volter Bold */
+}
+/* the bubble tail: outlined triangle (black under white) */
+.banner::before,
+.banner::after {
+  content: '';
+  position: absolute;
+  left: 18px;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-bottom: 0;
+}
+.banner::before {
+  bottom: -7px;
+  border-top-color: #000;
+}
+.banner::after {
+  bottom: -5.5px;
+  border-top-color: #fff;
+}
+.banner .obj {
+  white-space: normal;
+}
+.banner .obj::before {
+  content: '⚑ ';
+  color: #b8860b;
+}
+/* phase hints stay subtle — the bubble itself is always classic white */
+.banner.player b {
+  color: #1c5e9e;
+}
+.banner.enemy b {
+  color: #a32b1d;
+}
+.banner.won b {
+  color: #2e7d32;
+}
+.banner.lost b {
+  color: #a32b1d;
+}
+
+/* action buttons */
+#actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  min-height: 34px;
+}
+#actions button {
+  flex: 1;
+  min-width: 84px;
+}
+
+/* roster — light rows on the white card */
+#roster {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 10px;
+}
+.roster-row {
+  display: grid;
+  grid-template-columns: 1fr auto 46px 26px;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 8px;
+  background: #f2eee2;
+  border: 1px solid transparent;
+}
+.roster-row.player {
+  border-left: 3px solid #2d7dd2;
+}
+.roster-row.enemy {
+  border-left: 3px solid #c0392b;
+}
+.roster-row.sel {
+  border-color: #050a0e;
+  background: #f4d35e;
+}
+.roster-row.done {
+  opacity: 0.5;
+}
+.roster-row.dead {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+.rname {
+  color: #330;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rcls {
+  color: #776;
+  font-size: 10px;
+}
+.rhp {
+  position: relative;
+  height: 7px;
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.rhp-fill {
+  position: absolute;
+  inset: 0;
+  right: auto;
+  background: #00813e;
+}
+.roster-row.enemy .rhp-fill {
+  background: #cc0100;
+}
+.rhpn {
+  text-align: right;
+  color: #665f49;
+}
+
+/* combat log — tinted well, like habboskills' .project-card-logo */
+#log {
+  height: 108px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #330;
+  background: #d7eef5;
+  border: 1px solid #050a0e;
+  border-radius: 10px;
+  padding: 6px 8px;
+  margin-bottom: 8px;
+}
+#log div {
+  padding: 1px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* explore */
+#rooms {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+#rooms button {
+  text-align: left;
+}
+#rooms button.active {
+  background: #f4d35e;
+  outline: 2px solid #8eda55;
+  outline-offset: -1px;
+}
+
+/* character loader (title landing) — field styling lives in habbo-ui .hd-input */
+
+.info {
+  font-size: 11px;
+  margin-top: 8px;
+  color: #776;
+  min-height: 14px;
+}
+.info.dim {
+  color: #999;
+}
+
+/* emphasized HUD button (End Turn during your phase) — hd green */
+button.primary {
+  color: #fff;
+  background: #00813e;
+  border-color: #8eda55;
+}
+button.primary:hover {
+  background: #00ab54;
+  border-color: #b9f373;
+}
+
+/* run header — hd yellow stat pill */
+#runHeader {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #332f12;
+  background: #f4d35e;
+  border: 1px solid #050a0e;
+  border-radius: 15px;
+  box-shadow: 0 2px 3px rgba(6, 19, 25, 0.7);
+  z-index: 5;
+}
+#runHeader b {
+  color: #9c3816;
+}
+
+/* center overlay (title / builder / event / camp / end) */
+#overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* no side padding: .hd-landing carries the Bootstrap-style 12px gutters */
+  padding: 24px 0;
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.62);
+  z-index: 10;
+}
+/* overlay screens are all hd-ui (habbo-ui.css) — the old brown .screen
+   chrome is gone. Only the shared flex rows for choices/actions remain. */
+.choices,
+.camp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 14px;
+}
+.camp-actions {
+  justify-content: flex-end;
+}
+.result {
+  color: var(--hd-primary, #9c3816);
+  font-weight: bold;
+  font-size: 13px;
+  min-height: 18px;
+  margin-top: 10px;
+}
+
+/* squad builder: fully hd-ui now (habbo-ui.css .hd-class / .hd-btn) — the
+   old brown .dungeon-card / .class-card / .pick styles are gone with it */
+
+/* camp / squad cards — light hd-ui values (they live on white hd-cards) */
+.squad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.card {
+  padding: 10px 12px;
+  color: #330;
+  border: 1px solid #050a0e;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 2px 0 1px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+.card.sel {
+  background: #f4d35e;
+  outline: 2px solid #8eda55;
+  outline-offset: -1px;
+}
+.card.downed {
+  opacity: 0.45;
+  cursor: default;
+}
+.card-head {
+  font-size: 13px;
+}
+.card-hp {
+  font-size: 12px;
+  color: #00813e;
+  font-weight: bold;
+  margin: 2px 0;
+}
+.card.downed .card-hp {
+  color: #cc0100;
+}
+.card-stats {
+  font-size: 10px;
+  color: #776;
+}
+.slots {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+.slot {
+  flex: 1;
+  font-size: 10px;
+  padding: 5px 4px;
+  text-align: center;
+  border: 1px solid #6b6152; /* rarity color set inline */
+  border-radius: 10px;
+  background: #fff;
+  color: #330;
+  cursor: pointer;
+  line-height: 1.3;
+}
+.slot .dim {
+  display: block;
+  font-size: 8px;
+  text-transform: uppercase;
+  color: #776;
+}
+.inv {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.chip {
+  text-align: left;
+  font-size: 11px;
+  padding: 6px 9px;
+  border: 1px solid #050a0e; /* rarity color set inline */
+  border-radius: 12px;
+  background: #fff;
+  color: #330;
+  box-shadow: 0 2px 0 1px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+/* habbo account screen — hd-ui cards; only the small helpers remain */
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.acct-ok {
+  font-size: 14px;
+  color: #00813e;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.code-block {
+  margin-top: 8px;
+}
+.code {
+  font-family: 'Consolas', 'SF Mono', monospace;
+  font-size: 24px;
+  letter-spacing: 3px;
+  font-weight: 700;
+  color: #f4d35e;
+  text-align: center;
+  padding: 10px;
+  margin: 8px 0;
+  background: #071c49;
+  border: 1px solid #050a0e;
+  border-radius: 12px;
+  user-select: all;
+}
+.trees {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.tree {
+  padding: 9px 11px;
+  border: 1px solid #050a0e; /* tree color set inline */
+  border-radius: 12px;
+  background: #fff;
+}
+.tree-head {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.skill-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.skill-item.on .sk-name {
+  color: #330;
+}
+.skill-item.off .sk-name {
+  color: #999;
+}
+.sk-req {
+  font-size: 10px;
+  color: #999;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.skill-item.on .sk-req {
+  color: #00813e;
+}
+
+/* ---- room chat (explore) ----------------------------------------------------
+   Bubble skin shared with .banner (2006 white Habbo bubble); the stacking,
+   wrapping and fade behaviour is adapted from nitro-react's ChatWidgetView
+   (bubble-container: absolute, top-transition, word-break; max-width). */
+#chatLayer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 6;
+}
+/* classic-client bubble: tail-less white pill, 1px black border, very round
+   ends — exactly the 2001-2006 look (see reference screenshot) */
+.chat-bubble {
+  position: absolute;
+  transform: translateX(-50%);
+  max-width: 260px;
+  width: max-content;
+  padding: 1px 8px 2px;
+  background: #fff;
+  color: #000;
+  /* 1.75px visual stroke: Chrome floors fractional border-widths to whole
+     pixels, so the extra 0.75px rides on a box-shadow ring instead */
+  border: 1px solid #000;
+  box-shadow: 0 0 0 0.75px #000;
+  border-radius: 10px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  line-height: 1.35;
+  word-break: break-word;
+  filter: url(#crispify);
+  -webkit-font-smoothing: none;
+  transition: top 0.3s ease; /* smooth drift/push, matches nitro's bubble-container */
+}
+.chat-bubble b {
+  font-weight: bold;
+}
+/* chat modes — classic client: say normal, shout bold, whisper italic gray */
+.chat-bubble--shout .chat-msg {
+  font-weight: bold;
+}
+.chat-bubble--whisper .chat-msg {
+  font-style: italic;
+  color: #595959;
+}
+/* bot/NPC bubbles — the client's bot look: pale gray pill, bold name */
+.chat-bubble--bot {
+  background: #e8e8e8;
+}
+.chat-bubble--bot b {
+  font-weight: bold;
+}
+
+/* ---- remote player name tags (multiplayer presence) ------------------------
+   Small dark pill floating just above each remote head — the classic
+   hover-name look, in the same Volter face as chat. */
+#nameTagLayer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 5; /* under chat bubbles */
+}
+.name-tag {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  width: max-content;
+  padding: 0 5px 1px;
+  background: rgba(20, 18, 16, 0.72);
+  color: #fff;
+  border-radius: 7px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  line-height: 1.4;
+  -webkit-font-smoothing: none;
+}
+
+/* ---- NPC dialogue choices (npc.js) -----------------------------------------
+   Small centred tray docked onto the top edge of the chat toolbar: 2-3 reply
+   buttons as silver pills — same #efefef fill and #2c2c2a border as the chat
+   input pill, on a strip of the toolbar's own dark gray. */
+#dialoguePanel {
+  position: fixed;
+  bottom: 62px; /* sits flush on the 62px toolbar */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 460px;
+  padding: 6px 10px;
+  background: #555; /* the toolbar's dark gray, reads as one surface */
+  border: 1px solid #0e0e0e;
+  border-bottom: none;
+  border-radius: 9px 9px 0 0;
+  box-shadow: inset 0 1px 0 #5a5a5a; /* same top highlight as the toolbar */
+  z-index: 6;
+}
+#dialoguePanel.hidden {
+  display: none;
+}
+#dialoguePanel button {
+  height: 22px; /* the chat pill's height */
+  padding: 0 10px;
+  color: #000;
+  background: #efefef; /* silver pill, exactly the chat field */
+  border: 1px solid #2c2c2a;
+  border-radius: 11px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+#dialoguePanel button:hover {
+  background: #fff;
+}
+
+/* bottom toolbar — the classic client's gray strip: "Say" selector on the
+   left, long rounded white field beside it (reference screenshot) */
+#chatToolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 62px; /* tall enough to hold every icon at native size */
+  padding: 0 12px;
+  background: #555; /* the client's dark toolbar gray */
+  border-top: 1px solid #0e0e0e;
+  box-shadow: inset 0 1px 0 #5a5a5a;
+  z-index: 6;
+}
+/* the classic pill: one long silver rounded field holding dropdown + input */
+#chatToolbar form {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin: 0 0 0 60px; /* inset from the left edge like the client */
+  height: 22px;
+  background: #efefef; /* silver pill fill, exactly the reference */
+  border: 1px solid #2c2c2a;
+  border-radius: 11px;
+  overflow: hidden;
+}
+#chatToolbar .chat-say {
+  height: 100%;
+  padding: 0 4px 0 8px;
+  color: #000;
+  background: #efefef;
+  border: none;
+  border-right: 1px solid #999;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  outline: none;
+  cursor: pointer;
+}
+#chatToolbar input {
+  flex: 1;
+  height: 100%;
+  padding: 0 10px;
+  color: #000;
+  background: #efefef;
+  border: none;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  outline: none;
+}
+
+/* ---- room editor: native object-displayer infostand ---------------------------
+   The Shockwave client's (r28/v31, the Havana era) furni infostand, rebuilt from
+   the decompiled hh_room_ui window stack: obj_disp_furni.window + the
+   obj_disp_actions_furni.window button row, merged into one dark translucent
+   rounded panel anchored bottom-right above the toolbar. Text is the client's
+   #EEEEEE Volter (bold name / plain desc); action buttons are the 15px-tall
+   white-outline pills; the «/» line is object_displayer_toggle_actions. */
+.infostand {
+  position: fixed;
+  right: 10px;
+  bottom: 70px; /* fully above the 62px chat toolbar, like the client stage */
+  z-index: 7;
+  width: 146px;
+  color: #eee;
+  background: rgba(24, 24, 24, 0.82);
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  user-select: none;
+}
+.infostand-info {
+  padding: 6px 7px 5px;
+}
+.infostand-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: bold;
+  text-transform: capitalize;
+  filter: url(#crispify);
+}
+.infostand-name span {
+  flex: 1;
+  overflow: hidden; /* long names scroll in the client; we clip */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.infostand-close {
+  padding: 0 2px;
+  color: #eee;
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+}
+.infostand-close:hover {
+  color: #fff;
+}
+.infostand-preview {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 40px;
+  padding: 4px 0 2px;
+}
+.infostand-preview canvas {
+  max-width: 120px;
+  max-height: 86px;
+  image-rendering: pixelated;
+}
+.infostand-desc {
+  color: #eee;
+  text-align: center;
+  filter: url(#crispify);
+}
+.infostand-actions {
+  padding: 4px 7px 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18); /* next merged window */
+}
+.infostand-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px; /* the client's 3px button margins */
+  margin-bottom: 3px;
+}
+.infostand-buttons.hidden {
+  display: none;
+}
+.infostand-btn {
+  height: 17px; /* 15px button + border, scaleButtonWindow */
+  padding: 1px 7px 2px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid #fff;
+  border-radius: 9px;
+  font: inherit;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.infostand-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.infostand-btn.active {
+  border-color: #f6c343;
+  color: #f6c343;
+}
+.infostand-toggle {
+  display: block;
+  margin-left: auto;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.75);
+  background: none;
+  border: none;
+  font: inherit;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.infostand-toggle:hover {
+  color: #fff;
+}
+
+/* ---- human object displayer (multiplayer) ----------------------------------
+   The hh_room_ui human branch of the same window stack: bold name, full-body
+   habbo-imaging render, the motto line, then Invite / Add Friend / Trade. */
+.infostand--human .infostand-preview--human {
+  min-height: 110px;
+}
+.infostand--human .infostand-preview--human img {
+  image-rendering: pixelated;
+}
+.infostand--human .infostand-motto {
+  min-height: 12px;
+  color: #cfcfcf;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.infostand-btn:disabled {
+  color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.45);
+  cursor: default;
+}
+.infostand-btn:disabled:hover {
+  background: transparent;
+}
+
+/* ---- party formation (multiplayer) -----------------------------------------
+   Roster chip strip docked above the chat toolbar (leader crown + imaging
+   heads) and the invite prompt, both in the infostand's dark panel family. */
+#partyStrip {
+  position: fixed;
+  left: 10px;
+  bottom: 44px;
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  color: #eee;
+  background: rgba(24, 24, 24, 0.82);
+  border-radius: 8px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  user-select: none;
+}
+.party-label {
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.party-chip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px 1px 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+}
+.party-chip.me {
+  background: rgba(246, 195, 67, 0.25);
+}
+.party-chip img {
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  object-position: top;
+  image-rendering: pixelated;
+}
+.party-crown {
+  color: #f6c343;
+}
+.party-chip-name {
+  max-width: 80px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  filter: url(#crispify);
+}
+.party-prompt {
+  position: fixed;
+  left: 50%;
+  bottom: 64px;
+  transform: translateX(-50%);
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  color: #eee;
+  background: rgba(24, 24, 24, 0.88);
+  border-radius: 8px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+}
+.party-prompt-text {
+  filter: url(#crispify);
+}
+.party-prompt-btns {
+  display: flex;
+  gap: 4px;
+}
+
+/* ---- the Safe Trading window -----------------------------------------------
+   The classic client's trade box in the Hand's gray window family: title
+   strip, partner offers left / yours right with type-ID badges over filled
+   sockets, an "agrees" checkbox under each pane, "Add items to box." +
+   Cancel in the footer. Items come from the Hand (stash mode) — clicked or
+   dragged into the "You offer" well. */
+.trade-window {
+  position: fixed;
+  left: 44%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9;
+  width: 314px;
+  background: #c7c7c7; /* the Hand's board gray */
+  border: 1px solid #000;
+  border-radius: 9px;
+  box-shadow: inset 0 1px 0 #efefef, 0 4px 14px rgba(0, 0, 0, 0.45);
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  user-select: none;
+  overflow: hidden;
+}
+.trade-titlebar {
+  padding: 3px 0 4px;
+  color: #000;
+  background: linear-gradient(#e9e9e9, #bdbdbd);
+  border-bottom: 1px solid #8a8a8a;
+  text-align: center;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.trade-body {
+  padding: 7px 8px 8px;
+}
+.trade-panes {
+  display: flex;
+  gap: 8px;
+}
+.trade-pane {
+  flex: 1;
+  padding: 4px 5px 5px;
+  background: #b4b4b4; /* recessed well plate, like an empty hand socket */
+  border: 1px solid #7c7c7c;
+  border-top-color: #5f5f5f;
+  border-bottom-color: #e4e4e4;
+  border-radius: 4px;
+}
+.trade-pane-head {
+  margin-bottom: 3px;
+  color: #000;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.trade-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px 4px;
+}
+.trade-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.trade-badge {
+  height: 10px;
+  color: #4a4a4a;
+  line-height: 10px;
+  filter: url(#crispify);
+}
+/* empty cells keep the badge row's height so sockets stay aligned */
+.trade-cell > .trade-socket:only-child {
+  margin-top: 10px;
+}
+.trade-socket {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #a8a8a8; /* recessed empty well — same as the hand */
+  border: 1px solid #7c7c7c;
+  border-top-color: #5f5f5f;
+  border-bottom-color: #e4e4e4;
+  border-radius: 3px;
+}
+.trade-socket.filled {
+  background: #efefef;
+  cursor: pointer;
+}
+.trade-socket.filled:hover {
+  background: #ffe9b0;
+}
+.trade-socket canvas {
+  image-rendering: pixelated;
+}
+.trade-agree {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  color: #000;
+  cursor: pointer;
+  filter: url(#crispify);
+}
+.trade-agree input {
+  width: 11px;
+  height: 11px;
+  margin: 0;
+  accent-color: #4a4a4a;
+}
+.trade-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.trade-status {
+  color: #000;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.trade-status.lock {
+  color: #8a6d00;
+}
+.trade-status.good {
+  color: #1b7c2c;
+}
+.trade-actions {
+  display: flex;
+  gap: 5px;
+}
+/* footer buttons in the hand-btn white-pill family */
+.trade-btn {
+  padding: 2px 10px 3px;
+  color: #000;
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 9px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.trade-btn:hover {
+  background: #ffe9b0;
+}
+.trade-btn--confirm {
+  background: #b8e8b0;
+}
+
+/* the drag ghost: the item art riding the cursor from the hand to the box */
+.hand-drag-ghost {
+  position: fixed;
+  z-index: 99;
+  pointer-events: none;
+  transform: translate(-50%, -60%);
+  image-rendering: pixelated;
+}
+.hand-hint {
+  margin-bottom: 3px;
+  color: #4a4a4a;
+  filter: url(#crispify);
+}
+
+/* ---- :furni catalogue (admins) ---------------------------------------------
+   The classic 2006 catalogue window rebuilt in the toolbar-silver chrome
+   (same family as the chat bar + dialogue panel): gray frame, 1px black
+   outline, Volter text, white item cells that light up gold on hover.
+   Opened by the :furni chat command; items hand straight to the Object
+   Mover, so placing feels exactly like moving existing furni. */
+.furni-cat {
+  position: fixed;
+  top: 52px;
+  right: 14px;
+  z-index: 7;
+  width: 274px;
+  max-height: min(460px, calc(100vh - 110px));
+  display: flex;
+  flex-direction: column;
+  color: #000;
+  background: #c7c7c7;
+  border: 1px solid #000;
+  border-radius: 9px;
+  box-shadow: inset 0 1px 0 #efefef, 0 4px 16px rgba(0, 0, 0, 0.45);
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  user-select: none;
+}
+.furni-cat-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px 3px;
+  font-weight: bold;
+  filter: url(#crispify);
+  cursor: move;
+}
+.furni-cat-head span {
+  flex: 1;
+}
+.furni-cat-close {
+  padding: 0 3px;
+  color: #000;
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+}
+.furni-cat-close:hover {
+  color: #6d3900;
+}
+.furni-cat-sub {
+  padding: 0 8px 5px;
+  color: #4a4a4a;
+  filter: url(#crispify);
+}
+.furni-cat-search {
+  margin: 0 8px 6px;
+  padding: 4px 9px;
+  color: #000;
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 9px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  outline: none;
+}
+.furni-cat-grid {
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* nowrap labels must not blow the columns out */
+  gap: 4px;
+  align-content: start;
+  margin: 0 8px;
+  padding: 4px;
+  background: #efefef;
+  border: 1px solid #8a8a8a;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.furni-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 3px 2px 2px;
+  color: #000;
+  background: #fff;
+  border: 1px solid #8a8a8a;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+}
+.furni-cell:hover {
+  background: #ffe9b0;
+  border-color: #000;
+}
+.furni-cell canvas {
+  width: 64px; /* one tile — matches THUMB so cell art is never CSS-scaled */
+  height: 64px;
+  image-rendering: pixelated;
+}
+.furni-cell .fc-name {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+  filter: url(#crispify);
+}
+.furni-cat-empty {
+  grid-column: 1 / -1;
+  padding: 14px 0;
+  color: #4a4a4a;
+  text-align: center;
+  filter: url(#crispify);
+}
+/* :clothing wardrobe — slot group headers spanning the catalogue grid */
+.clothing-cat-slot {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  padding: 2px 2px 0;
+  color: #4a4a4a;
+  font-weight: bold;
+  text-transform: capitalize;
+  filter: url(#crispify);
+}
+.furni-cat-foot {
+  padding: 4px 8px 5px;
+  color: #4a4a4a;
+  text-align: right;
+  filter: url(#crispify);
+}
+/* native-resolution hover preview: the dark translucent Origins panel (same
+   family as the infostand), pinned beside the catalogue window */
+.furni-cat-preview {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 7px 5px;
+  color: #eee;
+  background: rgba(24, 24, 24, 0.82);
+  border-radius: 8px;
+  pointer-events: none; /* never traps the cursor mid-browse */
+}
+.furni-cat-preview canvas {
+  image-rendering: pixelated; /* untouched 1:1 art */
+}
+.furni-cat-preview span {
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  filter: url(#crispify);
+}
+
+/* ---- the Hand: native inventory container ----------------------------------
+   Rebuilt from the decompiled v31 Container Hand Class (hh_room_utils):
+   a 3×3 board of item sockets that slides in from the top-right corner
+   (js/hand.js drives the client's exact pAnimLocs easing), with the
+   habbo_hand_buttons window — prev / close / next — pinned 5px into the
+   corner above it. Board chrome matches the toolbar-silver family; sockets
+   are recessed wells; the detail card is the dark infostand family. */
+.hand {
+  position: fixed;
+  top: 30px;
+  right: 10px;
+  z-index: 7;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  user-select: none;
+}
+.hand-buttons {
+  position: absolute; /* the separate buttons window, top-right, 5px in */
+  top: -25px;
+  right: 5px;
+  display: flex;
+  gap: 3px;
+}
+.hand-btn {
+  min-width: 22px;
+  padding: 2px 5px 3px;
+  color: #000;
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 9px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.hand-btn:hover {
+  background: #ffe9b0;
+}
+.hand-board {
+  width: 158px;
+  padding: 5px 8px 6px;
+  background: #c7c7c7;
+  border: 1px solid #000;
+  border-radius: 9px;
+  box-shadow: inset 0 1px 0 #efefef, 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+.hand-title {
+  margin-bottom: 4px;
+  color: #000;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.hand-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.hand-socket {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #a8a8a8; /* recessed empty well */
+  border: 1px solid #7c7c7c;
+  border-top-color: #5f5f5f; /* inset bevel: dark above, light below */
+  border-bottom-color: #e4e4e4;
+  border-radius: 4px;
+  cursor: default;
+}
+.hand-socket.filled {
+  background: #efefef;
+  cursor: pointer;
+}
+.hand-socket.filled:hover {
+  background: #ffe9b0;
+}
+.hand-socket.selected {
+  border-color: #6d3900;
+  background: #ffe9b0;
+}
+.hand-socket canvas {
+  image-rendering: pixelated;
+}
+/* worn gear: present but on a squad member's back — dimmed like the client
+   dims hand items that are mid-trade */
+.hand-socket.worn canvas {
+  opacity: 0.55;
+}
+.hand-foot {
+  margin-top: 4px;
+  color: #4a4a4a;
+  filter: url(#crispify);
+}
+.hand-detail {
+  margin-top: 6px;
+  padding: 6px 7px;
+  color: #eee;
+  background: rgba(24, 24, 24, 0.82);
+  border-radius: 8px;
+}
+.hand-detail-name {
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.hand-detail-line {
+  filter: url(#crispify);
+}
+.hand-detail-blurb {
+  margin-top: 3px;
+  font-style: italic;
+  color: #c9c9c9;
+  filter: url(#crispify);
+}
+.hand-detail-hint {
+  margin-top: 3px;
+  color: #f6c343;
+  filter: url(#crispify);
+}
+.hand-detail-btn {
+  margin-top: 5px;
+  padding: 3px 10px 4px;
+  color: #000;
+  background: #fff;
+  border: 1px solid #000;
+  border-radius: 9px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.hand-detail-btn:hover {
+  background: #ffe9b0;
+}
+/* native-res hover preview beside the hand — same family as .furni-cat-preview */
+.hand-preview {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 7px 5px;
+  color: #eee;
+  background: rgba(24, 24, 24, 0.82);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.hand-preview canvas {
+  image-rendering: pixelated; /* untouched 1:1 art */
+}
+.hand-preview span {
+  max-width: 160px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  filter: url(#crispify);
+}
+
+/* clothing-change poof: pixel clouds that hide the outfit swap (clothingPoof.js
+   positions and fades each puff per-frame; keep these dumb blocks) */
+.poof {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+}
+.poof-cloud {
+  position: absolute;
+  background: #fff;
+  border: 2px solid #d8d8d8;
+  border-radius: 40% 60% 55% 45%;
+  box-shadow: inset -2px -2px 0 #e8e8e8;
+  image-rendering: pixelated;
+}
+
+/* Object Mover small pic: the half-size preview that rides the cursor while
+   the hovered tile can't take the item (showSmallPic, ink 36 blend 60) */
+.furni-move-pic {
+  position: fixed;
+  z-index: 8;
+  opacity: 0.6;
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* explore testbed bar (debug) — white hd-card like the battle HUD */
+#exploreBar {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  flex-wrap: wrap; /* lets #adminHint drop to its own line */
+  gap: 6px;
+  align-items: center;
+  padding: 8px 10px;
+  color: #330;
+  background: #fff;
+  border: 1px solid #050a0e;
+  border-radius: 15px;
+  box-shadow: 0 2px 3px rgba(6, 19, 25, 0.7);
+  z-index: 5;
+}
+#exploreBar .info {
+  margin: 0 0 0 6px;
+}
+#exploreBar #editRoom.active {
+  background: #f4d35e;
+  outline: 2px solid #8eda55;
+  outline-offset: -1px;
+}
+#adminHint {
+  flex-basis: 100%; /* own line under the buttons */
+  margin: 4px 0 0;
+  color: #9c3816;
+  font-weight: bold;
+}
+
+/* ---- room music volume control ------------------------------------------------
+   Docked right of the chat input: a chunky 2000s speaker button matching the
+   gray toolbar chrome, with a press-to-reveal slider pop-over in the dark
+   translucent Origins panel style (same family as the infostand). */
+.music-ctl {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.music-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="14"><path d="M2 5h3l4-4v12l-4-4H2z" fill="%23ddd"/><path d="M11 4c1.2 1 2 1.8 2 3s-.8 2-2 3" fill="none" stroke="%23ddd" stroke-width="1.6"/></svg>') center no-repeat;
+  border: none;
+  cursor: pointer;
+  image-rendering: pixelated;
+}
+.music-btn:hover {
+  filter: brightness(1.35);
+}
+.music-btn:active {
+  transform: translateY(1px);
+}
+.music-btn.muted {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="14"><path d="M2 5h3l4-4v12l-4-4H2z" fill="%23ddd"/><path d="M11 4l4 6M15 4l-4 6" fill="none" stroke="%23e66" stroke-width="1.6"/></svg>');
+}
+.music-btn.loud {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="14"><path d="M2 5h3l4-4v12l-4-4H2z" fill="%23ddd"/><path d="M11 4c1.2 1 2 1.8 2 3s-.8 2-2 3" fill="none" stroke="%23ddd" stroke-width="1.6"/><path d="M13 2c2 1.6 3.2 3 3.2 5s-1.2 3.4-3.2 5" fill="none" stroke="%23ddd" stroke-width="1.4"/></svg>');
+}
+
+/* press-to-reveal pop-over: rises out of the button, Volter text, dark panel */
+.music-pop {
+  position: absolute;
+  right: 0;
+  bottom: 34px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  background: rgba(24, 24, 24, 0.86);
+  border-radius: 8px;
+  opacity: 0;
+  transform: translateY(6px) scale(0.94);
+  transform-origin: bottom right;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  pointer-events: none;
+}
+.music-ctl.open .music-pop {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.music-val {
+  min-width: 26px;
+  color: #eee;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  text-align: right;
+  filter: url(#crispify);
+}
+.music-pop input[type='range'] {
+  width: 110px;
+  height: 14px;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+.music-pop input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #555;
+  border: 1px solid #000;
+  border-radius: 2px;
+}
+.music-pop input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5px;
+  background: #c7c7c7;
+  border: 1px solid #000;
+  border-radius: 50%;
+  box-shadow: inset 0 1px 0 #efefef;
+}
+.music-pop input[type='range']::-moz-range-track {
+  height: 4px;
+  background: #555;
+  border: 1px solid #000;
+  border-radius: 2px;
+}
+.music-pop input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #c7c7c7;
+  border: 1px solid #000;
+  border-radius: 50%;
+}
+
+/* ---- classic toolbar icons (v31 cutouts, bottom-right of the chat bar) -------
+   No containers: the cutouts sit straight on the silver bar at NATIVE size
+   (never scaled — squishing the pixels ruins them), bottom-aligned so taller
+   art like the navigator tower pokes above the bar exactly like the client. */
+.toolbar-icons {
+  display: flex;
+  align-items: center; /* centred inside the tall dark bar */
+  gap: 6px; /* dense like the client row — sits right after the pill */
+}
+.tb-icon {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.tb-icon:hover {
+  /* same gold glow language as .active, a touch softer */
+  filter: brightness(1.08) drop-shadow(0 0 2px rgba(246, 195, 67, 0.6));
+}
+.tb-icon:active {
+  transform: translateY(1px);
+}
+.tb-icon.active {
+  filter: drop-shadow(0 0 2px #f6c343) drop-shadow(0 0 1px #f6c343);
+}
+.tb-icon img {
+  display: block; /* native dimensions — no max-width/height scaling */
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+
+/* pop-overs above the icons (same smooth pattern as the volume knob) */
+.tb-pop-wrap {
+  position: relative;
+  display: flex;
+}
+.tb-pop {
+  position: absolute;
+  right: 0;
+  bottom: 38px;
+  min-width: 148px;
+  padding: 7px 8px;
+  background: rgba(24, 24, 24, 0.86);
+  border-radius: 8px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  color: #eee;
+  opacity: 0;
+  transform: translateY(6px) scale(0.94);
+  transform-origin: bottom right;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  pointer-events: none;
+}
+.tb-pop-wrap.open .tb-pop {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.tb-pop-title {
+  margin-bottom: 5px;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.nav-room {
+  display: block;
+  width: 100%;
+  margin-bottom: 3px;
+  padding: 3px 7px;
+  color: #fff;
+  text-align: left;
+  background: transparent;
+  border: 1px solid #fff;
+  border-radius: 9px;
+  font: inherit;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.nav-room:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.nav-room.here {
+  border-color: #f6c343;
+  color: #f6c343;
+}
+.help-pop {
+  min-width: 210px;
+}
+.help-line {
+  margin-bottom: 3px;
+  filter: url(#crispify);
+}
+
+/* admin-token toast (was parented to the old top-left bar) */
+#adminHint {
+  position: fixed;
+  right: 10px;
+  bottom: 44px;
+  z-index: 8;
+  max-width: 340px;
+  padding: 6px 9px;
+  background: rgba(24, 24, 24, 0.9);
+  border-radius: 8px;
+  color: #f6c343;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  filter: url(#crispify);
+}
+
+/* ---- toolbar pop-over bodies (console / inventory) --------------------------- */
+.tb-dim {
+  color: rgba(255, 255, 255, 0.55);
+  filter: url(#crispify);
+}
+.console-pop,
+.inv-pop {
+  min-width: 190px;
+  max-width: 240px;
+}
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  filter: url(#crispify);
+}
+.friend-row span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.friend-del {
+  padding: 0 3px;
+  color: #eee;
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+}
+.friend-del:hover {
+  color: #f66;
+}
+.friend-add {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+}
+.friend-add input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 7px;
+  color: #000;
+  background: #efefef;
+  border: 1px solid #2c2c2a;
+  border-radius: 9px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  filter: url(#crispify);
+  outline: none;
+}
+.friend-add button {
+  padding: 2px 8px;
+  color: #fff;
+  background: transparent;
+  border: 1px solid #fff;
+  border-radius: 9px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.friend-add button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+.inv-member {
+  margin: 5px 0 2px;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.inv-member:first-child {
+  margin-top: 0;
+}
+.inv-row {
+  margin-bottom: 2px;
+  filter: url(#crispify);
+}
+.inv-gold {
+  margin-top: 6px;
+  color: #f6c343;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+
+/* ---- admin panel (summoned with :admin in chat) ------------------------------- */
+#adminPanel {
+  position: fixed;
+  right: 10px;
+  bottom: 72px; /* above the dark toolbar */
+  z-index: 8;
+  min-width: 130px;
+  padding: 7px 8px;
+  background: rgba(24, 24, 24, 0.86);
+  border-radius: 8px;
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  color: #eee;
+}
+#adminPanel button {
+  display: block;
+  width: 100%;
+  margin-bottom: 3px;
+  padding: 3px 7px;
+  color: #fff;
+  text-align: left;
+  background: transparent;
+  border: 1px solid #fff;
+  border-radius: 9px;
+  font: inherit;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+#adminPanel button:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+#adminPanel button.active {
+  border-color: #f6c343;
+  color: #f6c343;
+}
+#adminPanel button.tb-dim {
+  border-color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* ---- room discovery banner --------------------------------------------------
+   Skyrim "location discovered" moment: on entering a room the name fades
+   slowly in, holds, then fades slowly out — centered near the top of the
+   stage, in the classic Habbo ribbon font (habbofont.net art, Volter text
+   fallback). Purely decorative: never intercepts clicks on the room. */
+#roomDiscovery {
+  position: fixed;
+  top: 10%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+}
+#roomDiscovery.rd-play {
+  /* slow fade in (~1s) · hold (~1.8s) · slow fade out (~1.7s) */
+  animation: rd-discover 4.5s ease-in-out forwards;
+}
+@keyframes rd-discover {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  22% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  62% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0) scale(1);
+  }
+}
+/* ribbon art scaled up crisply, with a soft dark glow so it reads on any
+   room floor */
+.rd-ribbon {
+  height: 60px;
+  width: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+}
+/* Volter fallback when the ribbon GIF can't load — reuse the outlined logo */
+.rd-text {
+  font-size: 30px;
+  letter-spacing: 2px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+}

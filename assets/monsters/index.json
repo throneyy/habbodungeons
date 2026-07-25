@@ -1,0 +1,529 @@
+[
+ {
+  "id": "bear",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "bearbaby",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "bunnydepressed",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "bunnyeaster",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "bunnyevil",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "bunnylove",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "cat",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "chicken",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 8,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 8,
+    "repeat": 10
+   }
+  }
+ },
+ {
+  "id": "cow",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "croco",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "demonmonkey",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 8,
+    "repeat": 5
+   }
+  }
+ },
+ {
+  "id": "dog",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "dragon",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "fools",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 4
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "frog",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "gnome",
+  "actions": {
+   "std": {
+    "frames": 8,
+    "repeat": 4
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 4
+   }
+  }
+ },
+ {
+  "id": "haloompa",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 4
+   }
+  }
+ },
+ {
+  "id": "horse",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 4
+   }
+  }
+ },
+ {
+  "id": "kittenbaby",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "lion",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "monkey",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 8,
+    "repeat": 5
+   }
+  }
+ },
+ {
+  "id": "monster",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 1,
+    "repeat": 2
+   }
+  }
+ },
+ {
+  "id": "monsterplant",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "pig",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "pigeonevil",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 8,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 8,
+    "repeat": 10
+   }
+  }
+ },
+ {
+  "id": "pigeongood",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 8,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 8,
+    "repeat": 10
+   }
+  }
+ },
+ {
+  "id": "pigletbaby",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "pterosaur",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "puppybaby",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   }
+  }
+ },
+ {
+  "id": "rhino",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "spider",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 2,
+    "repeat": 2
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "terrier",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "terrierbaby",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 2
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "turtle",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 5,
+    "repeat": 3
+   },
+   "ded": {
+    "frames": 1,
+    "repeat": 1
+   }
+  }
+ },
+ {
+  "id": "velociraptor",
+  "actions": {
+   "std": {
+    "frames": 1,
+    "repeat": 1
+   },
+   "mv": {
+    "frames": 4,
+    "repeat": 4
+   }
+  }
+ }
+]

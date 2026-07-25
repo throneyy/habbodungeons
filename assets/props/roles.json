@@ -1,0 +1,4052 @@
+{
+ "ads_aftv_wall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 3.8
+ },
+ "ads_ag_crate": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "ads_twi_dvdr2": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 2.5
+ },
+ "ads_twi_fountn": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "ads_twi_tower": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 0
+ },
+ "br_phoenix": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "bw_ccnuts": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_archerhat": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_backkatana": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_badasshelmet": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_bandagedhead": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.97
+ },
+ "clothing_bandagedtorso": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_fantasycape": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_fantasyheadpiece": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.95
+ },
+ "clothing_fantasynecklace": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.15
+ },
+ "clothing_fantasystaff": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_fantasysword": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_fantasyvillager": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.7
+ },
+ "clothing_herochest": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_herohelmet": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_legarmour": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.25
+ },
+ "clothing_nt_witchhat2": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.1
+ },
+ "clothing_nt_witchrobes": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.7
+ },
+ "clothing_plaguemask": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.9
+ },
+ "clothing_r17_bathat": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.95
+ },
+ "clothing_r17_hweencrown": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.2
+ },
+ "clothing_r19_comedymask": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r19_medusa": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r19_minotaurhorns": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r19_tragedymask": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r22_princearmour": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r22_villainhornsa": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r24_steampunkhat": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r25_illusenwings": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 2.7
+ },
+ "clothing_r25_mushroomcape": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_r25_queenfyora": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 2.7
+ },
+ "clothing_rebelchest": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_ultrafantasycape": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_ultrafantasyheadpiece": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.95
+ },
+ "clothing_ultrafantasynecklace": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.15
+ },
+ "clothing_ultrafantasystaff": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_ultrafantasysword": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "clothing_witchhat2": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.1
+ },
+ "clothing_witchrobes": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.7
+ },
+ "country_corner": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 0
+ },
+ "country_ditch": {
+  "role": "furniture",
+  "sub": "gate",
+  "walk": false,
+  "h": 0
+ },
+ "country_fnc1": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 0
+ },
+ "country_fnc2": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 0.99
+ },
+ "country_fnc3": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 1.1
+ },
+ "country_gate": {
+  "role": "floor",
+  "sub": "gate",
+  "walk": true,
+  "h": 0
+ },
+ "country_grass": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0
+ },
+ "country_log": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "country_patio": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "country_rain": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "country_soil": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0
+ },
+ "country_stage": {
+  "role": "floor",
+  "sub": "elevation",
+  "walk": true,
+  "h": 0.8
+ },
+ "country_well": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "country_wheat": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0
+ },
+ "dng_block": {
+  "role": "floor",
+  "sub": "elevation",
+  "walk": true,
+  "h": 0.8
+ },
+ "dng_cube": {
+  "role": "floor",
+  "sub": "elevation",
+  "walk": true,
+  "h": 1
+ },
+ "dng_floor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.01
+ },
+ "dng_ground": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "dng_stairs": {
+  "role": "floor",
+  "sub": "elevation",
+  "walk": true,
+  "h": 0.8
+ },
+ "dng_treasure": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.01
+ },
+ "dng_treasure2": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1
+ },
+ "drago_c15_bed": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1.8
+ },
+ "ducket_c25_autumndecor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "ducket_c25_cottagebook": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "ducket_c25_cottageherbs": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "ducket_c25_plantpot": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "ducket_c25_warmfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "ducket_c25_wovenhammock": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 2.4
+ },
+ "ducket_c26_anchorpillow": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 0.7
+ },
+ "ducket_c26_beeplushie": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "ducket_c26_cottagecandle": {
+  "role": "furniture",
+  "sub": "light",
+  "walk": false,
+  "h": 1
+ },
+ "ducket_c26_cottageplant": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.5
+ },
+ "ducket_c26_cottagewreath": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "ducket_c26_floor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "ducket_c26_glasslantern": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "easter_c19_ancientbook": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_ancientbook2": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_babyent2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_babyhippogriff2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_babykelpie2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_bearowl": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_book1": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_book1a": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_book2": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_book2a": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_book3": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_book3a": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_book4": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_book4a": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "easter_c19_busybunny": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_chillgnome": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_dirtpath": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0.0001
+ },
+ "easter_c19_earthdrago": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_ent": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_fairyprince": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_flowerlamp": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.01
+ },
+ "easter_c19_flowertea": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_forrestegg2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_forrestfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.01
+ },
+ "easter_c19_forrestfood": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_habshirecat": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_hippogriff": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_kelpie": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_lilredbonnie": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_littlefairies": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "easter_c19_magicringtele": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.1
+ },
+ "easter_c19_meadow": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0.000001
+ },
+ "easter_c19_mushrooms": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "easter_c19_springtree": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_turnipbuddies": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_waterdrago": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_wisestone": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 2.1
+ },
+ "easter_c19_wolf": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c19_woodlandcritters": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 0
+ },
+ "easter_c20_ancienthorse": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_clayrelic": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_climbingropetele": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "easter_c20_darkprize1": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_darkprize2": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_darkprize3": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_darkprize4": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_darkrock": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.25
+ },
+ "easter_c20_darkrock1": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.25
+ },
+ "easter_c20_fishingpole": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "easter_c20_fishstream": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_forestfriends": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_foresttree": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_heather": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_heatherrock": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.2
+ },
+ "easter_c20_jadeguardian": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1.5
+ },
+ "easter_c20_lightprize2": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_lightprize3": {
+  "role": "furniture",
+  "sub": "light",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_lightprize4": {
+  "role": "furniture",
+  "sub": "light",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_lightrock": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.25
+ },
+ "easter_c20_lightrock1": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.25
+ },
+ "easter_c20_logwalk": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "easter_c20_mossydivider": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "easter_c20_mountainflats": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.2
+ },
+ "easter_c20_mountainslopes": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.4
+ },
+ "easter_c20_ornamentalrocks": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_rapids": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.0001
+ },
+ "easter_c20_rockboulders": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.6
+ },
+ "easter_c20_scatteredforestfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "easter_c20_stickteepee": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 0.5
+ },
+ "easter_c20_waypointrocks": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_c20_zenmaster": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.12
+ },
+ "easter_ltd19_flowerthrone": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.2
+ },
+ "easter_ltd20_fortuneduck": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "easter_r19_mysticalbird": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 2.15
+ },
+ "easter_r19_treeswing": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.4
+ },
+ "easter_r20_mountaingoat": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "easter_r20_mystictree": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "elegrass1": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "elerock1": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "env_bushes": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 0
+ },
+ "env_bushes_gate": {
+  "role": "furniture",
+  "sub": "gate",
+  "walk": false,
+  "h": 0
+ },
+ "env_grass": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0
+ },
+ "env_tree1": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.4
+ },
+ "env_tree2": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "env_tree3": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "env_tree4": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "fantasy_c22_adventureboard": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_archway": {
+  "role": "floor",
+  "sub": "gate",
+  "walk": true,
+  "h": 0.0001
+ },
+ "fantasy_c22_arrows": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_balcony": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 4.55
+ },
+ "fantasy_c22_bard": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_barrel": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_bluepotion": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_building1": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 4
+ },
+ "fantasy_c22_building2": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 4
+ },
+ "fantasy_c22_cloth": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.2
+ },
+ "fantasy_c22_cobblestonefloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "fantasy_c22_coins": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.5
+ },
+ "fantasy_c22_craftsman": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_crystal": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.2
+ },
+ "fantasy_c22_divider": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": true,
+  "h": 0.00001
+ },
+ "fantasy_c22_frothydrink": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_gnoll": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_goblin": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_greenpotion": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_guildhall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_hangingflags": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.00001
+ },
+ "fantasy_c22_herbs": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "fantasy_c22_jackalope": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_marketgoods": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_marketstall": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.9
+ },
+ "fantasy_c22_metal": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.3
+ },
+ "fantasy_c22_redpotion": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_roof": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_roofbase": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 1.03
+ },
+ "fantasy_c22_rune": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_sewers": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "fantasy_c22_shopsigns": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "fantasy_c22_smallwizard": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_strawcanopy": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.00001
+ },
+ "fantasy_c22_sweetrolls": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_tavern": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 4
+ },
+ "fantasy_c22_trainingdummy": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_trainingtarget": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.6
+ },
+ "fantasy_c22_treasure1": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1.2
+ },
+ "fantasy_c22_treasure1a": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1.2
+ },
+ "fantasy_c22_treasure2": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1.2
+ },
+ "fantasy_c22_treasure2a": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 1.2
+ },
+ "fantasy_c22_tree": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_c22_wizardtower": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 7.2
+ },
+ "fantasy_c22_wood": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.2
+ },
+ "fantasy_c25_broom": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.5
+ },
+ "fantasy_c25_bubble": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.6
+ },
+ "fantasy_ltd22_dragon": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 9.4
+ },
+ "fantasy_r22_herostatue": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "fantasy_r22_regalhorse": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 2.3
+ },
+ "gift_c18_cookiejar": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "gift_duck_flowerbasket": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "goth_table": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.2
+ },
+ "gothgate": {
+  "role": "floor",
+  "sub": "gate",
+  "walk": true,
+  "h": 0
+ },
+ "gothic15_toilet": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.6
+ },
+ "gothic_bed": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.6
+ },
+ "gothic_bowl": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "gothic_c15_chandelier": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "gothic_c15_crn": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": true,
+  "h": 1
+ },
+ "gothic_c15_dvdr": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 1.5
+ },
+ "gothic_c15_toilet": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.6
+ },
+ "gothic_c15_tower": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "gothic_candles": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "gothic_carpet": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0
+ },
+ "gothic_carpet2": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "gothic_chair": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.2
+ },
+ "gothic_desk": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "gothic_sofa": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.2
+ },
+ "gothic_stool": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.2
+ },
+ "gothiccandelabra": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "gothrailing": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "greek_c15_bench": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.5
+ },
+ "greek_c15_floor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "greek_c15_lamp": {
+  "role": "furniture",
+  "sub": "light",
+  "walk": false,
+  "h": 1
+ },
+ "greek_c15_tile": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.2
+ },
+ "greek_c19_chair": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.2
+ },
+ "greek_c19_fruitbowl": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.1
+ },
+ "greek_c19_harp": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.5
+ },
+ "greek_c19_harp2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.5
+ },
+ "greek_c19_pythagorascup": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "greek_c19_scrolls1": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "greek_c19_scrolls2": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "greek_c19_shield1": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "greek_c19_shield2": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "greek_c19_statue": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "greek_c19_table": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 0.9
+ },
+ "greek_c19_vase1": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "greek_c19_vase2": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "greek_gate": {
+  "role": "floor",
+  "sub": "gate",
+  "walk": true,
+  "h": 0
+ },
+ "greek_ltd19_harp": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.5
+ },
+ "greek_r19_chariot": {
+  "role": "floor",
+  "sub": "elevation",
+  "walk": true,
+  "h": 0.5
+ },
+ "greek_r19_luxbed": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1.35
+ },
+ "habbo25_c25_icebowl": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "habbo25_c25_pearlchairfloat2": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1
+ },
+ "habbo25_c25_sparkler": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "habbo25_c25_sunlounger1": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1.6
+ },
+ "habbo25_sc25_goldenfountain": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hblooza_chicken": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hblooza_dirtfloor": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0
+ },
+ "hblooza_fnc": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hblooza_fnc_crnr": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hhistory_c24_8bittrip": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hhistory_c24_cactus": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hhistory_c24_crafttable": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "hhistory_c24_gears": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.2
+ },
+ "hhistory_c24_levers": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "hhistory_c24_megaflower": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween12_cage": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.32
+ },
+ "hween12_cart": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 0.9
+ },
+ "hween12_coffin": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.000001
+ },
+ "hween12_costume_hopper": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.1
+ },
+ "hween12_fortune": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween12_guillotine": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1.48
+ },
+ "hween12_lantern": {
+  "role": "furniture",
+  "sub": "light",
+  "walk": false,
+  "h": 1
+ },
+ "hween12_moon": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.01
+ },
+ "hween12_orb": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween12_scarecrow": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween12_shedskin": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.000001
+ },
+ "hween12_track": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.15
+ },
+ "hween12_track_crl": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.15
+ },
+ "hween12_track_crr": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.15
+ },
+ "hween12_wolf": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c17_bonfire": {
+  "role": "floor",
+  "sub": "trap",
+  "walk": true,
+  "h": 0.001
+ },
+ "hween_c17_cavefloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c17_fallingrocks": {
+  "role": "floor",
+  "sub": "trap",
+  "walk": true,
+  "h": 0.0001
+ },
+ "hween_c17_flamingknight": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c17_gibbet": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 2.6
+ },
+ "hween_c17_handstrap": {
+  "role": "floor",
+  "sub": "trap",
+  "walk": true,
+  "h": 0.05
+ },
+ "hween_c17_hangingroots": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c17_hidewall": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "hween_c17_lichen": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c17_mimic": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 0
+ },
+ "hween_c17_monstertele": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.05
+ },
+ "hween_c17_pillar": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 4
+ },
+ "hween_c17_pillarsmall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 3.8
+ },
+ "hween_c17_portcullis": {
+  "role": "floor",
+  "sub": "gate",
+  "walk": true,
+  "h": 0.001
+ },
+ "hween_c17_rat": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c17_rock": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c17_rock2": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c17_rockdrip": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c17_shroomthing": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 2.2
+ },
+ "hween_c17_spiketrap": {
+  "role": "floor",
+  "sub": "trap",
+  "walk": true,
+  "h": 0.05
+ },
+ "hween_c17_tent": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 0.8
+ },
+ "hween_c17_thefallen": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c17_torturebed": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1.4
+ },
+ "hween_c17_wall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 3.3
+ },
+ "hween_c17_zombiegrunt": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c17_zombiesleep": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_angleroof": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_archway": {
+  "role": "floor",
+  "sub": "gate",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c19_autumnfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c19_bewitchedbed": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 2.1
+ },
+ "hween_c19_bewitchedcandles": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_bewitchedcauldron": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_bewitchedchair": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "hween_c19_bewitchedskull": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.5
+ },
+ "hween_c19_bewitchedtable": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.05
+ },
+ "hween_c19_bigroof": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 1.29
+ },
+ "hween_c19_birchtree": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_broomstaffstand": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "hween_c19_claddedwall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 4
+ },
+ "hween_c19_crookedfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c19_crystal": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_crystalball": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_darkwerewolf": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_feathers": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_firechild": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_fireplace": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_flameon": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 2.3
+ },
+ "hween_c19_herbs": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 0.2
+ },
+ "hween_c19_potions": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_pumpkinpatch": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_roofcorner": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_slimeblob": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_smallroof": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 1.29
+ },
+ "hween_c19_spiritowl": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_steeproof": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_stonewall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 4
+ },
+ "hween_c19_tarot": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_witchcraft": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_witchsatchel": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c19_witchsatchel2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c25_arrow": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c25_bedofmushrooms": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c25_campfire": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c25_infected1b": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 2.2
+ },
+ "hween_c25_infected2b": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 2.2
+ },
+ "hween_c25_infected3b": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 2.2
+ },
+ "hween_c25_infectedmonster": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c25_infectedplushie": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_c25_junkwall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c25_makeshiftbed": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1
+ },
+ "hween_c25_makeshiftendtable": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 0.65
+ },
+ "hween_c25_makeshifttable": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "hween_c25_makeshifttent": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 0.75
+ },
+ "hween_c25_mossyfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c25_oldwall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 3.7
+ },
+ "hween_c25_oldwallwindows": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 3.7
+ },
+ "hween_c25_rope": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c25_scrapclothing": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c25_scrapfabric": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c25_scrapmetal": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c25_scrapwood": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.1
+ },
+ "hween_c25_signage": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "hween_c25_tiledfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c25_weed1": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_c25_weed2": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.0001
+ },
+ "hween_c25_weed3": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_dragengage": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1.4
+ },
+ "hween_ltd17_dragon": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1.4
+ },
+ "hween_ltd19_skullthrone": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "hween_r17_ancdrago": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "hween_r17_lichthrone": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.2
+ },
+ "hween_r19_weepingwillow": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "hween_r19_witchfamiliar": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "hween_r25_mushroommchn": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "neopets_c25_cirrus": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "neopets_c25_esophagor": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "neopets_c25_eyrie1": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1.55
+ },
+ "neopets_c25_grass": {
+  "role": "floor",
+  "sub": "terrain",
+  "walk": true,
+  "h": 0.01
+ },
+ "neopets_c25_jumbleberry": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.4
+ },
+ "neopets_c25_loveberry": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.4
+ },
+ "neopets_c25_moneytree": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 5
+ },
+ "neopets_c25_sniddberry": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.5
+ },
+ "neopets_c25_spruce": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 2
+ },
+ "neopets_c25_unguberry": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.1
+ },
+ "neopets_c25_voidberry": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.4
+ },
+ "nft_cf25_bronzebar": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_cf25_cotton": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_cf25_goldbar": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_cf25_leather": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_cf25_mythicdust": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_cf25_silk": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_cf25_silverbar": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_cf25_yarn": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "nft_h25_alhambrapillowpile": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_collbench": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "nft_h25_collbigchest": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 0.005
+ },
+ "nft_h25_collpillar": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.9
+ },
+ "nft_h25_collsmallchest": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 0.005
+ },
+ "nft_h25_collsofa": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.4
+ },
+ "nft_h25_colltable": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.3
+ },
+ "nft_h25_flowers1": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers10": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers3": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers4": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers5": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers6": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers7": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers8": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_flowers9": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_giftopentestfurni": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_gnomeofdoom": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 0
+ },
+ "nft_h25_goblin": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_redxmaslollipop": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_h25_trippy_sleepingbag": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 0.8
+ },
+ "nft_h25_zeusdrinks": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_sc25_shrooms": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_sc25_smallpirateboat": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "nft_sc25_sunflowers": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "norja_c24_bed": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": null
+ },
+ "norja_c24_doublebed": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": null
+ },
+ "nov_c25_happytree": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 5
+ },
+ "picnic_food1": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "picnic_food2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "picnic_food3": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "picnic_wfall": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "plasto_c24_doublebed": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": null
+ },
+ "plasto_c24_hanginglight": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": null
+ },
+ "regalblack_r25_dragon": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "regalblack_r25_orb": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "rift1": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "rift2": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "rift3": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "rift4": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "rift5": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "rift6": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.001
+ },
+ "roombg_hween12": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.45
+ },
+ "sc25_biohazardsign": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "sc25_shrooms": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "sc25_warningsign": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "sc_snowglobe3": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "silo_c24_chandelier": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": null
+ },
+ "silo_c24_desklamp": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": null
+ },
+ "silo_c24_standinglamp": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": null
+ },
+ "sp_statue": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "sw_chest": {
+  "role": "furniture",
+  "sub": "container",
+  "walk": false,
+  "h": 0
+ },
+ "sw_raven": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 2
+ },
+ "sw_table": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "tent_beige": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 0.8
+ },
+ "tent_blue": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 0.8
+ },
+ "tent_orange": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 0.8
+ },
+ "vikings_animal_g": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 4
+ },
+ "vikings_animal_r": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 4
+ },
+ "vikings_basket1": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_basket2": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_bed": {
+  "role": "furniture",
+  "sub": "bed",
+  "walk": false,
+  "h": 1.7
+ },
+ "vikings_chair_g": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "vikings_chair_r": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.3
+ },
+ "vikings_chesspiece": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1
+ },
+ "vikings_flag_g": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 4
+ },
+ "vikings_flag_r": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 4
+ },
+ "vikings_floor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "vikings_gondola1": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.1
+ },
+ "vikings_gondola2a": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.1
+ },
+ "vikings_gondola2b": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.1
+ },
+ "vikings_gondola2c": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.1
+ },
+ "vikings_gondola3": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.1
+ },
+ "vikings_house": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0
+ },
+ "vikings_indoorstove": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_outdoorstove": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_pillar": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_roof_g": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.8
+ },
+ "vikings_roof_r": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1.8
+ },
+ "vikings_runestone": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_spike": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_stonecrn": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 1.33
+ },
+ "vikings_stonedivdr": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 1.15
+ },
+ "vikings_stonegate": {
+  "role": "furniture",
+  "sub": "gate",
+  "walk": false,
+  "h": 0
+ },
+ "vikings_stool": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_stove": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_table_g": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 1.1
+ },
+ "vikings_table_r": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": true,
+  "h": 1.1
+ },
+ "vikings_teleport": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0.2
+ },
+ "vikings_thor": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_throne": {
+  "role": "furniture",
+  "sub": "seat",
+  "walk": false,
+  "h": 1.7
+ },
+ "vikings_tombstone": {
+  "role": "furniture",
+  "sub": "decor",
+  "walk": false,
+  "h": 0
+ },
+ "vikings_torch": {
+  "role": "furniture",
+  "sub": "light",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_weapon": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_woodcrn": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 1.4
+ },
+ "vikings_wooddivdr": {
+  "role": "furniture",
+  "sub": "divider",
+  "walk": false,
+  "h": 1
+ },
+ "vikings_woodgate": {
+  "role": "furniture",
+  "sub": "gate",
+  "walk": false,
+  "h": 0
+ },
+ "vikings_yggdrasil": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "wf_act_adjust_clock": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_cancel_transaction": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_change_var_val": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_click_conf": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_freeze": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_furni_to_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_furni_to_user": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_give_currency": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_give_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_give_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_init_transaction": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_log": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_move_furni_as_group": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_move_rotate_user": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_neg_call_stacks": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_neg_log": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_neg_send_signal": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_place_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_rel_mov": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_remove_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_remove_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_send_signal": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_set_altitude": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_teleport_to_room": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_toggle_to_rnd": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_unfreeze": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_act_user_to_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_antenna1": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_antenna2": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_arrowplate": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_arrowplate_8dir": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_blob2": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.01
+ },
+ "wf_button": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_button_arrow": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_button_blue": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_button_green": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_button_red": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_button_x": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_button_yellow": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_cnd_actor_dir": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_chest_has_item_type": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_chest_has_items": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_counter_time_matches": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_has_altitude": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_has_handitem": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_has_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_match_date": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_match_time": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_neg_has_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_not_has_handitem": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_not_triggerer_match": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_not_user_performs_action": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_slc_quantity": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_team_has_rank": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_team_has_score": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_triggerer_match": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_user_performs_action": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_valid_moves": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_var_age_match": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_cnd_var_val_match": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_contract_payment": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.11
+ },
+ "wf_contract_reward": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.11
+ },
+ "wf_contract_trade": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.11
+ },
+ "wf_knob": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_ltdproto_act_toggle_state": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_numberscreen": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_numbertile1": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.1
+ },
+ "wf_numbertile2": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.1
+ },
+ "wf_proto_cnd_trggrer_on_frn": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_proto_pyramid": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.01
+ },
+ "wf_proto_trg_at_given_time": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_room_linker": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0
+ },
+ "wf_screenseparator": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_slc_furni_altitude": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_furni_area": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_furni_bytype": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_furni_neighborhood": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_furni_onfurni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_furni_picks": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_furni_signal": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_furni_with_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_remote": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_area": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_byaction": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_byname": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_bytype": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_group": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_handitem": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_neighborhood": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_onfurni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_signal": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_team": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slc_users_with_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_slider": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_storage_coins1": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_storage_coins2": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_storage_furni1": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_storage_furni2": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_storage_furni_starter": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_teamcolorquarter": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_teamcolortile": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_teammeter1": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_teammeter2": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_teammeter3": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_teammeter4": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.2
+ },
+ "wf_test_act": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 0.65
+ },
+ "wf_test_cnd": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 0.65
+ },
+ "wf_test_slc": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_test_trg": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 0.65
+ },
+ "wf_test_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 0.65
+ },
+ "wf_test_xtra": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 0.37
+ },
+ "wf_tile1": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.1
+ },
+ "wf_tile2": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.1
+ },
+ "wf_toggle": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": false,
+  "h": 1
+ },
+ "wf_token1": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": false,
+  "h": 1
+ },
+ "wf_token10": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.217
+ },
+ "wf_token11": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.217
+ },
+ "wf_token2": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": false,
+  "h": 1
+ },
+ "wf_token3": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": false,
+  "h": 1
+ },
+ "wf_token4": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": false,
+  "h": 1
+ },
+ "wf_token5": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.279
+ },
+ "wf_token6": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.279
+ },
+ "wf_token7": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.279
+ },
+ "wf_token8": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.217
+ },
+ "wf_token9": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.217
+ },
+ "wf_trg_click_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_click_tile": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_click_user": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_leave_room": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_period_short": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_recv_signal": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_state_changed": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_stuff_state": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_transaction_complete": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_transaction_fail": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_user_performs_action": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_trg_var_changed": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.65
+ },
+ "wf_var_context": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_var_echo": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_var_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_var_quest": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_var_quest_chain": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_var_reference": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_var_room": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_var_user": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1.2
+ },
+ "wf_vu": {
+  "role": "wired",
+  "sub": "tile/marker",
+  "walk": false,
+  "h": 1
+ },
+ "wf_xtra_anim_time": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_custom_contract": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_exec_in_order": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_execution_limit": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_filter_furni": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_xtra_filter_furni_by_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_xtra_filter_users": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_xtra_filter_users_by_var": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 1
+ },
+ "wf_xtra_mov_carry_users": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_mov_curve": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_mov_no_animation": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_mov_physics": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_or_eval": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_rotate_to_dir": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_scan_chest_furni_by_type": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_text_input_variable": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_text_output_furni_name": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_text_output_username": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_text_output_variable": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.37
+ },
+ "wf_xtra_var_lvlup_system": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.75
+ },
+ "wf_xtra_var_text_connector": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.75
+ },
+ "wf_xtra_var_time_util": {
+  "role": "wired",
+  "sub": "script-box",
+  "walk": true,
+  "h": 0.75
+ },
+ "wisp_c23_lilwisp": {
+  "role": "creature",
+  "sub": null,
+  "walk": true,
+  "h": 0.000001
+ },
+ "wisp_c23_moon": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.00001
+ },
+ "wisp_c23_starflower": {
+  "role": "furniture",
+  "sub": "cover",
+  "walk": false,
+  "h": 1
+ },
+ "wisp_c23_starryfloor": {
+  "role": "floor",
+  "sub": "tile",
+  "walk": true,
+  "h": 0.00001
+ },
+ "wisp_c23_willowisp": {
+  "role": "creature",
+  "sub": null,
+  "walk": false,
+  "h": 1.8
+ },
+ "yttv2": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.45
+ },
+ "yttv2b": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.45
+ },
+ "yttv2n": {
+  "role": "furniture",
+  "sub": "table",
+  "walk": false,
+  "h": 2.45
+ }
+}

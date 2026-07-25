@@ -1,43 +1,56 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Habbo Turnbased RPG - Habbo Dungeons</title>
-    <meta name="description" content="A turn based text adventure powered by Habbo dice rolls & an intuitive dungeon master.">
-    <meta name="author" content="Lovable" />
-
-    
-    
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-  
-  
-  
-  
-  
-  <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/phyhfYaZfgg4B8J22WvKhk39ggK2/uploads/1763571595816-Scroll3.png">
-  
-  
-  
-  
-  
-  
-  
-  
-  <meta property="og:title" content="Habbo Turnbased RPG - Habbo Dungeons">
-  <meta name="twitter:title" content="Habbo Turnbased RPG - Habbo Dungeons">
-  <meta property="og:description" content="A turn based text adventure powered by Habbo dice rolls &amp; an intuitive dungeon master.">
-  <meta name="twitter:description" content="A turn based text adventure powered by Habbo dice rolls &amp; an intuitive dungeon master.">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Habbo Dungeons — Tactical Dungeon Crawler for Habbo Origins</title>
+  <meta name="description" content="Tactical dungeon crawler for Habbo Origins — party up, trade, and clear rooms with your real Habbo avatar." />
+  <meta name="hd-supabase-url" content="https://cswyarorrvzbunodiftf.supabase.co" />
+  <meta name="hd-supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzd3lhcm9ycnZ6YnVub2RpZnRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMzNDQxMjAsImV4cCI6MjA3ODkyMDEyMH0.eiqqFFyaq5HhhFfMPYufzaFYvopKlBeaIq_NycE3Eyk" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/habbo-ui.css" />
 </head>
+<body>
+  <canvas id="game"></canvas>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- run progress header (shown during a run) -->
+  <div id="runHeader" class="hidden"></div>
+
+  <!-- battle side panel (shown during battles) -->
+  <div id="panel" class="hidden">
+    <div id="banner" class="banner"></div>
+    <div id="actions"></div>
+    <div id="roster"></div>
+    <div id="log"></div>
+    <p class="info dim">Tap your unit → blue to move, red to attack, green to use a skill.</p>
+  </div>
+
+  <!-- explore testbed bar -->
+  <div id="exploreBar" class="hidden">
+    <button data-room="0">The Poisoned Toad</button>
+    <button data-room="1">Town Square</button>
+    <button data-room="2">Fogwood Forest</button>
+    <button id="editRoom" class="hidden">Edit Room</button>
+    <button id="saveRoom" class="hidden">Save Layout</button>
+    <button id="exploreMenu">← Menu</button>
+    <span id="exploreStatus" class="info dim"></span>
+  </div>
+
+  <!-- title / squad builder / run screens -->
+  <div id="overlay"></div>
+
+  <!-- crispify: snaps glyph alpha to 0/1 so the Volter pixel font never
+       anti-aliases (the classic Habbo-font rendering trick) -->
+  <svg width="0" height="0" xmlns="http://www.w3.org/2000/svg" style="position:absolute">
+    <defs>
+      <filter id="crispify">
+        <feComponentTransfer>
+          <feFuncA type="discrete" tableValues="0 1" />
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+
+  <script type="module" src="js/main.js"></script>
+</body>
 </html>

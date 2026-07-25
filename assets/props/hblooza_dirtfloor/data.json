@@ -1,0 +1,30 @@
+{
+ "id": "hblooza_dirtfloor",
+ "name": "Dirt Floor",
+ "line": "habbopalooza",
+ "size": 64,
+ "xdim": 2,
+ "ydim": 2,
+ "dirs": [
+  0,
+  2
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 98,
+   "h": 67,
+   "ax": 49,
+   "ay": 19
+  },
+  "d2": {
+   "x": 100,
+   "y": 1,
+   "w": 98,
+   "h": 67,
+   "ax": 49,
+   "ay": 19
+  }
+ }
+}

@@ -1,0 +1,30 @@
+{
+ "id": "wf_cnd_var_val_match",
+ "name": "WIRED Condition: Variable Value",
+ "line": "wired",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0,
+  2
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 64,
+   "h": 49,
+   "ax": 32,
+   "ay": 33
+  },
+  "d2": {
+   "x": 66,
+   "y": 1,
+   "w": 64,
+   "h": 49,
+   "ax": 32,
+   "ay": 33
+  }
+ }
+}

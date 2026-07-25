@@ -1,0 +1,30 @@
+{
+ "id": "wf_xtra_scan_chest_furni_by_type",
+ "name": "WIRED Scanner Add-on: Chest Furni of Type",
+ "line": "wired",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0,
+  2
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 64,
+   "h": 41,
+   "ax": 31,
+   "ay": 25
+  },
+  "d2": {
+   "x": 66,
+   "y": 1,
+   "w": 64,
+   "h": 41,
+   "ax": 33,
+   "ay": 25
+  }
+ }
+}

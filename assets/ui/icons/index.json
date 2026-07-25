@@ -1,0 +1,50 @@
+{
+ "catalogue": {
+  "source": "https://web.archive.org/web/20110215124238id_/http://www.habborator.org/archive/icons/toolbar_04.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 295,
+  "fetchedAt": "2026-07-25T00:47:52.268Z"
+ },
+ "navigator": {
+  "source": "https://web.archive.org/web/20110215123401id_/http://www.habborator.org/archive/icons/navigator_active.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 688,
+  "fetchedAt": "2026-07-25T00:47:52.853Z"
+ },
+ "inventory": {
+  "source": "https://web.archive.org/web/20110215124315id_/http://www.habborator.org/archive/icons/toolbar_05.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 209,
+  "fetchedAt": "2026-07-25T00:47:53.665Z"
+ },
+ "help": {
+  "source": "https://web.archive.org/web/20110215122610id_/http://www.habborator.org/archive/icons/toolbar_06.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 205,
+  "fetchedAt": "2026-07-25T00:47:53.955Z"
+ },
+ "hotel": {
+  "source": "https://web.archive.org/web/20110215121705id_/http://www.habborator.org/archive/icons/gotohotelview_active.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 593,
+  "fetchedAt": "2026-07-25T00:47:54.382Z"
+ },
+ "navigator_inactive": {
+  "source": "https://web.archive.org/web/20110215121705id_/http://www.habborator.org/archive/icons/navigator_inactive.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 562,
+  "fetchedAt": "2026-07-25T00:47:53.281Z"
+ },
+ "hotel_inactive": {
+  "source": "https://web.archive.org/web/20110215121705id_/http://www.habborator.org/archive/icons/gotohotelview_inactive.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 509,
+  "fetchedAt": "2026-07-25T00:47:54.845Z"
+ },
+ "console": {
+  "source": "https://web.archive.org/web/20110215123903id_/http://www.habborator.org/archive/icons/console_inactive.gif",
+  "era": "shockwave-v31 (habborator archive via wayback)",
+  "bytes": 389,
+  "fetchedAt": "2026-07-25T01:21:27.560Z"
+ }
+}

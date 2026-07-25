@@ -1,0 +1,30 @@
+{
+ "id": "wf_slc_furni_neighborhood",
+ "name": "WIRED Selector: Furni In Neighborhood",
+ "line": "wired",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0,
+  2
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 64,
+   "h": 63,
+   "ax": 32,
+   "ay": 46
+  },
+  "d2": {
+   "x": 66,
+   "y": 1,
+   "w": 64,
+   "h": 63,
+   "ax": 32,
+   "ay": 46
+  }
+ }
+}

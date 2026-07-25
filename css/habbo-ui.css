@@ -1,0 +1,636 @@
+/* ============================================================================
+   Habbo Dungeons — HabboSkills-style UI kit
+   Rebuilt from the REAL habboskills.com stylesheet (tools/reference/custom.css)
+   so our chrome matches the fansite look, value for value:
+
+     wallpaper   tiled bg, repeat + fixed  (ours: assets/ui/bg-tile.png,
+                 a #071C49 navy starfield, swapped for their beige Habbo tile)
+     cards       #fff · 1px solid #050a0e · radius 15px
+                 · shadow 0 2px 3px rgba(6,19,25,.7) · ink #330
+     header bar  crimson strip, radius 14px 14px 0 0 (their .section-title)
+     stat pill   yellow #f4d35e row, bold label/value (their .yellow card rows)
+     buttons     crimson, chunky 0 3px 0 1px drop, hover lifts 1px
+                 (their .project-card-action); green/red from their .btn-*
+     logo        crimson Volter bold, white inner + dark outer outline
+                 (their habboskills.png lettering, rebuilt as text-shadows)
+
+   Font: Volter via @font-face in css/style.css. Add .hd-ui to a container to
+   set Volter + crispify (the #crispify SVG filter must exist on the page).
+
+   Palette lives in the :root variables below. The habboskills teal is retuned
+   to the crimson sampled from assets/ui/logos/habbo-dungeons-club.gif
+   (banner body #9c3816, banner highlight #cf5025) so chrome matches the mark.
+   ========================================================================== */
+
+/* ---- palette ---------------------------------------------------------------- */
+:root {
+  --hd-primary: #9c3816; /* club-banner crimson (was habboskills teal #0f8f8a) */
+  --hd-primary-ink: #fff;
+  --hd-navy: #071c49; /* bg-tile base tone */
+  --hd-ink: #330;
+  --hd-white: #fff;
+  --hd-border: #050a0e;
+  --hd-shadow: rgba(6, 19, 25, 0.7);
+  --hd-well: #d7eef5;
+  --hd-pill: #f4d35e;
+  --hd-badge-ink: #332f12;
+  --hd-btn-drop: rgba(0, 0, 0, 0.3);
+  --hd-btn-drop-hover: rgba(0, 0, 0, 0.25);
+  --hd-green: #00813e;
+  --hd-green-border: #8eda55;
+  --hd-green-hover: #00ab54;
+  --hd-green-border-hover: #b9f373;
+  --hd-red: #cc0100;
+  --hd-btn-white-ink: #000;
+  --hd-btn-white-hover: lightgray;
+  --hd-disabled-ink: #665f49;
+  --hd-disabled-bg: #e7e0cf;
+}
+
+/* ---- wallpaper (preview board <body> and the game's title overlay) ------- */
+.hd-page {
+  background-color: var(--hd-navy); /* base tone of the tile */
+  background-image: url('../assets/ui/bg-tile.png');
+  background-repeat: repeat;
+  background-attachment: fixed;
+  background-size: auto;
+  image-rendering: pixelated; /* keep the tile's pixels crisp */
+}
+
+/* ---- typography -----------------------------------------------------------
+   Volter is a 9px bitmap font: it only renders clean at 9px multiples
+   (9 / 18 / 27 / 36). Off-grid sizes (10-15px) round stems to a mix of 1px
+   and 2px and the glyphs look scrunched. habbofishing/habbogardening run
+   Volter-Goldfish at an 18px base for the same reason — every size in this
+   kit stays on the 9px grid. */
+.hd-ui,
+.hd-ui button,
+.hd-ui input,
+.hd-ui select {
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 18px;
+  -webkit-font-smoothing: none;
+}
+.hd-ui h1,
+.hd-ui h2,
+.hd-ui h3,
+.hd-ui p,
+.hd-ui .hd-pill,
+.hd-ui .hd-logo,
+.hd-ui label {
+  filter: url(#crispify);
+}
+
+/* ---- card ------------------------------------------------------------------
+   habboskills .white / .project-card / .card-skill, all share these values. */
+.hd-card {
+  overflow: hidden;
+  color: var(--hd-ink);
+  background: var(--hd-white);
+  border: 1px solid var(--hd-border);
+  border-radius: 15px;
+  box-shadow: 0 2px 3px var(--hd-shadow);
+}
+.hd-card-body {
+  padding: 18px;
+}
+/* crimson strip title — their .section-title, banner-toned */
+.hd-card-header {
+  padding: 10px 14px;
+  color: var(--hd-primary-ink);
+  background: var(--hd-primary);
+  border-bottom: 1px solid var(--hd-border);
+  border-radius: 14px 14px 0 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+/* tinted logo/art wells — their .project-card-logo variants */
+.hd-card-well {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: 18px;
+  background: var(--hd-well);
+  border-bottom: 1px solid var(--hd-border);
+}
+
+/* ---- yellow stat pill -------------------------------------------------------
+   Their .card.yellow stat rows: yellow chip, bold label left / value right. */
+.hd-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  color: var(--hd-ink);
+  background: var(--hd-pill);
+  border: 1px solid var(--hd-border);
+  border-radius: 15px;
+  box-shadow: 0 2px 3px var(--hd-shadow);
+  font-weight: bold;
+}
+.hd-pill + .hd-pill {
+  margin-top: 8px;
+}
+.hd-pill .hd-pill-value {
+  text-align: right;
+}
+
+/* small round badge — their .mini-badge / .recent-player-hotel */
+.hd-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  color: var(--hd-badge-ink);
+  background: var(--hd-white);
+  border: 1px solid var(--hd-border);
+  border-radius: 15px;
+  font-size: 9px;
+  font-weight: bold;
+}
+.hd-badge--yellow {
+  background: var(--hd-pill);
+}
+
+/* ---- buttons ----------------------------------------------------------------
+   Crimson default replaces their teal .project-card-action; the chunky
+   0 3px 0 1px shadow is shared by every habboskills button. Green/red stay. */
+.hd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 12px;
+  color: var(--hd-primary-ink);
+  background: var(--hd-primary);
+  border: 1px solid var(--hd-border);
+  border-radius: 15px;
+  box-shadow: 0 3px 0 1px var(--hd-btn-drop);
+  font: inherit;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+.hd-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 1px var(--hd-btn-drop-hover);
+}
+.hd-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 1px var(--hd-btn-drop);
+}
+/* green — their .btn-success */
+.hd-btn--green {
+  background: var(--hd-green);
+  border-color: var(--hd-green-border);
+}
+.hd-btn--green:hover {
+  background: var(--hd-green-hover);
+  border-color: var(--hd-green-border-hover);
+}
+/* red — their .btn-danger */
+.hd-btn--red {
+  background: var(--hd-red);
+  border-color: var(--hd-red);
+}
+/* white outline — their .btn-outline-dark */
+.hd-btn--white {
+  color: var(--hd-btn-white-ink);
+  background: var(--hd-white);
+  border-color: var(--hd-btn-white-ink);
+}
+.hd-btn--white:hover {
+  background: var(--hd-btn-white-hover);
+}
+/* disabled — their .project-card-action-disabled */
+.hd-btn:disabled,
+.hd-btn--disabled,
+.hd-btn--disabled:hover {
+  color: var(--hd-disabled-ink);
+  background: var(--hd-disabled-bg);
+  transform: none;
+  box-shadow: 0 3px 0 1px var(--hd-btn-drop);
+  cursor: default;
+}
+
+/* ---- logo banners ------------------------------------------------------------
+   Pre-generated phrase art from habbofont.net (/font/{style}/{text}.gif) —
+   HC Silver + Ribbon styles, committed under assets/ui/logos/. The generator
+   takes whole lowercased phrases (spaces → +), so new headings need a new GIF:
+     curl https://habbofont.net/font/habboclub_silver/your+text.gif
+     curl https://habbofont.net/font/habbo_ribbon/your+text.gif  */
+.hd-logo-img {
+  display: block;
+  image-rendering: pixelated;
+}
+.hd-logo-img--center {
+  margin: 0 auto;
+}
+
+/* ---- outlined logo text -------------------------------------------------------
+   The habboskills.png lettering: crimson fill, white inner outline, dark outer
+   outline, rebuilt as stacked text-shadow rings so it works on any heading.
+   (Shadows paint in order: white ring first/on top, dark ring behind it.) */
+.hd-logo {
+  color: var(--hd-primary);
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-weight: bold;
+  font-size: 36px;
+  letter-spacing: 2px;
+  line-height: 1.1;
+  -webkit-font-smoothing: none;
+  text-shadow:
+    /* white inner outline */
+    -2px -2px 0 var(--hd-white), 2px -2px 0 var(--hd-white), -2px 2px 0 var(--hd-white), 2px 2px 0 var(--hd-white),
+    -2px 0 0 var(--hd-white), 2px 0 0 var(--hd-white), 0 -2px 0 var(--hd-white), 0 2px 0 var(--hd-white),
+    /* dark outer outline */
+    -3px -3px 0 var(--hd-border), 3px -3px 0 var(--hd-border), -3px 3px 0 var(--hd-border), 3px 3px 0 var(--hd-border),
+    -3px 0 0 var(--hd-border), 3px 0 0 var(--hd-border), 0 -3px 0 var(--hd-border), 0 3px 0 var(--hd-border),
+    -3px -1px 0 var(--hd-border), 3px -1px 0 var(--hd-border), -3px 1px 0 var(--hd-border), 3px 1px 0 var(--hd-border),
+    -1px -3px 0 var(--hd-border), 1px -3px 0 var(--hd-border), -1px 3px 0 var(--hd-border), 1px 3px 0 var(--hd-border),
+    /* soft drop under the whole mark */
+    0 5px 3px var(--hd-shadow);
+}
+
+/* ---- class (calling) chips -----------------------------------------------------
+   Hero-creation class picker + party builder companions: white chip, a thick
+   class-colored left rib (set --cc inline), yellow when chosen. */
+.hd-class-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hd-class {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 92px;
+  padding: 6px 12px 7px;
+  color: var(--hd-ink);
+  background: var(--hd-white);
+  border: 1px solid var(--hd-border);
+  border-left: 6px solid var(--cc, var(--hd-primary));
+  border-radius: 15px;
+  box-shadow: 0 2px 0 1px var(--hd-btn-drop);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hd-class b {
+  color: var(--cc, var(--hd-primary));
+}
+.hd-class span {
+  font-size: 9px;
+  color: #776;
+  text-transform: capitalize;
+}
+.hd-class:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 1px var(--hd-btn-drop-hover);
+}
+.hd-class.on {
+  background: var(--hd-pill);
+  outline: 2px solid var(--hd-green-border);
+  outline-offset: -1px;
+}
+.hd-class.on b {
+  color: var(--hd-ink); /* pale class colors (Cleric) drown on the yellow pill */
+}
+.hd-class.on span {
+  color: var(--hd-badge-ink);
+}
+
+/* ---- text input ---------------------------------------------------------------
+   Their .form-control-lg treatment: white field, dark ink, 15px radius and a
+   hard drop shadow — border slimmed to 1px of our ink so it sits with hd-card. */
+.hd-input {
+  padding: 10px 14px;
+  color: var(--hd-ink);
+  background: var(--hd-white);
+  border: 1px solid var(--hd-border);
+  border-radius: 15px;
+  box-shadow: 0 3px 0 1px var(--hd-btn-drop);
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 18px;
+}
+.hd-input::placeholder {
+  color: #777;
+}
+.hd-input:focus {
+  outline: 2px solid var(--hd-green-border);
+  outline-offset: -1px;
+}
+
+/* helper text tones on white cards (the dark-theme .info beige is unreadable) */
+.hd-ui .info,
+.hd-ui .info.dim,
+.hd-ui .dim {
+  color: #776;
+}
+
+/* ---- landing layout ----------------------------------------------------------
+   Structure-only helpers for the title screen's habboskills-style page:
+   stacked full-width cards with two-column rows and a dim footer.
+   Sizing mirrors Bootstrap 5's `container-fluid container-md` exactly as used
+   by habbofishing.com / habbogardening.com: fluid with 12px side gutters on
+   mobile, then fixed max-widths at the standard breakpoints. */
+.hd-landing {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 0 12px;
+  margin: 24px auto;
+}
+@media (min-width: 768px) {
+  .hd-landing {
+    max-width: 720px;
+  }
+}
+@media (min-width: 992px) {
+  .hd-landing {
+    max-width: 960px;
+  }
+}
+@media (min-width: 1200px) {
+  .hd-landing {
+    max-width: 1140px;
+  }
+}
+@media (min-width: 1400px) {
+  .hd-landing {
+    max-width: 1320px;
+  }
+}
+.hd-landing-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.hd-landing-col {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.hd-footer {
+  padding: 8px 0 24px;
+  color: var(--hd-footer-ink, #8fa3cf);
+  font-size: 9px;
+  text-align: center;
+}
+.hd-footer a {
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.hd-footer a:hover {
+  color: var(--hd-white);
+}
+
+/* ---- loading sequence (website only) ---------------------------------------
+   The pixel "loading Habbos" animation stands in for any pending website
+   fetch (profile search, motto verify, Habbo sync, cloud check). The GIF is
+   decorative; the adjacent text carries the meaning for assistive tech. */
+.hd-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 0;
+  color: var(--hd-ink);
+  font-weight: bold;
+}
+.hd-loading img {
+  width: 68px;
+  height: auto;
+  image-rendering: pixelated;
+  flex: none;
+}
+.hd-loading--center {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 12px 0;
+}
+.hd-loading--center img {
+  width: 102px;
+}
+
+/* ---- inventory (standalone page) -------------------------------------------
+   Adapted from habbodungeons.com's Inventory page. See the item-type sections
+   below for the detailed rarity-rimmed cards. */
+.hd-inv-empty-note {
+  margin: 0;
+  color: #7a8290;
+}
+
+/* ---- inventory item-type sections (standalone Inventory page) ---------------
+   Adapted from habbodungeons.com's Inventory page: one titled panel per item
+   type (Weapons / Armor / Trinkets / Consumables), each holding a grid of
+   detailed cards (art + name + type + description), rimmed in rarity colour.
+   Rendered in our hd-ui skin; the per-item Equip/Delete actions from theirs are
+   omitted because our loadout is run-scoped and changes at camp, not here. */
+.hd-inv-section + .hd-inv-section {
+  margin-top: 16px;
+}
+.hd-inv-section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--hd-ink);
+}
+.hd-inv-section-count {
+  font-size: 11px;
+  font-weight: bold;
+  color: #7a8290;
+}
+.hd-inv-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 12px;
+}
+.hd-inv-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--hd-well);
+  border: 2px solid var(--hd-rarity, var(--hd-border));
+  border-radius: 12px;
+  box-shadow: 0 0 12px -3px var(--hd-rarity-glow, transparent);
+}
+.hd-inv-card-art {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+}
+.hd-inv-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.hd-inv-card-name {
+  font-size: 13px;
+  font-weight: bold;
+  line-height: 1.15;
+  color: var(--hd-rarity-ink, var(--hd-ink));
+}
+.hd-inv-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #7a8290;
+}
+.hd-inv-card-meta .hd-inv-card-rarity {
+  color: var(--hd-rarity-ink, var(--hd-ink));
+}
+.hd-inv-equipped {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  color: var(--hd-green);
+  background: #e7f6ec;
+  border: 1px solid var(--hd-green);
+  border-radius: 10px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.hd-inv-card-stat {
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--hd-ink);
+}
+.hd-inv-card-blurb {
+  font-size: 11px;
+  font-style: italic;
+  line-height: 1.3;
+  color: #776;
+}
+.hd-inv-stat-pills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+.hd-inv-stat-pills .hd-pill + .hd-pill {
+  margin-top: 0;
+}
+
+/* ---- dashboard stat blocks (adapted from habbodungeons.com) ----------------
+   Their Player Stats panel uses a big Level block, an HP bar, and chunky
+   big-number stat blocks. Rebuilt with our palette: yellow / crimson / blue
+   variants of one bordered block, plus a yellow HP meter. */
+.hd-stat-lead {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 560px) {
+  .hd-stat-lead {
+    grid-template-columns: 1fr;
+  }
+}
+.hd-stat-big {
+  padding: 14px;
+  text-align: center;
+  background: var(--hd-primary);
+  color: var(--hd-primary-ink);
+  border: 1px solid var(--hd-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 3px var(--hd-shadow);
+}
+.hd-stat-big-label {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.9;
+}
+.hd-stat-big-value {
+  font-size: 34px;
+  font-weight: bold;
+  line-height: 1.1;
+}
+/* HP meter */
+.hd-hpbar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--hd-ink);
+  margin: 12px 0 4px;
+}
+.hd-hpbar {
+  height: 16px;
+  background: #e7e0cf;
+  border: 1px solid var(--hd-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.hd-hpbar-fill {
+  height: 100%;
+  background: var(--hd-pill);
+  border-radius: 10px 0 0 10px;
+}
+.hd-statgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.hd-statblock {
+  padding: 10px 6px;
+  text-align: center;
+  background: var(--hd-pill);
+  color: var(--hd-badge-ink);
+  border: 1px solid var(--hd-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 3px var(--hd-shadow);
+}
+.hd-statblock--blue {
+  background: var(--hd-well);
+  color: var(--hd-ink);
+}
+.hd-statblock-label {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+.hd-statblock-value {
+  font-size: 24px;
+  font-weight: bold;
+  line-height: 1.1;
+}
+
+/* ---- dashboard action panels (their Join Adventure / Chests / Skills row) --
+   A three-up row of centered cards: a short blurb over one big button. */
+.hd-action-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+  min-height: 120px;
+  justify-content: center;
+}
+.hd-action-body p {
+  margin: 0;
+  color: #776;
+}

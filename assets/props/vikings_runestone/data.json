@@ -1,0 +1,30 @@
+{
+ "id": "vikings_runestone",
+ "name": "Viking Relic",
+ "line": "vikings",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  2,
+  4
+ ],
+ "frames": {
+  "d2": {
+   "x": 1,
+   "y": 1,
+   "w": 66,
+   "h": 70,
+   "ax": 36,
+   "ay": 56
+  },
+  "d4": {
+   "x": 68,
+   "y": 1,
+   "w": 66,
+   "h": 70,
+   "ax": 30,
+   "ay": 56
+  }
+ }
+}

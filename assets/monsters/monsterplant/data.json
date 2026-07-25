@@ -1,0 +1,31 @@
+{
+ "id": "monsterplant",
+ "size": 64,
+ "palette": 0,
+ "foot": 0,
+ "actions": {
+  "std": {
+   "frames": 1,
+   "repeat": 1
+  }
+ },
+ "frames": {
+  "std_2_0": {
+   "x": 1,
+   "y": 1,
+   "w": 66,
+   "h": 52,
+   "ax": 35,
+   "ay": 41
+  },
+  "std_4_0": {
+   "x": 68,
+   "y": 1,
+   "w": 66,
+   "h": 52,
+   "ax": 35,
+   "ay": 41
+  }
+ },
+ "build": "flash-assets-PRODUCTION-202606251236-639260803"
+}

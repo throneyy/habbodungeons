@@ -16,258 +16,38 @@ export type Database = {
     Tables: {
       battle_states: {
         Row: {
-          battle_log: Json | null
           created_at: string
-          current_enemy_state: Json
-          current_room_index: number
-          current_story_node: Json | null
           current_turn_user_id: string | null
-          dead_players: Json | null
           dungeon_id: string
           id: string
-          is_active: boolean
           party_id: string | null
-          server_id: string | null
-          story_memory: Json
-          turn_order: Json | null
+          state: Json
           updated_at: string
-          used_skills: string[] | null
-          user_id: string
         }
         Insert: {
-          battle_log?: Json | null
           created_at?: string
-          current_enemy_state: Json
-          current_room_index?: number
-          current_story_node?: Json | null
           current_turn_user_id?: string | null
-          dead_players?: Json | null
           dungeon_id: string
           id?: string
-          is_active?: boolean
           party_id?: string | null
-          server_id?: string | null
-          story_memory?: Json
-          turn_order?: Json | null
+          state?: Json
           updated_at?: string
-          used_skills?: string[] | null
-          user_id: string
         }
         Update: {
-          battle_log?: Json | null
           created_at?: string
-          current_enemy_state?: Json
-          current_room_index?: number
-          current_story_node?: Json | null
           current_turn_user_id?: string | null
-          dead_players?: Json | null
           dungeon_id?: string
           id?: string
-          is_active?: boolean
           party_id?: string | null
-          server_id?: string | null
-          story_memory?: Json
-          turn_order?: Json | null
+          state?: Json
           updated_at?: string
-          used_skills?: string[] | null
-          user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "battle_states_dungeon_id_fkey"
-            columns: ["dungeon_id"]
-            isOneToOne: false
-            referencedRelation: "dungeons"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "battle_states_party_id_fkey"
             columns: ["party_id"]
             isOneToOne: false
             referencedRelation: "parties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "battle_states_server_id_fkey"
-            columns: ["server_id"]
-            isOneToOne: false
-            referencedRelation: "servers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      daily_stats: {
-        Row: {
-          bosses_defeated: number
-          created_at: string
-          damage_dealt: number
-          dice_rolls_made: number
-          enemies_killed: number
-          id: string
-          quests_completed: number
-          stat_date: string
-          updated_at: string
-          user_id: string
-          xp_gained: number
-        }
-        Insert: {
-          bosses_defeated?: number
-          created_at?: string
-          damage_dealt?: number
-          dice_rolls_made?: number
-          enemies_killed?: number
-          id?: string
-          quests_completed?: number
-          stat_date?: string
-          updated_at?: string
-          user_id: string
-          xp_gained?: number
-        }
-        Update: {
-          bosses_defeated?: number
-          created_at?: string
-          damage_dealt?: number
-          dice_rolls_made?: number
-          enemies_killed?: number
-          id?: string
-          quests_completed?: number
-          stat_date?: string
-          updated_at?: string
-          user_id?: string
-          xp_gained?: number
-        }
-        Relationships: []
-      }
-      dungeons: {
-        Row: {
-          ai_background_url: string | null
-          created_at: string
-          difficulty: string
-          dungeon_json: Json
-          id: string
-          is_featured: boolean | null
-          name: string
-          owner_user_id: string
-          theme: string
-          times_played: number | null
-        }
-        Insert: {
-          ai_background_url?: string | null
-          created_at?: string
-          difficulty: string
-          dungeon_json: Json
-          id?: string
-          is_featured?: boolean | null
-          name: string
-          owner_user_id: string
-          theme: string
-          times_played?: number | null
-        }
-        Update: {
-          ai_background_url?: string | null
-          created_at?: string
-          difficulty?: string
-          dungeon_json?: Json
-          id?: string
-          is_featured?: boolean | null
-          name?: string
-          owner_user_id?: string
-          theme?: string
-          times_played?: number | null
-        }
-        Relationships: []
-      }
-      enemy_sprites: {
-        Row: {
-          created_at: string | null
-          enemy_name: string
-          id: string
-          sprite_filename: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          enemy_name: string
-          id?: string
-          sprite_filename: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          enemy_name?: string
-          id?: string
-          sprite_filename?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      generated_icons: {
-        Row: {
-          created_at: string | null
-          id: string
-          item_name: string
-          item_type: string
-          prompt_used: string
-          regenerate_requested: boolean | null
-          storage_path: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          item_name: string
-          item_type: string
-          prompt_used: string
-          regenerate_requested?: boolean | null
-          storage_path: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          item_name?: string
-          item_type?: string
-          prompt_used?: string
-          regenerate_requested?: boolean | null
-          storage_path?: string
-        }
-        Relationships: []
-      }
-      grid_configurations: {
-        Row: {
-          background_url: string
-          created_at: string
-          dungeon_id: string | null
-          enabled_cells: Json
-          grid_cols: number
-          grid_rows: number
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          background_url: string
-          created_at?: string
-          dungeon_id?: string | null
-          enabled_cells?: Json
-          grid_cols?: number
-          grid_rows?: number
-          id?: string
-          updated_at?: string
-        }
-        Update: {
-          background_url?: string
-          created_at?: string
-          dungeon_id?: string | null
-          enabled_cells?: Json
-          grid_cols?: number
-          grid_rows?: number
-          id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "grid_configurations_dungeon_id_fkey"
-            columns: ["dungeon_id"]
-            isOneToOne: false
-            referencedRelation: "dungeons"
             referencedColumns: ["id"]
           },
         ]
@@ -276,31 +56,19 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          is_equipped: boolean | null
-          item_name: string
-          item_type: string
-          quantity: number
-          updated_at: string
+          item_id: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          is_equipped?: boolean | null
-          item_name: string
-          item_type: string
-          quantity?: number
-          updated_at?: string
+          item_id: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          is_equipped?: boolean | null
-          item_name?: string
-          item_type?: string
-          quantity?: number
-          updated_at?: string
+          item_id?: string
           user_id?: string
         }
         Relationships: []
@@ -308,57 +76,84 @@ export type Database = {
       parties: {
         Row: {
           created_at: string
-          dungeon_id: string | null
           id: string
-          invite_code: string
           leader_id: string
-          max_members: number
-          updated_at: string
+          room_id: string | null
         }
         Insert: {
           created_at?: string
-          dungeon_id?: string | null
           id?: string
-          invite_code: string
           leader_id: string
-          max_members?: number
-          updated_at?: string
+          room_id?: string | null
         }
         Update: {
           created_at?: string
-          dungeon_id?: string | null
           id?: string
-          invite_code?: string
           leader_id?: string
-          max_members?: number
-          updated_at?: string
+          room_id?: string | null
+        }
+        Relationships: []
+      }
+      party_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          from_name: string
+          from_user: string
+          id: string
+          party_id: string | null
+          room_id: string | null
+          to_user: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          from_name: string
+          from_user: string
+          id?: string
+          party_id?: string | null
+          room_id?: string | null
+          to_user: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          from_name?: string
+          from_user?: string
+          id?: string
+          party_id?: string | null
+          room_id?: string | null
+          to_user?: string
         }
         Relationships: [
           {
-            foreignKeyName: "parties_dungeon_id_fkey"
-            columns: ["dungeon_id"]
+            foreignKeyName: "party_invites_party_id_fkey"
+            columns: ["party_id"]
             isOneToOne: false
-            referencedRelation: "dungeons"
+            referencedRelation: "parties"
             referencedColumns: ["id"]
           },
         ]
       }
       party_members: {
         Row: {
-          id: string
+          figure: string
           joined_at: string
+          name: string
           party_id: string
           user_id: string
         }
         Insert: {
-          id?: string
+          figure?: string
           joined_at?: string
+          name: string
           party_id: string
           user_id: string
         }
         Update: {
-          id?: string
+          figure?: string
           joined_at?: string
+          name?: string
           party_id?: string
           user_id?: string
         }
@@ -372,236 +167,263 @@ export type Database = {
           },
         ]
       }
-      player_stats: {
-        Row: {
-          atk: number
-          created_at: string
-          current_hp: number
-          current_mp: number
-          current_xp: number
-          def: number
-          equipped_weapon_id: string | null
-          id: string
-          level: number
-          max_hp: number
-          max_mp: number
-          spd: number
-          status_effects: Json | null
-          updated_at: string
-          user_id: string
-          xp_to_next_level: number
-        }
-        Insert: {
-          atk?: number
-          created_at?: string
-          current_hp?: number
-          current_mp?: number
-          current_xp?: number
-          def?: number
-          equipped_weapon_id?: string | null
-          id?: string
-          level?: number
-          max_hp?: number
-          max_mp?: number
-          spd?: number
-          status_effects?: Json | null
-          updated_at?: string
-          user_id: string
-          xp_to_next_level?: number
-        }
-        Update: {
-          atk?: number
-          created_at?: string
-          current_hp?: number
-          current_mp?: number
-          current_xp?: number
-          def?: number
-          equipped_weapon_id?: string | null
-          id?: string
-          level?: number
-          max_hp?: number
-          max_mp?: number
-          spd?: number
-          status_effects?: Json | null
-          updated_at?: string
-          user_id?: string
-          xp_to_next_level?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "player_stats_equipped_weapon_id_fkey"
-            columns: ["equipped_weapon_id"]
-            isOneToOne: false
-            referencedRelation: "inventory"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
-          class_id: string | null
-          created_at: string
-          custom_class_archetype: string | null
-          custom_class_description: string | null
-          custom_class_icon: string | null
-          custom_class_name: string | null
-          fishing_level: number | null
-          fishing_xp: number | null
-          gardening_level: number | null
-          gardening_xp: number | null
-          habbo_origins_id: string | null
+          fishing_level: number
+          gardening_level: number
+          habbo_figure: string | null
+          habbo_motto: string | null
           habbo_profile_json: Json | null
+          habbo_unique_id: string | null
           habbo_username: string | null
+          habbo_verified_at: string | null
           id: string
           last_habbo_skill_sync: string | null
-          unlocked_skills: string[] | null
+          unlocked_skills: Json
           updated_at: string
-          username: string
         }
         Insert: {
-          class_id?: string | null
-          created_at?: string
-          custom_class_archetype?: string | null
-          custom_class_description?: string | null
-          custom_class_icon?: string | null
-          custom_class_name?: string | null
-          fishing_level?: number | null
-          fishing_xp?: number | null
-          gardening_level?: number | null
-          gardening_xp?: number | null
-          habbo_origins_id?: string | null
+          fishing_level?: number
+          gardening_level?: number
+          habbo_figure?: string | null
+          habbo_motto?: string | null
           habbo_profile_json?: Json | null
+          habbo_unique_id?: string | null
           habbo_username?: string | null
+          habbo_verified_at?: string | null
           id: string
           last_habbo_skill_sync?: string | null
-          unlocked_skills?: string[] | null
+          unlocked_skills?: Json
           updated_at?: string
-          username: string
         }
         Update: {
-          class_id?: string | null
-          created_at?: string
-          custom_class_archetype?: string | null
-          custom_class_description?: string | null
-          custom_class_icon?: string | null
-          custom_class_name?: string | null
-          fishing_level?: number | null
-          fishing_xp?: number | null
-          gardening_level?: number | null
-          gardening_xp?: number | null
-          habbo_origins_id?: string | null
+          fishing_level?: number
+          gardening_level?: number
+          habbo_figure?: string | null
+          habbo_motto?: string | null
           habbo_profile_json?: Json | null
+          habbo_unique_id?: string | null
           habbo_username?: string | null
+          habbo_verified_at?: string | null
           id?: string
           last_habbo_skill_sync?: string | null
-          unlocked_skills?: string[] | null
+          unlocked_skills?: Json
           updated_at?: string
-          username?: string
         }
         Relationships: []
       }
       rate_limits: {
         Row: {
-          action_count: number | null
-          action_type: string
-          created_at: string | null
-          id: string
-          last_action_at: string
+          action: string
+          last_at: string
           user_id: string
-          window_start: string | null
         }
         Insert: {
-          action_count?: number | null
-          action_type: string
-          created_at?: string | null
-          id?: string
-          last_action_at?: string
+          action: string
+          last_at?: string
           user_id: string
-          window_start?: string | null
         }
         Update: {
-          action_count?: number | null
-          action_type?: string
-          created_at?: string | null
-          id?: string
-          last_action_at?: string
+          action?: string
+          last_at?: string
           user_id?: string
-          window_start?: string | null
         }
         Relationships: []
       }
-      server_players: {
+      room_layouts: {
         Row: {
           id: string
-          joined_at: string
-          server_id: string
-          user_id: string
+          layout: Json
+          room_id: string
+          updated_at: string
+          version: number
         }
         Insert: {
           id?: string
-          joined_at?: string
-          server_id: string
-          user_id: string
+          layout?: Json
+          room_id: string
+          updated_at?: string
+          version?: number
         }
         Update: {
           id?: string
-          joined_at?: string
-          server_id?: string
+          layout?: Json
+          room_id?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      room_messages: {
+        Row: {
+          created_at: string
+          id: string
+          mode: string
+          name: string
+          room_id: string
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mode?: string
+          name: string
+          room_id: string
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mode?: string
+          name?: string
+          room_id?: string
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      room_presence: {
+        Row: {
+          dir: number
+          figure: string
+          last_seen: string
+          name: string
+          room_id: string
+          user_id: string
+          x: number
+          y: number
+        }
+        Insert: {
+          dir?: number
+          figure?: string
+          last_seen?: string
+          name: string
+          room_id: string
+          user_id: string
+          x?: number
+          y?: number
+        }
+        Update: {
+          dir?: number
+          figure?: string
+          last_seen?: string
+          name?: string
+          room_id?: string
+          user_id?: string
+          x?: number
+          y?: number
+        }
+        Relationships: []
+      }
+      stash_gold: {
+        Row: {
+          gold: number
+          user_id: string
+        }
+        Insert: {
+          gold?: number
+          user_id: string
+        }
+        Update: {
+          gold?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trade_offers: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_id: string
+          item_id: string
+          trade_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_id: string
+          item_id: string
+          trade_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_id?: string
+          item_id?: string
+          trade_id?: string
           user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "server_players_server_id_fkey"
-            columns: ["server_id"]
+            foreignKeyName: "trade_offers_inventory_id_fkey"
+            columns: ["inventory_id"]
             isOneToOne: false
-            referencedRelation: "servers"
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_offers_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
             referencedColumns: ["id"]
           },
         ]
       }
-      servers: {
+      trades: {
         Row: {
+          a_accepted: boolean
+          a_confirmed: boolean
+          a_name: string
+          a_user: string
+          b_accepted: boolean
+          b_confirmed: boolean
+          b_name: string
+          b_user: string
           created_at: string
-          difficulty: string
-          dungeon_id: string | null
-          host_user_id: string
           id: string
-          is_active: boolean
-          max_players: number
-          server_name: string
+          room_id: string | null
+          stage: string
+          status: string
           updated_at: string
         }
         Insert: {
+          a_accepted?: boolean
+          a_confirmed?: boolean
+          a_name: string
+          a_user: string
+          b_accepted?: boolean
+          b_confirmed?: boolean
+          b_name: string
+          b_user: string
           created_at?: string
-          difficulty?: string
-          dungeon_id?: string | null
-          host_user_id: string
           id?: string
-          is_active?: boolean
-          max_players?: number
-          server_name: string
+          room_id?: string | null
+          stage?: string
+          status?: string
           updated_at?: string
         }
         Update: {
+          a_accepted?: boolean
+          a_confirmed?: boolean
+          a_name?: string
+          a_user?: string
+          b_accepted?: boolean
+          b_confirmed?: boolean
+          b_name?: string
+          b_user?: string
           created_at?: string
-          difficulty?: string
-          dungeon_id?: string | null
-          host_user_id?: string
           id?: string
-          is_active?: boolean
-          max_players?: number
-          server_name?: string
+          room_id?: string | null
+          stage?: string
+          status?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "servers_dungeon_id_fkey"
-            columns: ["dungeon_id"]
-            isOneToOne: false
-            referencedRelation: "dungeons"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -624,43 +446,12 @@ export type Database = {
         }
         Relationships: []
       }
-      verification_attempts: {
-        Row: {
-          attempts: number | null
-          created_at: string | null
-          id: string
-          locked_until: string | null
-          updated_at: string | null
-          username: string
-        }
-        Insert: {
-          attempts?: number | null
-          created_at?: string | null
-          id?: string
-          locked_until?: string | null
-          updated_at?: string | null
-          username: string
-        }
-        Update: {
-          attempts?: number | null
-          created_at?: string | null
-          id?: string
-          locked_until?: string | null
-          updated_at?: string | null
-          username?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      can_view_party_members: {
-        Args: { _party_id: string; _user_id: string }
-        Returns: boolean
-      }
-      generate_invite_code: { Args: never; Returns: string }
+      execute_trade: { Args: { _trade_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -668,14 +459,15 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_party_leader: {
+      in_party: {
         Args: { _party_id: string; _user_id: string }
         Returns: boolean
       }
-      is_party_member: {
-        Args: { _party_id: string; _user_id: string }
+      rate_limit_touch: {
+        Args: { _action: string; _min_interval: string; _user_id: string }
         Returns: boolean
       }
+      reap_stale_presence: { Args: { _ttl?: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

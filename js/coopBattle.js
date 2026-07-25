@@ -1,0 +1,939 @@
+// Co-op dungeon battles over the party relay (server/presence.js `relay`).
+//
+// Authority model: the LEADER's browser runs the whole simulation — enemy AI,
+// RNG, tile effects — exactly today's battle code. Members send serialized
+// unit commands up; the leader validates against the live engine (legal
+// mover, legal target, member owns that unit) and executes; the resulting
+// engine events (move paths, fx, log lines, phase snapshots) broadcast to
+// every member, whose clients replay them onto a replica room.
+//
+// Replicas are cheap because dungeon content is deterministic: members
+// rebuild the same room + enemies from (dungeonId, eventPicks, nodeIndex);
+// only the player squad (figures, callings, owners) rides the start event.
+//
+// Resilience:
+//   - member drop  -> their unit flips to AI (leader auto-acts it); a rejoin
+//     re-claims it at the next turn boundary (targeted re-`start` + snapshot)
+//   - leader drop  -> the server promotes the next member (party hand-off);
+//     they rebuild a live Battle from the last turn-boundary snapshot and
+//     take over the sim (fresh RNG — acceptable co-op resume)
+//   - idle member  -> 60s into a player phase the leader's client AI acts
+//     their unit, so battles can never stall
+import { Battle } from './battle.js';
+import { Unit } from './units.js';
+import { buildDungeon } from './dungeon.js';
+import { renderBattleFx } from './battleController.js';
+import { figureSprites } from './monsterSprites.js';
+
+export const TURN_TIMEOUT_MS = 60000; // idle member auto-act
+export const CONFIRM_MS = 30000; // descend confirm window
+
+// ---------------------------------------------------------------- leader side
+
+export class CoopLeader {
+  // net: shared Net; getName: () => my Habbo name
+  constructor(net, getName) {
+    this.net = net;
+    this.getName = getName;
+    this.members = new Map(); // lower name -> { name, status, classId, figure }
+    this.onRoster = null; // squad-builder rerender hook
+    this.battle = null;
+    this.bc = null;
+    this.cids = new Map(); // unit -> cid
+    this.byCid = new Map(); // cid -> unit
+    this.owners = new Map(); // member(roster) id -> { owner, figure }
+    this.pendingMoves = new Set(); // member-commanded units mid-walk
+    this.lastPhase = null;
+    this.lastStart = null; // re-sent to rejoining members
+    this.phaseStartedAt = 0;
+    this.turnTimeoutMs = TURN_TIMEOUT_MS; // overridable (tests dial it down)
+    this.timer = null;
+    this.confirmTimer = null;
+    this.unsubs = [
+      net.on('descend-ack', (m) => this.onAck(m)),
+      net.on('relay', (m) => this.onRelay(m)),
+      net.on('party', (m) => this.onPartyChange(m)),
+    ];
+  }
+
+  // Announce the descent to the party; members get CONFIRM_MS to answer.
+  announce(partyState, dungeonId) {
+    this.members.clear();
+    const me = String(this.getName() || '').toLowerCase();
+    for (const m of partyState.members) {
+      if (m.name.toLowerCase() === me) continue;
+      this.members.set(m.name.toLowerCase(), { name: m.name, status: 'pending', classId: 'fighter', figure: m.figure });
+    }
+    this.net.send({ t: 'descend', dungeon: dungeonId });
+    clearTimeout(this.confirmTimer);
+    this.confirmTimer = setTimeout(() => {
+      // silence = dropped from this descent (the party itself is intact)
+      for (const m of this.members.values()) {
+        if (m.status === 'pending') m.status = 'declined';
+      }
+      if (this.onRoster) this.onRoster();
+    }, CONFIRM_MS);
+  }
+
+  onAck(msg) {
+    const m = this.members.get(String(msg.name).toLowerCase());
+    if (!m || m.status !== 'pending') return;
+    m.status = msg.accept ? 'ready' : 'declined';
+    if (msg.accept) {
+      m.classId = msg.classId || 'fighter';
+      if (msg.figure) m.figure = msg.figure;
+    }
+    if (this.onRoster) this.onRoster();
+  }
+
+  readyMembers() {
+    return [...this.members.values()].filter((m) => m.status === 'ready');
+  }
+
+  // roster member id -> owning player (set by beginRun in main.js)
+  setOwner(memberId, owner, figure) {
+    this.owners.set(memberId, { owner, figure });
+  }
+
+  relay(data, to = null) {
+    this.net.send(to ? { t: 'relay', data, to } : { t: 'relay', data });
+  }
+
+  // -------------------------------------------------------- battle authority
+
+  // Called by RunController.toBattle (this.coop hook) with the live engine.
+  battleStarted({ battle, bc, players, enemies, node, run }) {
+    this.teardownBattle();
+    const zoom = battle.room.zoom === 1 ? 'm' : 's';
+    players.forEach((u, i) => this.link(u, `p${i}`));
+    enemies.forEach((u, i) => this.link(u, `e${i}`));
+    // members' units wear their real Habbo figures on the leader's screen too
+    for (const u of players) {
+      const own = this.owners.get(u.id);
+      if (own && own.owner && own.figure && !u.useSprites) u.sprites = figureSprites(own.figure, zoom);
+    }
+    this.wireCapture(battle, bc);
+    this.lastStart = {
+      k: 'start',
+      dungeonId: run.dungeon.id,
+      eventPicks: run.eventPicks,
+      seed: run.seed, // guests must regenerate the SAME seeded encounter
+      battleNumber: run.battleNumber(),
+      squadSize: players.length, // encounter was scaled to this many combatants
+      nodeIndex: run.nodeIndex,
+      battleName: node.name,
+      players: players.map((u) => this.serializeUnit(u)),
+      enemyCount: enemies.length,
+      log: battle.log.slice(),
+    };
+    this.relay(this.lastStart);
+    this.syncPhase(true);
+  }
+
+  // Leader promotion: take over an already-live battle (replica units are
+  // linked by the caller via byCid). No lastStart — late joiners only get
+  // snapshots from here on.
+  adoptBattle({ battle, bc, byCid }) {
+    this.teardownBattle();
+    for (const [cid, u] of byCid) {
+      this.link(u, cid);
+      // owners ride on the replica units (spec.owner from the old start)
+      if (u.owner) this.owners.set(u.id, { owner: u.owner, figure: null });
+    }
+    this.wireCapture(battle, bc);
+    this.lastStart = null;
+    this.syncPhase(true);
+  }
+
+  // Shared authority wiring: command gating, movement + event capture.
+  wireCapture(battle, bc) {
+    this.battle = battle;
+    this.bc = bc;
+    // the leader commands their own unit + AI slots, never a member's
+    bc.canSelect = (u) => {
+      const own = this.owners.get(u.id);
+      return !own || !own.owner || own.owner.toLowerCase() === String(this.getName()).toLowerCase();
+    };
+    // capture movement: every followPath (player taps AND enemy AI) relays
+    for (const u of this.byCid.values()) {
+      const orig = u.followPath.bind(u);
+      u.followPath = (path) => {
+        const ok = orig(path);
+        if (ok) this.relay({ k: 'move', cid: this.cids.get(u), path });
+        return ok;
+      };
+    }
+    // capture engine events
+    const origFx = battle.onFx;
+    battle.onFx = (e) => {
+      origFx(e);
+      this.relay({ k: 'fx', ...this.serializeFx(e) });
+    };
+    const origLog = battle.onLog;
+    battle.onLog = (m) => {
+      origLog(m);
+      this.relay({ k: 'log', msg: m });
+    };
+    const origEnd = battle.onEnd;
+    battle.onEnd = (result) => {
+      this.relay({ k: 'end', result });
+      origEnd(result);
+    };
+    const origChange = battle.onChange;
+    battle.onChange = () => {
+      origChange();
+      this.syncPhase();
+    };
+    this.lastPhase = null;
+    this.phaseStartedAt = performance.now();
+    this.timer = setInterval(() => this.tick(), 120);
+  }
+
+
+  link(unit, cid) {
+    this.cids.set(unit, cid);
+    this.byCid.set(cid, unit);
+  }
+
+  serializeUnit(u) {
+    const own = this.owners.get(u.id) || {};
+    return {
+      cid: this.cids.get(u),
+      classId: u.classId,
+      name: u.name,
+      level: u.level,
+      x: u.x,
+      y: u.y,
+      dir: u.dir,
+      stats: { ...u.stats },
+      shield: u.shield,
+      tag: u.tag,
+      owner: own.owner || null,
+      figure: u.useSprites ? own.figure || null : own.figure || null,
+    };
+  }
+
+  serializeFx(e) {
+    const out = { kind: e.kind };
+    if (e.attacker) out.attacker = this.cids.get(e.attacker);
+    if (e.caster) out.caster = this.cids.get(e.caster);
+    if (e.target) out.target = this.cids.get(e.target);
+    if (e.dmg != null) out.dmg = e.dmg;
+    if (e.amount != null) out.amount = e.amount;
+    if (e.killed != null) out.killed = e.killed;
+    if (e.skill) out.skill = { name: e.skill.name, kind: e.skill.kind };
+    if (e.spec) out.spec = { toggles: e.spec.toggles, gold: e.spec.gold, label: e.spec.label, kind: e.spec.kind };
+    // authoritative stat echoes so replicas never drift
+    if (e.attacker) out.aDir = e.attacker.dir;
+    if (e.target && e.target.stats) {
+      out.tHp = e.target.stats.hp;
+      out.tShield = e.target.shield;
+    }
+    return out;
+  }
+
+  unitSnapshot() {
+    const units = [];
+    for (const [cid, u] of this.byCid) {
+      units.push({
+        cid,
+        x: u.x,
+        y: u.y,
+        dir: u.dir,
+        hp: u.stats ? u.stats.hp : 0,
+        maxHp: u.stats ? u.stats.maxHp : 0,
+        shield: u.shield,
+        moved: u.moved,
+        acted: u.acted,
+        alive: u.alive,
+      });
+    }
+    return units;
+  }
+
+  // Broadcast phase/turn changes with a full snapshot — the turn-boundary
+  // truth replicas re-align to (and the promotion/resume seed).
+  syncPhase(force = false) {
+    const b = this.battle;
+    if (!b) return;
+    const key = `${b.phase}:${b.turn}`;
+    if (!force && key === this.lastPhase) return;
+    this.lastPhase = key;
+    this.phaseStartedAt = performance.now();
+    this.relay({ k: 'phase', phase: b.phase, turn: b.turn, units: this.unitSnapshot() });
+  }
+
+  // ------------------------------------------------------- member commands
+
+  onRelay(msg) {
+    const data = msg.data || {};
+    if (data.k === 'cmd') this.handleCommand(msg.from, data);
+    if (data.k === 'hello' && this.lastStart) {
+      // a member (re)joined mid-battle: targeted catch-up
+      this.relay(this.lastStart, msg.from);
+      this.relay({ k: 'phase', phase: this.battle.phase, turn: this.battle.turn, units: this.unitSnapshot() }, msg.from);
+    }
+  }
+
+  // Validate + execute one member command against the live engine.
+  handleCommand(from, cmd) {
+    const b = this.battle;
+    if (!b || b.phase !== 'player') return this.reject(from, 'not your phase');
+    const unit = this.byCid.get(cmd.cid);
+    if (!unit || !unit.alive || unit.team !== 'player') return this.reject(from, 'no such unit');
+    const own = this.owners.get(unit.id);
+    if (!own || !own.owner || own.owner.toLowerCase() !== String(from).toLowerCase()) {
+      return this.reject(from, 'not your unit');
+    }
+    if (unit.acted) return this.reject(from, 'unit already acted');
+
+    if (cmd.type === 'move') {
+      if (unit.moved || this.pendingMoves.has(unit)) return this.reject(from, 'already moved');
+      const k = `${cmd.x},${cmd.y}`;
+      if (!b.moveTiles(unit).has(k)) return this.reject(from, 'illegal move');
+      const path = b.pathTo(unit, cmd.x, cmd.y);
+      if (!path || !path.length) return this.reject(from, 'no path');
+      unit.followPath(path); // relayed by the capture wrapper
+      this.pendingMoves.add(unit);
+    } else if (cmd.type === 'attack') {
+      const target = this.byCid.get(cmd.target);
+      if (!target || !b.attackTargets(unit).includes(target)) return this.reject(from, 'illegal target');
+      b.resolveAttack(unit, target);
+      this.afterCommand();
+    } else if (cmd.type === 'skill') {
+      const skill = (unit.skills || [])[cmd.skill || 0];
+      if (!skill) return this.reject(from, 'no such skill');
+      const target = skill.target === 'self' ? unit : this.byCid.get(cmd.target);
+      if (!target || !b.skillTargets(unit, skill).includes(target)) return this.reject(from, 'illegal target');
+      b.resolveSkill(unit, target, skill);
+      this.afterCommand();
+    } else if (cmd.type === 'wait' || cmd.type === 'endTurn') {
+      unit.moved = true;
+      unit.acted = true;
+      this.afterCommand();
+    } else {
+      this.reject(from, `unknown command "${cmd.type}"`);
+    }
+  }
+
+  reject(to, reason) {
+    this.relay({ k: 'rejected', reason }, to);
+  }
+
+  afterCommand() {
+    const b = this.battle;
+    if (b.phase === 'player' && b.allPlayersDone()) b.endPlayerPhase();
+    if (this.bc) {
+      this.bc.refreshOverlays();
+      this.bc.render();
+    }
+  }
+
+  // 120ms authority tick: settle member moves, enforce the turn timeout,
+  // and keep replicas' done-flags fresh (promotion resumes from these).
+  tick() {
+    const b = this.battle;
+    if (!b) return;
+    const flags = [...this.byCid.values()].map((u) => (u.moved ? 1 : 0) + (u.acted ? 2 : 0)).join('');
+    if (flags !== this.lastFlags) {
+      this.lastFlags = flags;
+      this.relay({ k: 'phase', phase: b.phase, turn: b.turn, units: this.unitSnapshot() });
+    }
+    for (const u of [...this.pendingMoves]) {
+      if (u.walking) continue;
+      this.pendingMoves.delete(u);
+      u.moved = true;
+      b.unitSettled(u); // traps / switches / treasure fire server-of-record side
+      if (!u.alive) u.acted = true;
+      b.checkEnd();
+      this.afterCommand();
+    }
+    // 60s idle members: the companion AI acts their unit so nothing stalls
+    if (b.phase === 'player' && performance.now() - this.phaseStartedAt > this.turnTimeoutMs) {
+      const idle = [...this.byCid.values()].find(
+        (u) => u.team === 'player' && u.alive && !u.done && this.ownedByMember(u) && !this.pendingMoves.has(u)
+      );
+      if (idle) autoActPlayer(b, idle, () => this.afterCommand());
+    }
+  }
+
+  ownedByMember(u) {
+    const own = this.owners.get(u.id);
+    return !!(own && own.owner && own.owner.toLowerCase() !== String(this.getName()).toLowerCase());
+  }
+
+  // Party churn mid-battle: a departed member's unit flips to AI for the
+  // rest of the battle (their next rejoin re-claims it via 'hello').
+  onPartyChange(msg) {
+    if (!this.battle) return;
+    const present = new Set((msg.members || []).map((m) => m.name.toLowerCase()));
+    for (const [id, own] of this.owners) {
+      if (own.owner && !present.has(own.owner.toLowerCase())) {
+        own.owner = null; // AI-controlled from here on
+      }
+    }
+  }
+
+  // Run-level screens members can't see locally.
+  screen(kind) {
+    this.relay({ k: 'screen', kind });
+  }
+
+  // End of the whole descent (victory/defeat). shares: per-member loot info.
+  descentOver(result, shares = null) {
+    for (const m of this.readyMembers()) {
+      this.relay({ k: 'over', result, share: shares ? shares[m.name.toLowerCase()] || null : null }, m.name);
+    }
+    this.end();
+  }
+
+  teardownBattle() {
+    clearInterval(this.timer);
+    this.timer = null;
+    this.battle = null;
+    this.bc = null;
+    this.cids = new Map();
+    this.byCid = new Map();
+    this.pendingMoves.clear();
+  }
+
+  end() {
+    this.teardownBattle();
+    clearTimeout(this.confirmTimer);
+    for (const u of this.unsubs) u();
+    this.unsubs = [];
+  }
+}
+
+// Companion auto-act for an idle member's unit: attack in place, else move
+// into range and attack, else wait. Mirrors ai.js tiers 1-2 from the player
+// team's side, reusing the engine's own legality queries.
+export function autoActPlayer(battle, unit, after) {
+  const finish = () => {
+    unit.moved = true;
+    unit.acted = true;
+    if (after) after();
+  };
+  const hitNow = battle.attackTargets(unit);
+  if (hitNow.length) {
+    battle.resolveAttack(unit, weakest(hitNow));
+    if (after) after();
+    return;
+  }
+  if (!unit.moved) {
+    const { reach } = battle.computeMoveField(unit);
+    let best = null;
+    for (const [k, dist] of reach) {
+      const [x, y] = k.split(',').map(Number);
+      if (battle.unitAt(x, y) && !(x === unit.x && y === unit.y)) continue;
+      const targets = battle.attackTargets(unit, x, y);
+      if (!targets.length) continue;
+      const target = weakest(targets);
+      const score = dist * 100 + target.stats.hp;
+      if (!best || score < best.score) best = { x, y, target, score };
+    }
+    if (best) {
+      const path = battle.pathTo(unit, best.x, best.y);
+      if (path && path.length) {
+        unit.followPath(path);
+        unit.moved = true;
+        // the attack lands on the leader's next settle pass
+        const settle = setInterval(() => {
+          if (unit.walking) return;
+          clearInterval(settle);
+          battle.unitSettled(unit);
+          const t = battle.attackTargets(unit);
+          if (unit.alive && t.length) battle.resolveAttack(unit, weakest(t));
+          else unit.acted = true;
+          battle.checkEnd();
+          if (after) after();
+        }, 120);
+        return;
+      }
+    }
+  }
+  finish();
+}
+
+function weakest(list) {
+  return list.slice().sort((a, b) => a.stats.hp - b.stats.hp)[0];
+}
+
+// ---------------------------------------------------------------- member side
+
+// Renders the leader's event stream onto a replica room and turns the
+// member's taps into serialized commands for their own unit.
+export class SpectateController {
+  constructor(dom, member) {
+    this.dom = dom; // { banner, actions, roster, log }
+    this.member = member; // CoopMember (owns the net + replica state)
+    this.game = null;
+    this.sel = null;
+    this.mode = 'normal';
+    this.activeSkill = null;
+    this.activeSkillIndex = 0;
+  }
+
+  onAttach(game) {
+    this.game = game;
+  }
+  onRoom() {}
+
+  get shadow() {
+    return this.member.shadow;
+  }
+
+  myUnits() {
+    return this.member.myUnits();
+  }
+
+  get commanding() {
+    return this.member.shadow && this.member.shadow.phase === 'player';
+  }
+
+  onTap(tile) {
+    const shadow = this.shadow;
+    if (!shadow || !this.commanding) return;
+    const here = shadow.unitAt(tile.x, tile.y);
+    const k = `${tile.x},${tile.y}`;
+
+    if (this.mode === 'skill') {
+      if (here && this.game.overlays.skill.has(k)) {
+        this.member.sendCommand({
+          type: 'skill',
+          cid: this.member.cidOf(this.sel),
+          skill: this.activeSkillIndex,
+          target: this.member.cidOf(here),
+        });
+        this.sel.acted = true; // optimistic; the phase snapshot is the truth
+        this.deselect();
+      } else {
+        this.cancel();
+      }
+      return;
+    }
+
+    if (!this.sel) {
+      if (here && this.isMine(here) && !here.done) this.select(here);
+      return;
+    }
+
+    if (here && here.team === 'enemy' && this.game.overlays.target.has(k)) {
+      this.member.sendCommand({ type: 'attack', cid: this.member.cidOf(this.sel), target: this.member.cidOf(here) });
+      this.sel.acted = true; // optimistic; the phase snapshot is the truth
+      this.deselect();
+      return;
+    }
+
+    if (!this.sel.moved && this.game.overlays.move.has(k)) {
+      this.member.sendCommand({ type: 'move', cid: this.member.cidOf(this.sel), x: tile.x, y: tile.y });
+      this.sel.moved = true; // optimistic
+      this.refreshOverlays();
+      this.render();
+      return;
+    }
+    if (here && this.isMine(here) && !here.done) this.select(here);
+    else this.deselect();
+  }
+
+  isMine(unit) {
+    return this.myUnits().includes(unit);
+  }
+
+  select(unit) {
+    if (this.sel) this.sel.selected = false;
+    this.sel = unit;
+    this.mode = 'normal';
+    if (unit) unit.selected = true;
+    this.refreshOverlays();
+    this.render();
+  }
+
+  deselect() {
+    this.select(null);
+  }
+
+  cancel() {
+    this.mode = 'normal';
+    this.activeSkill = null;
+    this.refreshOverlays();
+    this.render();
+  }
+
+  enterSkill(skill, index) {
+    if (!this.sel || this.sel.acted) return;
+    if (skill.target === 'self') {
+      this.member.sendCommand({ type: 'skill', cid: this.member.cidOf(this.sel), skill: index });
+      this.sel.acted = true;
+      this.deselect();
+      return;
+    }
+    this.activeSkill = skill;
+    this.activeSkillIndex = index;
+    this.mode = 'skill';
+    this.refreshOverlays();
+    this.render();
+  }
+
+  wait() {
+    if (!this.sel) return;
+    this.member.sendCommand({ type: 'wait', cid: this.member.cidOf(this.sel) });
+    this.sel.acted = true;
+    this.deselect();
+  }
+
+  refreshOverlays() {
+    const g = this.game;
+    if (!g) return;
+    g.clearOverlays();
+    const u = this.sel;
+    const shadow = this.shadow;
+    if (!u || !shadow || !this.commanding) return;
+    if (this.mode === 'skill') {
+      for (const t of shadow.skillTargets(u, this.activeSkill)) g.overlays.skill.add(`${t.x},${t.y}`);
+      return;
+    }
+    if (!u.moved) for (const k of shadow.moveTiles(u)) g.overlays.move.add(k);
+    for (const t of shadow.attackTargets(u)) g.overlays.target.add(`${t.x},${t.y}`);
+  }
+
+  update(now) {
+    // replica units animate through the normal Avatar tick (Game.loop);
+    // nothing to simulate here — the leader's stream is the authority
+  }
+
+  render() {
+    const dom = this.dom;
+    const shadow = this.shadow;
+    if (!dom.banner || !shadow) return;
+    const mineReady = this.myUnits().some((u) => u.alive && !u.done);
+    const label = {
+      player: mineReady ? `Turn ${shadow.turn}, your unit is ready` : `Turn ${shadow.turn}, party is moving`,
+      enemy: `Turn ${shadow.turn}, enemy phase`,
+      won: 'Victory!',
+      lost: 'Defeated...',
+    }[shadow.phase];
+    dom.banner.innerHTML = `<b>${label}:</b> <span class="obj">Co-op: ${this.member.leaderName}'s descent</span>`;
+    dom.banner.className = `banner ${shadow.phase}`;
+
+    dom.actions.innerHTML = '';
+    if (shadow.phase === 'player') {
+      if (this.mode === 'skill') {
+        this.btn(`Tap a green target for ${this.activeSkill.name}`, null, true);
+        this.btn('Back', () => this.cancel());
+      } else if (this.sel) {
+        if (shadow.attackTargets(this.sel).length) this.btn('Attack a red foe', null, true);
+        (this.sel.skills || []).forEach((sk, i) => {
+          if (shadow.skillTargets(this.sel, sk).length || sk.target === 'self') {
+            this.btn(sk.name, () => this.enterSkill(sk, i));
+          }
+        });
+        this.btn('Wait', () => this.wait());
+        this.btn('Cancel', () => this.deselect());
+      } else if (mineReady) {
+        this.btn('Tap your unit to command it', null, true);
+      } else {
+        this.btn('Waiting for the party…', null, true);
+      }
+    } else if (shadow.phase === 'enemy') {
+      this.btn('Enemy phase…', null, true);
+    }
+
+    dom.roster.innerHTML = '';
+    for (const u of shadow.units) {
+      const row = document.createElement('div');
+      row.className = `roster-row ${u.team}${u.alive ? '' : ' dead'}${u === this.sel ? ' sel' : ''}${u.done && u.alive ? ' done' : ''}`;
+      const frac = u.stats ? Math.max(0, u.stats.hp / u.stats.maxHp) : 0;
+      row.innerHTML =
+        `<span class="rname">${u.name}</span>` +
+        `<span class="rcls">${u.cls.name}${u.team === 'player' ? ` L${u.level}` : ''}</span>` +
+        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%"></span></span>` +
+        `<span class="rhpn">${u.alive ? u.stats.hp : '✕'}</span>`;
+      dom.roster.appendChild(row);
+    }
+  }
+
+  btn(label, fn, disabled = false) {
+    const b = document.createElement('button');
+    b.textContent = label;
+    if (disabled) b.disabled = true;
+    else b.addEventListener('click', fn);
+    this.dom.actions.appendChild(b);
+  }
+
+  appendLog(msg) {
+    if (!this.dom.log) return;
+    const line = document.createElement('div');
+    line.textContent = msg;
+    this.dom.log.appendChild(line);
+    this.dom.log.scrollTop = this.dom.log.scrollHeight;
+    while (this.dom.log.childNodes.length > 60) this.dom.log.removeChild(this.dom.log.firstChild);
+  }
+}
+
+export class CoopMember {
+  // game: shared Game renderer; dom: battle panel elements; ui: screen hooks
+  // from main.js { waiting(html), battleReady(), exit(reason, share) }
+  constructor(net, game, dom, getName) {
+    this.net = net;
+    this.game = game;
+    this.dom = dom;
+    this.getName = getName;
+    this.ui = null;
+    this.active = false;
+    this.leaderName = null;
+    this.shadow = null; // query-only Battle over the replica units
+    this.byCid = new Map(); // cid -> unit
+    this.cidBack = new Map(); // unit -> cid
+    this.controller = null;
+    this.promoted = null; // CoopLeader after a leader hand-off
+    this.unsubs = [];
+  }
+
+  // Member accepted the descend confirm: follow the leader's stream.
+  activate(leaderName, ui) {
+    this.deactivate();
+    this.active = true;
+    this.leaderName = leaderName;
+    this.ui = ui;
+    this.unsubs = [
+      this.net.on('relay', (m) => this.onRelay(m)),
+      this.net.on('party', (m) => this.onPartyChange(m)),
+      this.net.on('close', () => this.exit('Connection lost.')),
+    ];
+    this.net.send({ t: 'descend-ack', accept: true, classId: this.ui.classId, figure: this.ui.figure });
+    this.ui.waiting(`<b>${esc(leaderName)}</b> is opening the way down…`);
+  }
+
+  decline() {
+    this.net.send({ t: 'descend-ack', accept: false });
+  }
+
+  deactivate() {
+    for (const u of this.unsubs) u();
+    this.unsubs = [];
+    this.active = false;
+    this.shadow = null;
+    this.byCid.clear();
+    this.cidBack.clear();
+    this.controller = null;
+    if (this.promoted) {
+      this.promoted.end();
+      this.promoted = null;
+    }
+  }
+
+  exit(reason, share = null) {
+    const ui = this.ui;
+    this.deactivate();
+    if (ui) ui.exit(reason, share);
+  }
+
+  cidOf(unit) {
+    return this.cidBack.get(unit);
+  }
+
+  myUnits() {
+    const me = String(this.getName() || '').toLowerCase();
+    return [...this.byCid.values()].filter((u) => u.owner && u.owner.toLowerCase() === me);
+  }
+
+  sendCommand(cmd) {
+    this.net.send({ t: 'relay', data: { k: 'cmd', ...cmd }, to: this.leaderName });
+  }
+
+  onRelay(msg) {
+    if (this.promoted) return; // authority now — the CoopLeader handles relays
+    const d = msg.data || {};
+    switch (d.k) {
+      case 'start':
+        return this.buildReplica(d);
+      case 'move':
+        return this.applyMove(d);
+      case 'fx':
+        return this.applyFx(d);
+      case 'log':
+        return this.controller && this.controller.appendLog(d.msg);
+      case 'phase':
+        return this.applyPhase(d);
+      case 'end':
+        return this.applyEnd(d);
+      case 'screen':
+        return this.applyScreen(d);
+      case 'over':
+        return this.exit(d.result === 'won' ? 'The descent is complete!' : 'The descent has ended.', d.share);
+      case 'rejected':
+        return this.controller && this.controller.appendLog(`(command refused: ${d.reason})`);
+    }
+  }
+
+  // Rebuild the deterministic room + enemies, then the squad from the wire.
+  buildReplica(d) {
+    const dungeon = buildDungeon(d.dungeonId, d.eventPicks || {});
+    const node = dungeon && dungeon.nodes[d.nodeIndex];
+    if (!node || node.type !== 'battle') return;
+    const room = node.makeRoom({ seed: d.seed ?? 0 });
+    const enemies = node.makeEnemies(room, {
+      seed: d.seed ?? 0,
+      battleNumber: d.battleNumber ?? 1,
+      squadSize: d.squadSize ?? 4,
+    });
+    this.byCid.clear();
+    this.cidBack.clear();
+    const zoom = room.zoom === 1 ? 'm' : 's';
+    const players = (d.players || []).map((spec) => {
+      const u = new Unit(room, null, spec.x, spec.y, {
+        team: 'player',
+        classId: spec.classId,
+        name: spec.name,
+        level: spec.level,
+        dir: spec.dir,
+        tag: spec.tag,
+      });
+      u.stats = { ...spec.stats };
+      u.shield = spec.shield || 0;
+      u.owner = spec.owner || null;
+      if (spec.figure) u.sprites = figureSprites(spec.figure, zoom);
+      this.link(u, spec.cid);
+      return u;
+    });
+    enemies.forEach((u, i) => this.link(u, `e${i}`));
+
+    this.controller = new SpectateController(this.dom, this);
+    this.game.setController(this.controller);
+    this.game.setRoom(room);
+    for (const u of [...players, ...enemies]) this.game.addUnit(u);
+    // query-only engine over the same units: legality hints + banner text
+    this.shadow = new Battle(room, [...players, ...enemies], { objective: node.objective });
+    const goal = this.shadow.objective.tile;
+    if (goal) this.game.overlays.objective.add(`${goal.x},${goal.y}`);
+    if (this.dom.log) this.dom.log.innerHTML = '';
+    for (const line of d.log || []) this.controller.appendLog(line);
+    this.ui.battleReady(d.battleName);
+    this.controller.render();
+  }
+
+  link(unit, cid) {
+    unit.cid = cid;
+    this.byCid.set(cid, unit);
+    this.cidBack.set(unit, cid);
+  }
+
+  applyMove(d) {
+    const u = this.byCid.get(d.cid);
+    if (u) u.followPath(d.path || []);
+  }
+
+  applyFx(d) {
+    const e = { kind: d.kind };
+    if (d.attacker) e.attacker = this.byCid.get(d.attacker);
+    if (d.caster) e.caster = this.byCid.get(d.caster);
+    if (d.target) e.target = this.byCid.get(d.target);
+    if (d.dmg != null) e.dmg = d.dmg;
+    if (d.amount != null) e.amount = d.amount;
+    if (d.skill) e.skill = d.skill;
+    if (d.spec) e.spec = d.spec;
+    // authoritative echoes
+    if (e.attacker && d.aDir != null) e.attacker.dir = d.aDir;
+    if (e.target && e.target.stats && d.tHp != null) {
+      e.target.stats.hp = d.tHp;
+      e.target.shield = d.tShield || 0;
+    }
+    // world side-effects replicas must mirror
+    if (this.shadow) {
+      if (d.kind === 'switch' && d.spec) {
+        for (const t of d.spec.toggles || []) this.shadow.room.toggleGate(t.x, t.y);
+      }
+      if ((d.kind === 'treasure' || d.kind === 'hazard') && e.target) {
+        const fx = this.shadow.room.effectAt(e.target.x, e.target.y);
+        if (fx && (d.kind === 'treasure' || fx.once)) fx.spent = true;
+      }
+    }
+    if (e.target || e.caster || e.attacker) renderBattleFx(this.game, e);
+    if (this.controller) this.controller.render();
+  }
+
+  // Turn-boundary truth: snap every unit to the leader's snapshot.
+  applyPhase(d) {
+    if (!this.shadow) return;
+    this.shadow.phase = d.phase;
+    this.shadow.turn = d.turn;
+    this.lastSnapshot = d;
+    for (const spec of d.units || []) {
+      const u = this.byCid.get(spec.cid);
+      if (!u) continue;
+      if (!u.walking) {
+        u.x = spec.x;
+        u.y = spec.y;
+        u.z = u.room.heightAt(spec.x, spec.y) || 0;
+      }
+      u.dir = spec.dir;
+      if (u.stats) {
+        u.stats.hp = spec.hp;
+        u.stats.maxHp = spec.maxHp;
+      }
+      u.shield = spec.shield;
+      u.moved = spec.moved;
+      u.acted = spec.acted;
+      if (!spec.alive && u.stats) u.stats.hp = 0;
+    }
+    if (this.controller) {
+      this.controller.refreshOverlays();
+      this.controller.render();
+    }
+  }
+
+  applyEnd(d) {
+    if (this.shadow) this.shadow.phase = d.result;
+    if (this.controller) this.controller.render();
+  }
+
+  applyScreen(d) {
+    const label = d.kind === 'camp' ? 'The party makes camp' : 'The party weighs a choice';
+    this.ui.waiting(`${label} — <b>${esc(this.leaderName)}</b> is deciding…`);
+  }
+
+  // Party churn: if the crown lands on ME mid-battle, take over the sim from
+  // the last turn-boundary snapshot (leader-loss promotion).
+  onPartyChange(msg) {
+    if (!msg.leader) {
+      this.exit('The party has disbanded.');
+      return;
+    }
+    const me = String(this.getName() || '').toLowerCase();
+    if (msg.leader.toLowerCase() === me && this.leaderName && this.leaderName.toLowerCase() !== me) {
+      this.promote();
+    } else {
+      this.leaderName = msg.leader;
+    }
+  }
+
+  // Become the authority: the replica room + units are already live; rebuild
+  // a real Battle over them at the last snapshot and adopt it into a fresh
+  // capture (fresh RNG from here — acceptable co-op resume).
+  promote() {
+    if (!this.shadow || !this.ui || !this.ui.promote) {
+      this.exit('The leader has left the descent.');
+      return;
+    }
+    const snapshot = this.lastSnapshot;
+    const units = [...this.byCid.values()];
+    const battle = this.shadow; // same engine instance: state already synced
+    battle.onEnd = () => {};
+    battle._ended = false;
+    if (snapshot) {
+      battle.turn = snapshot.turn;
+    }
+    if (battle.phase !== 'player') {
+      // resume at the player phase from the boundary (never mid-enemy-AI)
+      battle.startPlayerPhase();
+    }
+    const promotedName = this.leaderName;
+    this.leaderName = this.getName();
+    this.promoted = this.ui.promote({ battle, units, byCid: this.byCid, from: promotedName });
+  }
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+}

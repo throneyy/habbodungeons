@@ -1,0 +1,6941 @@
+[
+ {
+  "id": "ads_aftv_wall",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "2x1",
+  "name": "Exposed Brick Wall",
+  "line": "ad_sales"
+ },
+ {
+  "id": "ads_ag_crate",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "ads_ag_crate name",
+  "line": "ad_sales"
+ },
+ {
+  "id": "ads_twi_dvdr2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Clock Tower wall",
+  "line": "ad_sales"
+ },
+ {
+  "id": "ads_twi_fountn",
+  "dirs": [
+   0
+  ],
+  "dims": "2x2",
+  "name": "Fountain",
+  "line": "ad_sales"
+ },
+ {
+  "id": "ads_twi_tower",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Clock Tower",
+  "line": "ad_sales"
+ },
+ {
+  "id": "br_phoenix",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Flaming Phoenix",
+  "line": "gifts"
+ },
+ {
+  "id": "bw_ccnuts",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Coconuts",
+  "line": "gifts"
+ },
+ {
+  "id": "clothing_archerhat",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Archer Cap",
+  "line": "easter_2019"
+ },
+ {
+  "id": "clothing_backkatana",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Survival Katana",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "clothing_badasshelmet",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Horned Helmet",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_bandagedhead",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Head Injury",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "clothing_bandagedtorso",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Body Bandage",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "clothing_beard1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1"
+ },
+ {
+  "id": "clothing_darkcrown",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1"
+ },
+ {
+  "id": "clothing_fantasycape",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fantasy Cape",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_fantasyheadpiece",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fantasy Gold Band",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_fantasynecklace",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fantasy Amulet",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_fantasystaff",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fantasy Staff",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_fantasysword",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fantasy Sword",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_fantasyvillager",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Villager Tunic",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_herochest",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Iron Chest Armour",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_herohelmet",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Iron Helmet",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_legarmour",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Iron Leg Armour",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_mutton1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1"
+ },
+ {
+  "id": "clothing_mutton2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1"
+ },
+ {
+  "id": "clothing_nt_witchhat2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Hat",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "clothing_nt_witchrobes",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Robes",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "clothing_plaguemask",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Plague Mask",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_r17_bathat",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Vampire Bat Hat",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_r17_hweencrown",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Medieval Crown",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_r19_comedymask",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Comedy Mask",
+  "line": "greek"
+ },
+ {
+  "id": "clothing_r19_medusa",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Medusa Hair",
+  "line": "greek"
+ },
+ {
+  "id": "clothing_r19_minotaurhorns",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Minotaur Horns",
+  "line": "greek"
+ },
+ {
+  "id": "clothing_r19_tragedymask",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Tragedy Mask",
+  "line": "greek"
+ },
+ {
+  "id": "clothing_r22_princearmour",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Royal Armour",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_r22_villainhornsa",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Villainous Horns",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_r24_steampunkhat",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Steampunk Accessories",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "clothing_r25_illusenwings",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Illusen Faerie Wings",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "clothing_r25_mushroomcape",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mushroom Cape",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "clothing_r25_queenfyora",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Queen Fyora Accessories",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "clothing_rebelchest",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Spiked Chest Armour",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "clothing_starcrown",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1"
+ },
+ {
+  "id": "clothing_ultrafantasycape",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Adorned Fantasy Cape",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_ultrafantasyheadpiece",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fantasy Gold Crown",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_ultrafantasynecklace",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Charmed Fantasy Amulet",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_ultrafantasystaff",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Powerful Fantasy Staff",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_ultrafantasysword",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Unbreakable Fantasy Sword",
+  "line": "fantasy"
+ },
+ {
+  "id": "clothing_witchhat2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Hat",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "clothing_witchrobes",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Robes",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "country_corner",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Ditch Corner",
+  "line": "country"
+ },
+ {
+  "id": "country_ditch",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Ditch",
+  "line": "country"
+ },
+ {
+  "id": "country_fnc1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Wooden Divider",
+  "line": "country"
+ },
+ {
+  "id": "country_fnc2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Rock Divider",
+  "line": "country"
+ },
+ {
+  "id": "country_fnc3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Rock Corner Divider",
+  "line": "country"
+ },
+ {
+  "id": "country_gate",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Gate",
+  "line": "country"
+ },
+ {
+  "id": "country_grass",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Grass Patch",
+  "line": "country"
+ },
+ {
+  "id": "country_log",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Log",
+  "line": "country"
+ },
+ {
+  "id": "country_patio",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Patio",
+  "line": "country"
+ },
+ {
+  "id": "country_rain",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Rain",
+  "line": "country"
+ },
+ {
+  "id": "country_soil",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Soil",
+  "line": "country"
+ },
+ {
+  "id": "country_stage",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Country Stage",
+  "line": "country"
+ },
+ {
+  "id": "country_well",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Well",
+  "line": "country"
+ },
+ {
+  "id": "country_wheat",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Wheat Patch",
+  "line": "country"
+ },
+ {
+  "id": "dng_block",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Dungeon Plateau",
+  "line": "drago"
+ },
+ {
+  "id": "dng_cube",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Dungeon Bricks",
+  "line": "drago"
+ },
+ {
+  "id": "dng_floor",
+  "dirs": [
+   0
+  ],
+  "dims": "2x2",
+  "name": "Dungeon Floor",
+  "line": "drago"
+ },
+ {
+  "id": "dng_ground",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Dungeon Ground",
+  "line": "drago"
+ },
+ {
+  "id": "dng_stairs",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Dungeon Stairs",
+  "line": "drago"
+ },
+ {
+  "id": "dng_treasure",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Treasure Patch",
+  "line": "drago"
+ },
+ {
+  "id": "dng_treasure2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Treasure Dig",
+  "line": "drago"
+ },
+ {
+  "id": "drago_c15_bed",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "1x3",
+  "name": "Dungeon Bed",
+  "line": "drago"
+ },
+ {
+  "id": "ducket_c25_autumndecor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Autumn Leaf Garland",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c25_cottagebook",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cosy Book",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c25_cottageherbs",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Essential Herbs",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c25_plantpot",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ornamental Plant",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c25_warmfloor",
+  "dirs": [
+   0
+  ],
+  "dims": "2x2",
+  "name": "Warm Wood Floor",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c25_wovenhammock",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "1x3",
+  "name": "Tropical Hammock",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c26_anchorpillow",
+  "dirs": [
+   2,
+   4,
+   6,
+   0
+  ],
+  "dims": "1x1",
+  "name": "Anchor Throw Pillow",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c26_beeplushie",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bee Plushie",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c26_cottagecandle",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Moody Candle",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c26_cottageplant",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cottage Mantlepiece Plant",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c26_cottagewreath",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cottage Wreath",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c26_floor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Cottage Floor",
+  "line": "duckets"
+ },
+ {
+  "id": "ducket_c26_glasslantern",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Sea Glass Lanterns",
+  "line": "duckets"
+ },
+ {
+  "id": "easter_c19_ancientbook",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_ancientbook2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_babyent2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Baby Ent",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_babyhippogriff2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Baby Bear Owl",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_babykelpie2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Baby Water Kelpie",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_bearowl",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bear Owl",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Red Riding Hood Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book1a",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Red Riding Hood Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Wonderland Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book2a",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Wonderland Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Snow White Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book3a",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Snow White Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book4",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Habbelina Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_book4a",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Habbelina Storybook",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_busybunny",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Busy Bunny",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_chillgnome",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Forest Gnome",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_dirtpath",
+  "dirs": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "dims": "1x2",
+  "name": "Forest Path",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_earthdrago",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Arboreal Dragon",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_ent",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ent",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_fairyprince",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fairy Prince",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_flowerlamp",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Luminescent Flower Lamp",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_flowertea",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Tulip Teapot",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_forrestegg2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Enchanted Egg",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_forrestfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Forest Floor",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_forrestfood",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Forest Floor",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_habshirecat",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Habbshire Cat",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_hippogriff",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Savage Hippogriff",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_kelpie",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Water Kelpie",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_lilredbonnie",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bonnie Red Riding Hood",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_littlefairies",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Woodland Fairies",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_magicringtele",
+  "dirs": [
+   4,
+   2,
+   6,
+   0
+  ],
+  "dims": "1x1",
+  "name": "Forest Ring Teleport",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_meadow",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Wildflower Meadow",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_mushrooms",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Forest Mushrooms",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_springtree",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Whispering Tree",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_turnipbuddies",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Magic Turnips",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_waterdrago",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Aquifer Dragon",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_wisestone",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Soothsayer Stone",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_wolf",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ravenous Wolf",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c19_woodlandcritters",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Enchanted Woodland Critters",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_c20_ancienthorse",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Earth Pony",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_clayrelic",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Light Relic",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_climbingropetele",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Climbing Rope",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_darkprize1",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Dark Relic",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_darkprize2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Dark Earth Pony",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_darkprize3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Dark Master Monument",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_darkprize4",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Dark Imperial Crown",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_darkrock",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Siren Rock",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_darkrock1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Siren Rock",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_fishingpole",
+  "dirs": [
+   0,
+   2,
+   6,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Fishing Line",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_fishstream",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Salmon Run",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_forestfriends",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Jar of Critters",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_foresttree",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Skinny Tree",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_heather",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Heather Patch",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_heatherrock",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Heather Rock",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_jadeguardian",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Jade Guardian",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_lightprize2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Light Jade Dragon",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_lightprize3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Light Royal Protector",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_lightprize4",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Light Imperial Robes",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_lightrock",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mermaid Rock",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_lightrock1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mermaid Rock",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_logwalk",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Water Logs",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_mossydivider",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Mossy Fence",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_mountainflats",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Mountain Flats",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_mountainslopes",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Mountain Slopes",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_ornamentalrocks",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cairn",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_rapids",
+  "dirs": [
+   2,
+   6,
+   4,
+   0
+  ],
+  "dims": "1x1",
+  "name": "Spring Rapids",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_rockboulders",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Mountain Rocks",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_scatteredforestfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Fallen Leaves",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_stickteepee",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Camping Teepee",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_waypointrocks",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Waypoint Rocks",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_c20_zenmaster",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Master Monument",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_ltd19_flowerthrone",
+  "dirs": [
+   0,
+   2,
+   6,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Wildflower Throne",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_ltd20_fortuneduck",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Fortune Duck",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_r19_mysticalbird",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Rainbow Forest Chicken",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_r19_treeswing",
+  "dirs": [
+   0,
+   6,
+   4,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Fairytale Forest Swing",
+  "line": "easter_2019"
+ },
+ {
+  "id": "easter_r20_mountaingoat",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mountain Goat",
+  "line": "easter_2020"
+ },
+ {
+  "id": "easter_r20_mystictree",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mystic Tree",
+  "line": "easter_2020"
+ },
+ {
+  "id": "elegrass1",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "elegrass1 name",
+  "line": "country"
+ },
+ {
+  "id": "elerock1",
+  "dirs": [
+   4,
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "elerock1 name",
+  "line": "country"
+ },
+ {
+  "id": "env_bushes",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Bush Divider",
+  "line": "country"
+ },
+ {
+  "id": "env_bushes_gate",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Bush Gate Divider",
+  "line": "country"
+ },
+ {
+  "id": "env_grass",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Grass Patch",
+  "line": "country"
+ },
+ {
+  "id": "env_tree1",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Beech Stool",
+  "line": "country"
+ },
+ {
+  "id": "env_tree2",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Tree Stool 2",
+  "line": "country"
+ },
+ {
+  "id": "env_tree3",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Linden Stool",
+  "line": "country"
+ },
+ {
+  "id": "env_tree4",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Friendship Tree",
+  "line": "country"
+ },
+ {
+  "id": "fantasy_c22_adventureboard",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Adventure Board",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_archway",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x2",
+  "name": "Medieval Archway",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_arrows",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Arrow Bucket",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_balcony",
+  "dirs": [
+   0,
+   2,
+   6,
+   4
+  ],
+  "dims": "2x1",
+  "name": "Medieval Balcony",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_bard",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gifted Bard",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_barrel",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Medieval Barrel",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_bluepotion",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Potion of Magic",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_building1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Medieval Wall",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_building2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Medieval Doorway",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_cloth",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cloth Squares",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_cobblestonefloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Cobblestone Village Floor",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_coins",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mixed Metal Coins",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_craftsman",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Village Blacksmith",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_crystal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Crystal Shards",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_divider",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x2",
+  "name": "Medieval Divider",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_frothydrink",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Frothy Pint",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_gnoll",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gnoll",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_goblin",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Greedy Goblin",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_greenpotion",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Potion of Strength",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_guildhall",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Guild Hall",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_hangingflags",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Hanging Flags",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_herbs",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Drying Herbs",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_jackalope",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Jackalope",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_marketgoods",
+  "dirs": [
+   0,
+   2,
+   6,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Market Goods",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_marketstall",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x2",
+  "name": "Market Stall",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_metal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Metal Ingot",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_redpotion",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Potion of Wit",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_roof",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Medieval Roof",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_roofbase",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Medieval Building Block",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_rune",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fantastical Rune Stones",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_sewers",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Sewer Drain",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_shopsigns",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Shop Signs",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_smallwizard",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Little Wizard",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_strawcanopy",
+  "dirs": [
+   0,
+   2,
+   6,
+   4
+  ],
+  "dims": "2x2",
+  "name": "Straw Canopy",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_sweetrolls",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Sweet Rolls",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_tavern",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Medieval Tavern",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_trainingdummy",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Training Dummy",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_trainingtarget",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Target Practice",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_treasure1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Everyday Supply Chest",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_treasure1a",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Everyday Supply Chest",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_treasure2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Peculiar Supply Chest",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_treasure2a",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Peculiar Supply Chest",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_tree",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bright Transitional Tree",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_wizardtower",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Wizard's Tower",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c22_wood",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Stick Pile",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c25_broom",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "2x1",
+  "name": "Fantasy Broom",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_c25_bubble",
+  "dirs": [
+   2,
+   4,
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Fantasy Bubble",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_ltd22_dragon",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Fire-Breathing Dragon",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_r22_herostatue",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Hero Statue",
+  "line": "fantasy"
+ },
+ {
+  "id": "fantasy_r22_regalhorse",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Royal Steed",
+  "line": "fantasy"
+ },
+ {
+  "id": "gift_c18_cookiejar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cookie Jar",
+  "line": "ad_sales"
+ },
+ {
+  "id": "gift_duck_flowerbasket",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Community Pillar Gift",
+  "line": "gifts"
+ },
+ {
+  "id": "goth_table",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x5",
+  "name": "Gothic Table",
+  "line": "gothic"
+ },
+ {
+  "id": "gothgate",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Gothic Portcullis",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_bed",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "2x3",
+  "name": "Gothic Bed",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_bowl",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Gothic Drinking Fountain",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_c15_chandelier",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gothic Chandelier",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_c15_crn",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Gothic Corner",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_c15_dvdr",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Gothic Divider",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_c15_toilet",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Gothic Toilet",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_c15_tower",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gothic Tower",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_candles",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Gothic Candles",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_carpet",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x4",
+  "name": "Cobbled Path",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_carpet2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x4",
+  "name": "Floor Hatch",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_chair",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Gothic Chair Pink",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_desk",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Gothic Desk",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_sofa",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Gothic Sofa Pink",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic_stool",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Gothic Stool Pink",
+  "line": "gothic"
+ },
+ {
+  "id": "gothic15_toilet",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Gothic Toilet",
+  "line": "gothic"
+ },
+ {
+  "id": "gothiccandelabra",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gothic Candelabra",
+  "line": "gothic"
+ },
+ {
+  "id": "gothrailing",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Gothic Railing",
+  "line": "gothic"
+ },
+ {
+  "id": "greek_c15_bench",
+  "dirs": [
+   4,
+   2,
+   6,
+   0
+  ],
+  "dims": "2x1",
+  "name": "Greek Bench",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c15_floor",
+  "dirs": [
+   2,
+   0,
+   4,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Greek Tile",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c15_lamp",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Greek Torch",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c15_tile",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Greek Mini Tile",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_chair",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Stool",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_fruitbowl",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bowl of Fruit",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_harp",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Athenian Harp",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_harp2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Deluxe Athenian Harp",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_pythagorascup",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Pythagorean Cup",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_scrolls1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Scrolls",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_scrolls2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Scrolls",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_shield1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Shield",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_shield2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Shield",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_statue",
+  "dirs": [
+   0,
+   2,
+   6,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Bronze Warrior Statue",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_table",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Table",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_vase1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Vase",
+  "line": "greek"
+ },
+ {
+  "id": "greek_c19_vase2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Vase",
+  "line": "greek"
+ },
+ {
+  "id": "greek_gate",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Greek Gate",
+  "line": "greek"
+ },
+ {
+  "id": "greek_ltd19_harp",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gold Athenian Harp",
+  "line": "greek"
+ },
+ {
+  "id": "greek_r19_chariot",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Ancient Greek Chariot",
+  "line": "greek"
+ },
+ {
+  "id": "greek_r19_luxbed",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Senator's Bed",
+  "line": "greek"
+ },
+ {
+  "id": "habbo25_c25_icebowl",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ice Bowl",
+  "line": "habbo25"
+ },
+ {
+  "id": "habbo25_c25_pearlchairfloat2",
+  "dirs": [
+   4,
+   2,
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Iridecent Pearl Float",
+  "line": "habbo25"
+ },
+ {
+  "id": "habbo25_c25_sparkler",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Sparkler",
+  "line": "habbo25"
+ },
+ {
+  "id": "habbo25_c25_sunlounger1",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "1x3",
+  "name": "Hotel Lounger",
+  "line": "habbo25"
+ },
+ {
+  "id": "habbo25_sc25_goldenfountain",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Golden Fountain",
+  "line": "habbo25"
+ },
+ {
+  "id": "hblooza_chicken",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Chicken Stand",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "hblooza_dirtfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Dirt Floor",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "hblooza_fnc",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fence",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "hblooza_fnc_crnr",
+  "dirs": [
+   0,
+   6,
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fence Corner",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "hhistory_c24_8bittrip",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "8 Bit Jello",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "hhistory_c24_cactus",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bobba Cactus",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "hhistory_c24_crafttable",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "2x1",
+  "name": "Donnie’s Crafting Table",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "hhistory_c24_gears",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gears",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "hhistory_c24_levers",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Levers",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "hhistory_c24_megaflower",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mega Flower",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "hween_c17_bonfire",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Flame Trap",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_cavefloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Cursed Cave Floor",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_fallingrocks",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Falling Rocks",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_flamingknight",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Flame Knight",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_gibbet",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Cursed Gibbet",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_handstrap",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Buried Zombies Trap",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_hangingroots",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Roots",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_hidewall",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Cursed Cave Wall",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_lichen",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Lichen",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_mimic",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mimic Chest",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_monstertele",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Monstrous Worm Teleport",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_pillar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Pillar",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_pillarsmall",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Small Cursed Pillar",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_portcullis",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Cursed Portcullis",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_rat",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Diseased Rat",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_rock",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Rocks",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_rock2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Rocks",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_rockdrip",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Dripping Rock",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_shroomthing",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mushroom Man",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_spiketrap",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Trap",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_tent",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x3",
+  "name": "Cursed Tent",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_thefallen",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Pile of Bones",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_torturebed",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "1x3",
+  "name": "Torture Rack",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_wall",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Cursed Cave Wall",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_zombiegrunt",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Zombie Grunt",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c17_zombiesleep",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Dormant Zombie",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_c19_angleroof",
+  "dirs": [
+   0,
+   4,
+   6,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Roof",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_archway",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Witch Archway",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_autumnfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Autumn Forest Floor",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_bewitchedbed",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Witch Bed",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_bewitchedcandles",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Candles",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_bewitchedcauldron",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch's Cauldron",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_bewitchedchair",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Witch Armchair",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_bewitchedskull",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Crumbling Skull",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_bewitchedtable",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Table",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_bigroof",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Big Witch Roof",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_birchtree",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Birch Tree",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_broomstaffstand",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch's Broom Stand",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_claddedwall",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Witch Wall",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_crookedfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Uneven Floorboards",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_crystal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Crystal",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_crystalball",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Crystal Ball",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_darkwerewolf",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Ravenous Werewolf",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_feathers",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Long Feathers",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_firechild",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Burning Phantom",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_fireplace",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Witch's Fireplace",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_flameon",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Flaming Unicorn",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_herbs",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fragrant Herbs",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_potions",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Potions",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_pumpkinpatch",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Pumpkin Patch",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_roofcorner",
+  "dirs": [
+   3,
+   1,
+   5,
+   7
+  ],
+  "dims": "1x1",
+  "name": "Witch Roof Corner",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_slimeblob",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Living Slime",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_smallroof",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Small Witch Roof",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_spiritowl",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Spirit Owl",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_steeproof",
+  "dirs": [
+   4,
+   6,
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Witch Roof",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_stonewall",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Stone Wall",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_tarot",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Tarot Cards",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_witchcraft",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch's Crafting Table",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_witchsatchel",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ingredients Pouch",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c19_witchsatchel2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ingredients Pouch",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_c25_arrow",
+  "dirs": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "dims": "1x1",
+  "name": "Firing Arrow",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_bedofmushrooms",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Mushroom Patch",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_campfire",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Campfire",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_infected1b",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "The Infected",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_infected2b",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mushroom Infected",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_infected3b",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Poisonous Infected",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_infectedmonster",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Infected Beast",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_infectedplushie",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mushroom Infected Plushie",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_junkwall",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Barricade Wall",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_makeshiftbed",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Makeshift Bed",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_makeshiftendtable",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Makeshift End Table",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_makeshifttable",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Makeshift Bench",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_makeshifttent",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x3",
+  "name": "Makeshift Tent",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_mossyfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Mossy Ground",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_oldwall",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Worn Wall",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_oldwallwindows",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Busted Windows",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_rope",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Some Rope",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_scrapclothing",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Raggedy Clothing",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_scrapfabric",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Fabric Rags",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_scrapmetal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Scrap Metal",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_scrapwood",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Wood Pieces",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_signage",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Apocalyptic Graffiti",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_tiledfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Mossy Pavement",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_weed1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Garden Weeds",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_weed2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Climbing Weeds",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_c25_weed3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Trailing Weeds",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween_dragengage",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x2",
+  "name": "Hellfire Dragon",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_ltd17_dragon",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x2",
+  "name": "Hellfire Dragon",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_ltd19_skullthrone",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Witch Throne",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_r17_ancdrago",
+  "dirs": [
+   0,
+   4,
+   6,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Cursed Dragon Statue",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_r17_lichthrone",
+  "dirs": [
+   0,
+   4,
+   6,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cursed Throne",
+  "line": "habboween_2017"
+ },
+ {
+  "id": "hween_r19_weepingwillow",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Weeping Willow",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_r19_witchfamiliar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Witch Familiar",
+  "line": "habboween_2019"
+ },
+ {
+  "id": "hween_r25_mushroommchn",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Mushroom Machine",
+  "line": "habboween_2025"
+ },
+ {
+  "id": "hween12_cage",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cage",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_cart",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Ghost Train Car",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_coffin",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Executioner's Coffin",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_costume_hopper",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Costume Hopper",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_fortune",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Misfortune Teller",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_guillotine",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Guillotine",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_lantern",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Lantern",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_moon",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Moon Light",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_orb",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ghost Light",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_scarecrow",
+  "dirs": [
+   2,
+   0,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Scarecrow",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_shedskin",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Snake skin",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_track",
+  "dirs": [
+   2,
+   6,
+   4,
+   0
+  ],
+  "dims": "1x1",
+  "name": "Ghost Train Track",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_track_crl",
+  "dirs": [
+   0,
+   6,
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ghost Train Left Corner",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_track_crr",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Ghost Train Right Corner",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "hween12_wolf",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Wolf",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "neopets_c25_cirrus",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cirrus Petpet",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_esophagor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Neopets Esophagor",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_eyrie1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Eyrie",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_grass",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Neopets Grass",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_jumbleberry",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Jumbleberry",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_loveberry",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Loveberry",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_moneytree",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Neopets Money Tree",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_sniddberry",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Sniddberry",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_spruce",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Neopets Spruce",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_unguberry",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Unguberry",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "neopets_c25_voidberry",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Voidberry",
+  "line": "ad_neopets"
+ },
+ {
+  "id": "nft_cf25_bronzebar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bronze Bar",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_cf25_cotton",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cotton",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_cf25_goldbar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Gold Bar",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_cf25_leather",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Leather",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_cf25_mythicdust",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mythic Dust",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_cf25_silk",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Silk",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_cf25_silverbar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Silver Bar",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_cf25_yarn",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ball of Yarn",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_alhambrapillowpile",
+  "dirs": [
+   2,
+   4,
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Alhambra Pillows",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_collbench",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Collectors Bench",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_collbigchest",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Large Collectors Chest",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_collpillar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Collectors Pillar",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_collsmallchest",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Collectors Chest",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_collsofa",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Collectors Couch",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_colltable",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Collectors Table",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Sunshine Yellow Tulips",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers10",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "White Peruvian Lilies",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bright Red Tulips",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Rich Purple Tulips",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers4",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Blood Red Roses",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers5",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Bright Purple Roses",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers6",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Royal White Roses",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers7",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "White Amaryllis",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers8",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Purple Amaryllis",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_flowers9",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Pink Peruvian Lilies",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_giftopentestfurni",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "nft_h25_giftopentestfurni name",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_gnomeofdoom",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Reaper Gnome",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_goblin",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Goblin Warrior",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_redxmaslollipop",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Red Christmas Lollipop",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_trippy_sleepingbag",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x3",
+  "name": "Trippy Sleeping Bag",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_h25_zeusdrinks",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Zeus's Water Fountain",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_sc25_shrooms",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Infectious Mushrooms",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_sc25_smallpirateboat",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Pirate Ship Float",
+  "line": "nft2025"
+ },
+ {
+  "id": "nft_sc25_sunflowers",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Sunflower Plant",
+  "line": "nft2025"
+ },
+ {
+  "id": "norja_c24_bed",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Grey Norja Single Bed",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "norja_c24_doublebed",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x3",
+  "name": "Grey Norja Double Bed",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "nov_c25_happytree",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Happy Tree",
+  "line": "misc"
+ },
+ {
+  "id": "picnic_food1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Cheese Platter",
+  "line": "country"
+ },
+ {
+  "id": "picnic_food2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Baguettes and Apples",
+  "line": "country"
+ },
+ {
+  "id": "picnic_food3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Picnic Refreshments",
+  "line": "country"
+ },
+ {
+  "id": "picnic_wfall",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "2x2",
+  "name": "Wild Cascades",
+  "line": "country"
+ },
+ {
+  "id": "plasto_c24_doublebed",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "2x3",
+  "name": "Red Plasto Air Mattress",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "plasto_c24_hanginglight",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "1x1",
+  "name": "Red Plasto Hanging Light ",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "regalblack_r25_dragon",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Regal Black Dragon Egg Statue",
+  "line": "habbo25"
+ },
+ {
+  "id": "regalblack_r25_orb",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Regal Black Sovereigns' Orb",
+  "line": "habbo25"
+ },
+ {
+  "id": "rift1",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "rift1 name",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "rift2",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "rift2 name",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "rift3",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "rift3 name",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "rift4",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "rift4 name",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "rift5",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "rift5 name",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "rift6",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "rift6 name",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "roombg_hween12",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Fairground Of Fear",
+  "line": "habboween_2012"
+ },
+ {
+  "id": "rp_arrow",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Directional Arrow",
+  "line": "custom"
+ },
+ {
+  "id": "sc_snowglobe3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Icy Duck Snow Globe",
+  "line": "nft2025"
+ },
+ {
+  "id": "sc25_biohazardsign",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Biohazard Sign",
+  "line": "nft2025"
+ },
+ {
+  "id": "sc25_shrooms",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Infectious Mushrooms",
+  "line": "nft2025"
+ },
+ {
+  "id": "sc25_warningsign",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Warning Sign",
+  "line": "nft2025"
+ },
+ {
+  "id": "silo_c24_chandelier",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Black Silo Chandelier",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "silo_c24_desklamp",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Black Silo Desk Lamp",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "silo_c24_standinglamp",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Black Silo Standing Lamp",
+  "line": "hhistory_2024"
+ },
+ {
+  "id": "sp_statue",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Stone Knight",
+  "line": "gifts"
+ },
+ {
+  "id": "sw_chest",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Spiderwick Chest",
+  "line": "ad_sales"
+ },
+ {
+  "id": "sw_raven",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Spiderwick Raven",
+  "line": "ad_sales"
+ },
+ {
+  "id": "sw_table",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Spiderwick Desk",
+  "line": "ad_sales"
+ },
+ {
+  "id": "tent_beige",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x3",
+  "name": "Beige Tent",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "tent_blue",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x3",
+  "name": "Blue Tent",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "tent_orange",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x3",
+  "name": "Orange Tent",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "vikings_animal_g",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Battleshade Figurehead",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_animal_r",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Steelscar Figurehead",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_basket1",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Vegetable Bingue",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_basket2",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Meat Bingue",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_bed",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x3",
+  "name": "Viking bed",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_chair_g",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Battleshade Chair",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_chair_r",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Steelscar Chair",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_chesspiece",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Viking Chess Piece",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_flag_g",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Battleshade Flag",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_flag_r",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Steelscar Flag",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_floor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Dark Wood Floor",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_gondola1",
+  "dirs": [
+   0,
+   4,
+   6,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Viking Long Ship Front",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_gondola2a",
+  "dirs": [
+   4,
+   2,
+   6,
+   0
+  ],
+  "dims": "2x1",
+  "name": "Viking Long Ship Middle",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_gondola2b",
+  "dirs": [
+   4,
+   2,
+   6,
+   0
+  ],
+  "dims": "2x1",
+  "name": "Viking Long Ship Middle",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_gondola2c",
+  "dirs": [
+   4,
+   2,
+   0,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Viking Long Ship Middle",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_gondola3",
+  "dirs": [
+   0,
+   4,
+   2,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Viking Long Ship Back",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_house",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "2x2",
+  "name": "Viking Cotie (Needs Steelscar Helmet and Torch or Steelscar Helmet and Torch)",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_indoorstove",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Cooking Pit",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_outdoorstove",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x2",
+  "name": "Cooking Pit",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_pillar",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Viking Pillar",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_roof_g",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Verdigris Roof",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_roof_r",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Amber Roof",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_runestone",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Viking Relic",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_spike",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Spiked Skull",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_stonecrn",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Stone Corner",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_stonedivdr",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Stone Divider",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_stonegate",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Stone Gate",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_stool",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Lund Stool",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_stove",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Vikings Stove",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_table_g",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "3x1",
+  "name": "Battleshade Table",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_table_r",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "3x1",
+  "name": "Steelscar Table",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_teleport",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Runestone Teleport",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_thor",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Mjolnir of Thor",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_throne",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Game of Habbos",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_tombstone",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Viking Cross",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_torch",
+  "dirs": [
+   2
+  ],
+  "dims": "1x1",
+  "name": "Furolles Torch",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_weapon",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "2x1",
+  "name": "Viking Weapon Rack",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_woodcrn",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Timber Corner",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_wooddivdr",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "2x1",
+  "name": "Timber Divider",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_woodgate",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Timber Gate",
+  "line": "vikings"
+ },
+ {
+  "id": "vikings_yggdrasil",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Yggdrasil Tree",
+  "line": "vikings"
+ },
+ {
+  "id": "wf_act_adjust_clock",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Adjust Counter Time",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_cancel_transaction",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Cancel Transaction",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_change_var_val",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Change Variable Value",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_click_conf",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Set Clicking Configurations",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_freeze",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Freeze User",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_furni_to_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Move Furni To Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_furni_to_user",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Move Furni To User",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_give_currency",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Give Currency From Chest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_give_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Give Furni From Chest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_give_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Give Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_init_transaction",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Initiate Transaction",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_log",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Write to logs",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_move_furni_as_group",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Move Furni As Group",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_move_rotate_user",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Move And Rotate User",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_neg_call_stacks",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "WIRED Negative Effect: Execute stacks",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_neg_log",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Negative Effect: Write to logs",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_neg_send_signal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Negative Effect: Send Signal",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_place_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Place Temporary Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_rel_mov",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Relative Furni Movement",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_remove_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Remove Temporary Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_remove_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Remove Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_send_signal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Send Signal",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_set_altitude",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Set Furni Altitude",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_teleport_to_room",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Teleport to Room",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_toggle_to_rnd",
+  "dirs": [
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Toggle Furni to Random State",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_unfreeze",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Unfreeze User",
+  "line": "wired"
+ },
+ {
+  "id": "wf_act_user_to_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Effect: Move User to Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_antenna1",
+  "dirs": [
+   0,
+   2,
+   6,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Wired Antenna",
+  "line": "wired"
+ },
+ {
+  "id": "wf_antenna2",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "1x1",
+  "name": "Small Wired Antenna",
+  "line": "wired"
+ },
+ {
+  "id": "wf_arrowplate",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Arrow Plate",
+  "line": "wired"
+ },
+ {
+  "id": "wf_arrowplate_8dir",
+  "dirs": [
+   0,
+   2,
+   4,
+   6,
+   1,
+   3,
+   5,
+   7
+  ],
+  "dims": "1x1",
+  "name": "Arrow Plate",
+  "line": "wired"
+ },
+ {
+  "id": "wf_blob2",
+  "dirs": [
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED GAME: Super Blob",
+  "line": "wired"
+ },
+ {
+  "id": "wf_button",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Button",
+  "line": "wired"
+ },
+ {
+  "id": "wf_button_arrow",
+  "dirs": [
+   0,
+   1,
+   2,
+   3,
+   7,
+   4,
+   5,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Arrow Button",
+  "line": "wired"
+ },
+ {
+  "id": "wf_button_blue",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Blue Button",
+  "line": "wired"
+ },
+ {
+  "id": "wf_button_green",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Green Button",
+  "line": "wired"
+ },
+ {
+  "id": "wf_button_red",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Red Button",
+  "line": "wired"
+ },
+ {
+  "id": "wf_button_x",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Cross Button",
+  "line": "wired"
+ },
+ {
+  "id": "wf_button_yellow",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Yellow Button",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_actor_dir",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: User Direction",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_chest_has_item_type",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Chest Contains Furni Type",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_chest_has_items",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Chest Has X Items",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_counter_time_matches",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Counter Time Matches",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_has_altitude",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Furni Altitude Matches",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_has_handitem",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: User has handitem",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_has_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Has Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_match_date",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Date Matches",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_match_time",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Time Matches",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_neg_has_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Negative Condition: DOESN’t Have Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_not_has_handitem",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Negative Condition: User DOESN'T Have Handitem",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_not_triggerer_match",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Negative Condition: Triggerer DOESN'T Match",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_not_user_performs_action",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Negative Condition: User Is NOT Performing Action",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_slc_quantity",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Selector Quantity",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_team_has_rank",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Team Is Winning",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_team_has_score",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Team Has Score",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_triggerer_match",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Triggerer Matches",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_user_performs_action",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: User Is Performing Action",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_valid_moves",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Can Perform Movements",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_var_age_match",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Variable Age",
+  "line": "wired"
+ },
+ {
+  "id": "wf_cnd_var_val_match",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Condition: Variable Value",
+  "line": "wired"
+ },
+ {
+  "id": "wf_contract_payment",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Contract: Payment Contract",
+  "line": "wired"
+ },
+ {
+  "id": "wf_contract_reward",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Contract: Reward Contract",
+  "line": "wired"
+ },
+ {
+  "id": "wf_contract_trade",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Contract: Trade Contract",
+  "line": "wired"
+ },
+ {
+  "id": "wf_knob",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Knob",
+  "line": "wired"
+ },
+ {
+  "id": "wf_ltdproto_act_toggle_state",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient WIRED Effect: Toggle Furni State",
+  "line": "wired"
+ },
+ {
+  "id": "wf_numberscreen",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Number Screen",
+  "line": "wired"
+ },
+ {
+  "id": "wf_numbertile1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Number Tile Dark",
+  "line": "wired"
+ },
+ {
+  "id": "wf_numbertile2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Number Tile Light",
+  "line": "wired"
+ },
+ {
+  "id": "wf_proto_cnd_trggrer_on_frn",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient WIRED Condition: Triggerer Is On Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_proto_pyramid",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient WIRED Pyramid",
+  "line": "wired"
+ },
+ {
+  "id": "wf_proto_trg_at_given_time",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Ancient WIRED Trigger: At Given Time",
+  "line": "wired"
+ },
+ {
+  "id": "wf_room_linker",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "WIRED Room Linker",
+  "line": "wired"
+ },
+ {
+  "id": "wf_screenseparator",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Screen Separator",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_altitude",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni With Altitude",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_area",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni In Area",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_bytype",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni By Type",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_neighborhood",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni In Neighborhood",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_onfurni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni On Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_picks",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni Picks",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_signal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni From Signal",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_furni_with_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Furni With Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_remote",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Remote selection",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_area",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users In Area",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_byaction",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users By Action",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_byname",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users By Name",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_bytype",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users By Type",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_group",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users In Group",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_handitem",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users With Handitem",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_neighborhood",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users In Neighborhood",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_onfurni",
+  "dirs": [
+   2,
+   0
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users On Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_signal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users From Signal",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_team",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users In Team",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slc_users_with_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Selector: Users With Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_slider",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Slider",
+  "line": "wired"
+ },
+ {
+  "id": "wf_storage_coins1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Credit Chest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_storage_coins2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Credit Chest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_storage_furni_starter",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Starter Furni Chest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_storage_furni1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Furni Chest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_storage_furni2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Furni Chest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_teamcolorquarter",
+  "dirs": [
+   0,
+   2,
+   4,
+   6
+  ],
+  "dims": "1x1",
+  "name": "Team Colour Quarter",
+  "line": "wired"
+ },
+ {
+  "id": "wf_teamcolortile",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Team Colour Tile",
+  "line": "wired"
+ },
+ {
+  "id": "wf_teammeter1",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Yellow Team Meter",
+  "line": "wired"
+ },
+ {
+  "id": "wf_teammeter2",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Blue Team Meter",
+  "line": "wired"
+ },
+ {
+  "id": "wf_teammeter3",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Red Team Meter",
+  "line": "wired"
+ },
+ {
+  "id": "wf_teammeter4",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Green Team Meter",
+  "line": "wired"
+ },
+ {
+  "id": "wf_test_act",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Custom Wired Effect",
+  "line": "wired"
+ },
+ {
+  "id": "wf_test_cnd",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Custom Wired Condition",
+  "line": "wired"
+ },
+ {
+  "id": "wf_test_slc",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Custom Wired Selector",
+  "line": "wired"
+ },
+ {
+  "id": "wf_test_trg",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Custom Wired Trigger",
+  "line": "wired"
+ },
+ {
+  "id": "wf_test_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "wf_test_var name",
+  "line": "wired"
+ },
+ {
+  "id": "wf_test_xtra",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Custom Wired Add-on",
+  "line": "wired"
+ },
+ {
+  "id": "wf_tile1",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Dark Tile",
+  "line": "wired"
+ },
+ {
+  "id": "wf_tile2",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Light Tile",
+  "line": "wired"
+ },
+ {
+  "id": "wf_toggle",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Toggle",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token1",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Red Game Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token10",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Green Counter Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token11",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Blue Counter Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token2",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Yellow Game Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token3",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Green Game Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token4",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Blue Game Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token5",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Dark Wood Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token6",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Medium Wood Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token7",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Light Wood Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token8",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Red Counter Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_token9",
+  "dirs": [
+   0
+  ],
+  "dims": "1x1",
+  "name": "Yellow Counter Token",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_click_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: User Clicks Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_click_tile",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: User Clicks Tile",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_click_user",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: User clicks User",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_leave_room",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: User leaves room",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_period_short",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: Repeat Effect (Short)",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_recv_signal",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: Receive Signal",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_state_changed",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: Furni Is Used",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_stuff_state",
+  "dirs": [
+   0,
+   6
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: Furni State Is Changed",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_transaction_complete",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: Transaction Completed",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_transaction_fail",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: Transaction Failed",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_user_performs_action",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: User Performs Action",
+  "line": "wired"
+ },
+ {
+  "id": "wf_trg_var_changed",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Trigger: Variable Changed",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_context",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: Context Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_echo",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: Echo",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: Furni Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_quest",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: Quest",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_quest_chain",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: Quest Chain",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_reference",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: From Another Room",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_room",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: Global Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_var_user",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Variable: User Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_vu",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Analogue Meter",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_anim_time",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-On: Animation Time",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_custom_contract",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Custom Contract",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_exec_in_order",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Execute In Order",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_execution_limit",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Execution Limit",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_filter_furni",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Filter: Filter To X Furni",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_filter_furni_by_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Filter: Furni with Highest/Lowest Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_filter_users",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Filter: Filter To X Users",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_filter_users_by_var",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Filter: Users with Highest/Lowest Variable",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_mov_carry_users",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Carry Users",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_mov_curve",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Movement Curve",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_mov_no_animation",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Cancel Move Animation",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_mov_physics",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Movement Physics",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_or_eval",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Wired Add-on: At least one condition is true",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_rotate_to_dir",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Add-on: Projectile",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_scan_chest_furni_by_type",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Scanner Add-on: Chest Furni of Type",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_text_input_variable",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Text Add-on: Variable capturer",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_text_output_furni_name",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Text Add-on: Furni name placeholder",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_text_output_username",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Text Add-on: Username placeholder",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_text_output_variable",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "WIRED Text Add-on: Variable placeholder",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_var_lvlup_system",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Variable Add-on: Level-up System",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_var_text_connector",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Variable Add-on: Text Connector",
+  "line": "wired"
+ },
+ {
+  "id": "wf_xtra_var_time_util",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Variable Add-on: Time Utilities",
+  "line": "wired"
+ },
+ {
+  "id": "wisp_c23_lilwisp",
+  "dirs": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7
+  ],
+  "dims": "1x1",
+  "name": "Little Wisp",
+  "line": "fantasy"
+ },
+ {
+  "id": "wisp_c23_moon",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Will-O-Wisp Moon",
+  "line": "fantasy"
+ },
+ {
+  "id": "wisp_c23_starflower",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Star Flower",
+  "line": "fantasy"
+ },
+ {
+  "id": "wisp_c23_starryfloor",
+  "dirs": [
+   0,
+   2
+  ],
+  "dims": "1x1",
+  "name": "Will-O-Wisp Floor",
+  "line": "fantasy"
+ },
+ {
+  "id": "wisp_c23_willowisp",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "1x1",
+  "name": "Will-O-Wisp",
+  "line": "fantasy"
+ },
+ {
+  "id": "yttv2",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "3x2",
+  "name": "Red Stackable Video TV",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "yttv2b",
+  "dirs": [
+   4,
+   2
+  ],
+  "dims": "3x2",
+  "name": "Grey Stackable Video TV",
+  "line": "habbopalooza"
+ },
+ {
+  "id": "yttv2n",
+  "dirs": [
+   2,
+   4
+  ],
+  "dims": "3x2",
+  "name": "The Secret TV",
+  "line": "habbopalooza"
+ }
+]
