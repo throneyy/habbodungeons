@@ -1797,6 +1797,7 @@ async function startExplore() {
   if (shouldConnectNet(myId)) net.connect(myId);
   game.setRoom(exploreRooms[0]);
   if (net.active) net.join(game.room.id);
+  updateMpStatus();
   party.render(); // party survives overlay flows — chips come straight back
   gateDest = null; // each explore session starts with a closed arch
   // RP-arrow teleports: stepping on an arrow switches to its target room
