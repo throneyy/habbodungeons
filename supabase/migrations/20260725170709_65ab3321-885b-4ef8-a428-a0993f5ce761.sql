@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.sync_verified_habbo_admin_role(uuid) TO service_role;

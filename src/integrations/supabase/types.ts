@@ -468,6 +468,10 @@ export type Database = {
         Returns: boolean
       }
       reap_stale_presence: { Args: { _ttl?: string }; Returns: number }
+      sync_verified_habbo_admin_role: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

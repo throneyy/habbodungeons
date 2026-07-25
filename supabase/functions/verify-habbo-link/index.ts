@@ -3,8 +3,12 @@
 // with a Supabase JWT, so on a successful motto match we just write the linked
 // Habbo onto their own profile row. Body: { name, code }.
 import { preflight, json } from "../_shared/cors.ts";
-import { requireUser, userClient } from "../_shared/client.ts";
+import { requireUser, serviceClient, userClient } from "../_shared/client.ts";
 import { fetchHabboProfile } from "../_shared/habbo.ts";
+
+// Server-side copy of js/config.js ADMIN_NAMES. This is authorization data, not
+// a secret: the Habbo name must still be proven by the live motto check below.
+const ADMIN_HABBO_NAMES = new Set(["throney"]);
 
 Deno.serve(async (req) => {
   const pre = preflight(req);
@@ -36,7 +40,8 @@ Deno.serve(async (req) => {
   // only when signed in. Signed-out guests still get the verified figure back.
   if (user) {
     const sb = userClient(req);
-    await sb.from("profiles").update({
+    await sb.from("profiles").upsert({
+      id: user.id,
       habbo_username: prof.name,
       habbo_unique_id: prof.uniqueId,
       habbo_figure: prof.figureString,
@@ -44,7 +49,10 @@ Deno.serve(async (req) => {
       habbo_verified_at: new Date().toISOString(),
       habbo_profile_json: prof,
       updated_at: new Date().toISOString(),
-    }).eq("id", user.id);
+    }, { onConflict: "id" });
+
+    const isAdminHabbo = ADMIN_HABBO_NAMES.has(String(prof.name ?? name).toLowerCase());
+    if (isAdminHabbo) await serviceClient().rpc("sync_verified_habbo_admin_role", { _user_id: user.id });
   }
 
   return json({
