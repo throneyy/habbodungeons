@@ -1,0 +1,30 @@
+{
+ "id": "clothing_bandagedhead",
+ "name": "Head Injury",
+ "line": "habboween_2025",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0,
+  2
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 26,
+   "h": 42,
+   "ax": 15,
+   "ay": 35
+  },
+  "d2": {
+   "x": 28,
+   "y": 1,
+   "w": 26,
+   "h": 42,
+   "ax": 11,
+   "ay": 35
+  }
+ }
+}

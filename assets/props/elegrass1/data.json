@@ -1,0 +1,33 @@
+{
+ "id": "elegrass1",
+ "name": "elegrass1 name",
+ "line": "country",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 75,
+   "h": 40,
+   "ax": 35,
+   "ay": 19
+  },
+  "s1_d0": {
+   "x": 77,
+   "y": 1,
+   "w": 75,
+   "h": 50,
+   "ax": 35,
+   "ay": 32
+  }
+ },
+ "states": [
+  0,
+  1
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "id": "wf_room_linker",
+ "name": "WIRED Room Linker",
+ "line": "wired",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 58,
+   "h": 31,
+   "ax": 29,
+   "ay": 15
+  }
+ }
+}

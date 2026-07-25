@@ -1,156 +1,48 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+// sync-habbo-skills — Fishing/Gardening levels from Bobba (server.js habboSkills).
+// Returns the raw levels + figure/motto; the client (js/skills.js
+// unlockedTreeSkills) computes the unlocked tree and mirrors it back, keeping
+// the unlock thresholds in one place. We also persist the levels to profiles.
+// Query: ?name=NAME  (or JSON body { name }).
+import { preflight, json } from "../_shared/cors.ts";
+import { requireUser, userClient } from "../_shared/client.ts";
+import { fetchHabboProfile } from "../_shared/habbo.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+Deno.serve(async (req) => {
+  const pre = preflight(req);
+  if (pre) return pre;
 
-// Skill definitions (duplicated from frontend for backend use)
-interface SkillDefinition {
-  id: string;
-  requiredFishingLevel?: number;
-  requiredGardeningLevel?: number;
-}
+  const user = await requireUser(req); // optional: guests sync locally
 
-const SKILL_DEFINITIONS: SkillDefinition[] = [
-  { id: "hooked_strike", requiredFishingLevel: 10 },
-  { id: "net_toss", requiredFishingLevel: 30 },
-  { id: "anglers_instinct", requiredFishingLevel: 40 },
-  { id: "foam_barrier", requiredFishingLevel: 55 },
-  { id: "tidal_guard", requiredFishingLevel: 70 },
-  { id: "undertow", requiredFishingLevel: 85 },
-  { id: "leviathan_lure", requiredFishingLevel: 99 },
-  { id: "depths_bounty", requiredFishingLevel: 100 },
-  { id: "herbal_salve", requiredGardeningLevel: 10 },
-  { id: "spore_burst", requiredGardeningLevel: 30 },
-  { id: "sapling_shield", requiredGardeningLevel: 40 },
-  { id: "verdant_pulse", requiredGardeningLevel: 55 },
-  { id: "evergreen_ward", requiredGardeningLevel: 70 },
-  { id: "rot_bloom", requiredGardeningLevel: 85 },
-  { id: "thorn_barrage", requiredGardeningLevel: 99 },
-  { id: "bloom_of_life", requiredGardeningLevel: 100 }
-];
+  const url = new URL(req.url);
+  let name = (url.searchParams.get("name") ?? "").trim();
+  if (!name && req.method === "POST") {
+    try {
+      const body = await req.json();
+      name = String(body?.name ?? "").trim();
+    } catch { /* ignore */ }
+  }
+  if (!name) return json({ ok: false, reason: "name required" }, 400);
 
-function getUnlockedSkills(fishingLevel: number, gardeningLevel: number): string[] {
-  return SKILL_DEFINITIONS
-    .filter(skill => {
-      const meetsFishing = skill.requiredFishingLevel == null || fishingLevel >= skill.requiredFishingLevel;
-      const meetsGardening = skill.requiredGardeningLevel == null || gardeningLevel >= skill.requiredGardeningLevel;
-      return meetsFishing && meetsGardening;
-    })
-    .map(skill => skill.id);
-}
+  const prof = await fetchHabboProfile(name, true);
+  if (!prof.ok) return json({ ok: false, reason: prof.reason });
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+  if (user) {
+    const sb = userClient(req);
+    await sb.from("profiles").update({
+      fishing_level: prof.fishingLevel ?? 0,
+      gardening_level: prof.gardeningLevel ?? 0,
+      habbo_figure: prof.figureString,
+      last_habbo_skill_sync: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }).eq("id", user.id);
   }
 
-  try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Get authenticated user
-    const authHeader = req.headers.get('Authorization')!;
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    console.log('Syncing skills for user:', user.id);
-
-    // Get user's profile to fetch habbo username
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('habbo_username')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      throw new Error('Profile not found');
-    }
-
-    if (!profile.habbo_username) {
-      throw new Error('No Habbo username linked. Please link your Habbo account first.');
-    }
-
-    const habboUsername = profile.habbo_username;
-    
-    console.log(`Syncing skills for ${habboUsername} via Bobba API...`);
-
-    // Fetch skills from Bobba API
-    const bobbaResponse = await fetch(
-      `https://api.bobba.me/get_habbo?username=${encodeURIComponent(habboUsername)}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-        },
-      }
-    );
-
-    if (!bobbaResponse.ok) {
-      throw new Error(`Bobba API returned status ${bobbaResponse.status}`);
-    }
-
-    const bobbaData = await bobbaResponse.json();
-    console.log('Bobba API response:', JSON.stringify(bobbaData));
-
-    // Extract skill levels from mainDetails
-    const fishingLevel = bobbaData.mainDetails?.fishingLevel || 0;
-    const gardeningLevel = bobbaData.mainDetails?.gardeningLevel || 0;
-    
-    // For XP, we'll set to 0 for now since Bobba API doesn't provide it
-    const fishingXp = 0;
-    const gardeningXp = 0;
-
-    console.log(`Parsed levels - Fishing: Lv${fishingLevel}, Gardening: Lv${gardeningLevel}`);
-
-    // Calculate unlocked skills
-    const unlockedSkills = getUnlockedSkills(fishingLevel, gardeningLevel);
-
-    // Update user profile
-    const { data: updatedProfile, error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        fishing_level: fishingLevel,
-        fishing_xp: fishingXp,
-        gardening_level: gardeningLevel,
-        gardening_xp: gardeningXp,
-        last_habbo_skill_sync: new Date().toISOString(),
-        unlocked_skills: unlockedSkills
-      })
-      .eq('id', user.id)
-      .select()
-      .single();
-
-    if (updateError) {
-      throw updateError;
-    }
-
-    console.log(`Skills synced successfully: ${unlockedSkills.length} skills unlocked`);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        fishingLevel,
-        fishingXp,
-        gardeningLevel,
-        gardeningXp,
-        unlockedSkills,
-        profile: updatedProfile
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error: any) {
-    console.error('Error syncing skills:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    );
-  }
+  return json({
+    ok: true,
+    name: prof.name,
+    figure: prof.figureString,
+    motto: prof.motto,
+    fishingLevel: prof.fishingLevel ?? 0,
+    gardeningLevel: prof.gardeningLevel ?? 0,
+  });
 });

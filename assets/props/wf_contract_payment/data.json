@@ -1,0 +1,46 @@
+{
+ "id": "wf_contract_payment",
+ "name": "WIRED Contract: Payment Contract",
+ "line": "wired",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0,
+  2
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 48,
+   "h": 27,
+   "ax": 24,
+   "ay": 14
+  },
+  "sd0": {
+   "x": 50,
+   "y": 1,
+   "w": 48,
+   "h": 25,
+   "ax": 24,
+   "ay": 12
+  },
+  "d2": {
+   "x": 99,
+   "y": 1,
+   "w": 48,
+   "h": 27,
+   "ax": 24,
+   "ay": 14
+  },
+  "sd2": {
+   "x": 148,
+   "y": 1,
+   "w": 48,
+   "h": 25,
+   "ax": 24,
+   "ay": 12
+  }
+ }
+}

@@ -1,0 +1,21 @@
+{
+ "id": "greek_c15_tile",
+ "name": "Greek Mini Tile",
+ "line": "greek",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 66,
+   "h": 37,
+   "ax": 33,
+   "ay": 20
+  }
+ }
+}

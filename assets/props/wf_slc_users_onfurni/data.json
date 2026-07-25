@@ -1,0 +1,30 @@
+{
+ "id": "wf_slc_users_onfurni",
+ "name": "WIRED Selector: Users On Furni",
+ "line": "wired",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  2,
+  0
+ ],
+ "frames": {
+  "d2": {
+   "x": 1,
+   "y": 1,
+   "w": 64,
+   "h": 63,
+   "ax": 32,
+   "ay": 46
+  },
+  "d0": {
+   "x": 66,
+   "y": 1,
+   "w": 64,
+   "h": 63,
+   "ax": 32,
+   "ay": 46
+  }
+ }
+}

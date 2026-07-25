@@ -1,0 +1,30 @@
+{
+ "id": "dng_block",
+ "name": "Dungeon Plateau",
+ "line": "drago",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  4,
+  2
+ ],
+ "frames": {
+  "d4": {
+   "x": 1,
+   "y": 1,
+   "w": 66,
+   "h": 59,
+   "ax": 33,
+   "ay": 42
+  },
+  "d2": {
+   "x": 68,
+   "y": 1,
+   "w": 66,
+   "h": 59,
+   "ax": 33,
+   "ay": 42
+  }
+ }
+}

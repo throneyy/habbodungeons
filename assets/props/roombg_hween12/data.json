@@ -1,0 +1,21 @@
+{
+ "id": "roombg_hween12",
+ "name": "Fairground Of Fear",
+ "line": "habboween_2012",
+ "size": 64,
+ "xdim": 1,
+ "ydim": 1,
+ "dirs": [
+  0
+ ],
+ "frames": {
+  "d0": {
+   "x": 1,
+   "y": 1,
+   "w": 962,
+   "h": 701,
+   "ax": 490,
+   "ay": 685
+  }
+ }
+}
