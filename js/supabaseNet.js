@@ -76,11 +76,24 @@ export class SupabaseNet {
     }
     this.sb = sb;
     const { data: { user } = { user: null } } = await sb.auth.getUser();
-    if (!user) {
-      this.identity = null; // not signed in — no multiplayer, stay solo-local
-      return;
+    let currentUser = user;
+    if (!currentUser) {
+      // No email account required: mint an anonymous Supabase session so this
+      // browser has a JWT for Realtime. The Habbo motto link remains the
+      // identity; the anon user is just the transport credential.
+      try {
+        const { data, error } = await sb.auth.signInAnonymously();
+        if (error) throw error;
+        currentUser = data?.user || null;
+      } catch (e) {
+        console.warn('[habbo-dungeons] anonymous sign-in failed — multiplayer off:', e?.message || e);
+      }
+      if (!currentUser) {
+        this.identity = null;
+        return;
+      }
     }
-    this.userId = user.id;
+    this.userId = currentUser.id;
     await this._openUserChannel();
     this._openLayoutChannel();
     this._connected = true;
