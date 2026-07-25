@@ -1463,7 +1463,16 @@ function updateMpStatus() {
   el.style.color = '#7bd88f';
   el.onclick = null;
 }
-net.on('open', updateMpStatus);
+net.on('open', () => {
+  // Land the room join once the async connect finishes. On spawn, net.connect()
+  // is deferred behind Auth.ensureSession(), so net.active is still false when
+  // startExplore's `if (net.active) net.join(...)` runs and the join is skipped.
+  // Re-join here so the room Realtime channel (presence/movement/chat) is always
+  // created. Idempotent: skip when we're already on this room so a reconnect
+  // doesn't tear the channel down and rebuild it.
+  if (game.room && net.room !== game.room.id) net.join(game.room.id);
+  updateMpStatus();
+});
 net.on('close', updateMpStatus);
 // Retry once the async _open() finishes (auth.getUser is awaited): the
 // initial call above runs before net.active flips.
@@ -1899,7 +1908,13 @@ async function startExplore() {
     });
   }
   game.setRoom(exploreRooms[0]);
-  if (net.active) net.join(game.room.id);
+  // Record the room now, even though connect() is deferred behind ensureSession():
+  // net.join() stores the room and the connection lands it once open (SupabaseNet
+  // _open re-joins this.room; the ws Net re-sends join on socket open). Gate on
+  // shouldConnectNet (not net.active, which is still false pre-connect) so the
+  // join isn't skipped on spawn — while guests, who never connect, don't set a
+  // phantom room. This is what makes presence/movement/chat come alive.
+  if (shouldConnectNet(myId)) net.join(game.room.id);
   updateMpStatus();
   party.render(); // party survives overlay flows — chips come straight back
   gateDest = null; // each explore session starts with a closed arch
