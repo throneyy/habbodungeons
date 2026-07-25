@@ -585,8 +585,10 @@ button.primary:hover {
 
 /* ---- remote player name tags (multiplayer presence) ------------------------
    Small dark pill floating just above each remote head — the classic
-   hover-name look, in the same Volter face as chat. */
-#nameTagLayer {
+   hover-name look, in the same Volter face as chat. #botTagLayer is the same
+   layer for walking room bots (js/roomBots.js). */
+#nameTagLayer,
+#botTagLayer {
   position: fixed;
   inset: 0;
   overflow: hidden;
@@ -1209,6 +1211,19 @@ button.primary:hover {
   color: #4a4a4a;
   text-align: center;
   filter: url(#crispify);
+}
+/* :npc bot catalogue — same shelf, but each cell is a live habbo-imaging
+   avatar render (size 's') instead of extracted furni art. */
+.bot-cell img {
+  width: 32px; /* size 's' render — never CSS-scaled, so it stays crisp */
+  height: 56px;
+  object-fit: contain;
+  object-position: bottom;
+  image-rendering: pixelated;
+}
+.bot-cat-preview img {
+  width: 64px; /* size 'm' render at its native width */
+  image-rendering: pixelated;
 }
 /* :clothing wardrobe — slot group headers spanning the catalogue grid */
 .clothing-cat-slot {

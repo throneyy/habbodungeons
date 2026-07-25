@@ -16,6 +16,8 @@ import { SKILL_TREES, nextUnlocks } from './skills.js';
 import { ChatOverlay } from './chat.js';
 import { RoomEditor, AdminApi, serializeProp } from './roomEditor.js';
 import { FurniCatalog } from './furniCatalog.js';
+import { RoomBots, serializeBot } from './roomBots.js';
+import { BotCatalog } from './botCatalog.js';
 import { ADMIN_NAMES } from './config.js';
 import { figureWithArmor, CONSUMABLES, ITEMS, RARITY } from './items.js';
 import { propSprites } from './props.js';
@@ -1728,6 +1730,8 @@ net.on('layout', async () => {
 });
 let editor = null;
 let furniCat = null; // :furni catalogue window (admins)
+let botCat = null; // :npc bot catalogue window (admins)
+let roomBots = null; // walking room bots (RoomBots manager)
 let clothingCat = null; // :clothing wardrobe window (admins)
 let consumablesCat = null; // :consumables potion shelf (admins)
 let npcTalk = null; // DialogueRunner — one per explore session
@@ -1851,6 +1855,8 @@ function leaveExplore() {
   net.leaveRoom();
   updateMpStatus();
   if (furniCat) furniCat.close();
+  if (botCat) botCat.close();
+  if (roomBots) roomBots.detach();
   if (clothingCat) clothingCat.close();
   if (consumablesCat) consumablesCat.close();
   if (editor) editor.disable();
@@ -1888,6 +1894,11 @@ async function startExplore() {
   // each other; guests stay solo-local (exactly today's game)
   explore.remote = remote;
   remote.attach();
+  // walking room bots (:npc): wired BEFORE the first setRoom so the opening
+  // room spawns its saved bots (explore.onRoom drives RoomBots.onRoom)
+  if (!roomBots)
+    roomBots = new RoomBots(game, { isAdmin: isRoomAdmin, getEditor: () => editor });
+  explore.bots = roomBots;
   // tap a player (or yourself) → the human object displayer bottom-right
   explore.onPlayerTap = (unit) => {
     const self = unit === explore.unit;
@@ -2040,11 +2051,20 @@ async function startExplore() {
   if (!editor) editor = new RoomEditor(game);
   editor.attach(explore);
   if (!furniCat) furniCat = new FurniCatalog(game, () => editor);
+  // bot taps/placement get first refusal on a tap (attached after the editor,
+  // so this wrapper sits outermost), then fall through to furni, then walking
+  roomBots.attach(explore);
   chat.onCommand = (text) => {
     const cmd = text.trim().toLowerCase();
     if (cmd === ':furni') {
       if (!isRoomAdmin()) return true; // swallow silently, like :admin
       furniCat.toggle();
+      return true;
+    }
+    if (cmd === ':npc') {
+      if (!isRoomAdmin()) return true;
+      if (!botCat) botCat = new BotCatalog((def) => roomBots.beginPlace(def));
+      botCat.toggle();
       return true;
     }
     if (cmd === ':bag') {
@@ -2101,7 +2121,9 @@ async function startExplore() {
   saveBtn.onclick = async () => {
     saveBtn.textContent = 'Saving...';
     const layouts = {};
-    for (const r of exploreRooms) layouts[r.id] = r.props.map(serializeProp);
+    // bots ride the same array as furni (split back out on load by rooms.js)
+    for (const r of exploreRooms)
+      layouts[r.id] = [...r.props.map(serializeProp), ...(r.bots || []).map(serializeBot)];
     const res = await AdminApi.saveLayouts(layouts);
     const reason = res.reason === 'admin only'
       ? 'sign in and re-link throney'
@@ -2180,6 +2202,9 @@ window.__debug = {
   },
   // multiplayer handles (presence e2e drives these directly)
   explore, net, remote, party, coopMember, tradeUI,
+  // walking room bots + the furni editor (:npc / :furni e2e drive these)
+  roomBots: () => roomBots,
+  editor: () => editor,
   coopLeader: () => coopLeader,
   // daily-rewards wheel (e2e drives the open/spin/claim/block flow)
   openDailyWheel,

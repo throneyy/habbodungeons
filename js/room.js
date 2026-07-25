@@ -5,7 +5,7 @@ import { FURNI_DIMS } from './furniDims.js';
 // heights 0-9 and 'a'-'w' continue 10-32. Adjacent floors that differ by
 // exactly 1 render as stairs, just like the real client.
 export class Room {
-  constructor({ id, name, zoom = 1, heightmap, spawn, spawnDir = 4, props = [], effects = [], kit = null, critters = null }) {
+  constructor({ id, name, zoom = 1, heightmap, spawn, spawnDir = 4, props = [], effects = [], kit = null, critters = null, bots = [] }) {
     this.id = id;
     this.name = name;
     this.zoom = zoom; // 1 = guest room tiles (64x32), 0.5 = public-room scale (32x16)
@@ -18,6 +18,11 @@ export class Room {
     // [{ look: {pet,tint}, name, hp, xp, respawnMs, spawns: [{x,y},...] }].
     // DATA passthrough; battle rooms never set it.
     this.critters = critters;
+    // Walking room bots (Free Roam only — see js/roomBots.js):
+    // [{ bot: '<key>', x, y, dir }]. DATA passthrough like `critters`: these
+    // are specs, never props — they get no sprite sheet, never block a tile,
+    // and are split back out of saved layouts by rooms.js (splitBots).
+    this.bots = bots;
     this.rows = heightmap;
     this.h = heightmap.length;
     this.w = Math.max(...heightmap.map((r) => r.length));

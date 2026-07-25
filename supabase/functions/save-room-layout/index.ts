@@ -11,6 +11,16 @@ const isInt = (n: unknown, lo: number, hi: number) =>
   Number.isInteger(n) && (n as number) >= lo && (n as number) <= hi;
 
 function cleanProp(p: any) {
+  // Walking room bots (js/roomBots.js) ride the same layout array as furni but
+  // carry their own tiny shape: only the catalogue KEY travels, never a figure
+  // string (name/figure live in the client's js/botsData.js).
+  if (p && p.id === "bot") {
+    if (
+      typeof p.bot !== "string" || !/^[\w-]{1,40}$/.test(p.bot) ||
+      !isInt(p.x, 0, 99) || !isInt(p.y, 0, 99) || !isInt(p.dir ?? 0, 0, 7)
+    ) throw new Error("bad bot");
+    return { id: "bot", bot: p.bot, x: p.x, y: p.y, dir: p.dir ?? 0 };
+  }
   if (
     !p || !/^[\w-]{1,64}$/.test(String(p.id)) ||
     !isInt(p.x, 0, 99) || !isInt(p.y, 0, 99) || !isInt(p.dir ?? 0, 0, 7)

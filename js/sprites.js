@@ -71,3 +71,18 @@ export class AvatarSprites {
     return this.map.get(`${action}_${dir}_${f}`) || this.map.get(`std_${dir}_0`) || null;
   }
 }
+
+// Per-figure sprite cache shared across rooms and sessions — walking into a
+// room full of players (or bots) you've seen before costs zero imaging
+// requests. Shared by remotePlayers.js and roomBots.js; entries are returned
+// while still loading (the renderer falls back until `ready`).
+const spriteCache = new Map(); // `${figure}|${size}` -> AvatarSprites
+export function avatarSpritesFor(figure, size = 'm') {
+  const key = `${figure}|${size}`;
+  if (!spriteCache.has(key)) {
+    const sp = new AvatarSprites(figure, size);
+    sp.load();
+    spriteCache.set(key, sp);
+  }
+  return spriteCache.get(key);
+}

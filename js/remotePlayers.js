@@ -7,23 +7,10 @@
 // unit settles on a seat tile and sits). Chat lines bubble through the same
 // ChatOverlay as local speech.
 import { Unit } from './units.js';
-import { AvatarSprites } from './sprites.js';
+import { avatarSpritesFor } from './sprites.js';
 import { tileToScreen } from './iso.js';
 
 const HEAD_PX = { 1: 104, 0.5: 52 }; // bubble/name anchor above the head, by zoom
-
-// Per-figure sprite cache shared across rooms and sessions — walking into a
-// room full of players you've seen before costs zero imaging requests.
-const spriteCache = new Map(); // `${figure}|${size}` -> AvatarSprites (loading or ready)
-function spritesFor(figure, size) {
-  const key = `${figure}|${size}`;
-  if (!spriteCache.has(key)) {
-    const sp = new AvatarSprites(figure, size);
-    sp.load();
-    spriteCache.set(key, sp);
-  }
-  return spriteCache.get(key);
-}
 
 export class RemotePlayers {
   constructor(game, net) {
@@ -91,7 +78,7 @@ export class RemotePlayers {
     unit.stats = null; // explore: no HP bar
     unit.remote = true;
     unit.figure = member.figure || ''; // infostand render
-    if (member.figure) unit.sprites = spritesFor(member.figure, room.zoom === 1 ? 'm' : 's');
+    if (member.figure) unit.sprites = avatarSpritesFor(member.figure, room.zoom === 1 ? 'm' : 's');
     this.game.addUnit(unit);
     this.units.set(key, unit);
 

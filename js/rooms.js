@@ -1,6 +1,7 @@
 import { Room } from './room.js';
 import { SEATS } from './config.js';
 import { wireNpcs } from './npc.js';
+import { splitBots } from './roomBots.js';
 
 // Attackable scenery: tapping one of these from an adjacent tile swings at
 // it (strike pose, wobble, damage floater — see exploreController).
@@ -520,10 +521,13 @@ export function buildRooms(layouts = {}) {
     rooms.map((r) => {
       const saved = layouts[r.id];
       if (!Array.isArray(saved)) return r;
+      // Walking room bots share the saved layout array but are NOT props: pull
+      // them out before withSeats/wireArrows/wireGates/wireNpcs ever see them.
+      const { props, bots } = splitBots(saved.map((p) => ({ ...p })));
       return new Room({
         id: r.id, name: r.name, zoom: r.zoom, heightmap: r.rows,
         spawn: r.spawn, spawnDir: r.spawnDir, kit: r.kit, critters: r.critters,
-        props: withSeats(saved.map((p) => ({ ...p }))),
+        props: withSeats(props), bots,
       });
     })
   )));

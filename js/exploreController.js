@@ -37,6 +37,7 @@ export class ExploreController {
     this.pendingTalk = null; // NPC prop to address once we're beside it
     this.onNpcTalk = null; // set by main.js: (npcProp) => start its dialogue
     this.remote = null; // RemotePlayers — multiplayer presence (main.js wires it)
+    this.bots = null; // RoomBots — walking room bots (main.js wires it)
     this.onPlayerTap = null; // set by main.js: (unit) => open the human infostand
     // Huntable wildlife (room.critters DATA — the Mirkwood): harmless, low-XP
     // creatures that respawn. They never fight back.
@@ -66,6 +67,8 @@ export class ExploreController {
     this.unit.stats = null; // no HP bar in explore
     // multiplayer: accepted walks report their destination to the hub
     if (this.remote) this.remote.bindLocalUnit(this.unit);
+    // walking room bots: same deal — respawn them from the room's specs
+    if (this.bots) this.bots.onRoom(room);
     // wildlife: fresh room, fresh population (setRoom cleared the old units)
     this.critters = [];
     this.respawns = [];
@@ -383,6 +386,8 @@ export class ExploreController {
     // multiplayer: keep remote name tags glued above heads every frame
     if (this.remote) this.remote.update(now ?? performance.now());
     const nowMs = now ?? performance.now();
+    // room bots: idle wander + their own name tags
+    if (this.bots) this.bots.update(nowMs, this);
     // wildlife: land queued strikes at impact, respawn the fallen, drift the rest
     for (let i = this.strikes.length - 1; i >= 0; i--) {
       if (nowMs >= this.strikes[i].at) this.landStrike(this.strikes.splice(i, 1)[0]);
