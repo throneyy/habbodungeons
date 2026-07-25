@@ -1447,7 +1447,7 @@ function updateMpStatus() {
     el.textContent = '⚠ Multiplayer offline — sign in with email to see other players';
     el.style.color = '#ffb84d';
     el.style.cursor = 'pointer';
-    el.onclick = () => showAuthOverlay && showAuthOverlay();
+    el.onclick = () => showDashboard();
     return;
   }
   if (!net.connected) {
