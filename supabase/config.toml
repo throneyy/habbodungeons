@@ -1,43 +1,54 @@
 project_id = "cswyarorrvzbunodiftf"
 
-[functions.cleanup-completed-servers]
+[realtime]
+enabled = true
+
+[auth]
+enabled = true
+enable_signup = true
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+
+# --- V2 Edge Functions -------------------------------------------------------
+# verify_jwt = false only for endpoints reachable by not-yet-signed-in clients
+# (verify-habbo-link, sync-habbo-skills, fetch-habbo-profile, habbo-imaging)
+# or invoked by cron with the service-role key (presence-reap).
+[functions.verify-habbo-link]
 verify_jwt = false
-
-[functions.generate-dungeon-background]
-verify_jwt = true
-
-[functions.request-password-reset]
-verify_jwt = false
-
 [functions.sync-habbo-skills]
-verify_jwt = true
-
-[functions.verify-habbo-reset]
 verify_jwt = false
-
 [functions.fetch-habbo-profile]
-verify_jwt = true
-
-[functions.generate-dungeon]
-verify_jwt = true
-
-[functions.generate-story-node]
-verify_jwt = true
-
-[functions.get-server-players]
-verify_jwt = true
-
-[functions.load-battle]
-verify_jwt = true
-
-[functions.resolve-turn]
-verify_jwt = true
-
-[functions.start-dungeon-battle]
-verify_jwt = true
-
-[functions.text-to-speech]
-verify_jwt = true
-
-[functions.generate-featured-dungeons]
 verify_jwt = false
+[functions.habbo-imaging]
+verify_jwt = false
+[functions.stash-bank]
+verify_jwt = true
+[functions.save-room-layout]
+verify_jwt = true
+[functions.presence-heartbeat]
+verify_jwt = true
+[functions.presence-reap]
+verify_jwt = false
+[functions.party-invite]
+verify_jwt = true
+[functions.party-accept]
+verify_jwt = true
+[functions.party-decline]
+verify_jwt = true
+[functions.party-leave]
+verify_jwt = true
+[functions.party-disband]
+verify_jwt = true
+[functions.trade-open]
+verify_jwt = true
+[functions.trade-offer]
+verify_jwt = true
+[functions.trade-retract]
+verify_jwt = true
+[functions.trade-accept]
+verify_jwt = true
+[functions.trade-confirm]
+verify_jwt = true
+[functions.trade-cancel]
+verify_jwt = true
