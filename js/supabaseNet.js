@@ -94,6 +94,15 @@ export class SupabaseNet {
       }
     }
     this.userId = currentUser.id;
+    // Private Realtime channels enforce RLS on realtime.messages via the JWT.
+    // Push the current access token so anon sessions can subscribe/broadcast.
+    try {
+      const { data: { session } = { session: null } } = await sb.auth.getSession();
+      if (session?.access_token && sb.realtime?.setAuth) sb.realtime.setAuth(session.access_token);
+      sb.auth.onAuthStateChange((_e, s) => {
+        if (s?.access_token && sb.realtime?.setAuth) sb.realtime.setAuth(s.access_token);
+      });
+    } catch { /* ignore */ }
     await this._openUserChannel();
     this._openLayoutChannel();
     this._connected = true;
