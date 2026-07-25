@@ -119,15 +119,17 @@ try {
     claimed.goldPot > 0 || claimed.xpPot > 0 || claimed.itemPot.length > 0
   );
 
-  // close the popup -> the dock refreshes and drops its "ready" badge
+  // close the popup -> once claimed, the dock hides itself entirely (rather
+  // than lingering with a "come back tomorrow" note) until canClaim flips
+  // true again tomorrow — see js/dailyRewardDock.js refresh().
   await alice.click('.dr-x');
   await alice.waitForFunction(() => !document.querySelector('.dr-modal'), null, { timeout: 5000 });
   const dockAfter = await alice.evaluate(() => ({
+    dockHidden: document.querySelector('.dr-dock').hidden,
     badgeShown: !document.querySelector('.dr-dock-dot').hidden,
-    cta: document.querySelector('.dr-dock-cta').textContent,
   }));
   check('dock badge clears after claiming', dockAfter.badgeShown === false);
-  check('dock CTA switches to come-back-tomorrow', /Come back tomorrow/.test(dockAfter.cta));
+  check('dock hides entirely once claimed for today', dockAfter.dockHidden === true);
 
   // RE-OPEN the same day -> second spin must be blocked
   await alice.evaluate(() => window.__debug.openDailyWheel());
