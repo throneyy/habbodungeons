@@ -1826,7 +1826,15 @@ async function startExplore() {
     });
   };
   const myId = Identity.get();
-  if (shouldConnectNet(myId)) net.connect(myId);
+  if (shouldConnectNet(myId)) {
+    // Mint an anonymous Supabase session (if needed) so Realtime works without
+    // requiring the player to sign in with email. The Habbo motto link is the
+    // player identity; the anon JWT is just the transport credential.
+    Auth.ensureSession().finally(() => {
+      net.connect(myId);
+      updateMpStatus();
+    });
+  }
   game.setRoom(exploreRooms[0]);
   if (net.active) net.join(game.room.id);
   updateMpStatus();
