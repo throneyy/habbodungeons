@@ -50,7 +50,7 @@
 /* ---- wallpaper (preview board <body> and the game's title overlay) ------- */
 .hd-page {
   background-color: var(--hd-navy); /* base tone of the tile */
-  background-image: url('../assets/ui/bg-tile.png');
+  background-image: url('/assets/ui/bg-tile.png');
   background-repeat: repeat;
   background-attachment: fixed;
   background-size: auto;
