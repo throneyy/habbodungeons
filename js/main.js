@@ -18,6 +18,7 @@ import { RoomEditor, AdminApi, serializeProp } from './roomEditor.js';
 import { FurniCatalog } from './furniCatalog.js';
 import { RoomBots, serializeBot } from './roomBots.js';
 import { BotCatalog } from './botCatalog.js';
+import { ROOM_BOTS } from './botsData.js';
 import { ADMIN_NAMES } from './config.js';
 import { figureWithArmor, CONSUMABLES, ITEMS, RARITY } from './items.js';
 import { propSprites } from './props.js';
@@ -55,7 +56,13 @@ if (savedId && savedId.figure) {
   figureLabel = identityLabel(savedId);
 }
 async function loadFigure(fig) {
-  const [m, s] = await Promise.all([new AvatarSprites(fig, 'm').load(), new AvatarSprites(fig, 's').load()]);
+  // The class you're playing decides which weapon your own avatar carries
+  // (js/classWeapons.js) — fighter/sword when no calling is picked yet.
+  const classId = Identity.classId() || 'fighter';
+  const [m, s] = await Promise.all([
+    new AvatarSprites(fig, 'm', classId).load(),
+    new AvatarSprites(fig, 's', classId).load(),
+  ]);
   game.setSprites({ m, s });
 }
 loadFigure(figure);
@@ -807,9 +814,11 @@ function showDashboard() {
   });
   $('dashSignOut').addEventListener('click', signOut);
   // Changing calling updates the Class panel header, blurb and base stats, so
-  // re-render the whole dashboard (cheap; no run in progress changes).
+  // re-render the whole dashboard (cheap; no run in progress changes) — and
+  // reload the avatar sprites so the new class's weapon shows immediately.
   renderCallingRow($('callingRow'), () => {
     figureLabel = identityLabel(Identity.get());
+    loadFigure(figure);
     if (!leader) return showDashboard();
     $('charInfo').textContent = figureLabel;
     $('statBlocks').innerHTML = statBlocksHtml();
@@ -1213,6 +1222,7 @@ function showSquadBuilder(fromGate = false) {
       </div>
     </div>`;
   const rerender = () => {
+    loadFigure(figure); // picking a calling swaps the avatar's weapon art too
     renderCallingRow($('builderCalling'), rerender);
     renderDungeonRow();
     renderPartySlots();
@@ -2204,6 +2214,7 @@ window.__debug = {
   explore, net, remote, party, coopMember, tradeUI,
   // walking room bots + the furni editor (:npc / :furni e2e drive these)
   roomBots: () => roomBots,
+  botDefs: () => ROOM_BOTS,
   editor: () => editor,
   coopLeader: () => coopLeader,
   // daily-rewards wheel (e2e drives the open/spin/claim/block flow)

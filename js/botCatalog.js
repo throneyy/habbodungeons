@@ -57,7 +57,7 @@ export class BotCatalog {
           (b) =>
             b.key.toLowerCase().includes(q) ||
             b.name.toLowerCase().includes(q) ||
-            (b.desc || '').toLowerCase().includes(q)
+            (b.motto || '').toLowerCase().includes(q)
         )
       : ROOM_BOTS;
     this.unpreview();
@@ -66,15 +66,19 @@ export class BotCatalog {
       const cell = document.createElement('button');
       cell.type = 'button';
       cell.className = 'furni-cell bot-cell';
-      cell.title = `${def.name} · ${def.desc || 'room bot'}`;
+      cell.title = `${def.name} — ${def.motto || 'room bot'}`;
       const img = document.createElement('img');
       img.alt = def.name;
       img.loading = 'lazy'; // one imaging request per cell, only when scrolled in
-      img.src = avatarUrl(def.figure, 2, 's');
+      // thumbnails hold the carry item, so the shelf shows what you're placing
+      img.src = avatarUrl(def.figure, 2, 's', def.carry ?? null);
       const label = document.createElement('span');
       label.className = 'fc-name';
       label.textContent = def.name;
-      cell.append(img, label);
+      const motto = document.createElement('span');
+      motto.className = 'fc-motto';
+      motto.textContent = def.motto || '';
+      cell.append(img, label, motto);
       cell.addEventListener('click', () => this.pick(def));
       cell.addEventListener('mouseenter', () => this.preview(cell, def));
       cell.addEventListener('mouseleave', () => this.unpreview());
@@ -97,9 +101,9 @@ export class BotCatalog {
     pop.className = 'furni-cat-preview bot-cat-preview';
     const img = document.createElement('img');
     img.alt = def.name;
-    img.src = avatarUrl(def.figure, 2, 'm');
+    img.src = avatarUrl(def.figure, 2, 'm', def.carry ?? null);
     const cap = document.createElement('span');
-    cap.textContent = `${def.name} · ${def.desc || 'room bot'}`;
+    cap.textContent = `${def.name} — ${def.motto || 'room bot'}`;
     pop.append(img, cap);
     this.el.appendChild(pop);
     const wr = this.el.getBoundingClientRect();

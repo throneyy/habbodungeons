@@ -2,6 +2,7 @@ import { Unit } from './units.js';
 import { rotationBetween } from './pathfinder.js';
 import { furniSprites, monsterSprites } from './monsterSprites.js';
 import { PROJ_SPRITE } from './battleController.js';
+import { Identity } from './identity.js';
 
 const ATTACK_MS = 600; // attack jab duration (grab-reach pose)
 const IMPACT_MS = 250; // swing wind-up before the hit lands
@@ -59,7 +60,7 @@ export class ExploreController {
     this.unit = this.game.addUnit(
       new Unit(room, null, room.spawn.x, room.spawn.y, {
         team: 'player',
-        classId: 'fighter',
+        classId: Identity.classId() || 'fighter', // your calling — drives its weapon art
         useSprites: true,
         dir: room.spawnDir,
       })

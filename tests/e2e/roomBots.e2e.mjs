@@ -45,20 +45,35 @@ try {
   // ---- the catalogue window --------------------------------------------
   await runCommand(admin, ':npc');
   await admin.waitForSelector('.bot-cat', { timeout: 5000 });
-  const cat = await admin.evaluate(() => ({
-    cells: document.querySelectorAll('.bot-cat .bot-cell').length,
-    firstName: document.querySelector('.bot-cat .bot-cell .fc-name').textContent,
-    thumb: document.querySelector('.bot-cat .bot-cell img').getAttribute('src'),
-    foot: document.querySelector('.bot-cat .furni-cat-foot').textContent,
-  }));
-  check('catalogue lists every bot', cat.cells === 6);
-  check('cells render a habbo-imaging thumb', /figure=.+action=std/.test(decodeURIComponent(cat.thumb)));
-  check('cells are named', cat.firstName.length > 0);
-  check('footer counts the shelf', /6 bots/.test(cat.foot));
+  const cat = await admin.evaluate(async () => {
+    const { ROOM_BOTS } = await import('/js/botsData.js');
+    const cells = [...document.querySelectorAll('.bot-cat .bot-cell')];
+    const marcus = cells[1]; // roster order: harry, marcus, ...
+    return {
+      count: cells.length,
+      names: cells.map((c) => c.querySelector('.fc-name').textContent),
+      mottos: cells.map((c) => c.querySelector('.fc-motto').textContent),
+      thumb: cells[0].querySelector('img').getAttribute('src'),
+      carryThumb: marcus.querySelector('img').getAttribute('src'),
+      foot: document.querySelector('.bot-cat .furni-cat-foot').textContent,
+      rosterCarry: ROOM_BOTS[1].carry,
+    };
+  });
+  check('catalogue lists all 9 recovered bots', cat.count === 9);
+  check('cells are named in roster order',
+    JSON.stringify(cat.names) === JSON.stringify(['Harry', 'Marcus', 'Piers', 'Ingemar', 'Chloe', 'Jem', 'Miho', 'Amber', 'Ray']));
+  check('cells show the motto under the name', cat.mottos[0] === 'Happy to help' &&
+    cat.mottos[8] === 'Chill out and have a coconut!');
+  check('a non-carrier thumb is the plain stand pose',
+    /action=std/.test(decodeURIComponent(cat.thumb)));
+  check('a carrier thumb renders holding its item',
+    decodeURIComponent(cat.carryThumb).includes(`action=crr=${cat.rosterCarry}`));
+  check('footer counts the shelf', /9 bots/.test(cat.foot));
 
-  // search narrows the shelf
-  await admin.fill('.bot-cat .furni-cat-search', 'bounc');
-  check('search filters', (await admin.evaluate(() => document.querySelectorAll('.bot-cat .bot-cell').length)) === 1);
+  // search narrows the shelf (matches the motto text too)
+  await admin.fill('.bot-cat .furni-cat-search', 'katana');
+  check('search filters on motto', (await admin.evaluate(() =>
+    document.querySelectorAll('.bot-cat .bot-cell').length)) === 1);
   await admin.fill('.bot-cat .furni-cat-search', '');
 
   // ---- Escape cancels an in-flight placement ---------------------------
@@ -76,7 +91,7 @@ try {
   // ---- place a bot on a tile -------------------------------------------
   const placed = await admin.evaluate(() => {
     const roomBots = window.__debug.roomBots();
-    const def = { key: 'frank', name: 'Frank', figure: 'hr-125-1104.hd-190-1026.ch-215-82.lg-280-1189.sh-295-62' };
+    const def = window.__debug.botDefs()[0]; // Harry — no carry
     roomBots.beginPlace(def);
     roomBots.place({ x: 6, y: 6 }); // paved court, walkable
     const bot = roomBots.bots[0];
@@ -97,10 +112,10 @@ try {
   check('the tile becomes its home', placed.home.x === 6 && placed.home.y === 6);
   check('it renders through the normal unit pipeline', placed.inUnits && placed.hasSprites);
   check('no HP bar (stat-less entity)', placed.statless);
-  check('it carries a name tag', placed.tagText === 'Frank');
+  check('it carries a name tag', placed.tagText === 'Harry');
   check('it does NOT block its tile', placed.blocked === false);
   check('placement state is released', placed.placingCleared);
-  check('the spec joins room.bots', placed.spec && placed.spec.bot === 'frank' && placed.spec.x === 6);
+  check('the spec joins room.bots', placed.spec && placed.spec.bot === 'harry' && placed.spec.x === 6);
 
   // ---- it wanders, leashed ---------------------------------------------
   const drift = await admin.evaluate(async () => {
@@ -158,7 +173,7 @@ try {
     const roomBots = window.__debug.roomBots();
     const { serializeBot, splitBots } = await import('/js/roomBots.js');
     const { serializeProp } = await import('/js/roomEditor.js');
-    roomBots.beginPlace({ key: 'guildmaster', name: 'Guild Master', figure: 'x' });
+    roomBots.beginPlace(window.__debug.botDefs().find((b) => b.key === 'ray'));
     roomBots.place({ x: 7, y: 7 });
     const room = window.game.room;
     const layout = [...room.props.map(serializeProp), ...room.bots.map(serializeBot)];
@@ -176,12 +191,56 @@ try {
   check('Save Layout serializes the bot', persist.botEntries.length === 1 &&
     JSON.stringify(Object.keys(persist.botEntries[0]).sort()) === JSON.stringify(['bot', 'dir', 'id', 'x', 'y']));
   check('...and reloads it back into room.bots',
-    persist.botsBack.length === 1 && persist.botsBack[0].bot === 'guildmaster' &&
+    persist.botsBack.length === 1 && persist.botsBack[0].bot === 'ray' &&
     persist.botsBack[0].x === 7 && persist.botsBack[0].y === 7);
   check('furni survive the split untouched', persist.propsUnchanged);
   check('the dungeon gate still works', persist.gateStillThere);
   check('the Gatekeeper NPC is untouched', persist.keeperStillThere);
   check('the RP arrows are untouched', persist.arrowsStillThere === 2);
+
+  // ---- a carrying bot actually holds its item in-room -------------------
+  // Ray (carry: Cola) is on tile 7,7 from the persistence step above.
+  const carry = await admin.evaluate(async () => {
+    const roomBots = window.__debug.roomBots();
+    const { handItemId } = await import('/js/handItems.js');
+    const ray = roomBots.bots.find((b) => b.key === 'ray');
+    const cola = handItemId('Cola');
+    // a fresh non-carrier to compare against (the earlier Harry was picked up)
+    roomBots.beginPlace(window.__debug.botDefs().find((b) => b.key === 'harry'));
+    roomBots.place({ x: 5, y: 7 });
+    // the sprite set requests the carry-decorated poses
+    const posed = {
+      std: ray.sprites.posed('std'),
+      wlk: ray.sprites.posed('wlk'),
+      sit: ray.sprites.posed('sit'),
+      atk: ray.sprites.posed('atk'), // combat pose must stay untouched
+    };
+    const url = ray.sprites.spriteUrl(posed.std, 2, 0);
+    // and a non-carrier's poses are unchanged
+    const harry = roomBots.bots.find((b) => b.key === 'harry');
+    roomBots.openStand(ray);
+    const standImg = document.querySelector('.infostand--bot .infostand-preview--human img').getAttribute('src');
+    const standMotto = document.querySelector('.infostand--bot .infostand-motto').textContent;
+    roomBots.closeStand();
+    return {
+      cola, posed, url, standImg, standMotto,
+      entityCarry: ray.carry,
+      spriteCarry: ray.sprites.carry,
+      harryPosedStd: harry ? harry.sprites.posed('std') : null,
+      harryCarry: harry ? harry.sprites.carry : 'no-harry',
+      cacheSeparate: ray.sprites !== (harry && harry.sprites),
+    };
+  });
+  check('the carrying bot knows its item', carry.entityCarry === carry.cola && carry.spriteCarry === carry.cola);
+  check('idle pose becomes the carry render', carry.posed.std === `crr=${carry.cola}`);
+  check('walk keeps the item (comma-composed)', carry.posed.wlk === `wlk,crr=${carry.cola}`);
+  check('sit keeps the item', carry.posed.sit === `sit,crr=${carry.cola}`);
+  check('combat pose is left alone', carry.posed.atk === 'atk');
+  check('the imaging URL carries the item', decodeURIComponent(carry.url).includes(`action=crr=${carry.cola}`));
+  check('a non-carrier renders unchanged', carry.harryPosedStd === 'std' && carry.harryCarry === null);
+  check('carry keys the sprite cache separately', carry.cacheSeparate);
+  check('infostand preview holds the item', decodeURIComponent(carry.standImg).includes(`action=crr=${carry.cola}`));
+  check('infostand shows the motto', carry.standMotto === 'Chill out and have a coconut!');
 
   // ---- non-admins never see the shelf ----------------------------------
   const guest = await openPlayer(browser, PORT, 'NotAnAdmin', 'hr-125-1104.hd-190-1026.ch-260-1314.lg-280-1189.sh-295-62');

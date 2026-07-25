@@ -1225,6 +1225,16 @@ button.primary:hover {
   width: 64px; /* size 'm' render at its native width */
   image-rendering: pixelated;
 }
+/* the bot's motto, under its name — the quiet second line of the cell */
+.bot-cell .fc-motto {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center;
+  color: #4a4a4a;
+  filter: url(#crispify);
+}
 /* :clothing wardrobe — slot group headers spanning the catalogue grid */
 .clothing-cat-slot {
   grid-column: 1 / -1;

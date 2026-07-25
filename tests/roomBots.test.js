@@ -4,6 +4,7 @@
 // candidate filter (leash, blocked tiles, teleport pads, height steps).
 import { splitBots, serializeBot, wanderTarget, LEASH } from '../js/roomBots.js';
 import { ROOM_BOTS, botDef } from '../js/botsData.js';
+import { HAND_ITEMS, handItemId } from '../js/handItems.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -14,7 +15,7 @@ function check(name, cond) {
   }
 }
 
-const KEY = ROOM_BOTS[0].key;
+const KEY = ROOM_BOTS[0].key; // 'harry'
 
 // ---- botDef ---------------------------------------------------------------
 console.log('botDef');
@@ -23,6 +24,40 @@ check('unknown key is null', botDef('no_such_bot') === null);
 check('every definition has a figure', ROOM_BOTS.every((b) => /^[\w.-]+$/.test(b.figure)));
 check('keys are unique + persistable', new Set(ROOM_BOTS.map((b) => b.key)).size === ROOM_BOTS.length &&
   ROOM_BOTS.every((b) => /^[\w-]{1,40}$/.test(b.key)));
+
+// ---- the roster ----------------------------------------------------------
+// Recovered Havana `rooms_bots` roster: exactly these 9, in this order. Frank
+// and Mandy are NOT in the dump and must not reappear as invented figures.
+console.log('roster');
+const EXPECTED_KEYS = ['harry', 'marcus', 'piers', 'ingemar', 'chloe', 'jem', 'miho', 'amber', 'ray'];
+check('roster is exactly the 9 recovered bots, in order',
+  JSON.stringify(ROOM_BOTS.map((b) => b.key)) === JSON.stringify(EXPECTED_KEYS));
+check('no placeholder bots survive', !ROOM_BOTS.some((b) => ['frank', 'mandy', 'guide', 'bouncer', 'barkeep', 'sage', 'guildmaster'].includes(b.key)));
+check('every bot has a name and a motto',
+  ROOM_BOTS.every((b) => b.name && typeof b.motto === 'string' && b.motto.length > 0));
+check('figures are all distinct', new Set(ROOM_BOTS.map((b) => b.figure)).size === ROOM_BOTS.length);
+check('figures are well-formed part-colour pairs',
+  ROOM_BOTS.every((b) => b.figure.split('.').every((p) => /^[a-z]{2}-\d+-\d+$/.test(p))));
+check('every figure carries a head part (hd-)',
+  ROOM_BOTS.every((b) => b.figure.split('.').some((p) => p.startsWith('hd-'))));
+
+// ---- carry ---------------------------------------------------------------
+console.log('carry');
+const CARRIERS = { marcus: 'Cola', ingemar: 'Coffee', chloe: 'Cola', jem: 'Cola', ray: 'Cola' };
+check('exactly the expected bots carry something',
+  JSON.stringify(ROOM_BOTS.filter((b) => b.carry != null).map((b) => b.key)) ===
+  JSON.stringify(Object.keys(CARRIERS)));
+check('each carry resolves to the right hand-item id',
+  Object.entries(CARRIERS).every(([key, item]) => botDef(key).carry === handItemId(item)));
+check('carry ids are real entries in HAND_ITEMS',
+  ROOM_BOTS.every((b) => b.carry == null || HAND_ITEMS[b.carry] !== undefined));
+check('no bot carries Soda4 (id 49 has no art upstream)',
+  !ROOM_BOTS.some((b) => b.carry === 49));
+check('non-carriers leave the field unset',
+  ['harry', 'piers', 'miho', 'amber'].every((k) => botDef(k).carry === undefined));
+check('handItemId is name-exact and throws on a typo', (() => {
+  try { handItemId('cola'); return false; } catch { return handItemId('Cola') === 5; }
+})());
 
 // ---- splitBots ------------------------------------------------------------
 console.log('splitBots');

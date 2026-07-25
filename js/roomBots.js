@@ -77,6 +77,8 @@ export class RoomBot extends Avatar {
     this.key = def.key;
     this.name = def.name;
     this.figure = def.figure;
+    this.motto = def.motto || '';
+    this.carry = def.carry ?? null;
     this.home = { x: spec.x, y: spec.y };
     this.nextWander = 0;
     this.stats = null; // no HP bar (Game.drawUnit skips stat-less entities)
@@ -152,7 +154,9 @@ export class RoomBots {
   spawn(room, spec) {
     const def = botDef(spec.bot);
     if (!def) return null;
-    const sprites = avatarSpritesFor(def.figure, room.zoom === 1 ? 'm' : 's');
+    // carry rides the sprite set: the bot holds its item while idling, walking
+    // and sitting (js/sprites.js composes `wlk,crr=<id>` etc.)
+    const sprites = avatarSpritesFor(def.figure, room.zoom === 1 ? 'm' : 's', 'fighter', def.carry ?? null);
     const bot = new RoomBot(room, sprites, spec, def);
     bot.nextWander = performance.now() + 1000 + Math.random() * 4000;
     this.game.addUnit(bot);
@@ -350,7 +354,8 @@ export class RoomBots {
     el.innerHTML = `
       <div class="infostand-info">
         <div class="infostand-name"><span>${escapeHtml(bot.name)}</span><button class="infostand-close" title="Close">&times;</button></div>
-        <div class="infostand-preview infostand-preview--human"><img alt="${escapeHtml(bot.name)}" src="${avatarUrl(bot.figure, bot.dir)}" /></div>
+        <div class="infostand-preview infostand-preview--human"><img alt="${escapeHtml(bot.name)}" src="${avatarUrl(bot.figure, bot.dir, 'm', bot.carry)}" /></div>
+        <div class="infostand-desc infostand-motto">${escapeHtml(bot.motto) || '&nbsp;'}</div>
         <div class="infostand-desc">bot &middot; wanders within ${LEASH} tiles of (${bot.home.x}, ${bot.home.y})</div>
       </div>
       <div class="infostand-actions">
@@ -377,7 +382,7 @@ export class RoomBots {
   renderStandPreview() {
     if (!this.stand) return;
     const img = this.stand.el.querySelector('.infostand-preview--human img');
-    if (img) img.src = avatarUrl(this.stand.bot.figure, this.stand.bot.dir);
+    if (img) img.src = avatarUrl(this.stand.bot.figure, this.stand.bot.dir, 'm', this.stand.bot.carry);
   }
 
   closeStand() {
@@ -386,11 +391,13 @@ export class RoomBots {
   }
 }
 
-// full-body habbo-imaging render for the infostand / catalogue preview
-export function avatarUrl(figure, dir = 4, size = 'm') {
+// full-body habbo-imaging render for the infostand / catalogue preview.
+// `carry` (a js/handItems.js id) swaps the plain stand for the carry pose, so a
+// bot previews holding the same drink it holds in the room.
+export function avatarUrl(figure, dir = 4, size = 'm', carry = null) {
   const p = new URLSearchParams({
     figure: figure || '',
-    action: 'std',
+    action: carry == null ? 'std' : `crr=${carry}`,
     direction: String(dir),
     head_direction: String(dir),
     size,

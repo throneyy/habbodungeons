@@ -5,52 +5,99 @@
 // every other avatar (js/sprites.js). They are NOT the furni-prop NPCs in
 // js/npc.js (the Gatekeeper) — those are dialogue props with sprite sheets.
 //
+// SOURCE OF THIS ROSTER
+// Recovered from the Quackster/Havana emulator project, file
+// tools/migrations/update.1.3.sql, table `rooms_bots` — the names, mottos and
+// the `figure_flash` column are reproduced verbatim from that dump; no figure
+// string here has been adjusted, "improved" or invented.
+//
+// Provenance caveat: Havana is a v14-era Habbo emulator, i.e. a community
+// reconstruction of the hotel's bot roster. Treat this as emulator data, NOT as
+// claimed Sulake canon — the real hotel's bots may well have differed.
+//
+// Frank and Mandy are deliberately absent: they do not appear in that dump.
+// Rather than invent figures for them and pass the result off as recovered
+// data, they are simply left out. Add them only if a real source turns up.
+//
+// Only the fields carried in the source data are recorded here (name, motto,
+// figure). The hotel room each bot stood in is deliberately NOT reproduced:
+// it wasn't part of the data used, and guessing it would be invention.
+//
 // Identity (name + figure) lives HERE, in code; saved room layouts persist only
 // the `key` plus a tile (see serializeBot in js/roomBots.js), exactly like the
 // prop NPCs keep their identity in NPCS and the layout keeps their position.
 //
-// Figure strings are composed from part/colour pairs already proven to render
-// on this hotel's imaging endpoint (js/config.js DEFAULT_FIGURE, js/dungeon.js
-// FIGURES) — habbo-imaging silently falls back on an unknown pair.
+// Every figure below was byte-verified against the live imaging endpoint before
+// being committed: each renders a distinct avatar, none falls back to the
+// default/nude figure, and no two are identical.
+//
+// `carry` (optional) is a habbo-imaging hand-item id resolved BY NAME from
+// js/handItems.js — never a bare number — and is threaded into the imaging URL
+// as `action=crr=<id>` (js/sprites.js). Bots without one render unchanged.
 //
 // Next field to add here: `dialogue` (a key into js/dialogueData.js) so a bot
 // can be talked to the way the Gatekeeper is.
+import { handItemId } from './handItems.js';
+
 export const ROOM_BOTS = [
   {
-    key: 'frank',
-    name: 'Frank',
-    figure: 'hr-125-1104.hd-190-1026.ch-215-82.lg-280-1189.sh-295-62',
-    desc: 'The hotel helper. Has answered that question before.',
+    key: 'harry',
+    name: 'Harry',
+    motto: 'Happy to help',
+    figure: 'hr-831-61.ch-809-62.sh-290-110.hd-180-1.lg-285-64',
   },
   {
-    key: 'guide',
-    name: 'Fansite Guide',
-    figure: 'hr-125-1104.hd-190-1026.ch-260-1314.lg-275-81.sh-295-62',
-    desc: 'Points wanderers at the good rooms.',
+    key: 'marcus',
+    name: 'Marcus',
+    motto: 'Man of Talent',
+    figure: 'hr-155-32.sh-290-63.ch-235-78.hd-180-1.lg-285-81',
+    carry: handItemId('Cola'),
   },
   {
-    key: 'bouncer',
-    name: 'The Bouncer',
-    figure: 'hd-180-1.cc-3448-110.lg-3449-110.sh-295-62',
-    desc: 'Armoured, unimpressed, standing near the door.',
+    key: 'piers',
+    name: 'Piers',
+    motto: 'The master of the kitchen!',
+    figure: 'hr-891-61.ha-1024-62.ch-220-62.fa-1204-62.sh-300-62.hd-180-1.lg-280-62',
   },
   {
-    key: 'barkeep',
-    name: 'Barkeep',
-    figure: 'hr-125-1104.hd-190-1026.ch-215-64.lg-285-64.sh-295-62',
-    desc: 'Pulls the ale, hears everything.',
+    key: 'ingemar',
+    name: 'Ingemar',
+    motto: 'Snowballs, schnowballs',
+    figure: 'ha-1010-62.ch-210-62.sh-290-80.hd-180-2.lg-270-62',
+    carry: handItemId('Coffee'),
   },
   {
-    key: 'guildmaster',
-    name: 'Guild Master',
-    figure: 'hr-125-1104.hd-190-1026.ch-260-1314.lg-280-1189.sh-295-62.ha-3859-110',
-    desc: 'Runs the hall, wears the gold crown to prove it.',
+    key: 'chloe',
+    name: 'Chloe',
+    motto: 'Service with a smile',
+    figure: 'hr-500-59.sh-730-107.ch-650-107.hd-600-1.lg-696-96',
+    carry: handItemId('Cola'),
   },
   {
-    key: 'sage',
-    name: 'Wandering Sage',
-    figure: 'hd-180-1.ch-6275-64.ha-6273-64.fa-6271-61.lg-275-81',
-    desc: 'Robed, bearded, deliberately vague.',
+    key: 'jem',
+    name: 'Jem',
+    motto: "Don't look down",
+    figure: 'hr-832-61.lg-715-97.ch-650-71.hd-600-10.sh-730-97',
+    carry: handItemId('Cola'),
+  },
+  {
+    key: 'miho',
+    name: 'Miho',
+    motto: "My katana thinks you're cute!",
+    figure: 'hr-829-53.lg-280-62.ch-245-62.hd-180-2.sh-290-80',
+  },
+  {
+    key: 'amber',
+    name: 'Amber',
+    motto: 'On the crest of a wave',
+    figure: 'hr-575-36.sh-730-67.ch-685-93.hd-600-1.lg-827-67',
+  },
+  {
+    key: 'ray',
+    name: 'Ray',
+    motto: 'Chill out and have a coconut!',
+    figure: 'hr-829-34.lg-281-72.ch-803-62.hd-180-19.sh-295-68',
+    carry: handItemId('Cola'),
   },
 ];
 
