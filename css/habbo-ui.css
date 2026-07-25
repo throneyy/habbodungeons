@@ -634,3 +634,195 @@
   margin: 0;
   color: #776;
 }
+
+
+/* ---- daily rewards wheel (js/dailyRewardOverlay.js) -------------------------
+   A centered claim modal over a dimmed client: the authentic habbowheel furni
+   animation on a canvas, a 10-wedge prize legend, a 7-day streak row, and one
+   chunky spin/claim button. Everything reuses the hd-* tokens above. */
+.dr-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(6, 12, 28, 0.66);
+}
+.dr-modal {
+  width: 100%;
+  max-width: 560px;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  animation: dr-pop 160ms ease-out;
+}
+@keyframes dr-pop {
+  from { transform: translateY(8px) scale(0.98); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.dr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dr-x {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+.dr-x:hover { background: rgba(0, 0, 0, 0.34); }
+.dr-stage { display: flex; gap: 18px; align-items: stretch; flex-wrap: wrap; }
+.dr-wheel-col {
+  flex: 1 1 220px;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.dr-wheel-wrap {
+  position: relative;
+  background: var(--hd-well);
+  border: 1px solid var(--hd-border);
+  border-radius: 14px;
+  padding: 10px;
+}
+.dr-wheel { display: block; image-rendering: pixelated; }
+.dr-result { min-height: 22px; text-align: center; font-weight: bold; color: var(--hd-ink); }
+.dr-result .dr-win { color: var(--hd-green); }
+.dr-result .dr-sub { display: block; font-size: 10px; color: #776; font-weight: bold; }
+.dr-legend-col { flex: 1 1 220px; min-width: 200px; }
+.dr-leg-title {
+  font-size: 9px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #776;
+  margin: 0 0 8px;
+}
+.dr-leg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  background: var(--hd-pill);
+  color: var(--hd-ink);
+  border: 1px solid var(--hd-border);
+  border-radius: 12px;
+  box-shadow: 0 2px 3px var(--hd-shadow);
+  font-size: 11px;
+  font-weight: bold;
+}
+.dr-leg .dr-sw { width: 14px; height: 14px; flex: none; border: 1px solid rgba(0, 0, 0, 0.5); border-radius: 3px; }
+.dr-leg .dr-no { color: #8a7a3a; font-size: 9px; min-width: 16px; }
+.dr-leg .dr-amt { margin-left: auto; }
+.dr-leg.won { background: #e7f6ec; outline: 2px solid var(--hd-green); outline-offset: -1px; }
+.dr-leg.won .dr-amt { color: var(--hd-green); }
+.dr-streak { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.dr-pips { display: flex; gap: 5px; }
+.dr-pip { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--hd-border); background: #e7e0cf; }
+.dr-pip.on { background: var(--hd-pill); }
+.dr-pip.today { background: var(--hd-green); border-color: var(--hd-green-border); }
+.dr-streak-txt { font-size: 10px; color: #776; }
+.dr-streak-txt b { color: var(--hd-ink); }
+.dr-cta { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 4px; }
+.dr-cooldown { font-size: 10px; color: #776; text-align: center; }
+@media (max-width: 520px) {
+  .dr-stage { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dr-modal { animation: none; }
+}
+
+/* ---- daily rewards DOCK (js/dailyRewardDock.js) ----------------------------
+   The always-visible "Daily Spin" widget, bottom-right of the square. Sits
+   left of the chat toolbar's icon cluster; opens the popup above on click. */
+.dr-dock {
+  position: fixed;
+  right: 18px;
+  bottom: 74px;
+  z-index: 30;
+  width: 150px;
+  background: var(--hd-white);
+  border: 1px solid var(--hd-border);
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(6, 19, 25, 0.55);
+  cursor: pointer;
+  text-align: center;
+  color: var(--hd-ink);
+  overflow: visible;
+}
+.dr-dock:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(6, 19, 25, 0.6); }
+.dr-dock:focus-visible { outline: 3px solid var(--hd-green-border); outline-offset: 2px; }
+.dr-dock-head {
+  display: block;
+  padding: 6px 10px;
+  background: var(--hd-primary);
+  color: #fff;
+  border-radius: 14px 14px 0 0;
+  border-bottom: 1px solid var(--hd-border);
+  font-size: 11px;
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.dr-dock-canvas-wrap {
+  display: block;
+  background: #fff;
+  border-bottom: 1px solid var(--hd-border);
+  padding: 6px 0 4px;
+}
+.dr-dock-canvas { display: block; margin: 0 auto; image-rendering: pixelated; }
+.dr-dock-foot { display: block; padding: 7px; }
+.dr-dock-cta {
+  display: block;
+  padding: 6px 10px;
+  color: #fff;
+  background: var(--hd-green);
+  border: 1px solid var(--hd-border);
+  border-radius: 10px;
+  box-shadow: 0 2px 0 1px var(--hd-btn-drop);
+  font-size: 11px;
+  font-weight: bold;
+  filter: url(#crispify);
+  transition: transform 90ms ease, box-shadow 90ms ease;
+}
+/* hover reads as "pressed in": the raised drop collapses and an inset shadow
+   sinks the face, so the whole pill looks depressed */
+.dr-dock:hover .dr-dock-cta {
+  transform: translateY(2px);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--hd-btn-drop);
+}
+/* "ready" notification badge — the real Habbo alert icon, above the corner */
+.dr-dock-dot {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  z-index: 3;
+  width: 30px;
+  height: 30px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+}
+.dr-dock-dot.pulse { animation: dr-dotpulse 1.6s ease-in-out infinite; }
+@keyframes dr-dotpulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.14); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dr-dock-dot.pulse { animation: none; }
+  .dr-dock-cta { transition: none; }
+}

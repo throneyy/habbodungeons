@@ -33,6 +33,9 @@ import { PartyUI } from './party.js';
 import { CoopLeader, CoopMember } from './coopBattle.js';
 import { TradeUI } from './tradeWindow.js';
 import { showRoomDiscovery } from './roomBanner.js';
+import { openDailyReward } from './dailyRewardOverlay.js';
+import { applyReward } from './dailyReward.js';
+import { mountDailyDock } from './dailyRewardDock.js';
 
 
 const $ = (id) => document.getElementById(id);
@@ -1613,6 +1616,62 @@ function bankCoopShare(share) {
   localStorage.setItem(LS_COOP_POT, String(pot));
 }
 
+// Daily-wheel payout: grant a resolved reward to the active run (gold/item/xp),
+// or bank it into the same pots the next run picks up when no run is live
+// (mirrors bankWildXp / bankCoopShare). Returns a short summary for the popup.
+function bankReward(resolved) {
+  const r = Run.hasSave() ? Run.load(buildDungeon) : null;
+  if (r) {
+    const summary = applyReward(resolved, r);
+    r.save();
+    return summary;
+  }
+  // no active run: stash gold/xp into their pots; items wait in an item pot
+  if (resolved.kind === 'gold') {
+    const pot = Number(localStorage.getItem(LS_COOP_POT) || 0) + resolved.amt;
+    localStorage.setItem(LS_COOP_POT, String(pot));
+    return `+${resolved.amt} gold (waiting for your next run)`;
+  }
+  if (resolved.kind === 'xp') {
+    const pot = Number(localStorage.getItem(LS_WILD_XP) || 0) + resolved.amt;
+    localStorage.setItem(LS_WILD_XP, String(pot));
+    return `+${resolved.amt} XP (waiting for your next run)`;
+  }
+  // item pot: a simple id list the next run's satchel absorbs
+  const LS_ITEM_POT = 'habbo-dungeons-daily-items';
+  let ids = [];
+  try {
+    ids = JSON.parse(localStorage.getItem(LS_ITEM_POT) || '[]');
+  } catch {
+    ids = [];
+  }
+  ids.push(resolved.itemId);
+  localStorage.setItem(LS_ITEM_POT, JSON.stringify(ids));
+  return `${ITEMS[resolved.itemId] ? ITEMS[resolved.itemId].name : resolved.itemId} (waiting for your next run)`;
+}
+
+// Open the daily-rewards wheel popup (from the Gatekeeper choice, the bottom-
+// right dock, or __debug). One modal at a time; re-opening while it's up is a
+// no-op. On close, the dock refreshes so its "ready" badge clears after a claim.
+let dailyHandle = null;
+let dailyDock = null;
+async function openDailyWheel() {
+  if (dailyHandle) return dailyHandle;
+  try {
+    dailyHandle = await openDailyReward({
+      applyPayout: bankReward,
+      onClose: () => {
+        dailyHandle = null;
+        if (dailyDock) dailyDock.refresh();
+      },
+    });
+    return dailyHandle;
+  } catch (e) {
+    dailyHandle = null; // asset load failed; never block play
+    return null;
+  }
+}
+
 // The crown landed on this client mid-battle: adopt the replica into the
 // real battle controller and stream authority from here.
 function promoteToLeader({ battle: engine, byCid }) {
@@ -1798,6 +1857,10 @@ function leaveExplore() {
     adminPanel.destroy();
     adminPanel = null;
   }
+  if (dailyDock) {
+    dailyDock.destroy();
+    dailyDock = null;
+  }
   music.stop();
 }
 
@@ -1917,6 +1980,8 @@ async function startExplore() {
   // a Gatekeeper choice aims the archway at its dungeon
   npcTalk.onSet = (s) => {
     if (s.dungeon) gateDest = s.dungeon;
+    // the Gatekeeper's "spin the wheel" choice opens the daily-rewards popup
+    if (s.openWheel) openDailyWheel();
   };
   // room ambience: auto-plays per room (10% until the user moves the slider);
   // the speaker + press-to-reveal volume slider docks right of the chat input
@@ -1950,6 +2015,9 @@ async function startExplore() {
     onUnequip: (slot) => equipFromHand((r, leader) => r.unequip(leader.id, slot)),
     onUse: (itemId) => useConsumable(itemId),
   });
+  // the always-visible "Daily Spin" dock (bottom-right): pulses an alert badge
+  // while today's spin is unclaimed, opens the same wheel popup as the Gatekeeper
+  dailyDock = mountDailyDock({ onOpen: openDailyWheel });
   // admin tooling: chat commands, no buttons — :admin panel, :edit, :save,
   // and :furni (the catalogue-style spawner window)
   adminPanel = attachAdminPanel({ isAdmin: isRoomAdmin });
@@ -2098,4 +2166,6 @@ window.__debug = {
   // multiplayer handles (presence e2e drives these directly)
   explore, net, remote, party, coopMember, tradeUI,
   coopLeader: () => coopLeader,
+  // daily-rewards wheel (e2e drives the open/spin/claim/block flow)
+  openDailyWheel,
 };

@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# agent scratch + large one-off handoff bundle (12MB) — never commit
+.gg/
+habbo-dungeons-supabase-handoff.zip
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

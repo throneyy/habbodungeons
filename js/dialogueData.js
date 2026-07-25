@@ -18,7 +18,14 @@ export const DIALOGUES = {
         choices: [
           { text: 'The old keep below.', next: 'keep', set: { dungeon: 'dungeon' } },
           { text: 'The realm trials.', next: 'realms', set: { dungeon: 'realms' } },
+          { text: 'Spin the wheel of fortune.', next: 'wheel', set: { openWheel: true } },
           { text: "You're... a tree.", next: 'tree' },
+        ],
+      },
+      wheel: {
+        lines: [
+          'Ah, the wheel. Once a day the coins in my branches remember how to be generous.',
+          'Give it a turn. Fortune favours the ones who show up.',
         ],
       },
       keep: {
