@@ -1444,10 +1444,10 @@ function updateMpStatus() {
   const id = Identity.get();
   if (!id || !id.name) { el.textContent = ''; el.style.color = ''; return; }
   if (!net.active) {
-    el.textContent = '⚠ Multiplayer offline — sign in with email to see other players';
+    el.textContent = '⚠ Multiplayer offline - retrying';
     el.style.color = '#ffb84d';
     el.style.cursor = 'pointer';
-    el.onclick = () => showDashboard();
+    el.onclick = () => { Auth.ensureSession().finally(() => { net.connect(id); updateMpStatus(); }); };
     return;
   }
   if (!net.connected) {
