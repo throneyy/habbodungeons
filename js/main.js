@@ -1434,6 +1434,37 @@ function leaveRunChrome() {
 let exploreRooms = null;
 let chat = null;
 const remote = new RemotePlayers(game, net); // multiplayer presence (verified players)
+
+// Multiplayer status chip in the explore bar. Silent when everything works;
+// warns loudly when the player is Habbo-linked but has no Supabase auth session
+// (Realtime needs an email OTP sign-in — without it you're invisible to others).
+function updateMpStatus() {
+  const el = document.getElementById('mpStatus');
+  if (!el) return;
+  const id = Identity.get();
+  if (!id || !id.name) { el.textContent = ''; el.style.color = ''; return; }
+  if (!net.active) {
+    el.textContent = '⚠ Multiplayer offline — sign in with email to see other players';
+    el.style.color = '#ffb84d';
+    el.style.cursor = 'pointer';
+    el.onclick = () => showAuthOverlay && showAuthOverlay();
+    return;
+  }
+  if (!net.connected) {
+    el.textContent = '… connecting to multiplayer';
+    el.style.color = '#9ecbff';
+    el.onclick = null;
+    return;
+  }
+  el.textContent = '● Multiplayer connected';
+  el.style.color = '#7bd88f';
+  el.onclick = null;
+}
+net.on('open', updateMpStatus);
+net.on('close', updateMpStatus);
+// Retry once the async _open() finishes (auth.getUser is awaited): the
+// initial call above runs before net.active flips.
+setTimeout(updateMpStatus, 1500);
 const infostand = new HumanInfostand(); // tap a player → the human object displayer
 const party = new PartyUI(net, () => (Identity.get() || {}).name || ''); // roster chips + invites
 infostand.onInvite = (name) => party.invite(name);
