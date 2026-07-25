@@ -94,6 +94,15 @@ export class SupabaseNet {
       }
     }
     this.userId = currentUser.id;
+    // Private Realtime channels enforce RLS on realtime.messages via the JWT.
+    // Push the current access token so anon sessions can subscribe/broadcast.
+    try {
+      const { data: { session } = { session: null } } = await sb.auth.getSession();
+      if (session?.access_token && sb.realtime?.setAuth) sb.realtime.setAuth(session.access_token);
+      sb.auth.onAuthStateChange((_e, s) => {
+        if (s?.access_token && sb.realtime?.setAuth) sb.realtime.setAuth(s.access_token);
+      });
+    } catch { /* ignore */ }
     await this._openUserChannel();
     this._openLayoutChannel();
     this._connected = true;
@@ -165,7 +174,11 @@ export class SupabaseNet {
     this._leaveRoomChannel();
     this._rosterSent = false;
     const ch = this.sb.channel(`room:${roomId}`, {
-      config: { broadcast: { self: false }, presence: { key: this.userId } },
+      config: {
+        private: true, // enforces realtime.messages RLS (room:% policy)
+        broadcast: { self: false, ack: false },
+        presence: { key: this.userId },
+      },
     });
     ch.on('presence', { event: 'sync' }, () => this._onPresenceSync(ch, roomId));
     ch.on('presence', { event: 'join' }, ({ newPresences }) => this._onPresenceJoin(newPresences));
