@@ -1,0 +1,6 @@
+
+# Pin known line-ending conventions for files that have previously been
+# flipped by editors/tools with different defaults, so autocrlf/tool churn
+# can't silently rewrite an entire file's line endings again.
+css/habbo-ui.css text eol=crlf
+js/dailyRewardDock.js text eol=lf

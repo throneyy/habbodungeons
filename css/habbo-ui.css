@@ -749,12 +749,14 @@
 }
 
 /* ---- daily rewards DOCK (js/dailyRewardDock.js) ----------------------------
-   The always-visible "Daily Spin" widget, bottom-right of the square. Sits
-   left of the chat toolbar's icon cluster; opens the popup above on click. */
+   The always-visible "Daily Spin" widget, anchored top-right of the square.
+   That corner stays clear during normal square play (the room banner sits
+   top-centre), so the dock never overlaps it or the bottom-right chat
+   toolbar. Opens the popup on click. */
 .dr-dock {
   position: fixed;
+  top: 18px;
   right: 18px;
-  bottom: 74px;
   z-index: 30;
   width: 150px;
   background: var(--hd-white);

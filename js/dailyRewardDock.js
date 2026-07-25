@@ -1,5 +1,5 @@
 // Daily Rewards dock — the always-visible "Daily Spin" widget pinned to the
-// bottom-right of the square while you roam. It advertises the once-a-day spin
+// top-right of the square while you roam. It advertises the once-a-day spin
 // (a pulsing alert badge when a claim is available), plays the wheel's idle
 // light-chase, and opens the full Daily Rewards popup on click.
 //
@@ -31,18 +31,16 @@ export function mountDailyDock({ host = document.body, onOpen } = {}) {
   let stopAnim = null;
   let opening = false;
 
-  // Reflect whether today's spin is still available.
+  // Reflect whether today's spin is still available. Once claimed, the whole
+  // dock hides until canClaim flips true again next day (rather than lingering
+  // with a "come back tomorrow" note).
   function refresh() {
     const claimable = canClaim(loadDaily());
+    el.hidden = !claimable;
     dot.hidden = !claimable;
     dot.classList.toggle('pulse', claimable);
-    cta.textContent = claimable ? 'Ready to claim' : 'Come back tomorrow';
-    el.setAttribute(
-      'aria-label',
-      claimable
-        ? 'Daily Spin \u2014 a free reward is ready. Open daily rewards.'
-        : 'Daily Spin \u2014 claimed for today. Open daily rewards.'
-    );
+    cta.textContent = 'Ready to claim';
+    el.setAttribute('aria-label', 'Daily Spin \u2014 a free reward is ready. Open daily rewards.');
   }
 
   async function open() {
@@ -65,7 +63,7 @@ export function mountDailyDock({ host = document.body, onOpen } = {}) {
     }
   });
 
-  // start the idle marquee light-chase (dir 4, the compact bottom-right view)
+  // start the idle marquee light-chase (dir 4, the compact top-right view)
   ensureWheelAssets()
     .then(() => {
       stopAnim = playWheelClip('lights', 4, canvas);
