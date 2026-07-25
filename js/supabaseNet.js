@@ -226,7 +226,6 @@ export class SupabaseNet {
     this.pos = { x, y, dir: this.pos.dir };
     if (this.roomChannel) {
       this.roomChannel.send({ type: 'broadcast', event: 'moved', payload: { name: this.name, x, y } });
-      this.roomChannel.track({ name: this.name, figure: this.figure, ...this.pos });
     }
     this._upsertPresence();
   }
