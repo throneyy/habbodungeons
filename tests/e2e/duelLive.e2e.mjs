@@ -228,6 +228,25 @@ async function openPlayer(port, name, build = {}) {
     const game = window.game;
     const origFx = game.addFx.bind(game);
     game.addFx = (fx) => { window.__fx.push({ type: fx.type, text: fx.text, x: fx.x, y: fx.y }); return origFx(fx); };
+    // Every duel call this client makes to the live backend, with what came
+    // back. The abandonment watchdog polls duel-claim from inside a try/catch
+    // that swallows everything (js/main.js startDuelWatchdog), so without this
+    // a claim that is never sent and a claim that is refused every time look
+    // identical from outside: both are just a duel that never ends.
+    window.__sends = [];
+    const origSend = net.send.bind(net);
+    net.send = (m) => {
+      const out = origSend(m);
+      if (m && typeof m.t === 'string' && m.t.startsWith('duel-')) {
+        const at = Math.round(performance.now());
+        Promise.resolve(out).then(
+          (res) => window.__sends.push({ at, t: m.t, res }),
+          (err) => window.__sends.push({ at, t: m.t, err: String(err && err.message || err) }),
+        );
+      }
+      return out;
+    };
+
     // Every notice the duel UI puts on screen. `You win the duel!` is a
     // .party-prompt--notice that DELETES ITSELF after 3.5s (DuelUI.flash), so a
     // waitForSelector racing a claim that can take most of a minute would miss
