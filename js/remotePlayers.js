@@ -70,9 +70,17 @@ export class RemotePlayers {
     const room = this.game.room;
     const x = room.inBounds(member.x, member.y) ? member.x : room.spawn.x;
     const y = room.inBounds(member.x, member.y) ? member.y : room.spawn.y;
+    // The real calling this player picked (js/classWeapons.js), now carried
+    // over presence by SupabaseNet (_member()/track() in js/supabaseNet.js) —
+    // was hardcoded to 'fighter' here for every remote player regardless of
+    // their actual class, so a remote cleric always showed a sword instead of
+    // their hammer/lantern. Falls back to 'fighter' only for payloads from
+    // before this fix (or the local WS Net transport, which doesn't send
+    // classId at all yet — a separate, narrower gap than the one fixed here).
+    const classId = member.classId || 'fighter';
     const unit = new Unit(room, null, x, y, {
       team: 'player',
-      classId: 'fighter',
+      classId,
       dir: member.dir ?? 4,
       name: member.name,
     });
@@ -95,7 +103,7 @@ export class RemotePlayers {
       );
     }
     unit.figure = figure; // infostand render
-    unit.sprites = avatarSpritesFor(figure, room.zoom === 1 ? 'm' : 's');
+    unit.sprites = avatarSpritesFor(figure, room.zoom === 1 ? 'm' : 's', classId);
     this.game.addUnit(unit);
     this.units.set(key, unit);
 

@@ -39,6 +39,7 @@ export class SupabaseNet {
     this._connected = false;
     this._rosterSent = false;
     this._heartbeat = null;
+    this.classId = 'fighter'; // the calling this session is playing — see connect()
   }
 
   get active() {
@@ -64,6 +65,11 @@ export class SupabaseNet {
     this.identity = identity;
     this.name = identity.name;
     this.figure = identity.figure || '';
+    // Carried over presence so every OTHER client's RemotePlayers.spawn() can
+    // render this player's real weapon (js/classWeapons.js) instead of the
+    // fighter/sword default — confirmed missing from the wire entirely before
+    // this fix (see js/remotePlayers.js and tests/e2e/classIdFlicker.e2e.mjs).
+    this.classId = identity.classId || 'fighter';
     this._open().catch(() => {});
     return true;
   }
@@ -187,7 +193,7 @@ export class SupabaseNet {
     ch.on('broadcast', { event: 'chatted' }, ({ payload }) => this.emit('chatted', payload));
     ch.subscribe(async (status) => {
       if (status !== 'SUBSCRIBED') return;
-      await ch.track({ name: this.name, figure: this.figure, ...this.pos });
+      await ch.track({ name: this.name, figure: this.figure, classId: this.classId, ...this.pos });
       this._upsertPresence();
       this._startHeartbeat();
     });
@@ -195,7 +201,14 @@ export class SupabaseNet {
   }
 
   _member(meta) {
-    return { name: meta.name, figure: meta.figure || '', x: meta.x | 0, y: meta.y | 0, dir: meta.dir ?? 4 };
+    return {
+      name: meta.name,
+      figure: meta.figure || '',
+      classId: meta.classId || 'fighter',
+      x: meta.x | 0,
+      y: meta.y | 0,
+      dir: meta.dir ?? 4,
+    };
   }
 
   _onPresenceSync(ch, roomId) {
