@@ -17,7 +17,7 @@
 // (running itself would recurse). That costs about a second and buys a document
 // that cannot quietly become fiction again.
 import { readFileSync, readdirSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { basename } from 'node:path';
 
@@ -80,10 +80,17 @@ console.log('\nclaimed check counts match reality:');
 let total = 0;
 for (const [file, claimed] of claims) {
   if (!onDisk.includes(file)) continue; // already failed above
-  const out = execFileSync(process.execPath, [fileURLToPath(new URL(`tests/${file}`, ROOT))], {
+  // spawnSync, not execFileSync: a suite that FAILS exits non-zero, and
+  // execFileSync throws on that — which made this guard die with a stack dump
+  // and a raw stdout splat in the middle of `npm test` whenever any other
+  // suite broke, burying the real failure. Pass/fail is that suite's own
+  // verdict and the runner already reports it; all this guard does is count
+  // printed assertions, which works the same either way.
+  const res = spawnSync(process.execPath, [fileURLToPath(new URL(`tests/${file}`, ROOT))], {
     encoding: 'utf8',
     cwd: fileURLToPath(ROOT),
   });
+  const out = `${res.stdout || ''}${res.stderr || ''}`;
   // Every suite in this repo prints one indented `ok`/`FAIL` line per assertion.
   const actual = (out.match(/^\s+(ok|FAIL)/gm) || []).length;
   total += actual;

@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 11 unit suites below (325 checks) — must pass
+npm test                 # all 12 unit suites below (359 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 7 browser suites (real Chromium, static server, ports)
 ```
@@ -136,6 +136,7 @@ actually prints:
 node tests/pathfinder.test.js          # movement rules: diagonals, drops, void corners (27 checks)
 node tests/run.test.js                 # items, roster, save/resume, events, leader skills (49 checks)
 node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root (37 checks)
+node tests/battle.test.js              # damage math, line of sight, targeting, turn phases (34 checks)
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (75 checks)
 node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
@@ -152,10 +153,10 @@ need Chromium and bind real ports, so `run-suites.mjs` runs them sequentially.
 
 ### Quarantine
 
-`tests/quarantine/` holds four suites recovered from an abandoned history that
-**do not pass**: `battle` (34 pass, 1 assertion made stale by the ranger
-close-range dagger), `gimmicks` (43 pass, 1 prop-path failure), and `realms` /
+`tests/quarantine/` holds three suites recovered from an abandoned history that
+**do not pass**: `gimmicks` (43 pass, 1 prop-path failure), and `realms` /
 `sprites` (cannot start — prop paths, and a `tools/lib/` that was never ported).
+`battle` was the fourth and has been promoted into the blocking run.
 `npm run test:quarantine` runs them and reports, but always exits 0, so a broken
 suite can't gate a commit. `tests/quarantine/README.md` explains each failure
 and what promoting it requires.

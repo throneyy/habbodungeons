@@ -1,14 +1,14 @@
 // Battle-engine tests — run with:  node tests/battle.test.js
-import { Room } from '../../js/room.js';
-import { Unit } from '../../js/units.js';
-import { Battle } from '../../js/battle.js';
+import { Room } from '../js/room.js';
+import { Unit } from '../js/units.js';
+import { Battle } from '../js/battle.js';
 import {
   triangleMultiplier,
   heightMultiplier,
   tileDistance,
   computeDamage,
   hasLineOfSight,
-} from '../../js/classes.js';
+} from '../js/classes.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -90,12 +90,16 @@ console.log('move field');
 console.log('attacking');
 {
   const r = room(['00000', '00000', '00000']);
-  const ranger = unit(r, 0, 0, 'player', 'ranger'); // range 3, min 2
-  const near = unit(r, 1, 0, 'enemy', 'mage'); // distance 1 -> below min
-  const far = unit(r, 3, 0, 'enemy', 'mage'); // distance 3 -> in range
+  const ranger = unit(r, 0, 0, 'player', 'ranger'); // bow range 3
+  const near = unit(r, 1, 0, 'enemy', 'mage'); // distance 1 -> close-range dagger
+  const far = unit(r, 3, 0, 'enemy', 'mage'); // distance 3 -> in bow range
   const b = new Battle(r, [ranger, near, far], {});
   const t = b.attackTargets(ranger);
-  check('ranger cannot hit adjacent (min range 2)', !t.includes(near));
+  // A 'ranger cannot hit adjacent (min range 2)' assertion lived here. 9d6f0e4
+  // gave the ranger a close-range dagger to plug that dead zone, so d=1 is now
+  // a valid target and the assertion contradicted shipped behaviour. The whole
+  // close-range window is covered by tests/rangerCloseRange.test.js; `near`
+  // stays in the battle so the roster this case exercises is unchanged.
   check('ranger can hit at distance 3', t.includes(far));
 
   const fighter = unit(r, 0, 2, 'player', 'fighter'); // range 1
@@ -119,7 +123,7 @@ console.log('enemy AI');
   const p = unit(r, 0, 0, 'player', 'fighter');
   const e = unit(r, 1, 0, 'enemy', 'fighter'); // already adjacent
   const b = new Battle(r, [p, e], {});
-  const { runEnemyTurn } = await import('../../js/ai.js');
+  const { runEnemyTurn } = await import('../js/ai.js');
   const plan = runEnemyTurn(b, e);
   check('adjacent enemy plans to attack without moving', plan.target === p && (!plan.path || !plan.path.length));
 
