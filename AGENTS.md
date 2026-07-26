@@ -189,3 +189,72 @@ matches two rows, `maybeSingle()` raises PGRST116, and old code answers HTTP 200
   `realtime.ts`'s `if (!res.ok)` therefore cannot fire for an RLS drop, so the
   absence of a `[broadcast] … FAILED` line in the logs is **not** evidence that a
   broadcast succeeded.
+
+## File ownership
+
+### 1. Push every coherent chunk immediately, even unfinished
+
+The moment a change stands on its own, commit it on your branch and **push**.
+Not when it is polished, not when the feature is done — immediately. Unpushed
+work is invisible to the other five agents, and invisible work gets done twice.
+A branch on `origin` is also the only thing that stops another agent rewriting
+your commits; a local-only branch has no claim on anything.
+
+This is not a style preference. It is the direct cause of the two worst messes
+in this repo's short history:
+
+- **`410e469` duplicated `b90774a`.** Two agents wrote the same AGENTS.md
+  deploy-gap section, byte for byte, because the first sat unpushed in the hub
+  while the second was written from scratch. Same patch-id
+  (`9cb07503d4efd4ec`), different parents. The rebase that reconciled them
+  printed `skipped previously applied commit 410e469` — git discarded work
+  somebody had actually done, and that was the *good* outcome.
+- **`tests/run-suites.mjs` was created twice**, on two branches, each with a
+  feature the other lacked: quarantine mode on one, the machine-wide e2e lock on
+  the other. Neither agent could see the other's file. Merging them by hand
+  afterwards was strictly harder than either original, and a naive "pick a side"
+  resolution would have silently deleted a working capability.
+
+Both had one cause: work that existed only on somebody's disk. Push early and a
+collision surfaces as a merge conflict in seconds instead of a duplicated
+afternoon.
+
+### 2. Before creating a new file, check whether a branch already creates it
+
+`git status` cannot see another worktree. Fetch and ask:
+
+```bash
+git fetch origin
+git for-each-ref --format='%(refname)' refs/remotes/origin |
+  while read b; do
+    git ls-tree -r --name-only "$b" | grep -qx 'tests/run-suites.mjs' && echo "$b"
+  done
+```
+
+If a branch already owns the path, **do not create a second version**. Either
+base your work on that branch or hand the change to it — a second file at the
+same path is a merge conflict with a capability loss hiding inside it.
+
+### Who owns which shared file
+
+One branch owns each shared path. Send changes to the owner; do not fork it.
+
+| Path | Owner branch |
+| --- | --- |
+| `tests/run-suites.mjs` | **`chore/test-harness`** |
+| `tests/e2e/lib.mjs`, `tests/e2e/*.e2e.mjs` ports/slugs | `chore/test-harness` |
+| `tests/quarantine/**`, recovered `tests/*.test.js` | `chore/recover-test-suites` |
+| `js/consumableEffects.js`, `js/items.js`, `js/units.js` | `feat/buff-consumable` |
+| `js/duelWindow.js`, `js/duelCountdown.js`, `supabase/functions/duel-*`, `_shared/duel*.ts` | `feat/duel` |
+| `js/party.js`, `js/supabaseNet.js` send/error paths | `fix/party-invite-delivery` (merged) |
+| `*_profiles_unique_habbo_username.sql`, `_shared/party.ts` | `fix/profiles-unique-username` |
+| `js/classWeapons.js` | `feat/class-weapons` |
+| `AGENTS.md`, `README.md` | no single owner — **fetch and rebase before editing** |
+
+`AGENTS.md` and `README.md` are the two files every agent wants to touch, which
+is exactly why `410e469` happened. Rebase onto `origin/main` first, every time.
+
+Beware false clashes: `chore/recover-test-suites` is **stacked on**
+`feat/buff-consumable` (it has that commit as an ancestor), so a path like
+`tests/buffInspire.test.js` showing up on both is inherited, not duplicated.
+Check with `git merge-base --is-ancestor A B` before assuming a conflict.
