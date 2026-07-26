@@ -167,6 +167,14 @@ export class DuelHost extends CoopLeader {
   }
 
   onRelay(msg) {
+    // The duel stream rides the ROOM channel, so every player standing in the
+    // room can send a duel-relay frame — this is the only place that says who
+    // is actually in this duel. Without it a bystander could broadcast a
+    // `hello` before the real guest and be seated as the duellist, or send
+    // commands that handleCommand would weigh against `msg.from` alone.
+    // The server named the pair at accept time (_shared/duelFlow.ts); nothing
+    // in a frame's own payload gets a say in it.
+    if (!this.fromOpponent(msg)) return;
     const d = msg.data || {};
     if (d.k === 'hello' && !this.battle) {
       // Guest is on the channel. Boot once; a repeat (their retry) is a no-op
@@ -179,13 +187,22 @@ export class DuelHost extends CoopLeader {
     super.onRelay(msg);
   }
 
+  /** Is this frame from the player I am actually duelling? */
+  fromOpponent(msg) {
+    const from = String((msg && msg.from) || '').toLowerCase();
+    return !!from && from === String(this.opponent || '').toLowerCase();
+  }
+
   /** Build the one authoritative Battle and stream it to the guest. */
   boot(hello) {
     this.pendingHello = null;
     if (this.battle || !this.bc || !this.me) return null;
     const room = duelArena();
     const mine = duelUnit(room, { ...this.me, owner: this.me.name }, 0);
-    const theirs = duelUnit(room, { ...hello, owner: hello.name || this.opponent }, 1);
+    // Identity comes from the duel, never from the frame: `hello.name` is
+    // just a string the sender chose. this.opponent is the name the server
+    // put on the duel row, and it is what owns the unit and labels it.
+    const theirs = duelUnit(room, { ...hello, name: this.opponent, owner: this.opponent }, 1);
     const battle = this.bc.start(room, [mine], [theirs], {
       enemyAi: false, // the enemy phase belongs to a person, not to js/ai.js
       objective: { type: 'eliminate' },
@@ -314,6 +331,15 @@ export class DuelGuest extends CoopMember {
 
   sendCommand(cmd) {
     this.net.send({ t: 'duel-relay', data: { k: 'cmd', ...cmd }, to: this.leaderName });
+  }
+
+  // Same room-channel exposure as the host's (see DuelHost.onRelay): only the
+  // host is authoritative for this duel, so a frame from anyone else — a
+  // bystander's forged `start`, `phase` or `end` — is not this duel's news.
+  onRelay(msg) {
+    const from = String((msg && msg.from) || '').toLowerCase();
+    if (!from || from !== String(this.leaderName || '').toLowerCase()) return;
+    super.onRelay(msg);
   }
 
   /** Rebuild the host's arena and both duellists from the start frame. The

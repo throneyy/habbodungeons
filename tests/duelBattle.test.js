@@ -35,13 +35,14 @@ function check(name, cond) {
 
 const HOST = 'Alice'; // the challenger hosts (youChallenged === true)
 const GUEST = 'Bob';
+const BYSTANDER = 'Mallory'; // a third player standing in the same room
 
 // ---- the wire --------------------------------------------------------------
 // Two clients on one shared room channel. Mirrors SupabaseNet's `duel-relay`
 // path: the sender never sees its own frame, and a frame with `to` reaches
 // only that player. Delivery is synchronous, which makes every assertion below
 // about the state AFTER the round trip.
-function wire() {
+function wire(n = 2) {
   const nets = [];
   const make = (name) => {
     const handlers = new Map();
@@ -69,7 +70,7 @@ function wire() {
     nets.push(net);
     return net;
   };
-  return [make(HOST), make(GUEST)];
+  return [make(HOST), make(GUEST), make(BYSTANDER)].slice(0, n);
 }
 
 // The host's BattleController, reduced to what the authority actually uses.
@@ -126,20 +127,28 @@ function stubGame() {
 }
 
 // Boot a whole duel: guest says hello first (the host's screen is still going
-// up), the host arms, and the start frame flows back. Returns both roles.
+// up), the host arms, and the start frame flows back. Returns both roles, plus
+// a third client on the same room channel — the duel stream is a ROOM
+// broadcast, so a bystander really can send into it and every test below can
+// try.
 function duel(opts = {}) {
-  const [netA, netB] = wire();
+  const [netA, netB, netM] = wire(3);
   const rejects = [];
   netB.on('duel-relay', (m) => {
     if (m.data && m.data.k === 'rejected') rejects.push(m.data.reason);
   });
+  // What the bystander hears back. A non-participant should get NOTHING: the
+  // guard drops their frame before handleCommand can compose a refusal, so
+  // they cannot even probe the duel's state through the reasons it returns.
+  const heard = [];
+  netM.on('duel-relay', (m) => heard.push(m.data || {}));
   const host = new DuelHost(netA, () => HOST, GUEST);
   const bc = hostBc();
   const guest = new DuelGuest(netB, stubGame(), { banner: null, actions: null, roster: null, log: null }, () => GUEST);
   const ui = { waiting() {}, battleReady() {}, exit(reason) { ui.exited = reason; } };
   guest.activate(HOST, ui, { name: GUEST, classId: opts.guestClass || 'fighter', level: 1 });
   host.arm({ bc, me: { name: HOST, classId: opts.hostClass || 'fighter', level: 1 } });
-  return { host, guest, bc, ui, rejects, battle: bc.battle, netA, netB };
+  return { host, guest, bc, ui, rejects, heard, battle: bc.battle, netA, netB, netM };
 }
 
 const hostUnit = (d) => d.host.byCid.get(DUEL_CIDS[0]);
@@ -224,6 +233,94 @@ console.log('boot');
       netB.send({ t: 'duel-relay', to: HOST, data: { k: 'hello', name: GUEST, classId: 'mage', level: 2 } });
       return bc.battle === first && first.units.length === 2;
     })());
+}
+
+// ---- bystanders on the room channel ----------------------------------------
+// duel-relay is a ROOM broadcast: everyone standing in the room can send one.
+// The pair was decided by the server at accept time (_shared/duelFlow.ts), so
+// the two clients are the only things that can hold the pair to it.
+console.log('a third player in the room');
+{
+  // The race that matters: a bystander gets their hello in FIRST, before the
+  // real guest has said anything. Nothing may seat them.
+  const [netA, netB, netM] = wire(3);
+  const host = new DuelHost(netA, () => HOST, GUEST);
+  const bc = hostBc();
+  netM.send({ t: 'duel-relay', to: HOST, data: { k: 'hello', name: BYSTANDER, classId: 'mage', level: 9 } });
+  host.arm({ bc, me: { name: HOST, classId: 'fighter', level: 1 } });
+  check('a bystander’s hello does not boot the duel', bc.battle === null && host.battle === null);
+  check('and it is not even held as a pending arrival', host.pendingHello === null);
+
+  const guest = new DuelGuest(netB, stubGame(), { banner: null }, () => GUEST);
+  guest.activate(HOST, { waiting() {}, battleReady() {}, exit() {} }, { name: GUEST, classId: 'fighter', level: 1 });
+  track({ host, guest });
+  check('the real guest’s hello still boots it', !!bc.battle && bc.battle.units.length === 2);
+  check('the duellist seat went to the opponent, not the bystander',
+    host.owners.get(host.byCid.get(DUEL_CIDS[1]).id).owner === GUEST);
+  check('nor did the bystander’s level ride in with the seat',
+    host.byCid.get(DUEL_CIDS[1]).level === 1);
+
+  // A bystander who arrives after the boot and claims to BE the guest: the
+  // name in the payload is just a string, and it is not what is trusted.
+  netM.send({ t: 'duel-relay', to: HOST, data: { k: 'hello', name: GUEST, classId: 'mage', level: 9 } });
+  check('a bystander cannot re-seat themselves by borrowing the guest’s name',
+    host.byCid.get(DUEL_CIDS[1]).level === 1 &&
+    host.owners.get(host.byCid.get(DUEL_CIDS[1]).id).owner === GUEST);
+}
+{
+  const d = track(duel());
+  faceOff(d);
+  d.battle.resolveAttack(hostUnit(d), guestUnit(d));
+  d.bc.endUnit(hostUnit(d)); // the guest's phase is now open
+  const hp = hostUnit(d).stats.hp;
+
+  // The SAME command, from two different senders. Only one of them is in
+  // this duel.
+  const swing = { type: 'attack', cid: DUEL_CIDS[1], target: DUEL_CIDS[0] };
+  d.netM.send({ t: 'duel-relay', to: HOST, data: { k: 'cmd', ...swing } });
+  check('a bystander’s command does not land', hostUnit(d).stats.hp === hp);
+  check('the guest’s unit was not spent by it', guestUnit(d).acted === false);
+  check('the bystander is not even answered with a refusal',
+    d.rejects.length === 0 && d.heard.length === 0);
+
+  cmd(d, swing);
+  check('the real opponent’s identical command still succeeds', hostUnit(d).stats.hp < hp);
+  check('and it was accepted, not refused', d.rejects.length === 0);
+
+  // Impersonation on the way in: the transport stamps `from`, so claiming to
+  // be the guest in the payload changes nothing.
+  const turn = d.battle.turn;
+  d.netM.send({ t: 'duel-relay', to: HOST, from: GUEST, data: { k: 'cmd', type: 'wait', cid: DUEL_CIDS[1] } });
+  check('a bystander cannot forge the opponent’s name onto a command',
+    d.battle.turn === turn && d.heard.length === 0);
+}
+{
+  const d = track(duel());
+  const hp = replica(d, DUEL_CIDS[0]).stats.hp;
+  const turn = d.guest.shadow.turn;
+
+  // Only the host is authoritative for this duel. A bystander's forged
+  // stream must not reach the guest's screen.
+  d.netM.send({ t: 'duel-relay', to: GUEST, data: { k: 'phase', phase: 'player', turn: 99, units: [] } });
+  check('the guest ignores a phase frame from anyone but the host',
+    d.guest.shadow.turn === turn);
+  d.netM.send({
+    t: 'duel-relay',
+    to: GUEST,
+    data: { k: 'fx', kind: 'attack', attacker: DUEL_CIDS[1], target: DUEL_CIDS[0], dmg: 999, tHp: 0 },
+  });
+  check('nor a forged blow against the host’s duellist',
+    replica(d, DUEL_CIDS[0]).stats.hp === hp);
+  d.netM.send({ t: 'duel-relay', to: GUEST, data: { k: 'end', result: 'won' } });
+  check('nor a forged verdict', d.guest.shadow.phase !== 'won' && d.ui.exited === undefined);
+  d.netM.send({ t: 'duel-relay', to: GUEST, data: { k: 'start', arena: 'x', units: [], log: [] } });
+  check('nor a second arena to replace the one it is fighting in',
+    d.guest.shadow.units.length === 2);
+
+  // ...and the host's own frames still get through the same guard.
+  d.host.syncPhase(true);
+  check('the host’s frames are unaffected by the guard',
+    d.guest.shadow.turn === d.battle.turn && d.guest.shadow.phase === d.battle.phase);
 }
 
 // ---- phase ownership -------------------------------------------------------
