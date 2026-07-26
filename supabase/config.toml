@@ -65,3 +65,9 @@ verify_jwt = true
 verify_jwt = true
 [functions.duel-cancel]
 verify_jwt = true
+# Ending a fight. Both find the duel from the CALLER'S OWN user id, which is
+# what makes them unspoofable — there is no duel id in either request.
+[functions.duel-forfeit]
+verify_jwt = true
+[functions.duel-claim]
+verify_jwt = true

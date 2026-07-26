@@ -281,3 +281,91 @@ export async function cancelFlow(
   }
   return ok({ cancelled: !!live }, sends);
 }
+
+// ------------------------------------------------- finishing a live fight
+
+/** Both endings below settle a duel that is actually being FOUGHT, so they are
+ *  the same three steps every time and differ only in who won and why:
+ *
+ *    1. the row reaches a terminal status, so neither player stays "already
+ *       duelling" and both are free to duel again immediately
+ *    2. each side is told, from ITS OWN point of view (`youWon`), because a
+ *       shared payload would make one of the two screens lie
+ *    3. spectators are NOT told from here — they never see a user:<id> mailbox.
+ *       The surviving client broadcasts the end on the room channel so
+ *       js/duelSpectator.js can clear its HP bars and crossed-sword tags
+ *       instead of leaving them hanging over two idle avatars.
+ *
+ *  Status is "done" rather than "cancelled": a fight that was actually decided
+ *  is not the same event as somebody backing out of the handshake, and the row
+ *  is the only record of which happened. */
+async function settle(
+  store: DuelStore,
+  live: DuelRow,
+  winner: { id: string; name: string },
+  loser: { id: string; name: string },
+  reason: string,
+): Promise<FlowResult> {
+  await store.endDuel(live.id, "done");
+  const shape = (forUserId: string) => ({
+    duel: live.id,
+    winner: winner.name,
+    loser: loser.name,
+    youWon: forUserId === winner.id,
+    reason,
+  });
+  return ok({ ended: true, winner: winner.name }, [
+    { userId: live.a_user, event: "duel-ended", payload: shape(live.a_user) },
+    { userId: live.b_user, event: "duel-ended", payload: shape(live.b_user) },
+  ]);
+}
+
+/** duel-forfeit — "I yield". The caller loses the duel they are in.
+ *
+ *  A bystander cannot spoof this, and not because of a check written here: the
+ *  duel is looked up BY THE CALLER'S OWN user id (countdownOf), so a player who
+ *  is not in a duel has nothing to forfeit and someone else's duel is simply
+ *  not reachable from their identity. There is no duel id in the request to
+ *  tamper with. */
+export async function forfeitFlow(
+  store: DuelStore,
+  me: { id: string },
+): Promise<FlowResult> {
+  const live = await store.countdownOf(me.id);
+  if (!live) return ok({ ended: false }); // nothing to yield — not an error
+
+  const myName = await store.displayName(me.id);
+  const foe = foeOf(live, me.id);
+  return settle(store, live, foe, { id: me.id, name: myName }, `${myName} forfeited`);
+}
+
+/** duel-claim — "my opponent abandoned the fight, award me the win".
+ *
+ *  The caller does not get to assert that. THIS decides it, from the same
+ *  presence rule challengeFlow and acceptFlow already apply: a duellist is
+ *  present if their row is fresh (presenceFresh, PRESENCE_TTL_MS) AND still in
+ *  the room the duel is being fought in. Closing the tab and dropping the
+ *  connection both stop the heartbeat, so they fail the first half; walking out
+ *  mid-fight fails the second. One definition of "gone", three ways to trigger
+ *  it, and no second notion of offline invented here.
+ *
+ *  If they are still standing there, the claim is refused — which is what stops
+ *  a losing duellist from stealing a win by asserting a disconnect. */
+export async function claimFlow(
+  store: DuelStore,
+  me: { id: string },
+  nowMs: number,
+): Promise<FlowResult> {
+  const live = await store.countdownOf(me.id);
+  if (!live) return ok({ ended: false });
+
+  const foe = foeOf(live, me.id);
+  const theirs = await store.presenceOf(foe.id);
+  if (presenceFresh(theirs, nowMs) && theirs!.room_id === live.room_id) {
+    return no(`${foe.name} is still here`);
+  }
+
+  const myName = await store.displayName(me.id);
+  const why = presenceFresh(theirs, nowMs) ? "left the room" : "disconnected";
+  return settle(store, live, { id: me.id, name: myName }, foe, `${foe.name} ${why}`);
+}

@@ -21,6 +21,8 @@ import {
   acceptFlow,
   declineFlow,
   cancelFlow,
+  forfeitFlow,
+  claimFlow,
 } from '../supabase/functions/_shared/duelFlow.ts';
 import {
   DUEL_ASK_TTL_MS,

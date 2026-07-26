@@ -240,6 +240,12 @@ export class CoopLeader {
     if (e.target && e.target.stats) {
       out.tHp = e.target.stats.hp;
       out.tShield = e.target.shield;
+      // Root is an authoritative ECHO for the same reason HP is. serializeFx
+      // deliberately strips a skill down to { name, kind }, so `status` never
+      // crosses the wire and a replica could not re-derive a root even in
+      // principle — it would show the damage and miss the fact that the victim
+      // has just lost their next move.
+      out.tRooted = e.target.rooted || 0;
     }
     return out;
   }
@@ -255,6 +261,8 @@ export class CoopLeader {
         hp: u.stats ? u.stats.hp : 0,
         maxHp: u.stats ? u.stats.maxHp : 0,
         shield: u.shield,
+        rooted: u.rooted || 0,
+        rootedThisTurn: !!u.rootedThisTurn,
         moved: u.moved,
         acted: u.acted,
         alive: u.alive,
@@ -884,6 +892,7 @@ export class CoopMember {
     if (e.target && e.target.stats && d.tHp != null) {
       e.target.stats.hp = d.tHp;
       e.target.shield = d.tShield || 0;
+      if (d.tRooted != null) e.target.rooted = d.tRooted;
     }
     // world side-effects replicas must mirror
     if (this.shadow) {
@@ -919,6 +928,11 @@ export class CoopMember {
         u.stats.maxHp = spec.maxHp;
       }
       u.shield = spec.shield;
+      // rootedThisTurn is what moveTiles actually reads, and it is resolved by
+      // resetTurn on the AUTHORITY's units only — a replica never runs one, so
+      // both halves ride the snapshot.
+      if (spec.rooted != null) u.rooted = spec.rooted;
+      if (spec.rootedThisTurn != null) u.rootedThisTurn = spec.rootedThisTurn;
       u.moved = spec.moved;
       u.acted = spec.acted;
       if (!spec.alive && u.stats) u.stats.hp = 0;

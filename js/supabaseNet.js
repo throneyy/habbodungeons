@@ -130,6 +130,10 @@ export class SupabaseNet {
       'invited', 'declined', 'party',
       'trade-asked', 'trade-state', 'trade-done', 'trade-cancelled', 'trade-error',
       'duel-asked', 'duel-state', 'duel-declined', 'duel-cancelled', 'duel-error',
+      // How a FOUGHT duel ends: forfeit, or an opponent who abandoned it. The
+      // server decides both and tells each side from its own point of view
+      // (youWon), so neither client has to trust the other's report.
+      'duel-ended',
       // 'duel-watch' is NOT here: it is not a mailbox event. It is synthesised
       // in _onRelayed from room-channel traffic addressed to somebody else.
     ]) relay(e);
@@ -447,10 +451,16 @@ export class SupabaseNet {
     } catch {
       res = null; // invokeFn already swallows fetch failures; belt and braces
     }
-    if (res && res.ok) return;
+    // The result is RETURNED as well as acted on. Almost every caller ignores
+    // it (the server answers on a mailbox), but the duel watchdog needs to know
+    // whether its claim was granted or refused, and inventing a second call
+    // path for that would be a second place for auth and error handling to
+    // drift out of step.
+    if (res && res.ok) return res;
     const reason = (res && res.reason) || 'the server rejected that.';
     console.warn(`[habbo-dungeons] ${t} failed: ${reason}`);
     this.emit('net-error', { t, reason });
+    return res;
   }
 
   disconnect() {
@@ -485,4 +495,8 @@ const SEND_FN = {
   'duel-accept': { name: 'duel-accept', body: (m) => ({ from: m.from }) },
   'duel-decline': { name: 'duel-decline', body: (m) => ({ from: m.from }) },
   'duel-cancel': { name: 'duel-cancel', body: () => ({}) },
+  // Ending a live fight. Neither carries a duel id: the server finds the duel
+  // from the caller's own identity, which is what makes them unspoofable.
+  'duel-forfeit': { name: 'duel-forfeit', body: () => ({}) },
+  'duel-claim': { name: 'duel-claim', body: () => ({}) },
 };

@@ -194,10 +194,15 @@ export function furniSprites(id, opts = {}) {
 
 // Humanoid enemies are real Habbo avatars (habbo-imaging), same as the leader.
 const figureCache = new Map();
-export function figureSprites(figure, size = 'm') {
-  const key = `${figure}|${size}`;
+// `classId` picks the CARRIED WEAPON (AvatarSprites -> weaponFor): a ranger
+// draws a bow, a mage a wand, a cleric a hammer. It defaults to 'fighter', so
+// before duels started using this a duelling ranger silently held a sword. It
+// is part of the cache key for the same reason — two classes sharing one Habbo
+// figure are two different sprite sets.
+export function figureSprites(figure, size = 'm', classId = 'fighter') {
+  const key = `${figure}|${size}|${classId}`;
   if (!figureCache.has(key)) {
-    const sp = new AvatarSprites(figure, size);
+    const sp = new AvatarSprites(figure, size, classId);
     // fire-and-forget; outside a browser (tests) Image is missing — stay not-ready
     Promise.resolve()
       .then(() => sp.load())

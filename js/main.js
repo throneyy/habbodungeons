@@ -1474,6 +1474,9 @@ infostand.onDuel = (name) => duelUI.ask(name);
 infostand.canDuel = () => duelUI.canDuel() && !tradeUI.open;
 // GO! landed on both screens off one server anchor: boot the arena.
 duelUI.onReady = (state) => startDuel(state);
+// A fought duel ending: forfeit, or an opponent who abandoned it. Server-decided
+// and stamped per recipient (youWon), so each screen states its own outcome.
+net.on('duel-ended', (m) => onDuelEnded(m));
 
 // ---- co-op descents ---------------------------------------------------------
 // Leader: hosts the run — CoopLeader streams the battle to the party.
@@ -1596,11 +1599,19 @@ function myTile() {
 function myDuellist() {
   const r = Run.hasSave() ? Run.load(buildDungeon) : null;
   const leader = r && (r.squad.find((m) => m.leader) || r.squad[0]);
+  const eq = (leader && leader.equipment) || {};
   return {
     name: myName(),
     classId: Identity.classId() || 'fighter',
     figure,
     level: leader ? leader.level : 1,
+    // The character, as IDS. A duel is fought by the hero you have actually
+    // been playing — the Origins tree skills you unlocked and the gear your
+    // run leader is wearing — exactly what Run.instantiateSquad hands a dungeon
+    // battle. Ids, not numbers: the receiver resolves them against its own
+    // tables, so nothing here can invent a skill or a stat bonus.
+    skillIds: Identity.unlockedSkills(),
+    equipIds: ['weapon', 'armor', 'trinket'].map((slot) => eq[slot]).filter(Boolean),
   };
 }
 
@@ -1699,6 +1710,42 @@ function duelScreen() {
   panel.classList.remove('hidden');
 }
 
+// Watch for an opponent who stopped being there: closed the tab, dropped the
+// connection, or walked out of the room mid-fight.
+//
+// The client never decides this. It asks (duel-claim) and the SERVER applies
+// the same presence rule the challenge and the accept already applied — fresh
+// heartbeat AND still in the duel's room — so all three abandonments are one
+// definition of "gone" and a losing duellist cannot steal a win by asserting a
+// disconnect. A refusal ("X is still here") is the normal answer and is
+// ignored; the poll simply keeps asking.
+//
+// Only the HOST polls. Both clients asking would race for the same row, and
+// the host is the one that already owns the fight's authority.
+let duelClaim = null;
+
+function startDuelWatchdog() {
+  let quietSince = 0;
+  duelClaim = setInterval(async () => {
+    if (!duelHost || !duelHost.battle) return;
+    // Cheap local hint first: their avatar has gone from the room roster, or
+    // their relay has fallen silent. Presence is the server's business, but
+    // there is no reason to poll an edge function every few seconds while the
+    // opponent is visibly standing there swinging.
+    const theirs = remote.units.get(String(duelHost.opponent || '').toLowerCase());
+    const quiet = !theirs || (performance.now() - (duelHost.lastHeardAt || 0) > 12000);
+    if (!quiet) { quietSince = 0; return; }
+    if (!quietSince) { quietSince = performance.now(); return; }
+    if (performance.now() - quietSince < 4000) return; // let a hiccup settle
+    try {
+      const res = await net.send({ t: 'duel-claim' });
+      // A win is announced by the server on BOTH mailboxes (duel-ended), so
+      // nothing is done with the response here beyond stopping the poll.
+      if (res && res.ok && res.ended) clearInterval(duelClaim);
+    } catch { /* offline ourselves: the next tick tries again */ }
+  }, 3000);
+}
+
 function startDuel(state) {
   if (duelHost || duelGuest) return; // one duel at a time
   duelUI.close(); // the countdown window has said its piece
@@ -1717,9 +1764,11 @@ function startDuel(state) {
         result === 'aborted' ? 0 : 1200
       );
     game.setController(battle);
+    battle.onForfeit = () => forfeitDuel();
     duelHost.arm({ bc: battle, me, room: game.room, myTile: me.at });
     startDuelSync();
     startDuelFrame();
+    startDuelWatchdog();
     return;
   }
   duelGuest = new DuelGuest(net, game, battleDom(), myName);
@@ -1728,11 +1777,36 @@ function startDuel(state) {
     // standing in the room watching it, and covering the room with an overlay
     // is exactly what an in-place duel is not.
     waiting: (html) => duelUI.flash(html.replace(/<[^>]*>/g, '')),
-    battleReady: () => duelScreen(),
+    battleReady: () => {
+      duelScreen();
+      if (duelGuest && duelGuest.controller) duelGuest.controller.onForfeit = () => forfeitDuel();
+    },
     exit: (reason) => endDuel(reason),
   }, me);
   startDuelSync();
   startDuelFrame();
+}
+
+// "I yield." Not a battle command and not relayed: the server ends the duel and
+// both sides hear about it on their own mailbox, so a forfeit cannot be forged
+// by whoever happens to be hosting.
+async function forfeitDuel() {
+  if (!duelHost && !duelGuest) return;
+  try {
+    await net.send({ t: 'duel-forfeit' });
+  } catch {
+    // Offline: end our own screen anyway rather than trapping the player in a
+    // fight they have quit. The row is settled by the other side's claim.
+    endDuel('You forfeited.');
+  }
+}
+
+// The server settled a live fight (a forfeit, or an opponent who abandoned it).
+// `youWon` is stamped per recipient, so each screen states its own outcome.
+function onDuelEnded(msg) {
+  if (!duelHost && !duelGuest) return;
+  const why = msg && msg.reason ? ` (${msg.reason})` : '';
+  endDuel(msg && msg.youWon ? `You win the duel!${why}` : `You lost the duel.${why}`);
 }
 
 // Duel over (a KO, a refusal, or the connection). Put the room back exactly as
@@ -1742,7 +1816,15 @@ function endDuel(reason) {
   const opponent = (duelHost && duelHost.opponent) || (duelGuest && duelGuest.leaderName) || null;
   clearInterval(duelSync);
   duelSync = null;
+  clearInterval(duelClaim);
+  duelClaim = null;
   stopDuelFrame();
+  // Tell the room. Spectators (js/duelSpectator.js) learn a duel is over from
+  // an `end` frame on the room channel, and the two mailbox `duel-ended`
+  // messages never reach them — without this the HP bars and crossed-sword
+  // tags hang over two idle avatars until the 90s stale sweep. Both duellists
+  // send it: whichever is still connected covers the one that is not.
+  if (opponent) net.send({ t: 'duel-relay', to: opponent, data: { k: 'end', result: 'over' } });
   if (duelHost) {
     for (const u of duelHost.bc && duelHost.bc.duelUnits ? duelHost.bc.duelUnits : []) {
       const i = game.units.indexOf(u);

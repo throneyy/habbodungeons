@@ -62,10 +62,12 @@
 import { Battle } from './battle.js';
 import { Unit } from './units.js';
 import { CoopLeader, CoopMember, SpectateController } from './coopBattle.js';
+import { CLASSES } from './classes.js';
+import { treeSkillSpecs } from './skills.js';
+import { sumBonuses } from './items.js';
 import { hpTint } from './battleController.js';
 import { figureSprites } from './monsterSprites.js';
 import { rotationBetween } from './pathfinder.js';
-import { tileDistance } from './classes.js';
 
 export const DUEL_CIDS = ['p0', 'e0']; // host unit, guest unit
 
@@ -100,92 +102,169 @@ function standable(room, x, y, taken) {
   return !(taken && taken.x === x && taken.y === y);
 }
 
-// Neighbours in a fixed order, so two clients handed the same inputs pick the
-// same tile. Orthogonals first (a duel reads better square-on than cornered).
-const NEIGHBOURS = [
-  { dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 },
-  { dx: 1, dy: -1 }, { dx: 1, dy: 1 }, { dx: -1, dy: 1 }, { dx: -1, dy: -1 },
-];
-
 /** Where the two fighters start.
  *
- *  Remote players do not block tiles, so everyone who walks into a room piles
- *  onto its spawn: the first live duel opened with BOTH fighters on tile (6,7),
- *  rendering one sprite stacked on the other. A duel must never begin like
- *  that, so this is the rule:
+ *  MINIMAL INTERVENTION. A duel is fought in place, so the fighters keep the
+ *  tiles they are actually standing on — however far apart that is. Closing the
+ *  distance is a move, taken on a turn, and movement is part of the game:
+ *  forcing the two together would delete the opening of every duel and make
+ *  range, positioning and a ranger's entire reason to exist meaningless.
  *
- *    • already apart, both standable, and within attack reach → fight exactly
- *      where you stand. This is the normal case and the whole point of an
- *      in-place duel.
- *    • otherwise → anchor on the host's tile (or the nearest standable tile to
- *      it) and seat the guest on the first free neighbour, facing each other.
+ *  There are exactly two things to repair, and nothing else:
+ *
+ *    • BOTH ON ONE TILE. Remote players do not block tiles, so everyone who
+ *      walks into a room piles onto its spawn — the first live duel opened with
+ *      both fighters on (6,7), one sprite drawn on top of the other.
+ *    • STANDING SOMEWHERE UNSTANDABLE. A stale presence row, or furni dropped
+ *      on them since; the engine cannot run a fight from a blocked tile.
+ *
+ *  Repairs are minimal: whoever has to move goes to the NEAREST standable tile,
+ *  not to a tile chosen for tactical convenience. Both are then turned to face
+ *  each other, which costs nothing and reads better.
  *
  *  Pure and deterministic: same room + same tiles in, same answer out. The HOST
  *  runs it and ships the result in the start frame, so agreement never depends
  *  on both clients computing it. */
 export function placeDuellists(room, hostAt, guestAt) {
   const face = (a, b) => ({ ...a, dir: rotationBetween(a.x, a.y, b.x, b.y) });
-  const apart = hostAt && guestAt && (hostAt.x !== guestAt.x || hostAt.y !== guestAt.y);
-  if (
-    apart &&
-    standable(room, hostAt.x, hostAt.y) &&
-    standable(room, guestAt.x, guestAt.y, hostAt) &&
-    tileDistance(hostAt.x, hostAt.y, guestAt.x, guestAt.y) <= 1
-  ) {
-    return [face(hostAt, guestAt), face(guestAt, hostAt)];
-  }
+  if (!hostAt || !guestAt) return null;
 
-  // Anchor: the host's tile if it is usable, else the closest tile that is.
-  let anchor = hostAt && standable(room, hostAt.x, hostAt.y) ? { x: hostAt.x, y: hostAt.y } : null;
-  if (!anchor) anchor = nearestStandable(room, hostAt || room.spawn);
-  if (!anchor) return null; // a room with nowhere to stand cannot host a duel
+  // The host settles first so the guest can be kept off whatever tile it ends
+  // up on. Neither is moved unless its own tile is unusable.
+  const host = standable(room, hostAt.x, hostAt.y)
+    ? { x: hostAt.x, y: hostAt.y }
+    : nearestStandable(room, hostAt);
+  if (!host) return null; // a room with nowhere to stand cannot host a duel
 
-  for (const n of NEIGHBOURS) {
-    const spot = { x: anchor.x + n.dx, y: anchor.y + n.dy };
-    if (standable(room, spot.x, spot.y, anchor)) return [face(anchor, spot), face(spot, anchor)];
-  }
-  return null; // boxed in on all eight sides
+  const guest = standable(room, guestAt.x, guestAt.y, host)
+    ? { x: guestAt.x, y: guestAt.y }
+    : nearestStandable(room, guestAt, host);
+  if (!guest) return null; // boxed in with nowhere to put the second fighter
+
+  return [face(host, guest), face(guest, host)];
 }
 
-// Outward ring search for a tile somebody can stand on.
+// Outward ring search for the closest tile somebody can stand on. `taken` is a
+// tile already claimed by the other duellist.
 //
 // The origin is CLAMPED into the room first. A duellist whose reported tile is
 // outside the map (a stale presence row, a client that walked through a door)
 // would otherwise start the search miles away and the ring — bounded by the
 // room's own size — would never reach any floor at all, so the duel refused
 // itself with "no room to duel here" in a room that was mostly empty.
-function nearestStandable(room, from) {
+//
+// Rings are searched nearest-first so a displaced fighter moves as little as
+// possible: the point is to make the tile legal, not to reposition anyone.
+function nearestStandable(room, from, taken = null) {
   const ox = Math.min(Math.max(from ? from.x : 0, 0), room.w - 1);
   const oy = Math.min(Math.max(from ? from.y : 0, 0), room.h - 1);
-  if (standable(room, ox, oy)) return { x: ox, y: oy };
+  if (standable(room, ox, oy, taken)) return { x: ox, y: oy };
   for (let r = 1; r <= Math.max(room.w, room.h); r++) {
+    // Orthogonals first at each radius: a displaced fighter stepping straight
+    // off a tile reads better than one sliding diagonally, and fixing the order
+    // keeps the answer deterministic.
+    for (const [dx, dy] of [[0, -r], [r, 0], [0, r], [-r, 0]]) {
+      if (standable(room, ox + dx, oy + dy, taken)) return { x: ox + dx, y: oy + dy };
+    }
     for (let dy = -r; dy <= r; dy++) {
       for (let dx = -r; dx <= r; dx++) {
         if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-        if (standable(room, ox + dx, oy + dy)) return { x: ox + dx, y: oy + dy };
+        if (standable(room, ox + dx, oy + dy, taken)) return { x: ox + dx, y: oy + dy };
       }
     }
   }
   return null;
 }
 
+/** The most a duellist may claim to be. A duel is fought between two CLIENTS,
+ *  and the guest describes its own character, so these are the bounds the host
+ *  applies to anything it is told. Generous — they exist to stop absurdity, not
+ *  to second-guess a legitimate build. */
+export const DUEL_MAX_LEVEL = 30;
+const EQUIP_SLOTS = 3; // weapon / armor / trinket (js/run.js SLOTS)
+
+/** Normalise a character spec into something safe to build a Unit from.
+ *
+ *  THIS IS THE TRUST BOUNDARY. The guest sends its own stat block (it is the
+ *  only thing that knows its build), so the host must not simply believe it: a
+ *  hand-edited hello could otherwise claim level 9999, a skill with power 500,
+ *  or an equipment bonus of +1000 atk, and the host would dutifully construct
+ *  it and simulate the fight with it.
+ *
+ *  The rule that makes this safe is that THE WIRE CARRIES IDENTIFIERS, NEVER
+ *  NUMBERS. Skill ids resolve through treeSkillSpecs() against js/skills.js,
+ *  and equipment ids through sumBonuses() against js/items.js — both of them
+ *  the RECEIVER's own tables. An id that does not exist is dropped; an id that
+ *  does resolves to the same spec everyone else in the game has. So the worst
+ *  a liar can do is claim a build they did not earn (a real unlocked skill,
+ *  real gear), never invent one that does not exist.
+ *
+ *  Levels are the one bare number, so they are clamped.
+ *
+ *  What this deliberately does NOT do is verify ENTITLEMENT — whether the guest
+ *  really unlocked those skills or owns that gear. That needs the server, and
+ *  the data is already there (`profiles.unlocked_skills`, `fishing_level`,
+ *  `gardening_level`), so the fix is a host-side read of the opponent's profile
+ *  row rather than anything in this file. See README. */
+export function duellistSpec(raw = {}) {
+  const classId = CLASSES[raw.classId] ? raw.classId : 'fighter';
+  const level = Math.min(Math.max(Math.round(Number(raw.level) || 1), 1), DUEL_MAX_LEVEL);
+  // Ids in, canonical specs out. Unknown ids vanish (treeSkillSpecs filters).
+  const skillIds = (Array.isArray(raw.skillIds) ? raw.skillIds : [])
+    .filter((id) => typeof id === 'string').slice(0, 12);
+  const equipIds = (Array.isArray(raw.equipIds) ? raw.equipIds : [])
+    .filter((id) => typeof id === 'string').slice(0, EQUIP_SLOTS);
+  return {
+    classId,
+    level,
+    skillIds,
+    equipIds,
+    figure: typeof raw.figure === 'string' ? raw.figure : null,
+    at: raw.at && Number.isFinite(raw.at.x) && Number.isFinite(raw.at.y)
+      ? { x: raw.at.x | 0, y: raw.at.y | 0, dir: raw.at.dir | 0 }
+      : null,
+  };
+}
+
 /** One duellist as a Unit. `seat` 0 = host (team 'player'), 1 = guest (team
  *  'enemy'): the engine's two sides, handed out by who threw the gauntlet.
- *  The tile is never defaulted — an in-place duel has no spawn to fall back
- *  on, so a spec without one is a bug that should surface, not be papered
- *  over by dropping a fighter in a corner. */
+ *
+ *  A duellist is the player's ACTUAL character, not a bare class template: the
+ *  unlocked Water/Nature tree skills they ground for, the equipment bonuses
+ *  they are wearing, their level and their class weapon — exactly what
+ *  Run.instantiateSquad hands a dungeon battle. Anything less would make a duel
+ *  a different, smaller game than the rest of Habbo Dungeons, and would quietly
+ *  delete the reward for every hour spent levelling.
+ *
+ *  The tile is never defaulted — an in-place duel has no spawn to fall back on,
+ *  so a spec without one is a bug that should surface, not be papered over by
+ *  dropping a fighter in a corner. */
 export function duelUnit(room, spec, seat) {
+  const safe = duellistSpec(spec);
   const u = new Unit(room, null, spec.x, spec.y, {
     team: seat === 0 ? 'player' : 'enemy',
-    classId: spec.classId || 'fighter',
+    classId: safe.classId,
     name: spec.name || (seat === 0 ? 'Challenger' : 'Defender'),
-    level: spec.level || 1,
+    level: safe.level,
     dir: spec.dir ?? 4,
+    // Resolved from the RECEIVER's own tables, never taken off the wire.
+    skills: treeSkillSpecs(safe.skillIds),
+    bonuses: sumBonuses(safe.equipIds),
   });
+  // The host's authoritative stat block, echoed verbatim onto the replica so
+  // the two clients cannot disagree about HP even if their item tables ever
+  // drift. Only present on the start frame's units, never on a hello.
   if (spec.stats) u.stats = { ...spec.stats };
+  u.equipIds = safe.equipIds;
+  u.skillIds = safe.skillIds;
   u.owner = spec.owner || spec.name || null;
   u.duellist = true; // renderer/roster: this 'enemy' is a person
-  if (spec.figure) u.sprites = figureSprites(spec.figure, room.zoom === 1 ? 'm' : 's');
+  // The class weapon rides on the SPRITE SET, not the unit (js/sprites.js
+  // resolves it via weaponFor). figureSprites defaulted to 'fighter', so a
+  // duelling ranger drew a sword instead of a bow — pass the real calling.
+  if (spec.figure) {
+    u.sprites = figureSprites(spec.figure, room.zoom === 1 ? 'm' : 's', safe.classId);
+  }
   return u;
 }
 
@@ -207,6 +286,7 @@ export class DuelHost extends CoopLeader {
     this.pendingHello = null; // the guest arrived before the screen did
     this.onBoot = null; // (payload) => void — main.js reveals the battle panel
     this.onDuelEnd = null; // (result) => void — 'won' means the HOST won
+    this.lastHeardAt = 0; // last frame from the opponent (watchdog hint)
     this.room = null; // the room we are BOTH standing in (set by arm())
     this.myTile = null; // where I am standing right now (set by arm())
   }
@@ -259,6 +339,11 @@ export class DuelHost extends CoopLeader {
   }
 
   onRelay(msg) {
+    // When we last heard anything at all from the opponent. The abandonment
+    // watchdog in main.js uses it as a cheap local hint before asking the
+    // server (which is the only thing that decides whether they are really
+    // gone — see claimFlow).
+    if (this.fromOpponent(msg)) this.lastHeardAt = performance.now();
     // The duel stream rides the ROOM channel, so every player standing in the
     // room can send a duel-relay frame — this is the only place that says who
     // is actually in this duel. Without it a bystander could broadcast a
@@ -331,6 +416,15 @@ export class DuelHost extends CoopLeader {
       units: [mine, theirs].map((u) => ({ ...this.serializeUnit(u), team: u.team })),
       log: battle.log.slice(),
     };
+    this.lastStart.units.forEach((spec, i) => {
+      // Co-op's serializeUnit has no notion of a player's own character (its
+      // units are a squad the leader already owns). A duel's do: both clients
+      // and every spectator must build the SAME two fighters, skills and gear
+      // included, so the ids ride along with the stat block.
+      const u = [mine, theirs][i];
+      spec.skillIds = u.skillIds || [];
+      spec.equipIds = u.equipIds || [];
+    });
     this.relay(this.lastStart);
     this.syncPhase(true);
     if (this.onBoot) this.onBoot(this.lastStart);
@@ -384,6 +478,11 @@ export class DuelGuestController extends SpectateController {
     } else if (shadow.phase === 'player') {
       this.btn(`${foe} is moving...`, null, true);
     }
+    // Same as the host's: yielding is not a battle command and does not touch
+    // the relay. The server decides it and tells both mailboxes.
+    if (this.onForfeit && (shadow.phase === 'player' || shadow.phase === 'enemy')) {
+      this.btn('Forfeit', () => this.onForfeit());
+    }
 
     dom.roster.innerHTML = '';
     for (const u of shadow.units) {
@@ -434,6 +533,11 @@ export class DuelGuest extends CoopMember {
         classId: me.classId,
         figure: me.figure,
         level: me.level,
+        // The character, as IDENTIFIERS. The host resolves them against its own
+        // js/skills.js and js/items.js (duellistSpec), so this cannot inject a
+        // skill or a stat bonus that does not exist in the game.
+        skillIds: me.skillIds || [],
+        equipIds: me.equipIds || [],
         at: me.at || null, // my tile: the host places us both from this
       },
     });

@@ -387,6 +387,14 @@ export class BattleController {
         this.btn('End Turn', () => this.endTurn());
       }
     }
+    // Yielding is available on your own turn, from either seat, and is the ONLY
+    // action in a duel that is not a battle command: it does not go through the
+    // relay at all. The server ends the duel (duel-forfeit) and both clients
+    // learn about it from their own mailbox, so a forfeit cannot be forged by
+    // whoever happens to be hosting.
+    if (this.duel && this.onForfeit && (b.phase === 'player' || b.phase === 'enemy')) {
+      this.btn('Forfeit', () => this.onForfeit());
+    }
 
     this.dom.roster.innerHTML = '';
     for (const u of b.units) {

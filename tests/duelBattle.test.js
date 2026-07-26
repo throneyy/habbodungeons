@@ -23,10 +23,11 @@ import { Room } from '../js/room.js';
 import { Unit } from '../js/units.js';
 import { Battle } from '../js/battle.js';
 import {
-  DuelHost, DuelGuest, DUEL_CIDS, hostsDuel,
-  placeDuellists, blockedSnapshot, duelRoomView,
+  DuelHost, DuelGuest, DUEL_CIDS, DUEL_MAX_LEVEL, hostsDuel,
+  placeDuellists, blockedSnapshot, duelRoomView, duelUnit, duellistSpec,
 } from '../js/duelBattle.js';
 import { DuelSpectator } from '../js/duelSpectator.js';
+import { rotationBetween } from '../js/pathfinder.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -204,10 +205,23 @@ function duel(opts = {}) {
   // tiles, so everyone who walks in is stacked on the room's spawn.
   const hostAt = opts.hostAt || { x: 6, y: 7, dir: 4 };
   const guestAt = opts.guestAt || { x: 6, y: 7, dir: 4 };
-  guest.activate(HOST, ui, { name: GUEST, classId: opts.guestClass || 'fighter', level: 1, at: guestAt });
+  guest.activate(HOST, ui, {
+    name: GUEST,
+    classId: opts.guestClass || 'fighter',
+    level: opts.guestLevel || 1,
+    skillIds: opts.guestSkillIds || [],
+    equipIds: opts.guestEquipIds || [],
+    at: guestAt,
+  });
   host.arm({
     bc,
-    me: { name: HOST, classId: opts.hostClass || 'fighter', level: 1 },
+    me: {
+      name: HOST,
+      classId: opts.hostClass || 'fighter',
+      level: opts.hostLevel || 1,
+      skillIds: opts.hostSkillIds || [],
+      equipIds: opts.hostEquipIds || [],
+    },
     room: hostRoom,
     myTile: hostAt,
   });
@@ -232,6 +246,17 @@ function faceOff(d) {
 
 const live = [];
 const track = (d) => (live.push(d), d);
+
+// Moves ANIMATE: handleCommand starts the walk and Avatar.update consumes one
+// tile per WALK_MS tick, so a unit is not standing on its destination the
+// instant the command returns. Drive the tick clock forward rather than
+// sleeping — the walk is on a fixed tick timeline, not on wall-clock.
+function settle(...units) {
+  for (let t = 0; t < 40000; t += 500) {
+    for (const u of units) u.update(t);
+  }
+  return units;
+}
 
 // What an ONLOOKER's client is, reduced to what the spectator touches: a
 // renderer it queues effects into, and the remote avatars it dresses.
@@ -341,38 +366,54 @@ console.log('placement');
   const room = liveRoom();
   const dist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 
-  // The real case: everyone piled on the spawn.
+  // THE ONE THING PLACEMENT REPAIRS: two fighters on one tile. Remote players
+  // do not block tiles, so everyone who walks into a room piles onto its spawn
+  // — the first live duel opened with both fighters on (6,7), one sprite drawn
+  // on top of the other.
   const stacked = placeDuellists(room, { x: 6, y: 7 }, { x: 6, y: 7 });
-  check('two fighters on ONE tile are separated', dist(stacked[0], stacked[1]) === 1);
+  check('two fighters on ONE tile are separated', dist(stacked[0], stacked[1]) >= 1);
   check('the host keeps the tile it was standing on',
     stacked[0].x === 6 && stacked[0].y === 7);
+  check('the guest is moved the MINIMUM distance off it',
+    dist(stacked[0], stacked[1]) === 1);
   check('and they are turned to face each other',
     stacked[0].dir === 0 && stacked[1].dir === 4);
 
-  // Already fighting distance apart: leave them exactly where they are. This is
-  // the whole point of an in-place duel.
+  // EVERYTHING ELSE IS LEFT ALONE. A duel is fought in place: the fighters keep
+  // the tiles they are standing on, however far apart, and walk to each other
+  // on their turns. Forcing them together would delete the opening of every
+  // duel and make range and positioning meaningless.
   const adjacent = placeDuellists(room, { x: 3, y: 3 }, { x: 4, y: 3 });
   check('fighters already adjacent are NOT moved',
     adjacent[0].x === 3 && adjacent[0].y === 3 && adjacent[1].x === 4 && adjacent[1].y === 3);
   check('they are still turned to face each other',
     adjacent[0].dir === 2 && adjacent[1].dir === 6);
 
-  // Too far to fight: close the gap rather than opening on an unreachable foe.
   const apart = placeDuellists(room, { x: 1, y: 1 }, { x: 9, y: 8 });
-  check('fighters across the room are brought together', dist(apart[0], apart[1]) === 1);
-  check('the challenger still fights from where it stood',
-    apart[0].x === 1 && apart[0].y === 1);
+  check('fighters ACROSS THE ROOM are left exactly where they stand',
+    apart[0].x === 1 && apart[0].y === 1 && apart[1].x === 9 && apart[1].y === 8);
+  check('...so the distance between them is preserved', dist(apart[0], apart[1]) === 8);
+  check('...and they face each other across it',
+    apart[0].dir === rotationBetween(1, 1, 9, 8) && apart[1].dir === rotationBetween(9, 8, 1, 1));
 
-  // Never onto furni, and never onto the other fighter.
-  const byFurni = placeDuellists(room, { x: 9, y: 9 }, { x: 9, y: 9 });
-  check('nobody is placed onto a blocked prop tile',
-    !room.isBlocked(byFurni[0].x, byFurni[0].y) && !room.isBlocked(byFurni[1].x, byFurni[1].y));
-  check('...and the pair still ends up adjacent', dist(byFurni[0], byFurni[1]) === 1);
+  const mid = placeDuellists(room, { x: 2, y: 5 }, { x: 7, y: 5 });
+  check('a mid-range pair keeps its gap too', dist(mid[0], mid[1]) === 5);
+
+  // Never onto furni: the other repair. liveRoom() blocks (9,9).
+  const onFurni = placeDuellists(room, { x: 9, y: 9 }, { x: 3, y: 3 });
+  check('a fighter standing on furni is moved off it',
+    !room.isBlocked(onFurni[0].x, onFurni[0].y));
+  check('...to an adjacent tile, not across the room',
+    dist(onFurni[0], { x: 9, y: 9 }) === 1);
+  check('...and the OTHER fighter is not disturbed',
+    onFurni[1].x === 3 && onFurni[1].y === 3);
 
   // A host standing somewhere impossible still gets seated.
-  const offMap = placeDuellists(room, { x: 99, y: 99 }, { x: 99, y: 99 });
+  const offMap = placeDuellists(room, { x: 99, y: 99 }, { x: 4, y: 4 });
   check('a host on an impossible tile is relocated onto real floor',
     !!offMap && room.inBounds(offMap[0].x, offMap[0].y) && !room.isBlocked(offMap[0].x, offMap[0].y));
+  check('...and again the other fighter stays put',
+    offMap[1].x === 4 && offMap[1].y === 4);
 
   // Deterministic: the host decides and broadcasts, but the same inputs must
   // never yield two answers.
@@ -397,6 +438,19 @@ console.log('placement');
     replica(d, DUEL_CIDS[0]).y !== replica(d, DUEL_CIDS[1]).y);
   check('the host can reach the guest on turn 1',
     d.battle.attackTargets(h).includes(g));
+}
+{
+  // A duel thrown across the room STARTS across the room — movement is the
+  // opening move, not something placement quietly did for you.
+  const d = track(duel({ hostAt: { x: 2, y: 2 }, guestAt: { x: 8, y: 8 } }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('the fighters start where they were standing',
+    h.x === 2 && h.y === 2 && g.x === 8 && g.y === 8);
+  check('...out of reach, so somebody has to walk',
+    !d.battle.attackTargets(h).includes(g));
+  check('both clients agree on that opening',
+    replica(d, DUEL_CIDS[0]).x === 2 && replica(d, DUEL_CIDS[1]).x === 8);
 }
 
 // ---- the room has to be the same room --------------------------------------
@@ -670,6 +724,392 @@ console.log('phase ownership');
   check('the guest may end its own unit\u2019s turn', d.battle.turn === 2 && d.battle.phase === 'player');
   cmd(d, { type: 'attack', cid: DUEL_CIDS[1], target: DUEL_CIDS[0] });
   check('a spent phase cannot be replayed', d.rejects[d.rejects.length - 1] === 'not your phase');
+}
+
+// ---- the player's actual character travels into the duel --------------------
+// duelUnit used to build a bare class template: opts.skills and opts.bonuses
+// were never passed, so a duellist fought with no unlocked tree skills and no
+// equipment stats. A spec carrying 'whirlpool' produced a unit with skills [].
+// That made a duel a different, smaller game than a dungeon, and quietly
+// deleted the reward for every hour spent levelling.
+console.log('the character comes with you');
+{
+  const d = track(duel({
+    guestClass: 'ranger', guestLevel: 7,
+    guestSkillIds: ['whirlpool', 'net'],
+    guestEquipIds: ['iron_sword'],
+    hostAt: { x: 2, y: 5 }, guestAt: { x: 8, y: 5 },
+  }));
+  const g = guestUnit(d);
+
+  // Through the HELLO: the guest describes itself, the host builds it.
+  check('the guest\u2019s unlocked tree skills reached the host',
+    (g.skills || []).map((s) => s.id).join(',') === 'whirlpool,net');
+  check('...as real specs from the host\u2019s own skill table',
+    (g.skills || []).every((s) => s.power > 0 && s.kind));
+  check('the guest\u2019s level came with it', g.level === 7);
+  check('the guest\u2019s calling came with it', g.classId === 'ranger');
+
+  // Equipment shows up as STATS, which is the only way it can matter.
+  const bare = duelUnit(liveRoom(), { name: 'B', classId: 'ranger', level: 7, x: 1, y: 1 }, 1);
+  check('equipment bonuses raised the stats', g.stats.atk > bare.stats.atk);
+  check('...and a ranger keeps its ranged reach', g.stats.range === 3 && g.stats.min === 2);
+
+  // Through the START frame: the guest's own replica must be the same unit,
+  // or the two clients disagree about what a skill even does.
+  const r = replica(d, DUEL_CIDS[1]);
+  check('the start frame carried the skills back to the guest',
+    (r.skills || []).map((s) => s.id).join(',') === 'whirlpool,net');
+  check('...and the level', r.level === 7);
+  check('...and the equipment, as identical stats',
+    r.stats.atk === g.stats.atk && r.stats.maxHp === g.stats.maxHp);
+  check('both clients built the SAME fighter',
+    JSON.stringify([r.classId, r.level, r.stats]) === JSON.stringify([g.classId, g.level, g.stats]));
+
+  // And the frame a spectator reads carries it too.
+  const spec = d.host.lastStart.units.find((u) => u.cid === DUEL_CIDS[1]);
+  check('the start frame names the skills by id',
+    JSON.stringify(spec.skillIds) === JSON.stringify(['whirlpool', 'net']));
+  check('...and the equipment by id',
+    JSON.stringify(spec.equipIds) === JSON.stringify(['iron_sword']));
+  check('...and carries the authoritative stat block', spec.stats.atk === g.stats.atk);
+}
+{
+  // The host's own character travels too (it never crosses a wire, but it must
+  // not be dropped on the floor either).
+  const d = track(duel({ hostClass: 'cleric', hostLevel: 4, hostSkillIds: ['net'] }));
+  const h = hostUnit(d);
+  check('the host keeps its class skill AND its tree skills',
+    (h.skills || []).map((s) => s.id).join(',') === 'heal,net');
+  check('the host\u2019s level applies', h.level === 4);
+  check('the guest\u2019s replica of the host matches',
+    (replica(d, DUEL_CIDS[0]).skills || []).map((s) => s.id).join(',') === 'heal,net');
+}
+
+// ---- ...and a lying guest cannot invent one --------------------------------
+// The guest supplies its own stat block, so this is the trust boundary. The
+// rule that makes it safe: THE WIRE CARRIES IDENTIFIERS, NEVER NUMBERS. Ids
+// resolve through the receiver's own js/skills.js and js/items.js, so the worst
+// a liar can do is claim a build they did not earn — never invent one.
+console.log('a lying guest');
+{
+  const d = track(duel({
+    guestLevel: 9999,
+    guestSkillIds: ['__godmode', 'whirlpool'],
+    guestEquipIds: ['__excalibur', 'a', 'b', 'c', 'd', 'e', 'f'],
+  }));
+  const g = guestUnit(d);
+  check('an absurd level is clamped', g.level === DUEL_MAX_LEVEL);
+  check('a skill that does not exist is dropped',
+    (g.skills || []).map((s) => s.id).join(',') === 'whirlpool');
+  check('equipment that does not exist grants nothing',
+    g.stats.atk === duelUnit(liveRoom(), { name: 'x', classId: 'fighter', level: DUEL_MAX_LEVEL, x: 1, y: 1 }, 1).stats.atk);
+  check('the duel still starts \u2014 a liar is corrected, not kicked', !!d.battle);
+}
+{
+  // A fabricated skill OBJECT on the wire is ignored outright: duellistSpec
+  // only ever reads skillIds, so there is no path for a { power: 9999 } blob to
+  // reach the engine.
+  const forged = duellistSpec({
+    classId: 'fighter',
+    level: 3,
+    skills: [{ id: 'nuke', name: 'Nuke', kind: 'damage', target: 'enemy', range: 9, radius: 4, power: 9999 }],
+    bonuses: { atk: 9999, maxHp: 9999 },
+    stats: { atk: 9999, maxHp: 9999, hp: 9999 },
+  });
+  check('a forged skill object never survives normalisation', forged.skills === undefined);
+  check('a forged bonus blob never survives either', forged.bonuses === undefined);
+  check('nor a forged stat block', forged.stats === undefined);
+  check('only ids and a clamped level come out',
+    JSON.stringify(Object.keys(forged).sort()) ===
+    JSON.stringify(['at', 'classId', 'equipIds', 'figure', 'level', 'skillIds']));
+
+  const u = duelUnit(liveRoom(), {
+    name: 'Evil', x: 1, y: 1, classId: 'fighter', level: 3,
+    skills: [{ id: 'nuke', power: 9999 }],
+    bonuses: { atk: 9999 },
+  }, 1);
+  const honest = duelUnit(liveRoom(), { name: 'Good', x: 2, y: 2, classId: 'fighter', level: 3 }, 1);
+  check('a unit built from a forged spec is an ordinary fighter',
+    u.stats.atk === honest.stats.atk && (u.skills || []).length === 0);
+  check('an unknown class falls back rather than crashing',
+    duelUnit(liveRoom(), { name: 'Z', x: 1, y: 1, classId: '__nope', level: 1 }, 1).classId === 'fighter');
+}
+
+// ---- tactical play: movement, range, skills --------------------------------
+// Duels inherit the WHOLE command set from CoopLeader.handleCommand — move,
+// attack, skill, wait — but every duel test so far has been fighter vs fighter,
+// already adjacent, trading one melee swing. Movement, reach and skills have
+// never been exercised in a duel at all, on either side of the relay.
+//
+// The gating is the interesting part. Ownership and phase are checked once, in
+// handleCommand, ahead of the per-command-type branch, so "the guest cannot
+// move during the host's phase" should hold for exactly the same reason "the
+// guest cannot attack during the host's phase" holds. Should. That is what
+// these assert.
+console.log('tactical: movement');
+{
+  // Start them well apart so a move is actually required.
+  const d = track(duel({ hostAt: { x: 2, y: 2 }, guestAt: { x: 8, y: 8 } }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('placement left them far apart', Math.max(Math.abs(h.x - g.x), Math.abs(h.y - g.y)) > 1);
+  check('...and out of attack reach', !d.battle.attackTargets(h).includes(g));
+
+  // A fighter moves 4 (Chebyshev). The engine hands legality out as a Set of
+  // "x,y" keys, and both clients must be asking the same question of the same
+  // room.
+  const hostTiles = d.battle.moveTiles(h);
+  const guestView = d.guest.shadow.moveTiles(replica(d, DUEL_CIDS[0]));
+  check('the host can move at all', hostTiles.size > 0);
+  check('both clients agree on the host\u2019s legal move tiles EXACTLY',
+    [...hostTiles].sort().join('|') === [...guestView].sort().join('|'));
+  check('move range respects the class (fighter: 4)',
+    [...hostTiles].every((k) => {
+      const [x, y] = k.split(',').map(Number);
+      return Math.max(Math.abs(x - h.x), Math.abs(y - h.y)) <= 4;
+    }));
+
+  // The GUEST moves its own unit, in its own phase, and the host's authority
+  // executes it. The move is relayed, so the host's screen must land on the
+  // same tile.
+  d.battle.resolveAttack; // (no-op reference: attacks are covered elsewhere)
+  d.bc.endUnit(h); // host waits out turn 1 -> enemy phase opens
+  check('the guest\u2019s phase is open', d.battle.phase === 'enemy');
+
+  const step = { x: g.x - 2, y: g.y - 2 };
+  check('the target tile is legal for the guest',
+    d.guest.shadow.moveTiles(replica(d, DUEL_CIDS[1])).has(`${step.x},${step.y}`));
+  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: step.x, y: step.y });
+  check('the guest\u2019s move was accepted', d.rejects.length === 0);
+  check('the walk was started, not teleported', g.walking === true);
+  settle(g, replica(d, DUEL_CIDS[1]));
+  check('the host executed it on the authoritative unit',
+    g.x === step.x && g.y === step.y);
+  check('and the guest\u2019s replica shows the same tile',
+    replica(d, DUEL_CIDS[1]).x === step.x && replica(d, DUEL_CIDS[1]).y === step.y);
+  check('both clients agree on the unit\u2019s position after the move',
+    g.x === replica(d, DUEL_CIDS[1]).x && g.y === replica(d, DUEL_CIDS[1]).y);
+}
+{
+  // Beyond range is refused, and refused as a MOVE (not silently clamped).
+  const d = track(duel({ hostAt: { x: 2, y: 2 }, guestAt: { x: 8, y: 8 } }));
+  d.bc.endUnit(hostUnit(d));
+  const g = guestUnit(d);
+  const far = { x: g.x - 5, y: g.y - 5 }; // 5 > move 4
+  check('the far tile really is outside the move set',
+    !d.battle.moveTiles(g).has(`${far.x},${far.y}`));
+  const was = { x: g.x, y: g.y };
+  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: far.x, y: far.y });
+  check('a move beyond range is refused', d.rejects[d.rejects.length - 1] === 'illegal move');
+  check('...and the unit did not budge', g.x === was.x && g.y === was.y);
+  check('...nor did the replica', replica(d, DUEL_CIDS[1]).x === was.x);
+
+  // One move per turn.
+  const near = { x: g.x - 1, y: g.y - 1 };
+  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: near.x, y: near.y });
+  settle(g);
+  check('a legal move is accepted', g.x === near.x && g.y === near.y);
+  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: near.x - 1, y: near.y });
+  check('a second move in one turn is refused',
+    d.rejects[d.rejects.length - 1] === 'already moved');
+}
+{
+  // A move onto the other duellist's tile is not legal: the engine's own
+  // occupancy rule, which must hold in a duel exactly as in a dungeon.
+  const d = track(duel({ hostAt: { x: 4, y: 4 }, guestAt: { x: 5, y: 4 } }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('neither duellist may stand on the other',
+    !d.battle.moveTiles(h).has(`${g.x},${g.y}`) &&
+    !d.battle.moveTiles(g).has(`${h.x},${h.y}`));
+}
+{
+  // Blocked furni is excluded on BOTH clients — this is the obstacle snapshot
+  // doing its job. liveRoom() blocks (9,9).
+  const d = track(duel({ hostAt: { x: 8, y: 8 }, guestAt: { x: 2, y: 2 } }));
+  const h = hostUnit(d);
+  check('the host cannot walk onto furni', !d.battle.moveTiles(h).has('9,9'));
+  check('...and the guest\u2019s client agrees it is illegal',
+    !d.guest.shadow.moveTiles(replica(d, DUEL_CIDS[0])).has('9,9'));
+  check('both move sets are identical around the obstacle',
+    [...d.battle.moveTiles(h)].sort().join('|') ===
+    [...d.guest.shadow.moveTiles(replica(d, DUEL_CIDS[0]))].sort().join('|'));
+}
+
+console.log('tactical: reach');
+{
+  // A ranger (range 3, min 2) shoots without closing. The whole point of the
+  // class, and impossible to observe in a fighter-vs-fighter duel.
+  const d = track(duel({
+    hostClass: 'ranger', guestClass: 'fighter',
+    hostAt: { x: 3, y: 5 }, guestAt: { x: 6, y: 5 },
+  }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('the ranger and its foe are 3 tiles apart',
+    Math.max(Math.abs(h.x - g.x), Math.abs(h.y - g.y)) === 3);
+  check('the ranger can attack WITHOUT moving', d.battle.attackTargets(h).includes(g));
+  check('the guest\u2019s client agrees the shot is legal',
+    d.guest.shadow.attackTargets(replica(d, DUEL_CIDS[0])).includes(replica(d, DUEL_CIDS[1])));
+
+  const hp0 = g.stats.hp;
+  d.battle.resolveAttack(h, g);
+  check('the arrow lands from range', g.stats.hp < hp0);
+  check('the ranger never moved', h.x === 3 && h.y === 5);
+  check('both screens show the same HP after a ranged hit',
+    g.stats.hp === replica(d, DUEL_CIDS[1]).stats.hp);
+}
+{
+  // Melee out of range is refused. The fighter is the GUEST here so the
+  // refusal travels the relay.
+  const d = track(duel({ hostAt: { x: 2, y: 5 }, guestAt: { x: 7, y: 5 } }));
+  d.bc.endUnit(hostUnit(d));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('the two are out of melee reach',
+    !d.battle.attackTargets(g).includes(h));
+  const hp0 = h.stats.hp;
+  cmd(d, { type: 'attack', cid: DUEL_CIDS[1], target: DUEL_CIDS[0] });
+  check('a melee attack out of range is refused',
+    d.rejects[d.rejects.length - 1] === 'illegal target');
+  check('...and nobody was hurt', h.stats.hp === hp0);
+  check('...and the attacker was not spent', g.acted === false);
+}
+{
+  // The ranger's dead zone: min 2 means an adjacent foe cannot be shot, and
+  // the close-range dagger covers exactly that tile.
+  const d = track(duel({
+    hostClass: 'ranger', guestClass: 'fighter',
+    hostAt: { x: 4, y: 5 }, guestAt: { x: 5, y: 5 },
+  }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('an adjacent foe is still attackable (the close-range dagger)',
+    d.battle.attackTargets(h).includes(g));
+  const hp0 = g.stats.hp;
+  d.battle.resolveAttack(h, g);
+  check('the dagger connects', g.stats.hp < hp0);
+  check('both clients agree on the damage',
+    g.stats.hp === replica(d, DUEL_CIDS[1]).stats.hp);
+}
+
+console.log('tactical: skills');
+{
+  // A cleric's Heal on itself: a skill with a target, a range and a real
+  // effect, resolved through the relay by the guest.
+  const d = track(duel({
+    hostClass: 'fighter', guestClass: 'cleric',
+    hostAt: { x: 4, y: 5 }, guestAt: { x: 5, y: 5 },
+  }));
+  const g = guestUnit(d);
+  check('the guest\u2019s cleric has a skill', (g.skills || []).length > 0);
+
+  // Wound it first so a heal has something to do.
+  d.battle.resolveAttack(hostUnit(d), g);
+  d.bc.endUnit(hostUnit(d));
+  const hurt = g.stats.hp;
+  check('the cleric took a wound', hurt < g.stats.maxHp);
+  check('both clients see the wound', replica(d, DUEL_CIDS[1]).stats.hp === hurt);
+
+  cmd(d, { type: 'skill', cid: DUEL_CIDS[1], skill: 0, target: DUEL_CIDS[1] });
+  check('the skill was accepted', d.rejects.length === 0);
+  check('Heal restored HP on the authoritative unit', g.stats.hp > hurt);
+  check('the guest\u2019s replica shows the SAME HP after the skill',
+    replica(d, DUEL_CIDS[1]).stats.hp === g.stats.hp);
+  check('the skill spent the caster\u2019s turn', g.acted === true);
+}
+{
+  // An AREA + ROOT skill (Whirlpool: radius 1, status rooted) cast by the
+  // HOST, so the effect has to travel outward to the guest's replica.
+  const d = track(duel({
+    hostClass: 'fighter', guestClass: 'fighter',
+    hostAt: { x: 4, y: 5 }, guestAt: { x: 5, y: 5 },
+    // A REAL unlocked tree skill, by id — the same one a player grinds Fishing
+    // 65 for. It resolves through js/skills.js on both clients, which is the
+    // whole point: the wire carries the id, never the numbers.
+    hostSkillIds: ['whirlpool'],
+  }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  const skill = (h.skills || [])[0];
+  check('the host carries the area skill', !!skill && skill.id === 'whirlpool');
+  check('the foe is a legal target', d.battle.skillTargets(h, skill).includes(g));
+
+  const hp0 = g.stats.hp;
+  d.battle.resolveSkill(h, g, skill);
+  check('the area skill damaged the foe', g.stats.hp < hp0);
+  check('...and rooted them', g.rooted > 0);
+  check('both clients agree on the resulting HP',
+    replica(d, DUEL_CIDS[1]).stats.hp === g.stats.hp);
+  check('...and the guest’s client knows it is rooted',
+    replica(d, DUEL_CIDS[1]).rooted > 0);
+  // Root bites at the START of the victim's next phase (resetTurn resolves
+  // `rootedThisTurn`), which is exactly when it matters: they lose the move
+  // they were about to make, not one they already spent.
+  d.bc.endUnit(hostUnit(d));
+  check('the rooted duellist’s phase opened', d.battle.phase === 'enemy');
+  check('a rooted duellist cannot move on the host’s board',
+    d.battle.moveTiles(g).size <= 1);
+  check('...and its own client agrees it is stuck',
+    d.guest.shadow.moveTiles(replica(d, DUEL_CIDS[1])).size <= 1);
+  const stuck = { x: g.x, y: g.y };
+  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: g.x - 1, y: g.y });
+  settle(g);
+  check('...so a move command from it is refused', g.x === stuck.x && g.y === stuck.y);
+}
+
+console.log('tactical: ownership + phase gating');
+{
+  // The SAME two rules that gate attacks must gate moves and skills. If
+  // handleCommand's checks sat inside the attack branch instead of ahead of
+  // the type switch, these are the tests that would catch it.
+  const d = track(duel({
+    hostClass: 'fighter', guestClass: 'cleric',
+    hostAt: { x: 3, y: 5 }, guestAt: { x: 6, y: 5 },
+  }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('it is the host\u2019s phase', d.battle.phase === 'player');
+
+  // MOVE during the host's phase.
+  const was = { x: g.x, y: g.y };
+  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: g.x - 1, y: g.y });
+  check('the guest cannot MOVE during the host\u2019s phase',
+    d.rejects[d.rejects.length - 1] === 'not your phase');
+  check('...and did not move', g.x === was.x && g.y === was.y);
+
+  // SKILL during the host's phase.
+  cmd(d, { type: 'skill', cid: DUEL_CIDS[1], skill: 0, target: DUEL_CIDS[1] });
+  check('the guest cannot use a SKILL during the host\u2019s phase',
+    d.rejects[d.rejects.length - 1] === 'not your phase');
+  check('...and is not spent', g.acted === false);
+
+  // The host's OWN unit, moved by the guest, in the host's phase.
+  const hostWas = { x: h.x, y: h.y };
+  cmd(d, { type: 'move', cid: DUEL_CIDS[0], x: h.x + 1, y: h.y });
+  check('the guest cannot MOVE the host\u2019s unit',
+    d.rejects[d.rejects.length - 1] === 'not your unit');
+  check('...and it did not move', h.x === hostWas.x && h.y === hostWas.y);
+
+  // ...and in the guest's own phase, the host's unit is still not theirs.
+  d.bc.endUnit(h);
+  check('the guest\u2019s phase is open', d.battle.phase === 'enemy');
+  cmd(d, { type: 'move', cid: DUEL_CIDS[0], x: h.x + 1, y: h.y });
+  check('the guest cannot MOVE the host\u2019s unit in its OWN phase either',
+    d.rejects[d.rejects.length - 1] === 'not your unit');
+  cmd(d, { type: 'skill', cid: DUEL_CIDS[0], skill: 0, target: DUEL_CIDS[0] });
+  check('nor use the host\u2019s SKILLS',
+    d.rejects[d.rejects.length - 1] === 'not your unit');
+  check('the host is untouched throughout',
+    h.x === hostWas.x && h.y === hostWas.y && h.acted === true);
+
+  // A bystander trying the same tactical commands gets nothing at all.
+  d.netM.send({ t: 'duel-relay', to: HOST, data: { k: 'cmd', type: 'move', cid: DUEL_CIDS[1], x: g.x - 1, y: g.y } });
+  check('a bystander\u2019s MOVE does not land', g.x === was.x && g.y === was.y);
+  d.netM.send({ t: 'duel-relay', to: HOST, data: { k: 'cmd', type: 'skill', cid: DUEL_CIDS[1], skill: 0, target: DUEL_CIDS[1] } });
+  check('a bystander\u2019s SKILL does not land', g.acted === false);
+  check('...and neither is answered with a refusal', d.heard.length === 0);
 }
 
 // ---- one attack each, identical HP -----------------------------------------
