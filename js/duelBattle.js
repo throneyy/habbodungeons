@@ -35,82 +35,156 @@
 // Not the user:<id> mailbox — Realtime's write policy admits only `room:%` and
 // `party:%` topics, and duellists are guaranteed room-mates because the server
 // checked exactly that at challenge AND at accept (_shared/duelFlow.ts).
+//
+// THE FIGHT HAPPENS WHERE THE PLAYERS ARE STANDING. There is no arena and no
+// scene change: the Battle is built over the CURRENT room — its heightmap, its
+// furni, its props — and the duellists fight from the tiles they are actually
+// on. Nobody leaves the explore view, so bystanders keep watching the room and
+// the two duellists simply gain a battle UI over the top of it.
+//
+// Two things have to be pinned for that to be safe, because "the current room"
+// is a different object on each client:
+//
+//   ROOM IDENTITY  the start frame carries roomId, and the guest REFUSES a duel
+//                  whose room is not the one it is standing in. Without it a
+//                  guest who walked through a door mid-countdown would fight in
+//                  a room the host is not simulating.
+//   BLOCKED TILES  the host snapshots every blocked tile at GO and ships it.
+//                  Both engines then run over the SAME obstacle set via
+//                  duelRoomView(), so a move that is legal on one client cannot
+//                  be illegal on the other. Furni moves, gates open and props
+//                  are toggled; a snapshot is the only way the two agree.
+//
+// Live players are deliberately NOT part of that set. Remote avatars never
+// block a battle tile (Battle.unitAt only knows its own two units), so a
+// bystander cannot stand on a tile to grief it — and the snapshot is taken
+// from room.blockers, which holds props, never people.
 import { Battle } from './battle.js';
 import { Unit } from './units.js';
-import { Room } from './room.js';
 import { CoopLeader, CoopMember, SpectateController } from './coopBattle.js';
+import { hpTint } from './battleController.js';
 import { figureSprites } from './monsterSprites.js';
+import { rotationBetween } from './pathfinder.js';
+import { tileDistance } from './classes.js';
 
-export const DUEL_ARENA_ID = 'duel-arena';
 export const DUEL_CIDS = ['p0', 'e0']; // host unit, guest unit
-/** Where each duellist stands. Index 0 is the host's, 1 the guest's: mirrored
- *  across the arena's centre so neither side starts with the better ground. */
-export const DUEL_SPAWNS = [
-  { x: 2, y: 5, dir: 2 },
-  { x: 8, y: 5, dir: 6 },
+
+/** Every blocked tile in a room, as sorted "x,y" keys. Props and furni only —
+ *  `room.blockers` never holds players. Sorted so two snapshots of the same
+ *  room compare equal as strings. */
+export function blockedSnapshot(room) {
+  return [...room.blockers.keys()].sort();
+}
+
+/** A read-only view of `room` whose blocked tiles are exactly `keys`.
+ *
+ *  Object.create keeps the real room as the prototype, so tiles, heights,
+ *  bounds and props all read through unchanged and NOTHING is mutated — the
+ *  explore renderer is still drawing this very room while the duel runs over
+ *  the view. Only isBlocked is overridden, which is the one predicate the two
+ *  engines must agree on tile for tile. */
+export function duelRoomView(room, keys) {
+  const blocked = new Set(keys || []);
+  const view = Object.create(room);
+  view.isBlocked = function isBlocked(x, y) {
+    return !this.tile(x, y) || blocked.has(`${x},${y}`);
+  };
+  view.duelBlocked = blocked;
+  return view;
+}
+
+/** Can a duellist stand here? Walkable floor, and not a tile the other one
+ *  already holds. */
+function standable(room, x, y, taken) {
+  if (!room.inBounds(x, y) || room.isBlocked(x, y)) return false;
+  return !(taken && taken.x === x && taken.y === y);
+}
+
+// Neighbours in a fixed order, so two clients handed the same inputs pick the
+// same tile. Orthogonals first (a duel reads better square-on than cornered).
+const NEIGHBOURS = [
+  { dx: 0, dy: -1 }, { dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 },
+  { dx: 1, dy: -1 }, { dx: 1, dy: 1 }, { dx: -1, dy: 1 }, { dx: -1, dy: -1 },
 ];
 
-// The arena's visual kit (DATA, same shape js/dungeon.js uses).
-const ARENA_KIT = {
-  floor: 'dng_floor',
-  walls: { height: 3.4 },
-  palette: {
-    topA: '#565a63', topB: '#4e525a',
-    sideSW: '#23262d', sideSE: '#32363f',
-    line: 'rgba(8,9,12,0.45)',
-    wallN: '#3b3744', wallW: '#4b4657', wallTrim: '#211d29',
-  },
-};
+/** Where the two fighters start.
+ *
+ *  Remote players do not block tiles, so everyone who walks into a room piles
+ *  onto its spawn: the first live duel opened with BOTH fighters on tile (6,7),
+ *  rendering one sprite stacked on the other. A duel must never begin like
+ *  that, so this is the rule:
+ *
+ *    • already apart, both standable, and within attack reach → fight exactly
+ *      where you stand. This is the normal case and the whole point of an
+ *      in-place duel.
+ *    • otherwise → anchor on the host's tile (or the nearest standable tile to
+ *      it) and seat the guest on the first free neighbour, facing each other.
+ *
+ *  Pure and deterministic: same room + same tiles in, same answer out. The HOST
+ *  runs it and ships the result in the start frame, so agreement never depends
+ *  on both clients computing it. */
+export function placeDuellists(room, hostAt, guestAt) {
+  const face = (a, b) => ({ ...a, dir: rotationBetween(a.x, a.y, b.x, b.y) });
+  const apart = hostAt && guestAt && (hostAt.x !== guestAt.x || hostAt.y !== guestAt.y);
+  if (
+    apart &&
+    standable(room, hostAt.x, hostAt.y) &&
+    standable(room, guestAt.x, guestAt.y, hostAt) &&
+    tileDistance(hostAt.x, hostAt.y, guestAt.x, guestAt.y) <= 1
+  ) {
+    return [face(hostAt, guestAt), face(guestAt, hostAt)];
+  }
 
-/** The duelling ground: 11x11, walled, flat, and symmetric under a half turn
- *  about its centre, so the two spawns are the same tile in different clothes.
- *  Deliberately built from CONSTANTS with no seed and no random dressing —
- *  "both clients show identical arena tiles" is then true by construction
- *  rather than by both sides happening to roll the same numbers. */
-export function duelArena() {
-  const w = 11;
-  const h = 11;
-  const rows = [];
-  for (let y = 0; y < h; y++) {
-    let row = '';
-    for (let x = 0; x < w; x++) {
-      const edge = x === 0 || y === 0 || x === w - 1 || y === h - 1;
-      row += edge ? 'x' : '0';
-    }
-    rows.push(row);
+  // Anchor: the host's tile if it is usable, else the closest tile that is.
+  let anchor = hostAt && standable(room, hostAt.x, hostAt.y) ? { x: hostAt.x, y: hostAt.y } : null;
+  if (!anchor) anchor = nearestStandable(room, hostAt || room.spawn);
+  if (!anchor) return null; // a room with nowhere to stand cannot host a duel
+
+  for (const n of NEIGHBOURS) {
+    const spot = { x: anchor.x + n.dx, y: anchor.y + n.dy };
+    if (standable(room, spot.x, spot.y, anchor)) return [face(anchor, spot), face(spot, anchor)];
   }
-  // Two raised 2x2 pads, point-symmetric about the centre tile (5,5): high
-  // ground is worth +20% damage (js/classes.js), so each duellist gets one
-  // and the arena reads the same from either seat. 2..3 mirrors to 7..8.
-  for (const [x0, y0] of [[2, 2], [7, 7]]) {
-    for (let y = y0; y <= y0 + 1; y++) {
-      rows[y] = rows[y].slice(0, x0) + '11' + rows[y].slice(x0 + 2);
+  return null; // boxed in on all eight sides
+}
+
+// Outward ring search for a tile somebody can stand on.
+//
+// The origin is CLAMPED into the room first. A duellist whose reported tile is
+// outside the map (a stale presence row, a client that walked through a door)
+// would otherwise start the search miles away and the ring — bounded by the
+// room's own size — would never reach any floor at all, so the duel refused
+// itself with "no room to duel here" in a room that was mostly empty.
+function nearestStandable(room, from) {
+  const ox = Math.min(Math.max(from ? from.x : 0, 0), room.w - 1);
+  const oy = Math.min(Math.max(from ? from.y : 0, 0), room.h - 1);
+  if (standable(room, ox, oy)) return { x: ox, y: oy };
+  for (let r = 1; r <= Math.max(room.w, room.h); r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        if (standable(room, ox + dx, oy + dy)) return { x: ox + dx, y: oy + dy };
+      }
     }
   }
-  return new Room({
-    id: DUEL_ARENA_ID,
-    name: 'The Duelling Ground',
-    zoom: 1,
-    heightmap: rows,
-    kit: ARENA_KIT,
-    spawn: { x: DUEL_SPAWNS[0].x, y: DUEL_SPAWNS[0].y },
-    spawnDir: DUEL_SPAWNS[0].dir,
-  });
+  return null;
 }
 
 /** One duellist as a Unit. `seat` 0 = host (team 'player'), 1 = guest (team
- *  'enemy'): the engine's two sides, handed out by who threw the gauntlet. */
+ *  'enemy'): the engine's two sides, handed out by who threw the gauntlet.
+ *  The tile is never defaulted — an in-place duel has no spawn to fall back
+ *  on, so a spec without one is a bug that should surface, not be papered
+ *  over by dropping a fighter in a corner. */
 export function duelUnit(room, spec, seat) {
-  const at = DUEL_SPAWNS[seat];
-  const u = new Unit(room, null, spec.x ?? at.x, spec.y ?? at.y, {
+  const u = new Unit(room, null, spec.x, spec.y, {
     team: seat === 0 ? 'player' : 'enemy',
     classId: spec.classId || 'fighter',
     name: spec.name || (seat === 0 ? 'Challenger' : 'Defender'),
     level: spec.level || 1,
-    dir: spec.dir ?? at.dir,
+    dir: spec.dir ?? 4,
   });
   if (spec.stats) u.stats = { ...spec.stats };
   u.owner = spec.owner || spec.name || null;
+  u.duellist = true; // renderer/roster: this 'enemy' is a person
   if (spec.figure) u.sprites = figureSprites(spec.figure, room.zoom === 1 ? 'm' : 's');
   return u;
 }
@@ -133,6 +207,8 @@ export class DuelHost extends CoopLeader {
     this.pendingHello = null; // the guest arrived before the screen did
     this.onBoot = null; // (payload) => void — main.js reveals the battle panel
     this.onDuelEnd = null; // (result) => void — 'won' means the HOST won
+    this.room = null; // the room we are BOTH standing in (set by arm())
+    this.myTile = null; // where I am standing right now (set by arm())
   }
 
   // Only the duel relay: no descend/party stream is involved in a duel.
@@ -157,12 +233,14 @@ export class DuelHost extends CoopLeader {
     return unit.team === 'enemy' ? 'enemy' : 'player';
   }
 
-  /** Screen is up: hold my duellist spec and the live BattleController, then
-   *  boot as soon as the guest says hello (or immediately if they already
-   *  have). */
-  arm({ bc, me }) {
+  /** Screen is up: hold the live BattleController, my duellist spec, the room
+   *  we are standing in and the tile I am on — then boot as soon as the guest
+   *  says hello (or immediately if they already have). */
+  arm({ bc, me, room, myTile }) {
     this.bc = bc;
     this.me = me;
+    this.room = room;
+    this.myTile = myTile;
     if (this.pendingHello) this.boot(this.pendingHello);
   }
 
@@ -193,19 +271,37 @@ export class DuelHost extends CoopLeader {
     return !!from && from === String(this.opponent || '').toLowerCase();
   }
 
-  /** Build the one authoritative Battle and stream it to the guest. */
+  /** Build the one authoritative Battle over the room we are standing in, and
+   *  stream it to the guest. */
   boot(hello) {
     this.pendingHello = null;
-    if (this.battle || !this.bc || !this.me) return null;
-    const room = duelArena();
-    const mine = duelUnit(room, { ...this.me, owner: this.me.name }, 0);
+    if (this.battle || !this.bc || !this.me || !this.room) return null;
+
+    // Snapshot the obstacles as they are at GO, then run BOTH engines over that
+    // snapshot rather than over two independently-read rooms.
+    const blocked = blockedSnapshot(this.room);
+    const view = duelRoomView(this.room, blocked);
+
+    // Where the two of them actually stand. Everyone piles onto the room spawn
+    // (remote players do not block tiles), so this routinely has to separate
+    // them — see placeDuellists.
+    const spots = placeDuellists(view, this.myTile, hello.at || null);
+    if (!spots) {
+      this.relay({ k: 'refused', reason: 'no room to duel here' });
+      if (this.onDuelEnd) this.onDuelEnd('aborted', 'There is no room to duel here.');
+      return null;
+    }
+
+    const mine = duelUnit(view, { ...this.me, ...spots[0], owner: this.me.name }, 0);
     // Identity comes from the duel, never from the frame: `hello.name` is
     // just a string the sender chose. this.opponent is the name the server
     // put on the duel row, and it is what owns the unit and labels it.
-    const theirs = duelUnit(room, { ...hello, name: this.opponent, owner: this.opponent }, 1);
-    const battle = this.bc.start(room, [mine], [theirs], {
+    const theirs = duelUnit(view, { ...hello, ...spots[1], name: this.opponent, owner: this.opponent }, 1);
+    const battle = this.bc.start(view, [mine], [theirs], {
       enemyAi: false, // the enemy phase belongs to a person, not to js/ai.js
       objective: { type: 'eliminate' },
+      inPlace: true, // fight in the live room: do NOT rebuild the scene
+      duel: { opponent: this.opponent },
       onEnd: (result) => this.onDuelEnd && this.onDuelEnd(result),
     });
     this.link(mine, DUEL_CIDS[0]);
@@ -215,7 +311,8 @@ export class DuelHost extends CoopLeader {
     this.wireCapture(battle, this.bc);
     this.lastStart = {
       k: 'start',
-      arena: DUEL_ARENA_ID,
+      roomId: this.room.id, // the guest refuses anything that is not its room
+      blocked, // ...and fights over exactly these obstacles
       opponent: this.getName(),
       units: [mine, theirs].map((u) => ({ ...this.serializeUnit(u), team: u.team })),
       log: battle.log.slice(),
@@ -246,8 +343,9 @@ export class DuelGuestController extends SpectateController {
     const label = {
       enemy: mine ? `Turn ${shadow.turn}, your move` : `Turn ${shadow.turn}, waiting`,
       player: `Turn ${shadow.turn}, ${foe} is moving`,
-      won: 'Defeated...', // 'won' is the HOST's win: the engine speaks their side
-      lost: 'Victory!',
+      // 'won'/'lost' are the HOST's verdict: the engine speaks from their seat.
+      won: `${foe} wins the duel.`,
+      lost: `You beat ${foe}!`,
     }[shadow.phase];
     dom.banner.innerHTML = `<b>${label}:</b> <span class="obj">Duel vs ${foe}</span>`;
     dom.banner.className = `banner ${this.commanding ? 'player' : shadow.phase}`;
@@ -282,7 +380,9 @@ export class DuelGuestController extends SpectateController {
       row.innerHTML =
         `<span class="rname">${u.name}</span>` +
         `<span class="rcls">${u.cls.name} L${u.level}</span>` +
-        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%"></span></span>` +
+        // same health-coloured bar as the host's roster: both duellists are
+        // people, so neither side's bar may read red at full health
+        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%${hpTint(frac, true)}"></span></span>` +
         `<span class="rhpn">${u.alive ? u.stats.hp : '\u2715'}</span>`;
       dom.roster.appendChild(row);
     }
@@ -294,9 +394,11 @@ export class DuelGuest extends CoopMember {
     super(net, game, dom, getName);
     this.helloTimer = null;
     this.endDelayMs = 1200; // let the killing blow land on screen first
+    this.duelUnits = []; // what we added to the live scene, so we can take it back out
   }
 
-  /** Join the host's duel: announce myself, then render whatever comes back. */
+  /** Join the host's duel: announce myself (with the tile I am standing on, so
+   *  the host can seat us both), then render whatever comes back. */
   activate(hostName, ui, me) {
     this.deactivate();
     this.active = true;
@@ -312,7 +414,14 @@ export class DuelGuest extends CoopMember {
     const hello = () => this.net.send({
       t: 'duel-relay',
       to: hostName,
-      data: { k: 'hello', name: this.getName(), classId: me.classId, figure: me.figure, level: me.level },
+      data: {
+        k: 'hello',
+        name: this.getName(),
+        classId: me.classId,
+        figure: me.figure,
+        level: me.level,
+        at: me.at || null, // my tile: the host places us both from this
+      },
     });
     hello();
     this.helloTimer = setInterval(() => (this.shadow ? this.stopHello() : hello()), 1500);
@@ -342,12 +451,37 @@ export class DuelGuest extends CoopMember {
     super.onRelay(msg);
   }
 
-  /** Rebuild the host's arena and both duellists from the start frame. The
-   *  arena is a constant and every unit rides the wire, so this is the same
-   *  room and the same two units the host is simulating. */
+  /** Rebuild both duellists over MY OWN room from the start frame.
+   *
+   *  There is no arena to construct: the fight is in the room I am already
+   *  standing in, which the renderer is already drawing. Two things are
+   *  therefore checked rather than assumed — that it really is the same room,
+   *  and that its obstacles match the host's snapshot. */
   buildReplica(d) {
+    const live = this.game.room;
+    // REFUSE a duel that is not in my room. The host is simulating somewhere
+    // else — every tile it calls legal would be a guess here.
+    if (!live || !d.roomId || live.id !== d.roomId) {
+      this.stopHello();
+      this.exit(`That duel is in another room (${d.roomId || 'unknown'}).`);
+      return;
+    }
     this.stopHello();
-    const room = duelArena();
+
+    // Fight over the HOST's obstacle snapshot, not over my own reading of the
+    // room: the host is the authority, so adopting its set makes a move that is
+    // legal there legal here, by construction. A difference is worth knowing
+    // about (somebody's furni moved), so say so rather than silently diverging.
+    const mineNow = blockedSnapshot(live);
+    const hostBlocked = d.blocked || mineNow;
+    if (mineNow.join('|') !== hostBlocked.join('|')) {
+      console.warn(
+        `[duel] blocked-tile mismatch with the host (${mineNow.length} here, ` +
+        `${hostBlocked.length} there) — adopting the host's snapshot`
+      );
+    }
+    const room = duelRoomView(live, hostBlocked);
+
     this.byCid.clear();
     this.cidBack.clear();
     const units = (d.units || []).map((spec) => {
@@ -357,16 +491,30 @@ export class DuelGuest extends CoopMember {
       return u;
     });
     this.controller = new DuelGuestController(this.dom, this);
+    this.controller.duel = { opponent: this.leaderName };
     this.game.setController(this.controller);
-    this.game.setRoom(room);
+    // NO setRoom: that would clear the scene and throw away every bystander,
+    // prop and critter the explore view is holding. The duellists are simply
+    // added to the room that is already on screen.
     for (const u of units) this.game.addUnit(u);
+    this.duelUnits = units;
     // Query-only engine over the same units: legality hints and banner text.
     // enemyAi:false here too, so nothing on this screen can ever plan a turn.
     this.shadow = new Battle(room, units, { enemyAi: false, objective: { type: 'eliminate' } });
     if (this.dom.log) this.dom.log.innerHTML = '';
     for (const line of d.log || []) this.controller.appendLog(line);
-    if (this.ui.battleReady) this.ui.battleReady('The Duelling Ground');
+    if (this.ui.battleReady) this.ui.battleReady(live.name);
     this.controller.render();
+  }
+
+  /** Take the duellists back out of the scene. The room itself is untouched —
+   *  it was never replaced. */
+  clearDuelUnits() {
+    for (const u of this.duelUnits || []) {
+      const i = this.game.units.indexOf(u);
+      if (i >= 0) this.game.units.splice(i, 1);
+    }
+    this.duelUnits = [];
   }
 
   /** Somebody fell. The result is the HOST's verdict, because the host's

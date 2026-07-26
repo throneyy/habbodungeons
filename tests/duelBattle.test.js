@@ -22,7 +22,10 @@
 import { Room } from '../js/room.js';
 import { Unit } from '../js/units.js';
 import { Battle } from '../js/battle.js';
-import { DuelHost, DuelGuest, duelArena, DUEL_CIDS, hostsDuel } from '../js/duelBattle.js';
+import {
+  DuelHost, DuelGuest, DUEL_CIDS, hostsDuel,
+  placeDuellists, blockedSnapshot, duelRoomView,
+} from '../js/duelBattle.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -36,6 +39,26 @@ function check(name, cond) {
 const HOST = 'Alice'; // the challenger hosts (youChallenged === true)
 const GUEST = 'Bob';
 const BYSTANDER = 'Mallory'; // a third player standing in the same room
+
+// THE room. A duel is fought in place, so there is no arena to build: this
+// stands in for the ordinary room both players are already walking around in,
+// props and all. `p` is a blocked prop tile, so the blocked-snapshot and
+// placement rules have something real to trip over.
+const ROOM_ID = 'tavern';
+function liveRoom() {
+  const room = new Room({
+    id: ROOM_ID,
+    name: 'The Poisoned Toad',
+    heightmap: [
+      '00000000000', '00000000000', '00000000000', '00000000000',
+      '00000000000', '00000000000', '00000000000', '00000000000',
+      '00000000000', '00000000000', '00000000000',
+    ],
+    spawn: { x: 6, y: 7 },
+  });
+  room.block(9, 9, { id: 'table' }); // a bit of furni to snapshot
+  return room;
+}
 
 // ---- the wire --------------------------------------------------------------
 // Two clients on one shared room channel. Mirrors SupabaseNet's `duel-relay`
@@ -78,7 +101,14 @@ function hostBc() {
   return {
     canSelect: null,
     battle: null,
+    inPlace: null,
+    duel: null,
     start(room, players, enemies, opts) {
+      // Recorded, because "the fight happens in the room you are standing in"
+      // is exactly a claim about these two options.
+      this.inPlace = !!opts.inPlace;
+      this.duel = opts.duel || null;
+      this.duelUnits = [...players, ...enemies];
       this.battle = new Battle(room, [...players, ...enemies], {
         objective: opts.objective,
         enemyAi: opts.enemyAi,
@@ -98,18 +128,26 @@ function hostBc() {
   };
 }
 
-// The guest's renderer.
-function stubGame() {
+// The guest's renderer, already showing the room it is standing in — with a
+// bystander's avatar in the scene, so "the duel did not wipe the room" is
+// something the test can actually observe.
+function stubGame(room = liveRoom()) {
+  const bystanderAvatar = { name: BYSTANDER, avatar: true };
   return {
-    room: null,
-    units: [],
+    room,
+    units: [bystanderAvatar],
+    bystanderAvatar,
     controller: null,
+    setRoomCalls: 0,
     overlays: { move: new Set(), target: new Set(), skill: new Set(), objective: new Set() },
     setController(c) {
       this.controller = c;
       if (c.onAttach) c.onAttach(this);
     },
+    // An in-place duel must NEVER call this: it clears the scene and swaps the
+    // room the renderer is drawing.
     setRoom(r) {
+      this.setRoomCalls++;
       this.room = r;
       this.units = [];
     },
@@ -144,11 +182,23 @@ function duel(opts = {}) {
   netM.on('duel-relay', (m) => heard.push(m.data || {}));
   const host = new DuelHost(netA, () => HOST, GUEST);
   const bc = hostBc();
-  const guest = new DuelGuest(netB, stubGame(), { banner: null, actions: null, roster: null, log: null }, () => GUEST);
-  const ui = { waiting() {}, battleReady() {}, exit(reason) { ui.exited = reason; } };
-  guest.activate(HOST, ui, { name: GUEST, classId: opts.guestClass || 'fighter', level: 1 });
-  host.arm({ bc, me: { name: HOST, classId: opts.hostClass || 'fighter', level: 1 } });
-  return { host, guest, bc, ui, rejects, heard, battle: bc.battle, netA, netB, netM };
+  const hostRoom = opts.hostRoom || liveRoom();
+  const game = stubGame(opts.guestRoom || liveRoom());
+  const guest = new DuelGuest(netB, game, { banner: null, actions: null, roster: null, log: null }, () => GUEST);
+  const ui = { waiting() {}, battleReady(n) { ui.readyIn = n; }, exit(reason) { ui.exited = reason; } };
+  // Where the two are standing when the gauntlet lands. Defaults to the SAME
+  // tile, because that is what really happens: remote players do not block
+  // tiles, so everyone who walks in is stacked on the room's spawn.
+  const hostAt = opts.hostAt || { x: 6, y: 7, dir: 4 };
+  const guestAt = opts.guestAt || { x: 6, y: 7, dir: 4 };
+  guest.activate(HOST, ui, { name: GUEST, classId: opts.guestClass || 'fighter', level: 1, at: guestAt });
+  host.arm({
+    bc,
+    me: { name: HOST, classId: opts.hostClass || 'fighter', level: 1 },
+    room: hostRoom,
+    myTile: hostAt,
+  });
+  return { host, guest, bc, ui, game, rejects, heard, hostRoom, battle: bc.battle, netA, netB, netM };
 }
 
 const hostUnit = (d) => d.host.byCid.get(DUEL_CIDS[0]);
@@ -179,13 +229,21 @@ console.log('boot');
   check('the host built one authoritative battle', !!d.battle && d.battle.units.length === 2);
   check('the guest built a replica of it', !!d.guest.shadow && d.guest.shadow.units.length === 2);
 
-  const arena = duelArena();
-  check('the arena is the same tiles on both clients',
+  // IN PLACE: the fight is in the room they were already standing in.
+  check('the host fights in the live room, not an arena', d.battle.room.id === ROOM_ID);
+  check('the guest fights in the same room', d.guest.shadow.room.id === ROOM_ID);
+  check('both engines run over the same tiles',
     d.battle.room.rows.join('|') === d.guest.shadow.room.rows.join('|'));
-  check('and it is the constant arena, not a rolled one',
-    d.battle.room.rows.join('|') === arena.rows.join('|'));
-  check('the arena is symmetric under a half turn (neither side gets better ground)',
-    arena.rows.join('|') === arena.rows.map((r) => [...r].reverse().join('')).reverse().join('|'));
+  check('the battle controller was told to fight in place', d.bc.inPlace === true);
+  check('...and who the opponent is, so the UI can stop saying “enemy”',
+    !!d.bc.duel && d.bc.duel.opponent === GUEST);
+  check('the guest never swapped the room out from under the renderer',
+    d.game.setRoomCalls === 0);
+  check('the room the guest is looking at is still its own', d.game.room.id === ROOM_ID);
+  check('a bystander standing in the room was not wiped from the scene',
+    d.game.units.includes(d.game.bystanderAvatar));
+  check('the duellists were ADDED to that scene', d.game.units.length === 3);
+  check('the guest reported the real room name, not an arena', d.ui.readyIn === 'The Poisoned Toad');
 
   check('the host\u2019s duellist is team player', hostUnit(d).team === 'player');
   check('the guest\u2019s duellist is team enemy', guestUnit(d).team === 'enemy');
@@ -207,8 +265,18 @@ console.log('boot');
       a.stats.hp === b.stats.hp && a.stats.maxHp === b.stats.maxHp && a.stats.atk === b.stats.atk;
   };
   check('both clients show identical units', same(DUEL_CIDS[0]) && same(DUEL_CIDS[1]));
-  check('the two duellists start apart, mirrored across the arena',
-    hostUnit(d).x !== guestUnit(d).x && hostUnit(d).y === guestUnit(d).y);
+  // THE BUG THIS REPLACES. Both players walked in and stood on the room's
+  // spawn, because remote players do not block tiles — the first live duel
+  // started with both fighters on (6,7), one sprite drawn on top of the other.
+  check('the two duellists never start on the same tile',
+    hostUnit(d).x !== guestUnit(d).x || hostUnit(d).y !== guestUnit(d).y);
+  check('they start within reach of each other',
+    Math.max(Math.abs(hostUnit(d).x - guestUnit(d).x), Math.abs(hostUnit(d).y - guestUnit(d).y)) === 1);
+  check('and facing each other',
+    hostUnit(d).dir === 0 && guestUnit(d).dir === 4);
+  check('the replica agrees on where they are standing',
+    replica(d, DUEL_CIDS[0]).x === hostUnit(d).x && replica(d, DUEL_CIDS[0]).y === hostUnit(d).y &&
+    replica(d, DUEL_CIDS[1]).x === guestUnit(d).x && replica(d, DUEL_CIDS[1]).y === guestUnit(d).y);
   check('both clients open on turn 1, the host\u2019s phase',
     d.battle.phase === 'player' && d.battle.turn === 1 &&
     d.guest.shadow.phase === 'player' && d.guest.shadow.turn === 1);
@@ -219,10 +287,10 @@ console.log('boot');
   const [netA, netB] = wire();
   const host = new DuelHost(netA, () => HOST, GUEST);
   const bc = hostBc();
-  host.arm({ bc, me: { name: HOST, classId: 'fighter', level: 1 } });
+  host.arm({ bc, me: { name: HOST, classId: 'fighter', level: 1 }, room: liveRoom(), myTile: { x: 6, y: 7 } });
   check('an armed host has not booted before the guest says hello', bc.battle === null);
   const guest = new DuelGuest(netB, stubGame(), { banner: null }, () => GUEST);
-  guest.activate(HOST, { waiting() {}, battleReady() {}, exit() {} }, { name: GUEST, classId: 'mage', level: 2 });
+  guest.activate(HOST, { waiting() {}, battleReady() {}, exit() {} }, { name: GUEST, classId: 'mage', level: 2, at: { x: 6, y: 7 } });
   track({ host, guest });
   check('the guest\u2019s hello boots the battle', !!bc.battle && bc.battle.units.length === 2);
   check('the guest\u2019s own calling and level ride the hello',
@@ -233,6 +301,118 @@ console.log('boot');
       netB.send({ t: 'duel-relay', to: HOST, data: { k: 'hello', name: GUEST, classId: 'mage', level: 2 } });
       return bc.battle === first && first.units.length === 2;
     })());
+}
+
+// ---- where the fighters stand ----------------------------------------------
+// placeDuellists is pure, so the interesting cases can be asked directly rather
+// than staged through a whole duel.
+console.log('placement');
+{
+  const room = liveRoom();
+  const dist = (a, b) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+
+  // The real case: everyone piled on the spawn.
+  const stacked = placeDuellists(room, { x: 6, y: 7 }, { x: 6, y: 7 });
+  check('two fighters on ONE tile are separated', dist(stacked[0], stacked[1]) === 1);
+  check('the host keeps the tile it was standing on',
+    stacked[0].x === 6 && stacked[0].y === 7);
+  check('and they are turned to face each other',
+    stacked[0].dir === 0 && stacked[1].dir === 4);
+
+  // Already fighting distance apart: leave them exactly where they are. This is
+  // the whole point of an in-place duel.
+  const adjacent = placeDuellists(room, { x: 3, y: 3 }, { x: 4, y: 3 });
+  check('fighters already adjacent are NOT moved',
+    adjacent[0].x === 3 && adjacent[0].y === 3 && adjacent[1].x === 4 && adjacent[1].y === 3);
+  check('they are still turned to face each other',
+    adjacent[0].dir === 2 && adjacent[1].dir === 6);
+
+  // Too far to fight: close the gap rather than opening on an unreachable foe.
+  const apart = placeDuellists(room, { x: 1, y: 1 }, { x: 9, y: 8 });
+  check('fighters across the room are brought together', dist(apart[0], apart[1]) === 1);
+  check('the challenger still fights from where it stood',
+    apart[0].x === 1 && apart[0].y === 1);
+
+  // Never onto furni, and never onto the other fighter.
+  const byFurni = placeDuellists(room, { x: 9, y: 9 }, { x: 9, y: 9 });
+  check('nobody is placed onto a blocked prop tile',
+    !room.isBlocked(byFurni[0].x, byFurni[0].y) && !room.isBlocked(byFurni[1].x, byFurni[1].y));
+  check('...and the pair still ends up adjacent', dist(byFurni[0], byFurni[1]) === 1);
+
+  // A host standing somewhere impossible still gets seated.
+  const offMap = placeDuellists(room, { x: 99, y: 99 }, { x: 99, y: 99 });
+  check('a host on an impossible tile is relocated onto real floor',
+    !!offMap && room.inBounds(offMap[0].x, offMap[0].y) && !room.isBlocked(offMap[0].x, offMap[0].y));
+
+  // Deterministic: the host decides and broadcasts, but the same inputs must
+  // never yield two answers.
+  check('placement is deterministic',
+    JSON.stringify(placeDuellists(room, { x: 6, y: 7 }, { x: 6, y: 7 })) === JSON.stringify(stacked));
+
+  // A room with nowhere to stand cannot host a duel — and must say so rather
+  // than seating somebody in the void.
+  const solid = new Room({ id: 'solid', name: 'Solid', heightmap: ['xxx', 'xxx', 'xxx'], spawn: { x: 1, y: 1 } });
+  check('a room with no floor refuses to seat anyone',
+    placeDuellists(solid, { x: 1, y: 1 }, { x: 1, y: 1 }) === null);
+}
+{
+  // ...and through a real duel: a stacked pair boots un-stacked on BOTH screens.
+  const d = track(duel({ hostAt: { x: 6, y: 7 }, guestAt: { x: 6, y: 7 } }));
+  const h = hostUnit(d);
+  const g = guestUnit(d);
+  check('a duel from one shared tile boots with the fighters apart',
+    h.x !== g.x || h.y !== g.y);
+  check('the guest’s replica shows them apart too',
+    replica(d, DUEL_CIDS[0]).x !== replica(d, DUEL_CIDS[1]).x ||
+    replica(d, DUEL_CIDS[0]).y !== replica(d, DUEL_CIDS[1]).y);
+  check('the host can reach the guest on turn 1',
+    d.battle.attackTargets(h).includes(g));
+}
+
+// ---- the room has to be the same room --------------------------------------
+console.log('room identity + obstacles');
+{
+  const d = track(duel());
+  check('the start frame names the room', d.host.lastStart.roomId === ROOM_ID);
+  check('...and carries the blocked tiles as they were at GO',
+    Array.isArray(d.host.lastStart.blocked) && d.host.lastStart.blocked.includes('9,9'));
+  check('the snapshot is the room’s own blockers',
+    d.host.lastStart.blocked.join('|') === blockedSnapshot(d.hostRoom).join('|'));
+  check('both engines see the same blocked tile',
+    d.battle.room.isBlocked(9, 9) === true && d.guest.shadow.room.isBlocked(9, 9) === true);
+  check('and the same open tile',
+    d.battle.room.isBlocked(2, 2) === false && d.guest.shadow.room.isBlocked(2, 2) === false);
+
+  // Live players are NOT obstacles: a bystander cannot stand on a tile to deny
+  // it. The snapshot comes from room.blockers, which only ever holds props.
+  check('a duel’s obstacles never include people',
+    !d.host.lastStart.blocked.includes('6,7'));
+}
+{
+  // The guest walked into another room during the countdown.
+  const elsewhere = new Room({
+    id: 'square', name: 'The Old Town Square',
+    heightmap: ['00000', '00000', '00000', '00000', '00000'], spawn: { x: 2, y: 2 },
+  });
+  const d = track(duel({ guestRoom: elsewhere }));
+  check('a guest in a DIFFERENT room refuses the duel', !!d.ui.exited);
+  check('...and says why', /another room/.test(d.ui.exited || ''));
+  check('it builds no replica of a fight it cannot see', !d.guest.shadow);
+  check('and its own room is left alone', d.game.room.id === 'square' && d.game.setRoomCalls === 0);
+}
+{
+  // Furni moved on the guest's side: the host is authoritative, so its snapshot
+  // wins and the two engines still agree tile for tile.
+  const guestRoom = liveRoom();
+  guestRoom.block(3, 3, { id: 'crate' }); // a prop the host does not have
+  const d = track(duel({ guestRoom }));
+  check('a guest with extra furni still fights', !!d.guest.shadow);
+  check('it adopts the host’s obstacle set',
+    d.guest.shadow.room.isBlocked(3, 3) === false);
+  check('so both engines agree on every tile',
+    d.battle.room.isBlocked(3, 3) === d.guest.shadow.room.isBlocked(3, 3) &&
+    d.battle.room.isBlocked(9, 9) === d.guest.shadow.room.isBlocked(9, 9));
+  check('and the real room object was never mutated', guestRoom.isBlocked(3, 3) === true);
 }
 
 // ---- bystanders on the room channel ----------------------------------------
@@ -247,12 +427,12 @@ console.log('a third player in the room');
   const host = new DuelHost(netA, () => HOST, GUEST);
   const bc = hostBc();
   netM.send({ t: 'duel-relay', to: HOST, data: { k: 'hello', name: BYSTANDER, classId: 'mage', level: 9 } });
-  host.arm({ bc, me: { name: HOST, classId: 'fighter', level: 1 } });
+  host.arm({ bc, me: { name: HOST, classId: 'fighter', level: 1 }, room: liveRoom(), myTile: { x: 6, y: 7 } });
   check('a bystander’s hello does not boot the duel', bc.battle === null && host.battle === null);
   check('and it is not even held as a pending arrival', host.pendingHello === null);
 
   const guest = new DuelGuest(netB, stubGame(), { banner: null }, () => GUEST);
-  guest.activate(HOST, { waiting() {}, battleReady() {}, exit() {} }, { name: GUEST, classId: 'fighter', level: 1 });
+  guest.activate(HOST, { waiting() {}, battleReady() {}, exit() {} }, { name: GUEST, classId: 'fighter', level: 1, at: { x: 6, y: 7 } });
   track({ host, guest });
   check('the real guest’s hello still boots it', !!bc.battle && bc.battle.units.length === 2);
   check('the duellist seat went to the opponent, not the bystander',
@@ -313,8 +493,8 @@ console.log('a third player in the room');
     replica(d, DUEL_CIDS[0]).stats.hp === hp);
   d.netM.send({ t: 'duel-relay', to: GUEST, data: { k: 'end', result: 'won' } });
   check('nor a forged verdict', d.guest.shadow.phase !== 'won' && d.ui.exited === undefined);
-  d.netM.send({ t: 'duel-relay', to: GUEST, data: { k: 'start', arena: 'x', units: [], log: [] } });
-  check('nor a second arena to replace the one it is fighting in',
+  d.netM.send({ t: 'duel-relay', to: GUEST, data: { k: 'start', roomId: ROOM_ID, blocked: [], units: [], log: [] } });
+  check('nor a second start frame to replace the duel it is fighting',
     d.guest.shadow.units.length === 2);
 
   // ...and the host's own frames still get through the same guard.
@@ -366,8 +546,8 @@ console.log('phase ownership');
   check('an unknown unit id is refused', d.rejects[d.rejects.length - 1] === 'no such unit');
   cmd(d, { type: 'attack', cid: DUEL_CIDS[1], target: 'nobody' });
   check('an unknown target is refused', d.rejects[d.rejects.length - 1] === 'illegal target');
-  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: 0, y: 0 });
-  check('a move onto the arena wall is refused', d.rejects[d.rejects.length - 1] === 'illegal move');
+  cmd(d, { type: 'move', cid: DUEL_CIDS[1], x: 99, y: 99 });
+  check('a move off the edge of the room is refused', d.rejects[d.rejects.length - 1] === 'illegal move');
   check('every refusal so far left the engine exactly where it was',
     d.battle.phase === 'enemy' && d.battle.turn === 1 && guestUnit(d).acted === false);
 
@@ -430,7 +610,7 @@ console.log('knockout');
   check('the host’s engine calls the duel', d.battle.phase === 'won' && hostVerdict === 'won');
   check('the guest’s screen is told', d.guest.shadow.phase === 'won');
   await new Promise((r) => setTimeout(r, 20));
-  check('and the loser is walked out of the arena', d.ui.exited === `${HOST} wins the duel.`);
+  check('and the loser is told who won', d.ui.exited === `${HOST} wins the duel.`);
 }
 
 // ---- no AI, ever -----------------------------------------------------------

@@ -6,13 +6,18 @@
 // put two actual browsers in one room and made them fight. This does, and it is
 // the first run that can — the backend was only deployed today.
 //
-// Contexts:
-//   A, B  the duellists. Full flow: sign in, same room, A taps B and hits Duel,
-//         B accepts, both run the 3-2-1-GO off the server anchor, the battle
-//         boots, and each side lands one attack.
-//   C     a BYSTANDER standing in the same room, in no duel at all. Nothing here
-//         builds spectator support; C exists to MEASURE what a non-participant
-//         currently sees, which is a question nobody has answered.
+// Contexts, all three in THE OLD TOWN SQUARE and all three on distinct tiles:
+//   A, B  the duellists, standing next to each other. Full flow: sign in, walk,
+//         A taps B and hits Duel, B accepts, both run the 3-2-1-GO off the
+//         server anchor, the battle boots IN THE SQUARE, and each lands a blow.
+//   C     a BYSTANDER off to the side, in no duel at all. Nothing here builds
+//         spectator support; C exists to MEASURE what a non-participant sees.
+//
+// The walking matters. Remote players do not block tiles, so three clients that
+// just enter a room all stand on its spawn: the first live duel opened with
+// both fighters on (6,7), one sprite drawn on top of the other. Walking them
+// apart first is what makes "they fight from where they are standing" a real
+// claim rather than an accident of the placement fallback.
 //
 // Assertions read what each browser RENDERS — the countdown digit in
 // `.duel-count`, the banner text, the roster rows and their `.rhpn` HP numbers —
@@ -37,6 +42,26 @@ import { chromium } from 'playwright-core';
 import { findChromium, startServer, makeChecker, seedProfile, e2eName, portFor } from './lib.mjs';
 
 const PORT = portFor(61); // 59 is partyInviteError's; both are worktree-relative
+
+// The duel is staged in the village square rather than the tavern the client
+// boots into: it is the room players actually mill around in, it is big and
+// open, and it gives three people room to stand apart.
+const ROOM_ID = 'square';
+const ROOM_NAME = 'The Old Town Square';
+// Distinct tiles, chosen so A and B start ADJACENT (the duel should then fight
+// from exactly these tiles) with C well clear of both.
+//
+// Each entry is a PREFERENCE LIST, not one tile, and the walker takes the first
+// one this room can actually reach. The square's furniture is loaded from the
+// server (admin layouts), not from the room data in js/rooms.js, so a tile that
+// is open in the source can be blocked live: (9,11) reads walkable in
+// buildRooms([]) and is solid on the real square. Hardcoding one tile makes the
+// suite fail for a furniture change that has nothing to do with duels.
+const TILES = {
+  A: [{ x: 6, y: 8 }, { x: 6, y: 9 }, { x: 5, y: 8 }],
+  B: [{ x: 7, y: 8 }, { x: 7, y: 9 }, { x: 6, y: 8 }],
+  C: [{ x: 4, y: 11 }, { x: 10, y: 9 }, { x: 9, y: 9 }, { x: 4, y: 10 }],
+};
 const { check, state } = makeChecker();
 const exe = findChromium();
 if (!exe) { console.error('SKIP: no local Chromium build found'); process.exit(0); }
@@ -113,6 +138,11 @@ const rendered = (p) => p.evaluate(() => {
     // when the HP NUMBER agrees.
     cls: r.querySelector('.rcls') ? r.querySelector('.rcls').textContent.trim() : null,
     fill: r.querySelector('.rhp-fill') ? r.querySelector('.rhp-fill').style.width : null,
+    // the bar's COLOUR, which is the defect: it used to come from the team
+    // stylesheet rule, so an opponent at full health painted red
+    fillBg: r.querySelector('.rhp-fill')
+      ? (r.querySelector('.rhp-fill').style.background || getComputedStyle(r.querySelector('.rhp-fill')).backgroundColor)
+      : null,
     side: r.className.includes('player') ? 'player' : (r.className.includes('enemy') ? 'enemy' : '?'),
     done: r.className.includes('done'),
     dead: r.className.includes('dead'),
@@ -125,6 +155,13 @@ const rendered = (p) => p.evaluate(() => {
     actions: [...document.querySelectorAll('#actions button')].map((x) => x.textContent.trim()),
     rows,
     roomName: (window.game && window.game.room && window.game.room.name) || null,
+    roomId: (window.game && window.game.room && window.game.room.id) || null,
+    // The explore view must still be running underneath a duel: the room's own
+    // props and every OTHER person in it are still in the scene.
+    sceneUnits: (window.game && window.game.units || []).length,
+    propCount: (window.game && window.game.props || []).length,
+    overlayVisible: !!document.querySelector('#overlay') && !document.querySelector('#overlay').classList.contains('hidden'),
+    chatBar: !!document.querySelector('#chatToolbar'),
     phase: b ? b.phase : null,
     turn: b ? b.turn : null,
     units: b ? b.units.map((u) => ({
@@ -136,8 +173,9 @@ const rendered = (p) => p.evaluate(() => {
 });
 
 // Drive ONE action for whichever side this client owns, through real taps.
-// Fighters are move 4 / range 1 and the arena spawns them 6 tiles apart, so
-// closing the gap is part of the flow, not a shortcut around it.
+// Fighters are move 4 / range 1. In place they start adjacent, so the attack is
+// usually reachable at once; the move half stays in for the cases where the
+// placement rule had to separate them.
 const takeTurn = (p) => p.evaluate(async () => {
   const c = window.game.controller;
   const isGuest = typeof c.myUnits === 'function';
@@ -230,6 +268,55 @@ try {
   await a.page.waitForTimeout(1200);
   for (const p of [a, b, c]) await p.page.evaluate(() => { window.__rx.length = 0; window.__raw.length = 0; window.__app.length = 0; });
 
+  // ---------------------------------------------------- the square, apart
+  for (const p of [a, b, c]) {
+    const moved = await p.page.evaluate((id) => window.__debug.gotoRoom(id), ROOM_ID);
+    check(`${p.name} walked into the square`, moved === true);
+  }
+  await a.page.waitForTimeout(2500); // presence re-joins the new room's channel
+
+  // Walk each player onto their OWN tile. Everyone enters on the room spawn
+  // (remote players do not block tiles), so without this the duel would start
+  // from a three-way pile-up — which is the bug the placement rule exists for,
+  // and which this suite should not be silently relying on.
+  const stood = {};
+  for (const [p, wanted] of [[a, TILES.A], [b, TILES.B], [c, TILES.C]]) {
+    const at = await p.page.evaluate(async (opts) => {
+      const pf = await import('/js/pathfinder.js');
+      const ctl = window.game.controller;
+      const u = ctl.unit;
+      const room = window.game.room;
+      // First candidate this room can actually walk to from here.
+      const target = opts.wanted.find(
+        (t) => !room.isBlocked(t.x, t.y) && ((u.x === t.x && u.y === t.y) || !!pf.findPath(room, u.x, u.y, t.x, t.y)),
+      );
+      if (!target) {
+        return { x: u.x, y: u.y, target: null, tried: opts.wanted };
+      }
+      ctl.onTap(target);
+      for (let i = 0; i < 120 && (u.x !== target.x || u.y !== target.y); i++) {
+        await new Promise((r) => setTimeout(r, 100));
+      }
+      return { x: u.x, y: u.y, target, walking: !!u.walking, room: room.id };
+    }, { wanted });
+    stood[p.name] = { x: at.x, y: at.y };
+    check(`${p.name} walked to a tile of its own`,
+      !!at.target && at.x === at.target.x && at.y === at.target.y);
+    if (!at.target) {
+      console.log(`     └─ ${p.name}: none of ${JSON.stringify(at.tried)} is reachable in this room`);
+    } else if (at.x !== at.target.x || at.y !== at.target.y) {
+      console.log(`     └─ ${p.name} wanted (${at.target.x},${at.target.y}) but stopped at (${at.x},${at.y})`);
+    } else {
+      console.log(`     └─ ${p.name} @ (${at.x},${at.y})`);
+    }
+  }
+  const away = (p, q) => Math.max(Math.abs(p.x - q.x), Math.abs(p.y - q.y));
+  check('the two duellists are standing next to each other, on separate tiles',
+    away(stood[a.name], stood[b.name]) === 1);
+  check('the bystander is standing clear of both',
+    away(stood[c.name], stood[a.name]) >= 2 && away(stood[c.name], stood[b.name]) >= 2);
+  await a.page.waitForTimeout(1500); // let the walks broadcast
+
   // ------------------------------------------------------------- presence
   const tile = await a.page.waitForFunction((peer) => {
     const units = window.game?.controller?.remote?.units;
@@ -237,6 +324,9 @@ try {
     return u ? { x: u.x, y: u.y } : null;
   }, b.name, { timeout: 30000 }).then((h) => h.jsonValue()).catch(() => null);
   check('A sees B in the room', !!tile);
+  console.log(`  A sees B at   ->  ${JSON.stringify(tile)}`);
+  check('A sees B on B\u2019s real tile, not the shared spawn',
+    !!tile && tile.x === stood[b.name].x && tile.y === stood[b.name].y);
   // C's view of the two BEFORE anything starts — the baseline the "do they
   // freeze?" question is measured against.
   bystander.before = await c.page.evaluate((names) => {
@@ -251,6 +341,10 @@ try {
   console.log(`  C sees before ->  ${JSON.stringify(bystander.before)}`);
   check('the bystander sees both duellists in the room beforehand',
     !!bystander.before[a.name] && !!bystander.before[b.name]);
+  check('the bystander sees them on two DIFFERENT tiles',
+    !!bystander.before[a.name] && !!bystander.before[b.name] &&
+    (bystander.before[a.name].x !== bystander.before[b.name].x ||
+     bystander.before[a.name].y !== bystander.before[b.name].y));
   if (!tile) throw new Error('no presence — cannot start a real duel');
 
   // ------------------------------------------------------------- challenge
@@ -296,15 +390,27 @@ try {
   const bootB = await b.page.waitForFunction(
     () => document.querySelectorAll('#roster .roster-row').length === 2, null, { timeout: 30000 },
   ).then(() => true).catch(() => false);
-  check('A boots the arena and renders 2 roster rows', bootA);
-  check('B boots the arena and renders 2 roster rows', bootB);
+  check('A boots the duel and renders 2 roster rows', bootA);
+  check('B boots the duel and renders 2 roster rows', bootB);
 
   const rA = await rendered(a.page);
   const rB = await rendered(b.page);
   console.log(`  A renders     ->  ${JSON.stringify(rA)}`);
   console.log(`  B renders     ->  ${JSON.stringify(rB)}`);
-  check('A is in the arena room', rA.roomName === 'The Duelling Ground');
-  check('B is in the arena room', rB.roomName === 'The Duelling Ground');
+  // THE HEADLINE CLAIM: nobody went anywhere. The fight is in the square.
+  check('A fights in the square, not an arena', rA.roomId === ROOM_ID && rA.roomName === ROOM_NAME);
+  check('B fights in the square too', rB.roomId === ROOM_ID && rB.roomName === ROOM_NAME);
+  check('A never left the explore view', rA.overlayVisible === false && rA.chatBar === true);
+  check('B never left the explore view', rB.overlayVisible === false && rB.chatBar === true);
+  check('the square’s furniture is still on A’s screen', rA.propCount > 10);
+  check('...and on B’s', rB.propCount > 10);
+  check('the bystander is still in A’s scene alongside the two fighters',
+    rA.sceneUnits >= 3);
+  check('the duellists fight from the tiles they were standing on',
+    !!rA.units.find((u) => u.name === a.name && u.x === stood[a.name].x && u.y === stood[a.name].y) &&
+    !!rA.units.find((u) => u.name === b.name && u.x === stood[b.name].x && u.y === stood[b.name].y));
+  check('and never on the same tile as each other',
+    rA.units[0].x !== rA.units[1].x || rA.units[0].y !== rA.units[1].y);
   check('both clients agree on the unit positions',
     JSON.stringify(rA.units.map((u) => [u.name, u.x, u.y])) === JSON.stringify(rB.units.map((u) => [u.name, u.x, u.y])));
   check('both clients agree on starting HP',
@@ -361,6 +467,31 @@ try {
     finA.rows.every((r) => r.hp && Number(r.hp) > 0) &&
     finA.rows.some((r) => Number(r.hp) < 34) && finA.rows.filter((r) => Number(r.hp) < 34).length === 2);
 
+  // ---- the three UI defects this pass was meant to close --------------------
+  // The roster caption used to drop the level for team 'enemy' (correct for a
+  // goblin, wrong for a person), so the same fighter read "Fighter" on one
+  // screen and "Fighter L1" on the other.
+  check('every duellist carries a level on BOTH screens',
+    [...finA.rows, ...finB.rows].every((r) => /L\d+$/.test(r.cls || '')));
+  // The HP bar was coloured by TEAM, so each client painted its opponent's bar
+  // red — a fighter at full health read as nearly dead, on both screens.
+  const RED = /#cc0100|rgb\(204,\s*1,\s*0\)/;
+  const GREEN = /#00813e|rgb\(0,\s*129,\s*62\)/;
+  check('a duellist above half health never renders a red bar on either screen',
+    [...finA.rows, ...finB.rows].every((r) => !RED.test(r.fillBg || '')));
+  check('the bars are coloured by health, identically on both screens',
+    finA.rows.every((r) => GREEN.test(r.fillBg || '')) &&
+    finB.rows.every((r) => GREEN.test(r.fillBg || '')));
+  console.log(`  bar colours A ->  ${JSON.stringify(finA.rows.map((r) => [r.name, r.fillBg]))}`);
+  console.log(`  bar colours B ->  ${JSON.stringify(finB.rows.map((r) => [r.name, r.fillBg]))}`);
+  // The banner used to say "Defeat all enemies" at another player.
+  check('neither banner speaks dungeon at a person',
+    !/Defeat all enemies/.test(finA.banner || '') && !/Defeat all enemies/.test(finB.banner || ''));
+  check('both banners name the opponent instead',
+    (finA.banner || '').includes(b.name) && (finB.banner || '').includes(a.name));
+  console.log(`  banner A      ->  ${JSON.stringify(finA.banner)}`);
+  console.log(`  banner B      ->  ${JSON.stringify(finB.banner)}`);
+
   await Promise.all([shot(a.page, 'attack-A.png'), shot(b.page, 'attack-B.png'), shot(c.page, 'attack-C.png')]);
 
   // ------------------------------------------------------------- bystander
@@ -398,22 +529,45 @@ try {
   check('C physically RECEIVES the duel stream (it rides the room channel)', by.raw > 0);
   check('C\'s app code is told about none of it (every frame is addressed elsewhere)', by.app === 0);
   check('C renders no duel UI', !by.duelWindow && by.rosterRows === 0);
-  check('C is still standing in the square', by.roomName !== 'The Duelling Ground');
-  check('the duellists do NOT vanish from C\'s room', !!by.seen[a.name] && !!by.seen[b.name]);
-  check('...and are still drawn in C\'s scene', !!(by.seen[a.name] && by.seen[a.name].inScene));
+  check('C is still standing in the square', by.roomName === ROOM_NAME);
+  // SYMMETRY. The old teardown lifted one duellist out of the room and left the
+  // other standing: attack-C.png showed hb-DuelB frozen in the tavern while
+  // hb-DuelA had vanished outright. An in-place duel tears nothing down, so
+  // BOTH must still be there — and the failure to catch is one of them missing
+  // while the other is fine.
+  const present = [a.name, b.name].filter((n) => !!by.seen[n]);
+  check('NEITHER duellist vanishes from the bystander\u2019s room', present.length === 2);
+  check('...and they are treated identically (no one-vanished asymmetry)',
+    present.length === 0 || present.length === 2);
+  check('both are still drawn in C\u2019s scene',
+    [a.name, b.name].every((n) => !!(by.seen[n] && by.seen[n].inScene)));
+  check('both still carry their name tag for C',
+    [a.name, b.name].every((n) => !!(by.seen[n] && by.seen[n].hasTag)));
+  check('C never sees the two duellists stacked on one tile',
+    !by.seen[a.name] || !by.seen[b.name] ||
+    by.seen[a.name].x !== by.seen[b.name].x || by.seen[a.name].y !== by.seen[b.name].y);
 
-  // THE question. The duellists are standing in an arena on their own screens;
-  // what is their avatar doing in the room they left behind? Compare C's view
-  // now against C's view before the duel started.
+  // THE question, now answered per duellist: the fight is happening in this very
+  // room, so what does a bystander actually see the fighters DOING? Compare C's
+  // view now against C's view before the duel started, and against the truth.
   for (const n of [a.name, b.name]) {
     const was = bystander.before[n];
     const now = by.seen[n];
+    const truth = finA.units.find((u) => u.name === n);
     const verdict = !now ? 'VANISHED from C\'s room'
       : (was && now.x === was.x && now.y === was.y)
-        ? `FROZEN at (${now.x},${now.y}) — same tile as before the duel`
+        ? `STILL at (${now.x},${now.y}) — same tile as before the duel`
         : `MOVED to (${now.x},${now.y}) from (${was && was.x},${was && was.y})`;
-    console.log(`  ${n}: ${verdict}`);
+    const agrees = truth && now && truth.x === now.x && truth.y === now.y;
+    console.log(`  ${n}: ${verdict}; the fighter is really at (${truth && truth.x},${truth && truth.y}) — C ${agrees ? 'AGREES' : 'IS STALE'}`);
   }
+  bystander.tracking = [a.name, b.name].map((n) => {
+    const truth = finA.units.find((u) => u.name === n);
+    const now = by.seen[n];
+    return !!(truth && now && truth.x === now.x && truth.y === now.y);
+  });
+  check('C\u2019s view of where each fighter stands matches the real fight',
+    bystander.tracking.every(Boolean));
 } catch (e) {
   console.error(`\n  SUITE ABORTED: ${e.message}`);
   state.failed++;

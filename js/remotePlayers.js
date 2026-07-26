@@ -240,6 +240,17 @@ export class RemotePlayers {
     this.net.move(unit.x, unit.y); // real spawn tile, not the (0,0) default
   }
 
+  // Hide/show one player's name tag without touching their presence row.
+  //
+  // A DUEL is fought in place (js/duelBattle.js): the opponent's ordinary
+  // avatar is lifted out of the scene and their battle unit stands there
+  // instead. The tag has to ride along, or the name floats over an avatar that
+  // is no longer being drawn while the fighter below it is unlabelled.
+  setTagHidden(name, hidden) {
+    const tag = this.tags.get(String(name || '').toLowerCase());
+    if (tag) tag.style.display = hidden ? 'none' : '';
+  }
+
   // Called from the explore controller's frame update: keep name tags glued
   // above remote heads (camera pans and walk interpolation included).
   update(now) {

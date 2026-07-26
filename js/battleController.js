@@ -7,6 +7,20 @@ import { propSprites } from './props.js';
 // authentic Firing Arrow; magic/skill keep their procedural energy glow.
 export const PROJ_SPRITE = { ranged: 'hween_c25_arrow' };
 
+// The roster HP bar is coloured by TEAM in css/style.css: green for the player
+// squad, red for the enemy team. In a dungeon that reads correctly — red is the
+// monsters. In a DUEL the enemy team is the other player, so a fighter at full
+// health rendered a full red bar and read as nearly dead, on both screens at
+// once (each client renders its opponent as the enemy team). Colour by HEALTH
+// there instead, which is what a bar is for: green → amber → red as it drains.
+// Returns an inline `background` declaration to append to the fill's style, or
+// '' outside a duel so dungeon battles keep the stylesheet's team colours.
+export function hpTint(frac, isDuel) {
+  if (!isDuel) return '';
+  const c = frac > 0.5 ? '#00813e' : frac > 0.25 ? '#d98b0b' : '#cc0100';
+  return `;background:${c}`;
+}
+
 // Turns taps into Vandal Hearts commands and keeps the tile overlays + side
 // panel in sync with the battle engine. Flow for one player unit:
 //   tap your unit -> move range (blue) + attackable foes (red)
@@ -37,11 +51,21 @@ export class BattleController {
   onRoom() {}
 
   start(room, players, enemies, opts = {}) {
-    this.game.setRoom(room);
+    // A DUEL is fought in the room the players are already standing in
+    // (js/duelBattle.js), so it passes inPlace and the scene is left alone:
+    // setRoom would clear every bystander, prop and critter the explore view is
+    // holding and replace the room the renderer is drawing. Dungeon battles
+    // still build their room from scratch, which is what setRoom is for.
+    if (!opts.inPlace) this.game.setRoom(room);
     this.sel = null;
     this.moving = false;
     this.mode = 'normal';
     this.exit = null;
+    // Duel mode: the 'enemy' team is another PLAYER, so the UI must stop
+    // speaking dungeon (see render()).
+    this.duel = opts.duel || null;
+    this.inPlace = !!opts.inPlace;
+    this.duelUnits = opts.inPlace ? [...players, ...enemies] : [];
     if (this.dom.log) this.dom.log.innerHTML = '';
     for (const u of [...players, ...enemies]) this.game.addUnit(u);
     this.battle = new Battle(room, [...players, ...enemies], {
@@ -322,8 +346,17 @@ export class BattleController {
   render() {
     if (!this.battle || !this.dom.banner) return;
     const b = this.battle;
+    const foe = this.duel ? this.duel.opponent : null;
     // NB: bubble copy avoids em-dashes/ellipses — Volter maps them to odd glyphs.
-    const label = {
+    // A duel has no dungeon objective and no monsters: "enemy phase" and
+    // "Defeat all enemies" are about a person standing in the room with you, so
+    // name them instead.
+    const label = this.duel ? {
+      player: `Turn ${b.turn}, your move`,
+      enemy: `Turn ${b.turn}, ${foe} is moving`,
+      won: `You beat ${foe}!`,
+      lost: `${foe} wins the duel.`,
+    }[b.phase] : {
       player: `Turn ${b.turn}, your move`,
       enemy: `Turn ${b.turn}, enemy phase`,
       won: this.exit ? 'Victory! Walk onto the arrow to move on' : 'Victory!',
@@ -331,8 +364,9 @@ export class BattleController {
     }[b.phase];
     // Old-school Habbo chat-bubble shape: bold "name" part, then the message.
     const showObj = b.phase === 'player' || b.phase === 'enemy';
+    const obj = this.duel ? `Duel vs ${foe}` : b.objectiveText();
     this.dom.banner.innerHTML = showObj
-      ? `<b>${label}:</b> <span class="obj">${b.objectiveText()}</span>`
+      ? `<b>${label}:</b> <span class="obj">${obj}</span>`
       : `<b>${label}</b>`;
     this.dom.banner.className = `banner ${b.phase}`;
 
@@ -359,10 +393,15 @@ export class BattleController {
       const row = document.createElement('div');
       row.className = `roster-row ${u.team}${u.alive ? '' : ' dead'}${u === this.sel ? ' sel' : ''}${u.done && u.alive ? ' done' : ''}`;
       const frac = Math.max(0, u.stats.hp / u.stats.maxHp);
+      // Levels: shown for your own squad, hidden for monsters (a goblin has no
+      // meaningful level to a player) — but a DUELLIST is a person, and hiding
+      // it made the same fighter read "Fighter" on one screen and "Fighter L1"
+      // on the other.
+      const lvl = this.duel || u.team === 'player' ? ` L${u.level}` : '';
       row.innerHTML =
         `<span class="rname">${u.name}</span>` +
-        `<span class="rcls">${u.cls.name}${u.team === 'player' ? ` L${u.level}` : ''}</span>` +
-        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%"></span></span>` +
+        `<span class="rcls">${u.cls.name}${lvl}</span>` +
+        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%${hpTint(frac, !!this.duel)}"></span></span>` +
         `<span class="rhpn">${u.alive ? u.stats.hp : '✕'}</span>`;
       this.dom.roster.appendChild(row);
     }

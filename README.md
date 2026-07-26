@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 14 unit suites below (538 checks) — must pass
+npm test                 # all 14 unit suites below (577 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 10 e2e suites (9 real Chromium + the duel DB stack)
 ```
@@ -140,7 +140,7 @@ node tests/battle.test.js              # damage math, line of sight, targeting, 
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (75 checks)
 node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, clock skew (95 checks)
-node tests/duelBattle.test.js           # duel battle: host authority, phase ownership, bystanders, no AI (84 checks)
+node tests/duelBattle.test.js           # duel battle: in-place arena, placement, host authority, no AI (123 checks)
 node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
 node tests/dailyReward.test.js         # daily-wheel streaks, claim windows, payout table (23 checks)
 node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead zone (13 checks)
@@ -157,10 +157,16 @@ ports, so `run-suites.mjs` runs them sequentially and takes a machine-wide lock
 for the duration.
 
 `tests/e2e/duelLive.e2e.mjs` is the only suite that fights a real duel: three
-browsers on the live project, two duelling and one bystander standing in the
-room to measure what a non-participant sees. It reuses persistent browser
-profiles (like `partyInviteError`) so repeat runs mint no new anonymous users,
-and drops screenshots of all three clients into `tests/e2e/.artifacts/`.
+browsers on the live project, walking to distinct tiles in The Old Town Square
+— two duelling side by side and one bystander off to the side, measuring what a
+non-participant sees. It reuses persistent browser profiles (like
+`partyInviteError`) so repeat runs mint no new anonymous users, and drops
+screenshots of all three clients into `tests/e2e/.artifacts/`.
+
+Duels are fought **in place**: there is no arena and no scene change. The host
+builds one authoritative Battle over the room both players are already standing
+in, and neither ever leaves the explore view — so bystanders keep watching the
+room while the two fighters gain a battle UI over the top of it.
 
 One of them is not a browser suite at all. `tests/e2e/duel.e2e.mjs` boots a real
 PostgreSQL and a real PostgREST in-process and runs the duel edge functions'

@@ -1578,6 +1578,14 @@ let duelHost = null;
 let duelGuest = null;
 const battleDom = () => ({ banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log') });
 
+// The tile I am standing on right now. An in-place duel starts from the real
+// positions of the two players, so this is what gets sent and placed from.
+function myTile() {
+  const u = explore.unit;
+  if (!u) return null;
+  return { x: u.x, y: u.y, dir: u.dir };
+}
+
 // My duellist: the calling I'm playing, my Habbo figure, and my run leader's
 // level when I have a save (so a duel is fought by the hero I've been playing).
 function myDuellist() {
@@ -1591,75 +1599,165 @@ function myDuellist() {
   };
 }
 
+// The two duellists' ordinary AVATARS, taken out of the scene for the duration.
+//
+// A duel is fought in place, so the fighters are standing in the room twice
+// over: once as the explore avatar the renderer has been drawing, and once as
+// the battle Unit the engine now owns. Leaving both in draws two sprites on one
+// tile. The battle Unit is the one with the HP bar, the weapon art and the
+// combat poses, so the avatar is what gets pulled — and put straight back when
+// the duel ends. Bystanders' avatars are untouched: only the two fighters swap
+// representation, and only on their own two screens.
+let duelHidden = [];
+
+function hideDuellistAvatars(opponentName) {
+  duelHidden = [];
+  const pull = (unit) => {
+    if (!unit) return;
+    const i = game.units.indexOf(unit);
+    if (i < 0) return;
+    game.units.splice(i, 1);
+    duelHidden.push(unit);
+  };
+  pull(explore.unit); // mine
+  pull(remote.units.get(String(opponentName || '').toLowerCase())); // theirs
+  remote.setTagHidden(opponentName, true); // their name tag rides with them
+}
+
+function restoreDuellistAvatars(opponentName) {
+  for (const u of duelHidden) if (!game.units.includes(u)) game.units.push(u);
+  duelHidden = [];
+  remote.setTagHidden(opponentName, false);
+}
+
+// Keep the world honest about where a duellist is standing. The fight happens
+// in the room, so a bystander should see the fighters move as they fight rather
+// than watching two statues: when my battle unit settles on a new tile, my
+// avatar follows it and presence broadcasts it, exactly as an ordinary walk
+// would. Cheap, and it is what makes "in place" true for everyone else.
+let duelSync = null;
+let duelPrevOnFrame = null;
+
+// The explore view's per-frame work — remote name tags glued above heads,
+// critters wandering, room bots pacing — normally runs from
+// ExploreController.update, which stops being called the moment the battle
+// controller takes over input. In an in-place duel the room is still on screen
+// and full of other people, so that work must keep happening: chain it onto
+// game.onFrame for the duration, the same way RoomBots and RoomEditor do.
+function startDuelFrame() {
+  duelPrevOnFrame = game.onFrame;
+  game.onFrame = (g, now) => {
+    explore.update(now);
+    if (duelPrevOnFrame) duelPrevOnFrame(g, now);
+  };
+}
+
+function stopDuelFrame() {
+  game.onFrame = duelPrevOnFrame || null;
+  duelPrevOnFrame = null;
+}
+
+function startDuelSync() {
+  let last = null;
+  duelSync = setInterval(() => {
+    const u = myDuelUnit();
+    if (!u) return;
+    const key = `${u.x},${u.y}`;
+    if (key === last) return;
+    last = key;
+    if (explore.unit) {
+      explore.unit.x = u.x;
+      explore.unit.y = u.y;
+      explore.unit.dir = u.dir;
+      explore.unit.z = u.z;
+    }
+    net.move(u.x, u.y);
+  }, 300);
+}
+
+// My own fighter, whichever seat I am in: the host owns team 'player', the
+// guest's own unit is the host's team 'enemy'.
+function myDuelUnit() {
+  if (duelHost && duelHost.battle) {
+    return duelHost.battle.units.find((u) => u.team === 'player') || null;
+  }
+  if (duelGuest && duelGuest.controller) {
+    return (duelGuest.controller.myUnits() || [])[0] || null;
+  }
+  return null;
+}
+
+// Reveal the battle panel OVER the live room. No hideAll, no room discovery
+// ribbon, no run chrome swap: the explore view stays exactly as it was and the
+// duellist simply gains a battle UI on top of it.
 function duelScreen() {
-  hideAll();
-  startRunChrome();
   panel.classList.remove('hidden');
-  showRoomDiscovery('The Duelling Ground');
 }
 
 function startDuel(state) {
   if (duelHost || duelGuest) return; // one duel at a time
   duelUI.close(); // the countdown window has said its piece
-  // Stay in the room channel: the duel stream rides it (and we are still
-  // standing in that room as far as everyone else is concerned).
-  leaveExplore({ keepRoom: true });
-  hideAll();
-  const me = myDuellist();
+  // NOTHING is torn down. We stay in the room, in the explore view, on the room
+  // channel, with presence live — both duellists identically, which is also why
+  // one of them can no longer vanish from a bystander's screen while the other
+  // freezes: neither takes a teardown path any more, because there isn't one.
+  const me = { ...myDuellist(), at: myTile() };
+  hideDuellistAvatars(state.opponent);
   if (hostsDuel(state)) {
     duelHost = new DuelHost(net, myName, state.opponent);
     duelHost.onBoot = () => duelScreen();
-    duelHost.onDuelEnd = (result) =>
+    duelHost.onDuelEnd = (result, reason) =>
       setTimeout(
-        () => endDuel(result === 'won' ? 'You win the duel!' : `${state.opponent} wins the duel.`),
-        1200
+        () => endDuel(reason || (result === 'won' ? 'You win the duel!' : `${state.opponent} wins the duel.`)),
+        result === 'aborted' ? 0 : 1200
       );
-    game.setController(battle); // bc.start() builds the arena into the renderer
-    duelHost.arm({ bc: battle, me });
+    game.setController(battle);
+    duelHost.arm({ bc: battle, me, room: game.room, myTile: me.at });
+    startDuelSync();
+    startDuelFrame();
     return;
   }
   duelGuest = new DuelGuest(net, game, battleDom(), myName);
   duelGuest.activate(state.opponent, {
-    waiting: (html) => {
-      hideAll();
-      overlay.classList.remove('hidden');
-      skinOverlay();
-      overlay.innerHTML = `
-        <div class="hd-landing" style="width:min(560px,96vw)">
-          <div class="hd-card">
-            <div class="hd-card-header">Duel</div>
-            <div class="hd-card-body"><p style="margin:0">${html}</p></div>
-          </div>
-        </div>`;
-    },
+    // "Waiting" is now a one-line toast, not a fullscreen card: the guest is
+    // standing in the room watching it, and covering the room with an overlay
+    // is exactly what an in-place duel is not.
+    waiting: (html) => duelUI.flash(html.replace(/<[^>]*>/g, '')),
     battleReady: () => duelScreen(),
     exit: (reason) => endDuel(reason),
   }, me);
+  startDuelSync();
+  startDuelFrame();
 }
 
-// Duel over (a KO, or the connection): tear both roles down and walk back out
-// into the square.
+// Duel over (a KO, a refusal, or the connection). Put the room back exactly as
+// it was: the fighters' avatars return, the battle UI folds, and explore takes
+// its taps back. Nobody travels anywhere, because nobody ever left.
 function endDuel(reason) {
-  if (duelHost) duelHost.end();
-  if (duelGuest) duelGuest.deactivate();
+  const opponent = (duelHost && duelHost.opponent) || (duelGuest && duelGuest.leaderName) || null;
+  clearInterval(duelSync);
+  duelSync = null;
+  stopDuelFrame();
+  if (duelHost) {
+    for (const u of duelHost.bc && duelHost.bc.duelUnits ? duelHost.bc.duelUnits : []) {
+      const i = game.units.indexOf(u);
+      if (i >= 0) game.units.splice(i, 1);
+    }
+    duelHost.end();
+  }
+  if (duelGuest) {
+    duelGuest.clearDuelUnits();
+    duelGuest.deactivate();
+  }
   duelHost = null;
   duelGuest = null;
-  leaveRunChrome();
-  hideAll();
-  overlay.classList.remove('hidden');
-  skinOverlay();
-  overlay.innerHTML = `
-    <div class="hd-landing" style="width:min(560px,96vw)">
-      <div class="hd-card">
-        <div class="hd-card-header">Duel</div>
-        <div class="hd-card-body"><p style="margin:0">${reason}</p></div>
-      </div>
-      <div class="camp-actions"><button id="duelDone" class="hd-btn hd-btn--green">Back to the square ▸</button></div>
-    </div>`;
-  $('duelDone').addEventListener('click', () => {
-    unskinOverlay();
-    startExplore();
-  });
+  battle.duel = null;
+  battle.battle = null;
+  game.clearOverlays();
+  restoreDuellistAvatars(opponent);
+  panel.classList.add('hidden');
+  game.setController(explore); // explore takes its taps back
+  if (reason) duelUI.flash(reason);
 }
 
 // ---- wild XP (the Mirkwood hunt) -------------------------------------------
@@ -1887,18 +1985,18 @@ function seedBag() {
 // Tear down explore-session chrome (chat, music, editor) before leaving the
 // room world for an overlay flow (a gate, the debug menu).
 //
-// `keepRoom` holds the room channel (and this player's presence row) open:
-// a duel is fought IN the room it was thrown in, and its battle stream rides
-// that very channel (js/duelBattle.js), so dropping it would cut the duel off
-// mid-countdown. It also skips duelUI.detach(), which would send duel-cancel
-// and call the duel off on the way into it.
-function leaveExplore({ keepRoom = false } = {}) {
+// A DUEL does not come through here at all any more. It used to, with a
+// `keepRoom` flag holding the room channel open while everything else was
+// dismantled — which is precisely what left one duellist frozen and the other
+// vanished on a bystander's screen, because the two sides tore down different
+// things. An in-place duel leaves the explore session completely alone.
+function leaveExplore() {
   infostand.close();
   tradeUI.detach();
-  if (!keepRoom) duelUI.detach();
+  duelUI.detach();
   party.detach();
   remote.detach();
-  if (!keepRoom) net.leaveRoom();
+  net.leaveRoom();
   updateMpStatus();
   if (furniCat) furniCat.close();
   if (botCat) botCat.close();
@@ -2266,6 +2364,22 @@ window.__debug = {
   botDefs: () => ROOM_BOTS,
   editor: () => editor,
   coopLeader: () => coopLeader,
+  // duel handles (tests/e2e/duelLive.e2e.mjs drives a real three-browser duel)
+  duelHost: () => duelHost,
+  duelGuest: () => duelGuest,
+  // walk into a named explore room — the same path the navigator's room
+  // buttons take, so an e2e can stage a duel somewhere other than the room the
+  // client happens to boot into
+  gotoRoom: (id) => {
+    const target = (exploreRooms || []).find((r) => r.id === id);
+    if (!target) return false;
+    if (chat) chat.clear();
+    remote.clear();
+    game.setRoom(target);
+    if (net.active) net.join(game.room.id);
+    music.setRoom(game.room.id);
+    return true;
+  },
   // daily-rewards wheel (e2e drives the open/spin/claim/block flow)
   openDailyWheel,
 };
