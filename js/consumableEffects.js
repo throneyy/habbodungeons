@@ -18,6 +18,7 @@
 //   living()      every living target, already filtered (healAll)
 //   hp(t) maxHp(t) setHp(t, n) addXp(t, n)
 //   fallen()      a ROSTER member eligible to be revived, or null
+//   applyBuff(t, stat, n)  raise a live stat for the rest of the battle
 //
 // `fallen` is roster-shaped in BOTH contexts, not target-shaped: revive brings
 // back someone who is not on the field, so there is no live Unit to act on.
@@ -40,6 +41,10 @@ export function rosterTargets(run) {
     setHp: (m, n) => { m.hp = n; },
     addXp: (m, n) => { m.xp += n; },
     fallen: () => run.squad.find((m) => m.hp <= 0) || null,
+    // A buff is battle-scoped: it lives on a live Unit, and between rooms
+    // there is no Unit to hold it (instantiateSquad rebuilds them per battle).
+    // Refusing here keeps the tonic in the backpack instead of burning it.
+    applyBuff: () => false,
   };
 }
 
@@ -60,6 +65,12 @@ export function battleTargets(run, battle) {
     // only heroes who fell in an EARLIER battle can rejoin (a corpse on
     // this field would just be re-downed by writeBack)
     fallen: () => run.squad.find((m) => m.hp <= 0 && !battle.units.some((u) => u.id === m.id)) || null,
+    applyBuff: (u, stat, n) => {
+      if (typeof u.applyBuff !== 'function' || !u.applyBuff(stat, n)) return false;
+      // same gold burst + "+n ATK" floater Inspire plays
+      if (battle.onFx) battle.onFx({ kind: 'buff', caster: u, target: u, amount: n });
+      return true;
+    },
   };
 }
 
@@ -99,6 +110,14 @@ export function resolveEffect(effect, targets) {
         reviveMember(fallen);
         did = true;
       }
+      break;
+    }
+    case 'buff': {
+      // stat is explicit, so def/spd tonics need no new kind. A missing stat or
+      // amount is refused here; an unknown stat name is refused by the unit.
+      if (!effect.stat || !Number.isFinite(effect.n)) break;
+      const leader = targets.leader();
+      if (leader && targets.applyBuff) did = targets.applyBuff(leader, effect.stat, effect.n) === true;
       break;
     }
     case 'xp': {

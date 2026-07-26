@@ -21,6 +21,7 @@ export class Unit extends Avatar {
     this.skills = [...(this.cls.skill ? [this.cls.skill] : []), ...extra];
     this.skill = this.skills[0] || null;
     this.buffAtk = 0; // temporary Inspire/Blessing bonus, consumed on next attack
+    this.buffs = []; // lasting stat buffs from consumables ({ stat, n }) — see applyBuff
     this.shield = 0; // absorbs incoming damage before HP (Foam/Sapling Barrier)
     this.rooted = 0; // turns of root remaining (Net/Whirlpool) — can't move
     this.rootedThisTurn = false; // resolved at resetTurn: rooted for THIS phase
@@ -51,9 +52,33 @@ export class Unit extends Avatar {
         : null,
     };
 
+    // Consumable buffs (tonics) fold straight into the live stats. Applied
+    // after `stats` exists so construction and a mid-battle drink share code.
+    for (const b of opts.buffs || []) this.applyBuff(b.stat, b.n);
+
     // Per-turn flags, reset at the start of each of this unit's phases.
     this.moved = false;
     this.acted = false;
+  }
+
+  // Add a lasting stat buff (a drunk tonic), effective immediately even on an
+  // already-constructed unit. Deliberately NOT `buffAtk`: that field is
+  // Inspire's single-swing bonus, zeroed by the next attack (battle.js) and
+  // read as an eligibility flag by Inspire's targeting, so parking a lasting
+  // value there would both vanish and lock the Bard out. Returns false for an
+  // unbuffable stat or a non-numeric amount, so a malformed effect is refused
+  // instead of writing NaN into the stat block.
+  applyBuff(stat, n) {
+    if (!this.stats) return false;
+    if (stat !== 'atk' && stat !== 'def' && stat !== 'spd') return false;
+    if (!Number.isFinite(n) || n === 0) return false;
+    this.stats[stat] += n;
+    // equipment atk feeds BOTH atk and closeRange.atk (see the constructor),
+    // so the close-range profile has to move with it or a Ranger stepping into
+    // melee would silently lose the buff.
+    if (stat === 'atk' && this.stats.closeRange) this.stats.closeRange.atk += n;
+    this.buffs.push({ stat, n });
+    return true;
   }
 
   get alive() {
