@@ -11,6 +11,7 @@ import { Run, makeMember, memberStats, SAVE_KEY } from './run.js';
 import { buildDungeon, DUNGEONS, DUNGEON_ID } from './dungeon.js';
 import { pickEvents } from './events.js';
 import { Identity, Auth } from './identity.js';
+import { getSupabase } from './supabase.js';
 import { RunStore } from './runStore.js';
 import { SKILL_TREES, nextUnlocks } from './skills.js';
 import { ChatOverlay } from './chat.js';
@@ -2147,6 +2148,10 @@ window.__debug = {
   },
   // multiplayer handles (presence e2e drives these directly)
   explore, net, remote, party, coopMember, tradeUI,
+  // the shared Supabase client singleton, so an e2e run can seed the rows its
+  // own RLS policies allow it to write — notably profiles.habbo_username,
+  // which party-invite resolves the target by (tests/e2e/lib.mjs openPlayer).
+  supabase: () => getSupabase(),
   // walking room bots + the furni editor (:npc / :furni e2e drive these)
   roomBots: () => roomBots,
   botDefs: () => ROOM_BOTS,

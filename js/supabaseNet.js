@@ -376,7 +376,12 @@ export class SupabaseNet {
   }
 
   // ---- generic sender: party / trade / co-op relay -----------------------
-  send(msg) {
+  // Edge-function sends are awaited, not fire-and-forget: the party-* /
+  // trade-* functions answer a REJECTION with HTTP 200 + { ok:false, reason },
+  // so the only way a caller ever learns "party is full" / "already in a
+  // party" is by reading the body. Swallowing it left the UI stuck on an
+  // optimistic 'Invited…' forever with no explanation anywhere.
+  async send(msg) {
     if (!this.active || !msg || typeof msg.t !== 'string') return;
     const t = msg.t;
     // Co-op relay rides the party broadcast channel directly (leader-relay).
@@ -392,7 +397,16 @@ export class SupabaseNet {
     // Everything else is an authoritative mutation → an edge function.
     const fn = SEND_FN[t];
     if (!fn) return;
-    invokeFn(fn.name, fn.body(msg)).catch(() => {});
+    let res = null;
+    try {
+      res = await invokeFn(fn.name, fn.body(msg));
+    } catch {
+      res = null; // invokeFn already swallows fetch failures; belt and braces
+    }
+    if (res && res.ok) return;
+    const reason = (res && res.reason) || 'the server rejected that.';
+    console.warn(`[habbo-dungeons] ${t} failed: ${reason}`);
+    this.emit('net-error', { t, reason });
   }
 
   disconnect() {

@@ -50,7 +50,8 @@ export async function startServer(port) {
 }
 
 // A browser page with a pre-seeded VERIFIED identity so requireSignIn lets it
-// into the square. Purely client-side — no server session credential needed.
+// into the square, plus a matching profiles row so the SERVER knows who this
+// browser is (see seedProfile).
 export async function openPlayer(browser, port, name, figure) {
   const context = await browser.newContext({ viewport: { width: 1100, height: 750 } });
   const identity = {
@@ -67,7 +68,56 @@ export async function openPlayer(browser, port, name, figure) {
   const page = await context.newPage();
   page.on('pageerror', (e) => console.error(`  [${name}] pageerror:`, e.message));
   await page.goto(`http://localhost:${port}/`, { waitUntil: 'domcontentloaded' });
+  await seedProfile(page, identity);
   return page;
+}
+
+// Seeding localStorage alone makes a player look linked to ITSELF only. The
+// server has no idea who this browser is: the party-* / trade-* edge functions
+// resolve their target by profiles.habbo_username (supabase/functions/_shared/
+// party.ts userByName), so an unseeded peer is invisible to them and every
+// invite comes back { ok:false, reason:'no such player' } no matter how
+// correct the client is.
+//
+// The fix is a row the page is allowed to write itself: the "profiles self
+// upsert" / "profiles self update" RLS policies
+// (supabase/migrations/20260725153009_*.sql) permit insert/update where
+// auth.uid() = id, so a page's OWN anonymous session can claim its Habbo name
+// — no service-role key anywhere near the test suite.
+export async function seedProfile(page, identity) {
+  await page.waitForFunction(() => !!(window.__debug && window.__debug.supabase), null, { timeout: 20000 });
+  const res = await page.evaluate(async (id) => {
+    const d = window.__debug;
+    const sb = await d.supabase();
+    if (!sb) return { ok: false, reason: 'supabase client unavailable' };
+    // The anon JWT owns the row, so it has to exist before the upsert. Anon
+    // sign-ups are rate-limited per IP, and a two-browser suite burns two of
+    // them per run — retry, and surface the real auth error instead of a bare
+    // "no session", so a 429 is obvious rather than looking like a test bug.
+    let user = null;
+    let authErr = '';
+    for (let i = 0; i < 3 && !user; i++) {
+      const { data: { user: u } = { user: null } } = await sb.auth.getUser();
+      if (u) { user = u; break; }
+      const { data, error } = await sb.auth.signInAnonymously();
+      if (data?.user) user = data.user;
+      else {
+        authErr = error?.message || 'unknown';
+        await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+      }
+    }
+    if (!user) return { ok: false, reason: `no supabase session (${authErr})` };
+    const { error } = await sb.from('profiles').upsert({
+      id: user.id,
+      habbo_username: id.name,
+      habbo_figure: id.figure,
+      habbo_verified_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+    return error ? { ok: false, reason: error.message } : { ok: true, userId: user.id };
+  }, identity);
+  if (!res.ok) console.error(`  [${identity.name}] profile seed failed:`, res.reason);
+  return res;
 }
 
 // Enter Free Roam and wait until we're actually in the square. The Daily-Spin

@@ -34,8 +34,27 @@ export class PartyUI {
       net.on('invited', (m) => this.showInvite(m.from)),
       net.on('party', (m) => this.onState(m)),
       net.on('declined', (m) => this.notice(`${m.name} declined the invite.`)),
+      net.on('net-error', (m) => this.onNetError(m)),
       net.on('close', () => this.onState({ leader: null, members: [] })),
     ];
+  }
+
+  // A party/trade send the server refused (HTTP 200 + { ok:false, reason } —
+  // see SupabaseNet.send). Surface the server's own wording rather than a
+  // generic failure, and undo the infostand's optimistic 'Invited…' state so
+  // the button isn't dead until the panel is reopened.
+  onNetError({ t, reason }) {
+    this.notice(reason);
+    if (t === 'invite') this.resetInviteButton();
+  }
+
+  // humanInfostand.js flips its own button the instant it's clicked; only the
+  // network answer knows whether that was warranted.
+  resetInviteButton() {
+    const btn = document.querySelector('.infostand--human [data-act="invite"]');
+    if (!btn) return;
+    btn.textContent = 'Invite to Party';
+    btn.disabled = !this.canInvite();
   }
 
   get inParty() {
