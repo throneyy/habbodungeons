@@ -52,6 +52,45 @@ export type Database = {
           },
         ]
       }
+      duels: {
+        Row: {
+          a_name: string
+          a_user: string
+          b_name: string
+          b_user: string
+          created_at: string
+          id: string
+          room_id: string
+          starts_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          a_name: string
+          a_user: string
+          b_name: string
+          b_user: string
+          created_at?: string
+          id?: string
+          room_id: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          a_name?: string
+          a_user?: string
+          b_name?: string
+          b_user?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           created_at: string
@@ -169,6 +208,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          class_id: string | null
           fishing_level: number
           gardening_level: number
           habbo_figure: string | null
@@ -183,6 +223,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          class_id?: string | null
           fishing_level?: number
           gardening_level?: number
           habbo_figure?: string | null
@@ -197,6 +238,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          class_id?: string | null
           fishing_level?: number
           gardening_level?: number
           habbo_figure?: string | null
