@@ -7,21 +7,6 @@ import { requireUser, serviceClient, rateOk } from "../_shared/client.ts";
 import { PARTY_MAX, INVITE_TTL_MS, userByName, partyOf } from "../_shared/party.ts";
 import { broadcast, userTopic } from "../_shared/realtime.ts";
 
-// TEMPORARY DEPLOYMENT PROBE — delete once the question below is answered.
-//
-// We have proven Lovable does not apply database migrations (profiles.class_id
-// has been declared in git for a day and still returns 42703 on the live DB).
-// We have never proven it deploys EDGE FUNCTIONS at all, and a stale deployment
-// of THIS file would explain the invite-broadcast failure entirely: the
-// private:true fix in _shared/realtime.ts cannot take effect if the function
-// bundling it was never rebuilt.
-//
-// A version marker on the success response answers that with no ambiguity:
-// the field is absent from every previously deployed build, so if a live call
-// returns it, the deploy pipeline reached the server; if it does not, the
-// server is running old code and every edge-function fix so far is untested.
-const DEPLOY_MARKER = "2026-07-26-dd70zn";
-
 Deno.serve(async (req) => {
   const pre = preflight(req);
   if (pre) return pre;
@@ -66,5 +51,5 @@ Deno.serve(async (req) => {
   });
   // Push the prompt to the target's personal topic (js/party.js showInvite).
   await broadcast(userTopic(target.id), "invited", { from: fromName });
-  return json({ ok: true, deployedAt: DEPLOY_MARKER });
+  return json({ ok: true });
 });
