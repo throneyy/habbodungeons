@@ -55,8 +55,11 @@
 // maps to nothing at all, so he is left without one. No id is guessed to fill
 // a gap — an unmapped drink means no carry.
 //
-// Next field to add here: `dialogue` (a key into js/dialogueData.js) so a bot
-// can be talked to the way the Gatekeeper is.
+// What a bot SAYS lives in js/botChatter.js, keyed by the same `key` as here:
+// the dump's speech / response / unrecognised_response columns. That is a flat
+// pick-a-random-line shape, deliberately not js/dialogueData.js (the branching
+// node/choice machine the prop-NPC Gatekeeper runs on). 11 of the 33 are
+// silent in the source and are simply absent from that map.
 import { handItemId } from './handItems.js';
 
 export const ROOM_BOTS = [

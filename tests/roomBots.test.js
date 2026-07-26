@@ -5,6 +5,7 @@
 import { splitBots, serializeBot, wanderTarget, LEASH } from '../js/roomBots.js';
 import { ROOM_BOTS, botDef } from '../js/botsData.js';
 import { HAND_ITEMS, handItemId } from '../js/handItems.js';
+import { CHATTER, SILENT_BOTS, chatterFor, modeOf } from '../js/botChatter.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -84,6 +85,53 @@ check('non-carriers leave the field unset',
 check('handItemId is name-exact and throws on a typo', (() => {
   try { handItemId('cola'); return false; } catch { return handItemId('Cola') === 5; }
 })());
+
+// ---- chatter --------------------------------------------------------------
+// js/botChatter.js: the dump's speech / response / unrecognised_response
+// columns, keyed by the same bot keys. Silent bots are ABSENT, not empty.
+console.log('chatter');
+const chatterKeys = Object.keys(CHATTER);
+const allLines = Object.values(CHATTER).flatMap((c) => [...c.speech, ...c.response, ...c.unrecognised]);
+check('every chatter key is a real bot', chatterKeys.every((k) => botDef(k) !== null));
+check('chatter + silent covers the whole roster exactly',
+  chatterKeys.length + SILENT_BOTS.length === ROOM_BOTS.length &&
+  new Set([...chatterKeys, ...SILENT_BOTS]).size === ROOM_BOTS.length &&
+  ROOM_BOTS.every((b) => chatterKeys.includes(b.key) || SILENT_BOTS.includes(b.key)));
+check('silent bots are absent, not empty entries',
+  SILENT_BOTS.every((k) => CHATTER[k] === undefined && chatterFor(k) === null));
+check('no entry is silent-by-empty-arrays',
+  Object.values(CHATTER).every((c) => c.speech.length + c.response.length + c.unrecognised.length > 0));
+check('every entry has all three buckets as arrays',
+  Object.values(CHATTER).every((c) => ['speech', 'response', 'unrecognised'].every((k) => Array.isArray(c[k]))));
+check('chatterFor resolves a talker and rejects an unknown key',
+  chatterFor('harry') === CHATTER.harry && chatterFor('no_such_bot') === null);
+
+// the #SHOUT / #WHISPER suffixes must have been parsed into `mode`, never left
+// sitting in text where a chat bubble would render them literally
+check('no line still carries a raw #SHOUT / #WHISPER suffix',
+  allLines.every((l) => !/#(SHOUT|WHISPER)/.test(l.text)));
+check('modes are only the three known values',
+  allLines.every((l) => ['say', 'shout', 'whisper'].includes(modeOf(l))));
+check('the shout/whisper lines actually survived as modes',
+  allLines.some((l) => modeOf(l) === 'shout') && allLines.some((l) => modeOf(l) === 'whisper'));
+check('a known shout is parsed off its text', (() => {
+  const l = CHATTER.jem.speech[0];
+  return l.text === "Quiet please, I'm thinking" && modeOf(l) === 'shout';
+})());
+// Volter (the bitmap chat font) mis-renders curly punctuation and em dashes
+check('text is ASCII-only: no curly quotes, em dashes or ellipsis glyphs',
+  allLines.every((l) => !/[^\x20-\x7E]/.test(l.text)));
+check("Piers' curly apostrophe came through as ASCII",
+  CHATTER.piers.speech.some((l) => l.text === "That's a recipe for disaster."));
+check("no stray CR/LF survived inside a line (Amber's row carries one)",
+  allLines.every((l) => !/[\r\n]/.test(l.text)) &&
+  CHATTER.amber.response.some((l) => l.text === 'Thirst quenching, soul refreshing!'));
+check("no line is empty or untrimmed (Miho's row ends with a trailing |)",
+  allLines.every((l) => l.text.length > 0 && l.text === l.text.trim()));
+// the emulator's substitution tokens are content, not damage: they stay
+check('%drink% / %lowercaseDrink% template tokens are preserved',
+  CHATTER.lofar.response.some((l) => l.text.includes('%drink%')) &&
+  CHATTER.marcus.response.some((l) => l.text.includes('%lowercaseDrink%')));
 
 // ---- splitBots ------------------------------------------------------------
 console.log('splitBots');
