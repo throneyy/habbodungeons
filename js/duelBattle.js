@@ -276,6 +276,7 @@ export class DuelGuest extends CoopMember {
   constructor(net, game, dom, getName) {
     super(net, game, dom, getName);
     this.helloTimer = null;
+    this.endDelayMs = 1200; // let the killing blow land on screen first
   }
 
   /** Join the host's duel: announce myself, then render whatever comes back. */
@@ -340,6 +341,17 @@ export class DuelGuest extends CoopMember {
     for (const line of d.log || []) this.controller.appendLog(line);
     if (this.ui.battleReady) this.ui.battleReady('The Duelling Ground');
     this.controller.render();
+  }
+
+  /** Somebody fell. The result is the HOST's verdict, because the host's
+   *  engine is the one speaking: its 'won' is my defeat. */
+  applyEnd(d) {
+    super.applyEnd(d);
+    const mine = d.result === 'lost'; // the host's player team lost = I won
+    setTimeout(
+      () => this.exit(mine ? 'You win the duel!' : `${this.leaderName} wins the duel.`),
+      this.endDelayMs
+    );
   }
 
   // A duel has no party: leadership never moves, and step 3 owns what happens

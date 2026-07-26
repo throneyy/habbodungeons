@@ -317,6 +317,25 @@ console.log('a blow from each side');
     replica(d, DUEL_CIDS[0]).x === hostUnit(d).x && replica(d, DUEL_CIDS[1]).x === guestUnit(d).x);
 }
 
+// ---- a knockout ends it on both screens ------------------------------------
+console.log('knockout');
+{
+  const d = track(duel());
+  d.guest.endDelayMs = 0; // no on-screen beat to wait for in a test
+  let hostVerdict = null;
+  d.host.onDuelEnd = (result) => (hostVerdict = result);
+  faceOff(d);
+  guestUnit(d).stats.hp = 1;
+  d.host.syncPhase(true);
+  d.battle.resolveAttack(hostUnit(d), guestUnit(d));
+  check('the fallen duellist is dead on both screens',
+    guestUnit(d).alive === false && replica(d, DUEL_CIDS[1]).stats.hp === 0);
+  check('the host’s engine calls the duel', d.battle.phase === 'won' && hostVerdict === 'won');
+  check('the guest’s screen is told', d.guest.shadow.phase === 'won');
+  await new Promise((r) => setTimeout(r, 20));
+  check('and the loser is walked out of the arena', d.ui.exited === `${HOST} wins the duel.`);
+}
+
 // ---- no AI, ever -----------------------------------------------------------
 console.log('no AI acts in a duel');
 {
