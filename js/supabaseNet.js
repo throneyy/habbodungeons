@@ -11,7 +11,7 @@
 //                 is no per-step server validation (that guarantee is downgraded
 //                 vs. the ws hub, by design, for smooth walking).
 //   • user:<id>   private mailbox — edge functions broadcast prompts + state
-//                 here (invited/declined/party/trade-*).
+//                 here (invited/declined/party/trade-*/duel-*).
 //   • party:<id>  private co-op relay — descend/descend-ack/relay ride broadcast
 //                 directly between members (leader-relay, path B).
 //   • room_layouts postgres_changes — the "refetch layout vN" admin push.
@@ -129,6 +129,7 @@ export class SupabaseNet {
     for (const e of [
       'invited', 'declined', 'party',
       'trade-asked', 'trade-state', 'trade-done', 'trade-cancelled', 'trade-error',
+      'duel-asked', 'duel-state', 'duel-declined', 'duel-cancelled', 'duel-error',
     ]) relay(e);
     await new Promise((res) => ch.subscribe((status) => status === 'SUBSCRIBED' && res()));
     this.userChannel = ch;
@@ -437,4 +438,8 @@ const SEND_FN = {
   'trade-accept': { name: 'trade-accept', body: () => ({}) },
   'trade-confirm': { name: 'trade-confirm', body: () => ({}) },
   'trade-cancel': { name: 'trade-cancel', body: () => ({}) },
+  'duel-challenge': { name: 'duel-challenge', body: (m) => ({ name: m.name }) },
+  'duel-accept': { name: 'duel-accept', body: (m) => ({ from: m.from }) },
+  'duel-decline': { name: 'duel-decline', body: (m) => ({ from: m.from }) },
+  'duel-cancel': { name: 'duel-cancel', body: () => ({}) },
 };

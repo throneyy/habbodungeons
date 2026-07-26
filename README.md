@@ -124,9 +124,9 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 12 unit suites below (359 checks) — must pass
+npm test                 # all 13 unit suites below (454 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
-npm run test:e2e         # 7 browser suites (real Chromium, static server, ports)
+npm run test:e2e         # 9 e2e suites (8 real Chromium + the duel DB stack)
 ```
 
 Unit suites, each runnable on its own. Counts are the assertions each one
@@ -139,6 +139,7 @@ node tests/skills.test.js              # Origins skill trees: unlocks, damage/Ao
 node tests/battle.test.js              # damage math, line of sight, targeting, turn phases (34 checks)
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (75 checks)
+node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, clock skew (95 checks)
 node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
 node tests/dailyReward.test.js         # daily-wheel streaks, claim windows, payout table (23 checks)
 node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead zone (13 checks)
@@ -147,9 +148,25 @@ node tests/buffInspire.test.js         # `buff` consumable kind and Inspire stac
 node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
 ```
 
-Browser suites are `tests/e2e/*.e2e.mjs` (7 of them: presence, party/duel
-delivery, cloud sync, room bots, daily reward, move tracking, tag bodies). They
-need Chromium and bind real ports, so `run-suites.mjs` runs them sequentially.
+End-to-end suites are `tests/e2e/*.e2e.mjs`, nine of them: presence churn,
+party invite delivery, cloud sync, critter combat sync, room bots, daily
+reward, move tracking, tag bodies, and the duel handshake. Eight drive real
+Chromium against a static server and bind real ports, so `run-suites.mjs` runs
+them sequentially and takes a machine-wide lock for the duration.
+
+One of them is not a browser suite at all. `tests/e2e/duel.e2e.mjs` boots a real
+PostgreSQL and a real PostgREST in-process and runs the duel edge functions'
+storage layer against them — the queries in `duelStore.ts` and the `duels` RLS
+policy, neither of which the in-memory unit suite can reach. It needs the
+PostgREST binary once:
+
+```
+npm run test:e2e:setup             # once: downloads PostgREST to .gg/bin (~16MB)
+node tests/e2e/duel.e2e.mjs        # migration, handshake, RLS write rejection (50 checks)
+```
+
+`embedded-postgres` is pinned to an EXACT version (no caret): it is a beta, and
+a silent bump would change the Postgres binaries the harness boots.
 
 ### Quarantine
 

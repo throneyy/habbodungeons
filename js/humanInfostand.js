@@ -2,8 +2,8 @@
 // Displayer" human branch, rebuilt in the same .infostand CSS family as the
 // furni infostand (roomEditor.js): bold name, full-body habbo-imaging render
 // (dir 4), motto line, then the action row — Invite to Party / Add Friend /
-// Trade (stubbed). Tapping any player in Free Roam opens it; tapping yourself
-// opens the self view (no invite).
+// Trade / Duel. Tapping any player in Free Roam opens it; tapping yourself
+// opens the self view (no invite, no trade/duel targets).
 import { IMAGING_URL, DEFAULT_FIGURE } from './config.js';
 import { isSupabase, invokeFn } from './backend.js';
 import { addFriend, isFriend } from './toolbarIcons.js';
@@ -30,6 +30,8 @@ export class HumanInfostand {
     this.canInvite = () => false; // party.js: invites possible right now?
     this.onTrade = null; // set by main.js: (name) => open a trade ask
     this.canTrade = () => false; // tradeWindow.js: trading possible right now?
+    this.onDuel = null; // set by main.js: (name) => throw down a duel challenge
+    this.canDuel = () => false; // duelWindow.js: duelling possible right now?
   }
 
   get openFor() {
@@ -44,6 +46,7 @@ export class HumanInfostand {
     el.dataset.player = player.name;
     const inviteOk = !player.self && !!this.onInvite && this.canInvite(player.name);
     const tradeOk = !player.self && !!this.onTrade && this.canTrade(player.name);
+    const duelOk = !player.self && !!this.onDuel && this.canDuel(player.name);
     const friended = isFriend(player.name);
     el.innerHTML = `
       <div class="infostand-info">
@@ -58,6 +61,7 @@ export class HumanInfostand {
           ${player.self ? '' : `<button class="infostand-btn" data-act="invite" ${inviteOk ? '' : 'disabled'}>Invite to Party</button>`}
           ${player.self ? '' : `<button class="infostand-btn" data-act="friend" ${friended ? 'disabled' : ''}>${friended ? 'Friends ✓' : 'Add Friend'}</button>`}
           <button class="infostand-btn" data-act="trade" ${tradeOk ? '' : 'disabled'} ${tradeOk ? '' : 'title="You cannot trade right now"'}>Trade</button>
+          ${player.self ? '' : `<button class="infostand-btn" data-act="duel" ${duelOk ? '' : 'disabled'} ${duelOk ? '' : 'title="You cannot duel right now"'}>Duel</button>`}
         </div>
       </div>`;
     document.body.appendChild(el);
@@ -77,6 +81,9 @@ export class HumanInfostand {
       } else if (act === 'trade' && this.onTrade) {
         this.onTrade(player.name);
         this.close(); // the ask toast / trade window takes over
+      } else if (act === 'duel' && this.onDuel) {
+        this.onDuel(player.name);
+        this.close(); // the ask toast / duel window takes over
       }
     });
     if (!player.self) this.loadMotto(player.name);
