@@ -41,23 +41,12 @@ export class Room {
     // via assets/props; each prop's tile is solid (walk + line-of-sight)
     // UNLESS it's flagged `walk: true` (trap/plate/chest art you stand on)
     // or `sit: <height>` (chairs — walkable, and seat whoever lands there).
-    // Multi-tile items declare their footprint via `tiles: [{x,y},...]`
-    // (defaults to just the anchor tile). `gate: true` props open/close via
-    // toggleGate (switch gimmick) — open = whole footprint unblocked.
+    // `tiles` is DERIVED from the furni's own dims, never authored — see
+    // propFootprint. `gate: true` props open/close via toggleGate (switch
+    // gimmick) — open = whole footprint unblocked.
     this.props = props;
     for (const p of props) {
-      // Auto-derive multi-tile footprints for SEATS from the furni dims
-      // registry when the spec doesn't hand-declare one (dirs 2/6 rotate the
-      // dims 90°), so every tile of a two-seater sofa/bench seats. Scoped to
-      // seats: extracted dims for wall decor over-claim floor, and solid
-      // furni keep using hand-authored `tiles` (which always win).
-      if (p.sit && !(p.tiles && p.tiles.length) && FURNI_DIMS[p.id]) {
-        const [dx, dy] = FURNI_DIMS[p.id];
-        const [w, h] = (p.dir ?? 0) % 4 === 2 ? [dy, dx] : [dx, dy];
-        p.tiles = [];
-        for (let ty = 0; ty < h; ty++)
-          for (let tx = 0; tx < w; tx++) p.tiles.push({ x: p.x + tx, y: p.y + ty });
-      }
+      this.stampFootprint(p);
       if (p.walk || p.sit) continue;
       for (const t of propTiles(p)) this.block(t.x, t.y, p);
     }
@@ -72,6 +61,24 @@ export class Room {
 
   effectAt(x, y) {
     return this.effects.get(`${x},${y}`) || null;
+  }
+
+  // Recompute a prop's footprint from its furni dims. Every read path goes
+  // through the stamped `tiles`, so this is the one place a footprint is
+  // decided — call it after anything that changes a prop's x/y/dir.
+  stampFootprint(p) {
+    p.tiles = propFootprint(p);
+    return p.tiles;
+  }
+
+  // Add a prop after construction (self-healing defaults: gates, RP arrows,
+  // NPC trees). Stamps the footprint and blocks it if the item is solid,
+  // exactly as the constructor would have.
+  addProp(p) {
+    this.stampFootprint(p);
+    this.props.push(p);
+    if (!p.walk && !p.sit) for (const t of p.tiles) this.block(t.x, t.y, p);
+    return p;
   }
 
   // The sit-flagged prop covering (x,y), if any. Seats are walkable; the
@@ -160,7 +167,40 @@ export class Room {
 }
 
 function propTiles(p) {
-  return p.tiles && p.tiles.length ? p.tiles : [{ x: p.x, y: p.y }];
+  return p.tiles && p.tiles.length ? p.tiles : propFootprint(p);
+}
+
+// THE footprint rule, and the only one. Habbo furni occupy xdim x ydim tiles
+// from their anchor: xdim runs along +x, ydim along +y, and dirs 2/6 rotate
+// the pair 90°. Verified against the art itself — a prop's drop shadow IS its
+// footprint diamond, and the renderer anchors it at (tileCentre - ax, -ay), so
+// the shadow's lowest point sits 32px * (span - 1) off the anchor column along
+// whichever axis the item spans (+x leans down-RIGHT on screen, +y down-LEFT).
+// Measured on clean-diamond shadows: marketstall 1x2 d0 -33 (+y), balcony 2x1
+// d0 +32 (+x), vikings_table_g 3x1 d0 +64 (+x), and every one of those flips
+// sign at dir 2/6.
+//
+// This USED to be hand-authored per placement as `tiles: [{x,y},...]`, with
+// the derivation scoped to seats only. The hand lists transposed the axis: the
+// square's market stall at (8,3) claimed (8,3)+(9,3) where the art covers
+// (8,3)+(8,4) — an invisible wall on one side, a walk-through counter on the
+// other, and js/game.js's depth box built from the same wrong pair, so
+// depth.js's front-side test mis-ordered avatars against the near end. 40 of
+// 69 multi-tile placements in the live layouts were wrong that way. Deriving
+// leaves nothing to transpose, and heals layouts already saved in the
+// database (their stored `tiles` are ignored).
+//
+// Props with no FURNI_DIMS entry are 1x1 — the registry lists only multi-tile
+// furni. Wall decor whose extracted dims over-claim floor stays harmless as
+// long as it is placed `walk: true` (it is: hanging flags, canopies, roots),
+// because walkable props never block.
+export function propFootprint(p) {
+  const dims = FURNI_DIMS[p.id];
+  if (!dims) return [{ x: p.x, y: p.y }];
+  const [w, h] = (p.dir ?? 0) % 4 === 2 ? [dims[1], dims[0]] : dims;
+  const out = [];
+  for (let ty = 0; ty < h; ty++) for (let tx = 0; tx < w; tx++) out.push({ x: p.x + tx, y: p.y + ty });
+  return out;
 }
 
 function parseCell(ch) {

@@ -99,7 +99,7 @@ export class BattleController {
   showExit(exit, onReach) {
     const room = this.game.room;
     const spec = { id: 'rp_arrow', x: exit.x, y: exit.y, dir: exit.dir ?? 2, walk: true };
-    room.props.push(spec);
+    room.addProp(spec); // walkable: stamps the footprint, blocks nothing
     this.game.props.push({ ...spec, ref: spec, sprites: propSprites('rp_arrow') });
     this.exit = { x: exit.x, y: exit.y, onReach };
     this.game.clearOverlays();

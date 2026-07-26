@@ -157,14 +157,13 @@ export function decorate(room, { seed = 0, spawns = [], objectiveTile = null } =
     const prop = { id: tpl.id, x: tile.x, y: tile.y, dir: rng() < 0.5 ? 0 : 2, decor: true };
     if (tpl.walk) {
       prop.walk = true;
-      room.props.push(prop);
+      room.addProp(prop);
     } else {
-      room.props.push(prop);
-      room.block(tile.x, tile.y, prop);
+      room.addProp(prop); // blocks the derived footprint (every decor tpl is 1x1)
       // never let cover split the floor into islands (unwinnable fights);
       // a reverted piece doesn't count — try the next tile instead
       if (componentCount(room) > baseComps) {
-        room.unblock(tile.x, tile.y);
+        for (const t of prop.tiles) room.unblock(t.x, t.y);
         room.props.pop();
         continue;
       }

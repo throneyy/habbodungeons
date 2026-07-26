@@ -2,6 +2,7 @@ import { TILE_W, TILE_H, Z_STEP, TILE_THICKNESS, AVATAR_FOOT_PAD, WALK_FRAME_MS 
 import { tileToScreen, pointInDiamond } from './iso.js';
 import { propSprites } from './props.js';
 import { relaxDrawDepths } from './depth.js';
+import { propFootprint } from './room.js';
 import { defaultAvatar } from './defaultAvatar.js';
 
 // The offline/still-loading stand-in is the default Habbo (js/defaultAvatar.js):
@@ -320,13 +321,17 @@ export class Game {
     }
     for (const pr of this.props || []) {
       // multi-tile items sort by their DEEPEST tile so no tile of their own
-      // footprint draws over the art (portcullis spanning a two-tile bridge)
-      const tiles = pr.ref && pr.ref.tiles;
-      const xs = tiles && tiles.length ? tiles.map((t) => t.x) : [pr.x];
-      const ys = tiles && tiles.length ? tiles.map((t) => t.y) : [pr.y];
-      const depths = tiles && tiles.length ? tiles.map((t) => t.x + t.y) : [pr.x + pr.y];
+      // footprint draws over the art (portcullis spanning a two-tile bridge).
+      // The box comes from propFootprint, the SAME rule room.js blocks with:
+      // it used to read a hand-authored `tiles` list whose axis was
+      // transposed, so a 1x2 stall spanning (8,3)-(8,4) boxed as (8,3)-(9,3)
+      // and depth.js's "strictly on b's front side" test answered wrong for
+      // anyone standing at its near end — the furni sliced through avatars.
+      const tiles = propFootprint(pr.ref || pr);
+      const xs = tiles.map((t) => t.x);
+      const ys = tiles.map((t) => t.y);
       const it = {
-        depth: Math.max(...depths),
+        depth: Math.max(...tiles.map((t) => t.x + t.y)),
         kind: 1, prop: pr,
         x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys),
         front: !!(pr.ref && pr.ref.front),

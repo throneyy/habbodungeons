@@ -74,19 +74,19 @@ function antechamber() {
     props: [
       // ---- the landing: towers at the corners, twin gates, honor statues
       { id: 'gothic_c15_tower', x: 1, y: 1, dir: 0 },
-      { id: 'gothgate', x: 3, y: 1, dir: 0, tiles: [{ x: 3, y: 1 }, { x: 4, y: 1 }] },
+      { id: 'gothgate', x: 3, y: 1, dir: 0 },
       { id: 'sp_statue', x: 6, y: 1, dir: 0 },
       { id: 'gothic_bowl', x: 7, y: 1, dir: 0 },
       { id: 'gothic_bowl', x: 8, y: 1, dir: 0 },
       { id: 'sp_statue', x: 9, y: 1, dir: 0 },
-      { id: 'gothgate', x: 10, y: 1, dir: 0, tiles: [{ x: 10, y: 1 }, { x: 11, y: 1 }] },
+      { id: 'gothgate', x: 10, y: 1, dir: 0 },
       { id: 'gothic_c15_tower', x: 14, y: 1, dir: 0 },
       // railings cap the landing's outer lip; the middle stays climbable
-      { id: 'gothrailing', x: 1, y: 2, dir: 0, tiles: [{ x: 1, y: 2 }, { x: 2, y: 2 }] },
-      { id: 'gothrailing', x: 13, y: 2, dir: 0, tiles: [{ x: 13, y: 2 }, { x: 14, y: 2 }] },
+      { id: 'gothrailing', x: 1, y: 2, dir: 0 },
+      { id: 'gothrailing', x: 13, y: 2, dir: 0 },
       // ---- the processional aisle: carpet lane from the doors to the stairs
-      { id: 'gothic_carpet', x: 6, y: 4, dir: 0, walk: true, tiles: [{ x: 6, y: 4 }, { x: 7, y: 4 }, { x: 6, y: 5 }, { x: 7, y: 5 }, { x: 6, y: 6 }, { x: 7, y: 6 }, { x: 6, y: 7 }, { x: 7, y: 7 }] },
-      { id: 'gothic_carpet', x: 6, y: 8, dir: 0, walk: true, tiles: [{ x: 6, y: 8 }, { x: 7, y: 8 }, { x: 6, y: 9 }, { x: 7, y: 9 }, { x: 6, y: 10 }, { x: 7, y: 10 }, { x: 6, y: 11 }, { x: 7, y: 11 }] },
+      { id: 'gothic_carpet', x: 6, y: 4, dir: 0, walk: true },
+      { id: 'gothic_carpet', x: 6, y: 8, dir: 0, walk: true },
       { id: 'gothiccandelabra', x: 5, y: 4, dir: 0 },
       { id: 'gothiccandelabra', x: 8, y: 4, dir: 2 },
       { id: 'gothiccandelabra', x: 5, y: 9, dir: 0 },
@@ -94,19 +94,19 @@ function antechamber() {
       // a knight of the garrison, dead where he knelt beside the carpet
       { id: 'hween_c17_thefallen', x: 8, y: 6, dir: 0 },
       // ---- the chapel alcove: the chest, its light, and the cache
-      { id: 'sw_chest', x: 1, y: 5, dir: 0, tiles: [{ x: 1, y: 5 }, { x: 1, y: 6 }] },
-      { id: 'hween12_lantern', x: 3, y: 5, dir: 0, tiles: [{ x: 3, y: 5 }, { x: 3, y: 6 }] },
+      { id: 'sw_chest', x: 1, y: 5, dir: 0 },
+      { id: 'hween12_lantern', x: 3, y: 5, dir: 0 },
       { id: 'dng_treasure2', x: 2, y: 6, dir: 0, walk: true },
       // ---- the west wall: a cage, a lantern, a coffin stood by the doors
       { id: 'hween12_cage', x: 1, y: 3, dir: 0 },
-      { id: 'hween12_lantern', x: 1, y: 8, dir: 0, tiles: [{ x: 1, y: 8 }, { x: 1, y: 9 }] },
-      { id: 'hween12_coffin', x: 1, y: 10, dir: 0, tiles: [{ x: 1, y: 10 }, { x: 1, y: 11 }] },
+      { id: 'hween12_lantern', x: 1, y: 8, dir: 0 },
+      { id: 'hween12_coffin', x: 1, y: 10, dir: 0 },
       // ---- under the landing's east end: the dungeon's welcome
       { id: 'hween12_cage', x: 13, y: 3, dir: 0 },
-      { id: 'hween12_coffin', x: 14, y: 3, dir: 0, tiles: [{ x: 14, y: 3 }, { x: 14, y: 4 }] },
+      { id: 'hween12_coffin', x: 14, y: 3, dir: 0 },
       // ---- the collapse: cave floor creeping in, rubble, rim dressing
-      { id: 'hween_c17_cavefloor', x: 11, y: 4, dir: 0, walk: true, tiles: [{ x: 11, y: 4 }, { x: 12, y: 4 }, { x: 11, y: 5 }, { x: 12, y: 5 }] },
-      { id: 'hween_c17_cavefloor', x: 9, y: 8, dir: 0, walk: true, tiles: [{ x: 9, y: 8 }, { x: 10, y: 8 }, { x: 9, y: 9 }, { x: 10, y: 9 }] },
+      { id: 'hween_c17_cavefloor', x: 11, y: 4, dir: 0, walk: true },
+      { id: 'hween_c17_cavefloor', x: 9, y: 8, dir: 0, walk: true },
       { id: 'hween_c17_hangingroots', x: 13, y: 5, dir: 0 },
       { id: 'hween_c17_rockdrip', x: 12, y: 6, dir: 0 },
       { id: 'hween_c17_gibbet', x: 12, y: 7, dir: 0 },
@@ -159,13 +159,13 @@ function sunkenNave() {
       { id: 'gothic_bowl', x: 9, y: 2, dir: 0 },
       // relics of the old rites on the choir wings
       { id: 'fantasy_c22_rune', x: 1, y: 1, dir: 0 },
-      { id: 'hween12_lantern', x: 15, y: 1, dir: 0, tiles: [{ x: 15, y: 1 }, { x: 15, y: 2 }] },
+      { id: 'hween12_lantern', x: 15, y: 1, dir: 0 },
       { id: 'fantasy_c22_crystal', x: 15, y: 3, dir: 2 },
       // the choir's east wing: the processional carpet, mouldering in place
-      { id: 'gothic_carpet', x: 11, y: 2, dir: 2, walk: true, tiles: [{ x: 11, y: 2 }, { x: 12, y: 2 }, { x: 13, y: 2 }, { x: 14, y: 2 }, { x: 11, y: 3 }, { x: 12, y: 3 }, { x: 13, y: 3 }, { x: 14, y: 3 }] },
+      { id: 'gothic_carpet', x: 11, y: 2, dir: 2, walk: true },
       // railings cap the choir rim beside each bridgehead
-      { id: 'gothrailing', x: 5, y: 4, dir: 0, tiles: [{ x: 5, y: 4 }, { x: 6, y: 4 }] },
-      { id: 'gothrailing', x: 12, y: 6, dir: 0, tiles: [{ x: 12, y: 6 }, { x: 13, y: 6 }] },
+      { id: 'gothrailing', x: 5, y: 4, dir: 0 },
+      { id: 'gothrailing', x: 12, y: 6, dir: 0 },
       // ---- the chasm rim: roots, drip, rubble and a rockfall
       { id: 'hween_c17_fallingrocks', x: 5, y: 7, dir: 0 },
       { id: 'hween_c17_rock2', x: 6, y: 7, dir: 2 },
@@ -173,8 +173,8 @@ function sunkenNave() {
       { id: 'dng_block', x: 12, y: 9, dir: 2 },
       { id: 'hween_c17_rockdrip', x: 14, y: 10, dir: 0 },
       // ---- the bridge mouths: cave floor creeping out of the dark + traps
-      { id: 'hween_c17_cavefloor', x: 3, y: 7, dir: 0, walk: true, tiles: [{ x: 3, y: 7 }, { x: 4, y: 7 }, { x: 3, y: 8 }, { x: 4, y: 8 }] },
-      { id: 'hween_c17_cavefloor', x: 10, y: 9, dir: 0, walk: true, tiles: [{ x: 10, y: 9 }, { x: 11, y: 9 }, { x: 10, y: 10 }, { x: 11, y: 10 }] },
+      { id: 'hween_c17_cavefloor', x: 3, y: 7, dir: 0, walk: true },
+      { id: 'hween_c17_cavefloor', x: 10, y: 9, dir: 0, walk: true },
       { id: 'hween_c17_spiketrap', x: 4, y: 6, dir: 0, walk: true },
       { id: 'hween_c17_spiketrap', x: 11, y: 9, dir: 0, walk: true },
       // ---- the camp: the survivors' bonfire and what they left behind
@@ -183,7 +183,7 @@ function sunkenNave() {
       { id: 'gothiccandelabra', x: 8, y: 8, dir: 2 },
       { id: 'fantasy_c22_rune', x: 1, y: 7, dir: 0 },
       { id: 'fantasy_c22_crystal', x: 1, y: 10, dir: 0 },
-      { id: 'hween12_coffin', x: 15, y: 10, dir: 0, tiles: [{ x: 15, y: 10 }, { x: 15, y: 11 }] },
+      { id: 'hween12_coffin', x: 15, y: 10, dir: 0 },
       { id: 'dng_block', x: 13, y: 10, dir: 2 },
     ],
     effects: [
@@ -228,11 +228,11 @@ function throne() {
       { id: 'sp_statue', x: 4, y: 1, dir: 0 },
       { id: 'sp_statue', x: 11, y: 1, dir: 0 },
       // lanterns cap the sheer dais faces beside the grand stair
-      { id: 'hween12_lantern', x: 4, y: 3, dir: 2, tiles: [{ x: 4, y: 3 }, { x: 5, y: 3 }] },
-      { id: 'hween12_lantern', x: 9, y: 3, dir: 2, tiles: [{ x: 9, y: 3 }, { x: 10, y: 3 }] },
+      { id: 'hween12_lantern', x: 4, y: 3, dir: 2 },
+      { id: 'hween12_lantern', x: 9, y: 3, dir: 2 },
       // ---- the processional: carpet lane + the flaming honor guard
-      { id: 'gothic_carpet', x: 6, y: 4, dir: 0, walk: true, tiles: [{ x: 6, y: 4 }, { x: 7, y: 4 }, { x: 6, y: 5 }, { x: 7, y: 5 }, { x: 6, y: 6 }, { x: 7, y: 6 }, { x: 6, y: 7 }, { x: 7, y: 7 }] },
-      { id: 'gothic_carpet', x: 6, y: 8, dir: 0, walk: true, tiles: [{ x: 6, y: 8 }, { x: 7, y: 8 }, { x: 6, y: 9 }, { x: 7, y: 9 }, { x: 6, y: 10 }, { x: 7, y: 10 }, { x: 6, y: 11 }, { x: 7, y: 11 }] },
+      { id: 'gothic_carpet', x: 6, y: 4, dir: 0, walk: true },
+      { id: 'gothic_carpet', x: 6, y: 8, dir: 0, walk: true },
       // (stone knights, not hween_c17_flamingknight — that furni ships
       // Habbo's attackable-boss HEALTH BAR baked into every frame)
       { id: 'sp_statue', x: 5, y: 5, dir: 2 },
@@ -244,9 +244,9 @@ function throne() {
       { id: 'fantasy_c22_treasure1', x: 14, y: 5, dir: 2 },
       // ---- dungeon clutter on the floor beside the galleries
       { id: 'hween12_cage', x: 2, y: 6, dir: 0 },
-      { id: 'hween12_coffin', x: 2, y: 8, dir: 0, tiles: [{ x: 2, y: 8 }, { x: 2, y: 9 }] },
+      { id: 'hween12_coffin', x: 2, y: 8, dir: 0 },
       { id: 'hween12_cage', x: 13, y: 6, dir: 2 },
-      { id: 'hween12_coffin', x: 13, y: 8, dir: 0, tiles: [{ x: 13, y: 8 }, { x: 13, y: 9 }] },
+      { id: 'hween12_coffin', x: 13, y: 8, dir: 0 },
       // ---- floor traps beside the dais
       { id: 'hween_c17_spiketrap', x: 4, y: 4, dir: 0, walk: true },
       { id: 'hween_c17_spiketrap', x: 11, y: 4, dir: 0, walk: true },
@@ -284,15 +284,15 @@ function rampart() {
     spawn: { x: 8, y: 10 }, spawnDir: 0,
     props: [
       // ---- the curtain wall (row y2): six wall spans, pillars, the GATE
-      { id: 'hween_c17_wall', x: 1, y: 2, dir: 2, tiles: [{ x: 1, y: 2 }, { x: 2, y: 2 }] },
-      { id: 'hween_c17_wall', x: 3, y: 2, dir: 2, tiles: [{ x: 3, y: 2 }, { x: 4, y: 2 }] },
-      { id: 'hween_c17_wall', x: 5, y: 2, dir: 2, tiles: [{ x: 5, y: 2 }, { x: 6, y: 2 }] },
+      { id: 'hween_c17_wall', x: 1, y: 2, dir: 2 },
+      { id: 'hween_c17_wall', x: 3, y: 2, dir: 2 },
+      { id: 'hween_c17_wall', x: 5, y: 2, dir: 2 },
       { id: 'hween_c17_pillar', x: 7, y: 2, dir: 0 },
-      { id: 'hween_c17_portcullis', x: 8, y: 2, dir: 2, gate: true, tiles: [{ x: 8, y: 2 }, { x: 9, y: 2 }] },
+      { id: 'hween_c17_portcullis', x: 8, y: 2, dir: 2, gate: true },
       { id: 'hween_c17_pillar', x: 10, y: 2, dir: 0 },
-      { id: 'hween_c17_wall', x: 11, y: 2, dir: 2, tiles: [{ x: 11, y: 2 }, { x: 12, y: 2 }] },
-      { id: 'hween_c17_wall', x: 13, y: 2, dir: 2, tiles: [{ x: 13, y: 2 }, { x: 14, y: 2 }] },
-      { id: 'hween_c17_wall', x: 15, y: 2, dir: 2, tiles: [{ x: 15, y: 2 }, { x: 16, y: 2 }] },
+      { id: 'hween_c17_wall', x: 11, y: 2, dir: 2 },
+      { id: 'hween_c17_wall', x: 13, y: 2, dir: 2 },
+      { id: 'hween_c17_wall', x: 15, y: 2, dir: 2 },
       // ---- west catwalk: the garrison supply dump (the stair tile at (1,4)
       // climbs to (1,3); the coin pile sits first so looters can reach it)
       { id: 'dng_treasure2', x: 2, y: 3, dir: 0, walk: true },
@@ -303,9 +303,9 @@ function rampart() {
       { id: 'fantasy_c22_arrows', x: 12, y: 3, dir: 0 },
       // ---- the yard spine: a ruined wall splitting the approach into lanes
       { id: 'hween_c17_pillarsmall', x: 3, y: 7, dir: 0 },
-      { id: 'hween_c17_hidewall', x: 4, y: 7, dir: 2, tiles: [{ x: 4, y: 7 }, { x: 5, y: 7 }] },
-      { id: 'hween_c17_hidewall', x: 7, y: 7, dir: 2, tiles: [{ x: 7, y: 7 }, { x: 8, y: 7 }] },
-      { id: 'hween_c17_hidewall', x: 11, y: 7, dir: 2, tiles: [{ x: 11, y: 7 }, { x: 12, y: 7 }] },
+      { id: 'hween_c17_hidewall', x: 4, y: 7, dir: 2 },
+      { id: 'hween_c17_hidewall', x: 7, y: 7, dir: 2 },
+      { id: 'hween_c17_hidewall', x: 11, y: 7, dir: 2 },
       { id: 'hween_c17_pillarsmall', x: 13, y: 7, dir: 0 },
       // ---- the SW collapse: rockfall + rubble on the rim
       { id: 'hween_c17_fallingrocks', x: 1, y: 8, dir: 0 },
@@ -313,8 +313,8 @@ function rampart() {
       { id: 'hween_c17_rock2', x: 3, y: 10, dir: 2 },
       { id: 'hween_c17_hangingroots', x: 4, y: 11, dir: 0 },
       // ---- cave floor creeping into the yard
-      { id: 'hween_c17_cavefloor', x: 2, y: 5, dir: 0, walk: true, tiles: [{ x: 2, y: 5 }, { x: 3, y: 5 }, { x: 2, y: 6 }, { x: 3, y: 6 }] },
-      { id: 'hween_c17_cavefloor', x: 12, y: 8, dir: 0, walk: true, tiles: [{ x: 12, y: 8 }, { x: 13, y: 8 }, { x: 12, y: 9 }, { x: 13, y: 9 }] },
+      { id: 'hween_c17_cavefloor', x: 2, y: 5, dir: 0, walk: true },
+      { id: 'hween_c17_cavefloor', x: 12, y: 8, dir: 0, walk: true },
       // ---- yard cover
       { id: 'fantasy_c22_crystal', x: 5, y: 5, dir: 0 },
       { id: 'fantasy_c22_crystal', x: 12, y: 5, dir: 2 },
@@ -409,20 +409,20 @@ function glade() {
     spawn: { x: 7, y: 10 }, spawnDir: 0,
     props: [
       // ---- the treeline: hedge + trees ringing the clearing
-      { id: 'env_bushes', x: 1, y: 1, dir: 2, tiles: [{ x: 1, y: 1 }, { x: 2, y: 1 }] },
+      { id: 'env_bushes', x: 1, y: 1, dir: 2 },
       { id: 'easter_c19_springtree', x: 3, y: 1, dir: 2 },
-      { id: 'env_bushes', x: 5, y: 1, dir: 2, tiles: [{ x: 5, y: 1 }, { x: 6, y: 1 }] },
+      { id: 'env_bushes', x: 5, y: 1, dir: 2 },
       { id: 'easter_c20_foresttree', x: 8, y: 1, dir: 2 },
-      { id: 'env_bushes', x: 9, y: 1, dir: 2, tiles: [{ x: 9, y: 1 }, { x: 10, y: 1 }] },
+      { id: 'env_bushes', x: 9, y: 1, dir: 2 },
       { id: 'easter_c20_foresttree', x: 15, y: 4, dir: 2 },
-      { id: 'env_bushes', x: 15, y: 6, dir: 0, tiles: [{ x: 15, y: 6 }, { x: 15, y: 7 }] },
+      { id: 'env_bushes', x: 15, y: 6, dir: 0 },
       { id: 'easter_c19_springtree', x: 15, y: 9, dir: 2 },
-      { id: 'env_bushes', x: 13, y: 11, dir: 2, tiles: [{ x: 13, y: 11 }, { x: 14, y: 11 }] },
+      { id: 'env_bushes', x: 13, y: 11, dir: 2 },
       { id: 'easter_c20_foresttree', x: 12, y: 11, dir: 2 },
-      { id: 'env_bushes', x: 1, y: 11, dir: 2, tiles: [{ x: 1, y: 11 }, { x: 2, y: 11 }] },
-      { id: 'env_bushes', x: 1, y: 6, dir: 0, tiles: [{ x: 1, y: 6 }, { x: 1, y: 7 }] },
+      { id: 'env_bushes', x: 1, y: 11, dir: 2 },
+      { id: 'env_bushes', x: 1, y: 6, dir: 0 },
       // ---- the SW vista: the weeping willow over the water
-      { id: 'hween_r19_weepingwillow', x: 1, y: 9, dir: 0, tiles: [{ x: 1, y: 9 }, { x: 2, y: 9 }, { x: 1, y: 10 }, { x: 2, y: 10 }] },
+      { id: 'hween_r19_weepingwillow', x: 1, y: 9, dir: 0 },
       // ---- the mossy rise: the fairy ring, its lights and its keepers
       { id: 'easter_c19_magicringtele', x: 13, y: 1, dir: 2, walk: true }, // the way out
       { id: 'easter_c19_flowerlamp', x: 15, y: 1, dir: 2 },
@@ -440,10 +440,10 @@ function glade() {
       { id: 'easter_c20_heatherrock', x: 12, y: 7, dir: 2 },
       { id: 'easter_c19_babyent2', x: 10, y: 3, dir: 2 },
       // ---- the clearing: floor-art zones, a dirt track to the ford, cover
-      { id: 'easter_c19_meadow', x: 4, y: 7, dir: 0, walk: true, tiles: [{ x: 4, y: 7 }, { x: 5, y: 7 }, { x: 4, y: 8 }, { x: 5, y: 8 }] },
-      { id: 'easter_c20_scatteredforestfloor', x: 10, y: 8, dir: 0, walk: true, tiles: [{ x: 10, y: 8 }, { x: 11, y: 8 }, { x: 10, y: 9 }, { x: 11, y: 9 }] },
-      { id: 'easter_c19_dirtpath', x: 7, y: 7, dir: 0, walk: true, tiles: [{ x: 7, y: 7 }, { x: 7, y: 8 }] },
-      { id: 'easter_c19_dirtpath', x: 7, y: 9, dir: 0, walk: true, tiles: [{ x: 7, y: 9 }, { x: 7, y: 10 }] },
+      { id: 'easter_c19_meadow', x: 4, y: 7, dir: 0, walk: true },
+      { id: 'easter_c20_scatteredforestfloor', x: 10, y: 8, dir: 0, walk: true },
+      { id: 'easter_c19_dirtpath', x: 7, y: 7, dir: 0, walk: true },
+      { id: 'easter_c19_dirtpath', x: 7, y: 9, dir: 0, walk: true },
       { id: 'easter_c19_mushrooms', x: 9, y: 7, dir: 2, walk: true },
       { id: 'easter_c20_heather', x: 3, y: 6, dir: 2 },
       { id: 'easter_c20_heather', x: 12, y: 6, dir: 2 },
@@ -492,12 +492,12 @@ function ruin() {
       // ---- the colonnade avenue: pillars + hero statues flanking the walk
       { id: 'nft_h25_collpillar', x: 5, y: 5, dir: 0 },
       { id: 'nft_h25_collpillar', x: 11, y: 5, dir: 0 },
-      { id: 'fantasy_r22_herostatue', x: 5, y: 7, dir: 0, tiles: [{ x: 5, y: 7 }, { x: 5, y: 8 }, { x: 5, y: 9 }] },
-      { id: 'fantasy_r22_herostatue', x: 11, y: 7, dir: 0, tiles: [{ x: 11, y: 7 }, { x: 11, y: 8 }, { x: 11, y: 9 }] },
+      { id: 'fantasy_r22_herostatue', x: 5, y: 7, dir: 0 },
+      { id: 'fantasy_r22_herostatue', x: 11, y: 7, dir: 0 },
       { id: 'nft_h25_collpillar', x: 5, y: 11, dir: 0 },
       { id: 'nft_h25_collpillar', x: 11, y: 11, dir: 0 },
       // ---- the fallen arch, mid-court: the cover line on the direct approach
-      { id: 'greek_gate', x: 7, y: 7, dir: 0, tiles: [{ x: 7, y: 7 }, { x: 8, y: 7 }] },
+      { id: 'greek_gate', x: 7, y: 7, dir: 0 },
       // ---- the marble inlay of the processional walk
       { id: 'greek_c15_tile', x: 8, y: 4, dir: 0, walk: true },
       { id: 'greek_c15_tile', x: 8, y: 5, dir: 0, walk: true },
@@ -509,7 +509,7 @@ function ruin() {
       { id: 'greek_c19_table', x: 2, y: 5, dir: 0 },
       { id: 'greek_c19_chair', x: 3, y: 5, dir: 6 },
       { id: 'greek_c19_fruitbowl', x: 2, y: 6, dir: 0 },
-      { id: 'greek_c15_bench', x: 2, y: 8, dir: 0, tiles: [{ x: 2, y: 8 }, { x: 3, y: 8 }] },
+      { id: 'greek_c15_bench', x: 2, y: 8, dir: 0 },
       { id: 'greek_c19_harp', x: 1, y: 3, dir: 2 },
       // ---- the east wing: the collapse rim and the horse that ended it all
       { id: 'easter_c20_ancienthorse', x: 13, y: 6, dir: 2 },
@@ -555,36 +555,36 @@ function meadhall() {
       { id: 'vikings_flag_r', x: 7, y: 2, dir: 2 },
       { id: 'vikings_flag_g', x: 11, y: 2, dir: 2 },
       // ---- armory + relic beside the dais
-      { id: 'vikings_weapon', x: 4, y: 2, dir: 2, tiles: [{ x: 4, y: 2 }, { x: 5, y: 2 }] },
+      { id: 'vikings_weapon', x: 4, y: 2, dir: 2 },
       { id: 'vikings_runestone', x: 13, y: 2, dir: 2 },
       // ---- the WEST WING: the Yggdrasil shrine under Thor's gaze
       { id: 'vikings_yggdrasil', x: 1, y: 1, dir: 0 },
       { id: 'vikings_thor', x: 2, y: 2, dir: 2 },
       { id: 'vikings_tombstone', x: 1, y: 3, dir: 2 },
-      { id: 'vikings_stonedivdr', x: 1, y: 4, dir: 0, tiles: [{ x: 1, y: 4 }, { x: 2, y: 4 }] },
+      { id: 'vikings_stonedivdr', x: 1, y: 4, dir: 0 },
       // the chief's longship, drawn up along the west wall
-      { id: 'vikings_gondola3', x: 1, y: 6, dir: 4, tiles: [{ x: 1, y: 6 }, { x: 1, y: 7 }] },
-      { id: 'vikings_gondola2a', x: 1, y: 8, dir: 4, tiles: [{ x: 1, y: 8 }, { x: 1, y: 9 }] },
+      { id: 'vikings_gondola3', x: 1, y: 6, dir: 4 },
+      { id: 'vikings_gondola2a', x: 1, y: 8, dir: 4 },
       // ---- the feast aisle: tables + stools flanking the double longfire
-      { id: 'vikings_table_r', x: 6, y: 5, dir: 6, tiles: [{ x: 6, y: 5 }, { x: 6, y: 6 }, { x: 6, y: 7 }] },
-      { id: 'vikings_table_r', x: 12, y: 5, dir: 6, tiles: [{ x: 12, y: 5 }, { x: 12, y: 6 }, { x: 12, y: 7 }] },
+      { id: 'vikings_table_r', x: 6, y: 5, dir: 6 },
+      { id: 'vikings_table_r', x: 12, y: 5, dir: 6 },
       { id: 'vikings_stool', x: 5, y: 6, dir: 2 },
       { id: 'vikings_stool', x: 13, y: 6, dir: 6 },
       // the double longfire: two real 2x2 flame pits, ALL eight tiles burn
-      { id: 'hween_c17_bonfire', x: 8, y: 5, dir: 0, walk: true, tiles: [{ x: 8, y: 5 }, { x: 9, y: 5 }, { x: 8, y: 6 }, { x: 9, y: 6 }] },
-      { id: 'hween_c17_bonfire', x: 8, y: 8, dir: 0, walk: true, tiles: [{ x: 8, y: 8 }, { x: 9, y: 8 }, { x: 8, y: 9 }, { x: 9, y: 9 }] },
+      { id: 'hween_c17_bonfire', x: 8, y: 5, dir: 0, walk: true },
+      { id: 'hween_c17_bonfire', x: 8, y: 8, dir: 0, walk: true },
       // ---- the EAST WING: kitchen + the animal pen
       { id: 'vikings_stove', x: 16, y: 2, dir: 2 },
-      { id: 'vikings_indoorstove', x: 16, y: 3, dir: 0, tiles: [{ x: 16, y: 3 }, { x: 16, y: 4 }] },
+      { id: 'vikings_indoorstove', x: 16, y: 3, dir: 0 },
       { id: 'vikings_basket2', x: 16, y: 5, dir: 0 },
       { id: 'vikings_basket1', x: 15, y: 2, dir: 0 },
-      { id: 'vikings_stonedivdr', x: 14, y: 7, dir: 0, tiles: [{ x: 14, y: 7 }, { x: 15, y: 7 }] },
+      { id: 'vikings_stonedivdr', x: 14, y: 7, dir: 0 },
       { id: 'vikings_animal_g', x: 15, y: 8, dir: 2 },
       { id: 'vikings_animal_r', x: 16, y: 9, dir: 2 },
       // ---- the SOUTH WALL: sleeping alcoves + the stone gate entry
-      { id: 'vikings_bed', x: 2, y: 11, dir: 2, tiles: [{ x: 2, y: 11 }, { x: 3, y: 11 }, { x: 4, y: 11 }] },
-      { id: 'vikings_bed', x: 5, y: 11, dir: 2, tiles: [{ x: 5, y: 11 }, { x: 6, y: 11 }, { x: 7, y: 11 }] },
-      { id: 'vikings_stonegate', x: 8, y: 11, dir: 0, tiles: [{ x: 8, y: 11 }, { x: 9, y: 11 }] },
+      { id: 'vikings_bed', x: 2, y: 11, dir: 2 },
+      { id: 'vikings_bed', x: 5, y: 11, dir: 2 },
+      { id: 'vikings_stonegate', x: 8, y: 11, dir: 0 },
       { id: 'vikings_chair_r', x: 11, y: 11, dir: 0 },
       { id: 'vikings_spike', x: 13, y: 11, dir: 2 },
       { id: 'vikings_tombstone', x: 16, y: 11, dir: 2 },
@@ -655,21 +655,21 @@ function hollow() {
       { id: 'wisp_c23_lilwisp', x: 12, y: 7, dir: 2 },
       { id: 'wisp_c23_lilwisp', x: 5, y: 10, dir: 2 },
       // ---- the boardwalks: mouldering autumn planks over the mud
-      { id: 'hween_c19_autumnfloor', x: 9, y: 4, dir: 0, walk: true, tiles: [{ x: 9, y: 4 }, { x: 10, y: 4 }, { x: 9, y: 5 }, { x: 10, y: 5 }] },
-      { id: 'hween_c19_autumnfloor', x: 6, y: 8, dir: 0, walk: true, tiles: [{ x: 6, y: 8 }, { x: 7, y: 8 }, { x: 6, y: 9 }, { x: 7, y: 9 }] },
-      { id: 'hween_c19_autumnfloor', x: 13, y: 5, dir: 0, walk: true, tiles: [{ x: 13, y: 5 }, { x: 14, y: 5 }, { x: 13, y: 6 }, { x: 14, y: 6 }] },
+      { id: 'hween_c19_autumnfloor', x: 9, y: 4, dir: 0, walk: true },
+      { id: 'hween_c19_autumnfloor', x: 6, y: 8, dir: 0, walk: true },
+      { id: 'hween_c19_autumnfloor', x: 13, y: 5, dir: 0, walk: true },
       // ---- pumpkin patches guard both junctions (stand-on art, vines grasp)
-      { id: 'hween_c19_pumpkinpatch', x: 4, y: 6, dir: 2, walk: true, tiles: [{ x: 4, y: 6 }, { x: 5, y: 6 }, { x: 4, y: 7 }, { x: 5, y: 7 }] },
-      { id: 'hween_c19_pumpkinpatch', x: 10, y: 8, dir: 2, walk: true, tiles: [{ x: 10, y: 8 }, { x: 11, y: 8 }, { x: 10, y: 9 }, { x: 11, y: 9 }] },
+      { id: 'hween_c19_pumpkinpatch', x: 4, y: 6, dir: 2, walk: true },
+      { id: 'hween_c19_pumpkinpatch', x: 10, y: 8, dir: 2, walk: true },
       // ---- the scarecrow field, rotting in the west
-      { id: 'hween_c19_fireplace', x: 1, y: 9, dir: 2, tiles: [{ x: 1, y: 9 }, { x: 1, y: 10 }] }, // the cottage hearth, all that's left of it
+      { id: 'hween_c19_fireplace', x: 1, y: 9, dir: 2 }, // the cottage hearth, all that's left of it
       { id: 'hween12_scarecrow', x: 3, y: 9, dir: 2 },
       { id: 'hween12_cart', x: 2, y: 11, dir: 2 },
-      { id: 'hween12_coffin', x: 4, y: 10, dir: 0, tiles: [{ x: 4, y: 10 }, { x: 4, y: 11 }] },
+      { id: 'hween12_coffin', x: 4, y: 10, dir: 0 },
       { id: 'hween12_fortune', x: 1, y: 12, dir: 2 },
       // ---- the east lane: a lantern against the dark, a chair facing it
       // (the lane past the SE pool stays open — the satchel lies at its end)
-      { id: 'hween12_lantern', x: 15, y: 5, dir: 0, tiles: [{ x: 15, y: 5 }, { x: 15, y: 6 }] },
+      { id: 'hween12_lantern', x: 15, y: 5, dir: 0 },
       { id: 'hween_c19_bewitchedchair', x: 12, y: 12, dir: 0 },
       // ---- her ingredient satchel, dropped at the lane's end
       { id: 'hween_c19_witchsatchel', x: 15, y: 12, dir: 2, walk: true },

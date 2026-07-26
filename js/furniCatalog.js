@@ -6,7 +6,7 @@
 // puts it back on the shelf). Edits live in memory like the rest of the
 // editor — Save Layout persists them.
 import { propSprites } from './props.js';
-import { FURNI_DIMS } from './furniDims.js';
+import { propFootprint } from './room.js';
 import { SEATS } from './config.js';
 
 const THUMB = 64; // cell canvas size (px) — one full tile, so most furni draw 1:1
@@ -169,9 +169,9 @@ export class FurniCatalog {
     this.pop = null;
   }
 
-  // Build the prop spec exactly like rooms.js would author it (sit height
-  // from SEATS, footprint from FURNI_DIMS with the 2/6 dims swap) and hand it
-  // to the editor's Object Mover.
+  // Build the prop spec exactly like rooms.js would author it (sit height from
+  // SEATS, footprint derived by propFootprint) and hand it to the editor's
+  // Object Mover.
   spawn(entry) {
     const editor = this.getEditor();
     const room = this.game.room;
@@ -180,13 +180,7 @@ export class FurniCatalog {
     const spec = { id: entry.id, x: room.spawn.x, y: room.spawn.y, dir };
     if (SEATS[entry.id] != null) spec.sit = SEATS[entry.id];
     if (entry.id === 'rp_arrow') spec.walk = true; // arrows are floor decals
-    const dims = FURNI_DIMS[entry.id];
-    if (dims) {
-      const [w, h] = dir % 4 === 2 ? [dims[1], dims[0]] : dims;
-      spec.tiles = [];
-      for (let ty = 0; ty < h; ty++)
-        for (let tx = 0; tx < w; tx++) spec.tiles.push({ x: spec.x + tx, y: spec.y + ty });
-    }
+    spec.tiles = propFootprint(spec);
     editor.spawnNew(spec);
   }
 

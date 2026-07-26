@@ -11,7 +11,6 @@
 // panel above the chat toolbar.
 import { Dialogue } from './dialogue.js';
 import { DIALOGUES } from './dialogueData.js';
-import { FURNI_DIMS } from './furniDims.js';
 
 // furni id -> NPC identity. `bubble` = px above the tile centre where speech
 // bubbles anchor (the money tree is far taller than an avatar head).
@@ -31,27 +30,18 @@ export const NPC_DEFAULTS = {
   square: [{ id: 'neopets_c25_moneytree', x: 10, y: 1, dir: 0 }],
 };
 
-// Stamp p.npc onto every registered NPC prop and derive missing multi-tile
-// footprints from FURNI_DIMS (saved layouts keep tiles, hand specs may not).
+// Stamp p.npc onto every registered NPC prop. Footprints are derived by the
+// Room itself (propFootprint), so a restored default only has to go in through
+// addProp to get its tiles stamped and blocked.
 export function wireNpcs(rooms) {
   for (const room of rooms) {
     for (const def of NPC_DEFAULTS[room.id] || []) {
-      if (!room.props.some((p) => p.id === def.id)) room.props.push({ ...def });
+      if (!room.props.some((p) => p.id === def.id)) room.addProp({ ...def });
     }
     for (const p of room.props) {
       const spec = NPCS[p.id];
       if (!spec) continue;
       p.npc = spec;
-      if (!(p.tiles && p.tiles.length) && FURNI_DIMS[p.id]) {
-        const [dx, dy] = FURNI_DIMS[p.id];
-        const [w, h] = (p.dir ?? 0) % 4 === 2 ? [dy, dx] : [dx, dy];
-        p.tiles = [];
-        for (let ty = 0; ty < h; ty++)
-          for (let tx = 0; tx < w; tx++) p.tiles.push({ x: p.x + tx, y: p.y + ty });
-        // footprint tiles are solid — room construction already ran, so block
-        // the derived tiles here (the anchor tile was blocked by the ctor)
-        for (const t of p.tiles) room.block(t.x, t.y, p);
-      }
     }
   }
   return rooms;

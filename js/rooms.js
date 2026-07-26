@@ -32,24 +32,49 @@ const withSeats = (props) =>
 export const GATE_FURNI = 'fantasy_c22_archway';
 const GATE_DEFAULTS = {
   // set into the guild hall's west front, beside the clock tower (the
-  // default layout places it there too — this only heals omissions)
-  square: [{ id: GATE_FURNI, x: 1, y: 5, dir: 2, tiles: [{ x: 1, y: 5 }, { x: 1, y: 6 }] }],
+  // default layout places it there too — this only heals omissions). No
+  // footprint here: the Room derives it from the arch's own dims.
+  square: [{ id: GATE_FURNI, x: 1, y: 5, dir: 2 }],
 };
+
+// A traversal decal (RP arrow, dungeon gate) is only a door if a player can
+// STAND on it, so every one of them ends up here. Its own block is always
+// lifted — it was flagged walkable after the ctor ran. Beyond that, a door
+// buried under OTHER furni would strand players, and that is a live hazard:
+// footprints used to be hand-authored per placement and got the axis wrong, so
+// layouts were saved against footprints a tile off. The square's adventure
+// board (1x2, dir 2) sits across (12,6)+(13,6) with the mirkwood arrow on
+// (13,6) — correct footprints put a solid board on the only exit tile. The
+// module's contract is that the traversal network always comes back complete,
+// so when a layout leaves a door no standable tile at all, the door wins one
+// back and says so. A door with one tile still free (the square's arch, whose
+// far tile holds a goblin statue) is left exactly as the admin placed it.
+function wireDoor(room, p) {
+  for (const t of p.tiles) {
+    if (room.blockers.get(`${t.x},${t.y}`) === p) room.unblock(t.x, t.y);
+  }
+  if (p.tiles.some((t) => !room.isBlocked(t.x, t.y))) return;
+  const t = p.tiles[0];
+  const by = room.blockers.get(`${t.x},${t.y}`);
+  room.unblock(t.x, t.y);
+  console.warn(
+    `[rooms] ${room.id}: ${p.id} at (${t.x},${t.y}) was fully covered by ` +
+      `${by && by.id ? `${by.id} at (${by.x},${by.y})` : 'another item'} — freeing the door tile. ` +
+      'Move one of them in the room editor and re-save the layout.',
+  );
+}
 
 function wireGates(rooms) {
   for (const room of rooms) {
     // restore the arch if a saved layout dropped it (admins move, not lose)
     for (const def of GATE_DEFAULTS[room.id] || []) {
-      if (!room.props.some((p) => p.id === def.id)) room.props.push({ ...def });
+      if (!room.props.some((p) => p.id === def.id)) room.addProp({ ...def });
     }
     for (const p of room.props) {
       if (p.id !== GATE_FURNI) continue;
       p.walk = true; // step INTO the archway to descend
       p.teleport = { gate: true }; // destination comes from the Gatekeeper
-      // the ctor ran before this stamp: lift any blocks it put on the tiles
-      for (const t of p.tiles && p.tiles.length ? p.tiles : [{ x: p.x, y: p.y }]) {
-        if (room.blockers.get(`${t.x},${t.y}`) === p) room.unblock(t.x, t.y);
-      }
+      wireDoor(room, p);
     }
   }
   return rooms;
@@ -79,11 +104,14 @@ function wireArrows(rooms) {
       if (orphan) orphan.teleport = { room: def.dest }; // admin's spot, healed aim
       else {
         const spec = { id: 'rp_arrow', x: def.x, y: def.y, dir: def.dir, walk: true, teleport: { room: def.dest } };
-        room.props.push(spec);
+        room.addProp(spec);
         arrows.push(spec);
       }
     }
-    for (const p of arrows) p.walk = true;
+    for (const p of arrows) {
+      p.walk = true;
+      wireDoor(room, p);
+    }
   }
   return rooms;
 }
@@ -275,8 +303,15 @@ export function buildRooms(layouts = {}) {
         { id: 'fantasy_c22_barrel', x: 6, y: 1, dir: 0 },
         { id: 'fantasy_c22_barrel', x: 7, y: 1, dir: 2 },
         // ---- the EAST storage bay (raised): stone-walled edge, casks + cat
-        { id: 'vikings_stonedivdr', x: 10, y: 3, dir: 2 }, // bay's west wall (2-tall each)
-        { id: 'vikings_stonedivdr', x: 10, y: 5, dir: 2 },
+        { id: 'vikings_stonedivdr', x: 10, y: 3, dir: 2 }, // bay's west wall (2-tall)
+        // the wall turns east along the bay's south edge instead of running on
+        // down the column: two 2-tall sections would seal (10,6), and that tile
+        // is the room's ONLY step down to the southern dining floor — where the
+        // feast table, its stools and the exit arrow are. The seal was invisible
+        // while footprints were hand-authored a tile off (this divider claimed
+        // its anchor alone); deriving them from the furni's real 2x1 dims made
+        // the wall solid and stranded half the tavern.
+        { id: 'vikings_stonedivdr', x: 10, y: 5, dir: 0 }, // corner: (10,5)+(11,5)
         { id: 'fantasy_c22_barrel', x: 11, y: 4, dir: 0 },
         { id: 'fantasy_c22_barrel', x: 11, y: 5, dir: 2 },
         { id: 'easter_c19_habshirecat', x: 11, y: 3, dir: 2 }, // cat perched on the casks
@@ -298,7 +333,7 @@ export function buildRooms(layouts = {}) {
         { id: 'vikings_chair_r', x: 3, y: 8, dir: 6, sit: 0.25 },
         { id: 'vikings_chair_r', x: 2, y: 9, dir: 0, sit: 0.25 },
         // ---- CENTRE-SOUTH: the long feast table, benches drawn up both sides
-        { id: 'vikings_table_r', x: 5, y: 8, dir: 0, tiles: [{ x: 5, y: 8 }, { x: 6, y: 8 }, { x: 7, y: 8 }] },
+        { id: 'vikings_table_r', x: 5, y: 8, dir: 0 },
         { id: 'vikings_stool', x: 5, y: 7, dir: 2 },
         { id: 'vikings_stool', x: 6, y: 7, dir: 2 },
         { id: 'vikings_stool', x: 7, y: 7, dir: 2 },
@@ -342,34 +377,34 @@ export function buildRooms(layouts = {}) {
       kit: SQUARE_KIT,
       props: withSeats([
         // ---- WEST: the guild hall front — wall, clock tower, gate, balcony
-        { id: 'fantasy_c22_building1', x: 1, y: 1, dir: 2, tiles: [{ x: 1, y: 1 }, { x: 1, y: 2 }] },
-        { id: 'fantasy_c22_guildhall', x: 1, y: 3, dir: 2, tiles: [{ x: 1, y: 3 }, { x: 1, y: 4 }] },
+        { id: 'fantasy_c22_building1', x: 1, y: 1, dir: 2 },
+        { id: 'fantasy_c22_guildhall', x: 1, y: 3, dir: 2 },
         // the dungeon gate: wireGates makes it walkable + aims it (GATE_FURNI)
-        { id: 'fantasy_c22_archway', x: 1, y: 5, dir: 2, tiles: [{ x: 1, y: 5 }, { x: 1, y: 6 }] },
-        { id: 'fantasy_c22_balcony', x: 1, y: 7, dir: 2, tiles: [{ x: 1, y: 7 }, { x: 1, y: 8 }] },
+        { id: 'fantasy_c22_archway', x: 1, y: 5, dir: 2 },
+        { id: 'fantasy_c22_balcony', x: 1, y: 7, dir: 2 },
         { id: 'fantasy_c22_shopsigns', x: 1, y: 9, dir: 2 },
         { id: 'fantasy_c22_barrel', x: 1, y: 10, dir: 2 },
         // ---- NORTH: the timber-framed tavern row, thatch side of the square
-        { id: 'fantasy_c22_tavern', x: 2, y: 1, dir: 0, tiles: [{ x: 2, y: 1 }, { x: 3, y: 1 }] },
-        { id: 'fantasy_c22_building2', x: 4, y: 1, dir: 0, tiles: [{ x: 4, y: 1 }, { x: 5, y: 1 }] },
-        { id: 'fantasy_c22_building1', x: 6, y: 1, dir: 0, tiles: [{ x: 6, y: 1 }, { x: 7, y: 1 }] },
-        { id: 'fantasy_c22_building1', x: 8, y: 1, dir: 0, tiles: [{ x: 8, y: 1 }, { x: 9, y: 1 }] },
+        { id: 'fantasy_c22_tavern', x: 2, y: 1, dir: 0 },
+        { id: 'fantasy_c22_building2', x: 4, y: 1, dir: 0 },
+        { id: 'fantasy_c22_building1', x: 6, y: 1, dir: 0 },
+        { id: 'fantasy_c22_building1', x: 8, y: 1, dir: 0 },
         // the Gatekeeper (money tree NPC) fills the row's open NE bay
-        { id: 'neopets_c25_moneytree', x: 10, y: 1, dir: 0, tiles: [{ x: 10, y: 1 }, { x: 11, y: 1 }, { x: 10, y: 2 }, { x: 11, y: 2 }] },
+        { id: 'neopets_c25_moneytree', x: 10, y: 1, dir: 0 },
         // bunting strung across the tavern front
         { id: 'fantasy_c22_hangingflags', x: 6, y: 2, dir: 0, walk: true },
         // ---- RP arrow in at the tavern door (explicit — three rooms share
         // the arrow network now, round-robin would mis-pair this one)
         { id: 'rp_arrow', x: 5, y: 2, dir: 0, walk: true, teleport: { room: 'tavern' } },
         // ---- EAST: the market under its awnings
-        { id: 'fantasy_c22_marketstall', x: 8, y: 3, dir: 0, tiles: [{ x: 8, y: 3 }, { x: 9, y: 3 }] },
+        { id: 'fantasy_c22_marketstall', x: 8, y: 3, dir: 0 },
         { id: 'fantasy_c22_marketgoods', x: 8, y: 4, dir: 0 },
         { id: 'fantasy_c22_marketgoods', x: 9, y: 4, dir: 2 },
-        { id: 'fantasy_c22_strawcanopy', x: 10, y: 3, dir: 0, tiles: [{ x: 10, y: 3 }, { x: 11, y: 3 }, { x: 10, y: 4 }, { x: 11, y: 4 }] },
+        { id: 'fantasy_c22_strawcanopy', x: 10, y: 3, dir: 0 },
         // ---- SE: the green corner — grass and the bright tree
-        { id: 'neopets_c25_grass', x: 12, y: 1, dir: 0, walk: true, tiles: [{ x: 12, y: 1 }, { x: 13, y: 1 }, { x: 12, y: 2 }, { x: 13, y: 2 }] },
-        { id: 'neopets_c25_grass', x: 12, y: 3, dir: 0, walk: true, tiles: [{ x: 12, y: 3 }, { x: 13, y: 3 }, { x: 12, y: 4 }, { x: 13, y: 4 }] },
-        { id: 'neopets_c25_grass', x: 12, y: 5, dir: 0, walk: true, tiles: [{ x: 12, y: 5 }, { x: 13, y: 5 }, { x: 12, y: 6 }, { x: 13, y: 6 }] },
+        { id: 'neopets_c25_grass', x: 12, y: 1, dir: 0, walk: true },
+        { id: 'neopets_c25_grass', x: 12, y: 3, dir: 0, walk: true },
+        { id: 'neopets_c25_grass', x: 12, y: 5, dir: 0, walk: true },
         { id: 'fantasy_c22_tree', x: 13, y: 4, dir: 0 },
         // ---- RP arrow into the Mirkwood, on the path below the green corner
         // (the fenced grass itself is decorative — the arrow stays reachable)
@@ -379,11 +414,11 @@ export function buildRooms(layouts = {}) {
         { id: 'easter_c20_mossydivider', x: 13, y: 6, dir: 0 },
         { id: 'fantasy_c22_barrel', x: 11, y: 6, dir: 0 },
         // ---- SW: the dirt training yard
-        { id: 'hblooza_dirtfloor', x: 2, y: 6, dir: 0, walk: true, tiles: [{ x: 2, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 7 }, { x: 3, y: 7 }] },
-        { id: 'hblooza_dirtfloor', x: 4, y: 6, dir: 0, walk: true, tiles: [{ x: 4, y: 6 }, { x: 5, y: 6 }, { x: 4, y: 7 }, { x: 5, y: 7 }] },
-        { id: 'hblooza_dirtfloor', x: 2, y: 8, dir: 0, walk: true, tiles: [{ x: 2, y: 8 }, { x: 3, y: 8 }, { x: 2, y: 9 }, { x: 3, y: 9 }] },
-        { id: 'hblooza_dirtfloor', x: 4, y: 8, dir: 0, walk: true, tiles: [{ x: 4, y: 8 }, { x: 5, y: 8 }, { x: 4, y: 9 }, { x: 5, y: 9 }] },
-        { id: 'hblooza_dirtfloor', x: 3, y: 7, dir: 0, walk: true, tiles: [{ x: 3, y: 7 }, { x: 4, y: 7 }, { x: 3, y: 8 }, { x: 4, y: 8 }] },
+        { id: 'hblooza_dirtfloor', x: 2, y: 6, dir: 0, walk: true },
+        { id: 'hblooza_dirtfloor', x: 4, y: 6, dir: 0, walk: true },
+        { id: 'hblooza_dirtfloor', x: 2, y: 8, dir: 0, walk: true },
+        { id: 'hblooza_dirtfloor', x: 4, y: 8, dir: 0, walk: true },
+        { id: 'hblooza_dirtfloor', x: 3, y: 7, dir: 0, walk: true },
         { id: 'hween_c25_weed1', x: 3, y: 7, dir: 0, walk: true },
         { id: 'hween_c25_weed1', x: 4, y: 9, dir: 0, walk: true },
         { id: 'fantasy_c22_goblin', x: 2, y: 5, dir: 2 },
@@ -402,7 +437,7 @@ export function buildRooms(layouts = {}) {
         { id: 'country_patio', x: 8, y: 7, dir: 0, walk: true }, { id: 'country_patio', x: 9, y: 7, dir: 0, walk: true },
         { id: 'country_patio', x: 6, y: 8, dir: 0, walk: true }, { id: 'country_patio', x: 7, y: 8, dir: 0, walk: true },
         { id: 'country_patio', x: 8, y: 8, dir: 0, walk: true }, { id: 'country_patio', x: 9, y: 8, dir: 0, walk: true },
-        { id: 'fantasy_c22_sewers', x: 6, y: 10, dir: 0, walk: true, tiles: [{ x: 6, y: 10 }, { x: 7, y: 10 }] },
+        { id: 'fantasy_c22_sewers', x: 6, y: 10, dir: 0, walk: true },
         // ---- the guild's quest board by the south entrance
         { id: 'fantasy_c22_adventureboard', x: 10, y: 10, dir: 0 },
       ]),
@@ -419,12 +454,12 @@ export function buildRooms(layouts = {}) {
       props: withSeats([
         ...mirkwoodTreeline(),
         // ---- the trail: dirt path winding from the southern gap to the shrine
-        { id: 'easter_c19_dirtpath', x: 14, y: 17, dir: 0, walk: true, tiles: [{ x: 14, y: 17 }, { x: 14, y: 18 }] },
-        { id: 'easter_c19_dirtpath', x: 14, y: 15, dir: 0, walk: true, tiles: [{ x: 14, y: 15 }, { x: 14, y: 16 }] },
-        { id: 'easter_c19_dirtpath', x: 13, y: 13, dir: 0, walk: true, tiles: [{ x: 13, y: 13 }, { x: 13, y: 14 }] },
-        { id: 'easter_c19_dirtpath', x: 13, y: 11, dir: 0, walk: true, tiles: [{ x: 13, y: 11 }, { x: 13, y: 12 }] },
-        { id: 'easter_c19_dirtpath', x: 14, y: 9, dir: 0, walk: true, tiles: [{ x: 14, y: 9 }, { x: 14, y: 10 }] },
-        { id: 'easter_c19_dirtpath', x: 14, y: 7, dir: 0, walk: true, tiles: [{ x: 14, y: 7 }, { x: 14, y: 8 }] },
+        { id: 'easter_c19_dirtpath', x: 14, y: 17, dir: 0, walk: true },
+        { id: 'easter_c19_dirtpath', x: 14, y: 15, dir: 0, walk: true },
+        { id: 'easter_c19_dirtpath', x: 13, y: 13, dir: 0, walk: true },
+        { id: 'easter_c19_dirtpath', x: 13, y: 11, dir: 0, walk: true },
+        { id: 'easter_c19_dirtpath', x: 14, y: 9, dir: 0, walk: true },
+        { id: 'easter_c19_dirtpath', x: 14, y: 7, dir: 0, walk: true },
         // ---- the wisp shrine on the rise (the trail's destination): standing
         // stones, will-o-wisp light, starry ground — beautiful but WRONG
         { id: 'easter_c20_waypointrocks', x: 12, y: 4, dir: 2 },
@@ -435,18 +470,18 @@ export function buildRooms(layouts = {}) {
         { id: 'wisp_c23_lilwisp', x: 11, y: 7, dir: 2 },
         { id: 'wisp_c23_lilwisp', x: 16, y: 7, dir: 2 },
         // ---- the west spring: the old willow over black water
-        { id: 'hween_r19_weepingwillow', x: 2, y: 6, dir: 0, tiles: [{ x: 2, y: 6 }, { x: 3, y: 6 }, { x: 2, y: 7 }, { x: 3, y: 7 }] },
-        { id: 'easter_c20_fishstream', x: 7, y: 8, dir: 0, tiles: [{ x: 7, y: 8 }, { x: 7, y: 9 }] },
-        { id: 'hween_c25_bedofmushrooms', x: 5, y: 10, dir: 0, tiles: [{ x: 5, y: 10 }, { x: 6, y: 10 }, { x: 7, y: 10 }] },
+        { id: 'hween_r19_weepingwillow', x: 2, y: 6, dir: 0 },
+        { id: 'easter_c20_fishstream', x: 7, y: 8, dir: 0 },
+        { id: 'hween_c25_bedofmushrooms', x: 5, y: 10, dir: 0 },
         { id: 'easter_c20_darkrock', x: 5, y: 5, dir: 2 },
         { id: 'hween_c25_weed2', x: 4, y: 12, dir: 2, walk: true },
         { id: 'hween_c25_weed1', x: 5, y: 13, dir: 2, walk: true },
         // the springside is thick with overgrowth: weed clumps + mossy ground
-        { id: 'hween_c25_mossyfloor', x: 3, y: 15, dir: 0, walk: true, tiles: [{ x: 3, y: 15 }, { x: 4, y: 15 }, { x: 3, y: 16 }, { x: 4, y: 16 }] },
+        { id: 'hween_c25_mossyfloor', x: 3, y: 15, dir: 0, walk: true },
         { id: 'hween_c25_weed3', x: 2, y: 13, dir: 2, walk: true },
         { id: 'hween_c25_weed1', x: 5, y: 16, dir: 2, walk: true },
         { id: 'hween_c25_weed2', x: 3, y: 17, dir: 2, walk: true },
-        { id: 'hween_c25_bedofmushrooms', x: 6, y: 18, dir: 0, tiles: [{ x: 6, y: 18 }, { x: 7, y: 18 }, { x: 8, y: 18 }] },
+        { id: 'hween_c25_bedofmushrooms', x: 6, y: 18, dir: 0 },
         // ---- the dark east wood: spider country, close-planted, root-choked
         { id: 'hween_c19_birchtree', x: 18, y: 8, dir: 2 },
         { id: 'hween_c19_birchtree', x: 19, y: 9, dir: 0 },
@@ -458,7 +493,7 @@ export function buildRooms(layouts = {}) {
         { id: 'hween_c19_birchtree', x: 24, y: 7, dir: 0 },
         { id: 'hween_c17_hangingroots', x: 20, y: 8, dir: 0 },
         { id: 'hween_c17_lichen', x: 21, y: 8, dir: 0, walk: true },
-        { id: 'easter_c20_scatteredforestfloor', x: 17, y: 11, dir: 0, walk: true, tiles: [{ x: 17, y: 11 }, { x: 18, y: 11 }, { x: 17, y: 12 }, { x: 18, y: 12 }] },
+        { id: 'easter_c20_scatteredforestfloor', x: 17, y: 11, dir: 0, walk: true },
         // the spiders nest in the weeds: tall foxglove + trailing vines choke it
         { id: 'hween_c25_weed2', x: 22, y: 10, dir: 2, walk: true },
         { id: 'hween_c25_weed3', x: 24, y: 11, dir: 2, walk: true },
@@ -471,8 +506,8 @@ export function buildRooms(layouts = {}) {
         { id: 'hween_c17_lichen', x: 22, y: 2, dir: 0, walk: true },
         { id: 'hween_c25_weed1', x: 25, y: 4, dir: 2, walk: true },
         { id: 'hween_c25_weed3', x: 25, y: 6, dir: 2, walk: true },
-        { id: 'hween_c25_mossyfloor', x: 15, y: 3, dir: 0, walk: true, tiles: [{ x: 15, y: 3 }, { x: 16, y: 3 }, { x: 15, y: 4 }, { x: 16, y: 4 }] },
-        { id: 'easter_c20_scatteredforestfloor', x: 22, y: 2, dir: 0, walk: true, tiles: [{ x: 22, y: 2 }, { x: 23, y: 2 }, { x: 22, y: 3 }, { x: 23, y: 3 }] },
+        { id: 'hween_c25_mossyfloor', x: 15, y: 3, dir: 0, walk: true },
+        { id: 'easter_c20_scatteredforestfloor', x: 22, y: 2, dir: 0, walk: true },
         // ---- mid-wood: dead falls and mushroom rings
         { id: 'hween_c25_weed3', x: 8, y: 3, dir: 2, walk: true },
         { id: 'hween_c25_weed1', x: 9, y: 4, dir: 2, walk: true },
@@ -485,26 +520,26 @@ export function buildRooms(layouts = {}) {
         { id: 'easter_c20_rockboulders', x: 21, y: 6, dir: 2 },
         { id: 'hween_c25_weed3', x: 11, y: 11, dir: 2, walk: true },
         { id: 'hween_c25_weed2', x: 12, y: 12, dir: 2, walk: true },
-        { id: 'hween_c25_mossyfloor', x: 6, y: 11, dir: 0, walk: true, tiles: [{ x: 6, y: 11 }, { x: 7, y: 11 }, { x: 6, y: 12 }, { x: 7, y: 12 }] },
-        { id: 'hween_c25_bedofmushrooms', x: 9, y: 9, dir: 0, tiles: [{ x: 9, y: 9 }, { x: 10, y: 9 }, { x: 11, y: 9 }] },
+        { id: 'hween_c25_mossyfloor', x: 6, y: 11, dir: 0, walk: true },
+        { id: 'hween_c25_bedofmushrooms', x: 9, y: 9, dir: 0 },
         { id: 'hween_c19_birchtree', x: 6, y: 15, dir: 2 },
         { id: 'hween_c19_birchtree', x: 9, y: 14, dir: 0 },
         { id: 'hween_c19_birchtree', x: 11, y: 3, dir: 2 },
         // ---- the SE marsh: black water, drowned weeds
-        { id: 'easter_c20_fishstream', x: 22, y: 15, dir: 0, tiles: [{ x: 22, y: 15 }, { x: 22, y: 16 }] },
+        { id: 'easter_c20_fishstream', x: 22, y: 15, dir: 0 },
         { id: 'easter_c19_mushrooms', x: 20, y: 18, dir: 2, walk: true },
         { id: 'hween_c25_weed2', x: 11, y: 16, dir: 2, walk: true },
         { id: 'hween_c25_weed3', x: 24, y: 18, dir: 2, walk: true },
         { id: 'hween_c17_lichen', x: 25, y: 19, dir: 0, walk: true },
         { id: 'hween_c25_weed1', x: 24, y: 16, dir: 2, walk: true },
-        { id: 'hween_c25_bedofmushrooms', x: 21, y: 18, dir: 0, tiles: [{ x: 21, y: 18 }, { x: 22, y: 18 }, { x: 23, y: 18 }] },
+        { id: 'hween_c25_bedofmushrooms', x: 21, y: 18, dir: 0 },
         { id: 'hween_c25_weed2', x: 16, y: 14, dir: 2, walk: true },
         // ---- the south wood, flanking the trail
         { id: 'hween_c19_birchtree', x: 10, y: 18, dir: 2 },
         { id: 'hween_c19_birchtree', x: 18, y: 19, dir: 0 },
         { id: 'easter_c20_darkrock', x: 23, y: 14, dir: 2 },
         { id: 'hween_c17_shroomthing', x: 25, y: 16, dir: 2 },
-        { id: 'easter_c20_scatteredforestfloor', x: 7, y: 18, dir: 0, walk: true, tiles: [{ x: 7, y: 18 }, { x: 8, y: 18 }, { x: 7, y: 19 }, { x: 8, y: 19 }] },
+        { id: 'easter_c20_scatteredforestfloor', x: 7, y: 18, dir: 0, walk: true },
         // ---- fallen country logs strewn through the wood (part of the room
         // build so they're permanent + always render crisp at big-room scale)
         { id: 'country_log', x: 1, y: 2, dir: 0 },

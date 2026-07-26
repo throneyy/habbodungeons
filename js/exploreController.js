@@ -1,4 +1,5 @@
 import { Unit } from './units.js';
+import { propFootprint } from './room.js';
 import { rotationBetween } from './pathfinder.js';
 import { furniSprites, monsterSprites } from './monsterSprites.js';
 import { PROJ_SPRITE } from './battleController.js';
@@ -35,8 +36,8 @@ export const propId = (prop) => `${prop.id}@${prop.x},${prop.y}`;
 // because critters wander: the id must survive the drift.
 export const critterId = (spec, tile) => `${spec.name}@${tile.x},${tile.y}`;
 
-// a prop's occupied tiles (multi-tile furni declare them, 1×1 default)
-const footprint = (p) => (p.tiles && p.tiles.length ? p.tiles : [{ x: p.x, y: p.y }]);
+// a prop's occupied tiles, derived from its furni dims (room.js propFootprint)
+const footprint = (p) => propFootprint(p);
 
 // the footprint tile closest to (x,y) — what the avatar actually turns toward
 function nearestTileOf(prop, x, y) {

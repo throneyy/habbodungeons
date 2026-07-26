@@ -1,4 +1,5 @@
 import { propSprites } from './props.js';
+import { propFootprint } from './room.js';
 import { Identity } from './identity.js';
 import { isSupabase, invokeFn } from './backend.js';
 import { getSupabase } from './supabase.js';
@@ -82,7 +83,10 @@ export function serializeProp(p) {
   if (p.gate === true) out.gate = true;
   if (p.front === true) out.front = true; // dominant: stacked in front (depth.js)
   if (p.teleport) out.teleport = { ...p.teleport }; // RP-arrow destination
-  if (p.tiles && p.tiles.length) out.tiles = p.tiles.map((t) => ({ x: t.x, y: t.y }));
+  // `tiles` is deliberately NOT persisted: the footprint is derived from the
+  // furni's own dims at load (room.js propFootprint). Saving it created a
+  // second source of truth that went stale — 40 of 69 multi-tile placements
+  // in the live layouts had their footprint transposed 90°.
   return out;
 }
 
@@ -98,7 +102,7 @@ export function serializeProp(p) {
 // Escape cancels. Wraps the explore controller's onTap instead of growing
 // explore code.
 
-const footprint = (p) => (p.tiles && p.tiles.length ? p.tiles : [{ x: p.x, y: p.y }]);
+const footprint = (p) => propFootprint(p);
 
 export class RoomEditor {
   constructor(game) {
@@ -250,6 +254,7 @@ export class RoomEditor {
     const room = this.game.room;
     const ref = { ...spec };
     room.props.push(ref);
+    room.stampFootprint(ref); // never blocked yet — startMove takes it as a ghost
     const gp = { ...ref, ref, sprites: propSprites(ref.id) };
     this.game.props.push(gp);
     // Escape-to-cancel needs the key handler even with the editor toggled off
@@ -266,7 +271,7 @@ export class RoomEditor {
       gp,
       ref,
       offs: footprint(ref).map((t) => ({ dx: t.x - ref.x, dy: t.y - ref.y })),
-      orig: { x: ref.x, y: ref.y, tiles: ref.tiles ? ref.tiles.map((t) => ({ ...t })) : null },
+      orig: { x: ref.x, y: ref.y },
     };
     ref.editGhost = true;
     this.makeSmallPic();
@@ -311,10 +316,7 @@ export class RoomEditor {
     if (!m) return;
     m.ref.x = m.gp.x = x;
     m.ref.y = m.gp.y = y;
-    if (m.ref.tiles) {
-      m.ref.tiles = m.offs.map((o) => ({ x: x + o.dx, y: y + o.dy }));
-      m.gp.tiles = m.ref.tiles;
-    }
+    m.gp.tiles = m.ref.tiles = propFootprint(m.ref); // follows x/y/dir, always
   }
 
   canDrop(x, y) {
@@ -339,11 +341,7 @@ export class RoomEditor {
       this.pickUp(m.ref, m.gp);
       return;
     }
-    this.setPos(m.orig.x, m.orig.y);
-    if (m.orig.tiles) {
-      m.ref.tiles = m.orig.tiles;
-      m.gp.tiles = m.orig.tiles;
-    }
+    this.setPos(m.orig.x, m.orig.y); // re-derives the footprint from the old spot
     this.finishMove();
   }
 
@@ -371,14 +369,20 @@ export class RoomEditor {
     if (!dirs || dirs.length < 2) return;
     const prev = ref.dir;
     const next = dirs[(dirs.indexOf(ref.dir) + 1) % dirs.length];
+    const room = this.game.room;
+    const solid = !ref.walk && !ref.sit;
+    // dirs 2/6 swap the dims, so an asymmetric footprint MOVES on rotate —
+    // release the old tiles before re-deriving or the blockers go stale (and,
+    // mid-move, so does the Object Mover's drop test)
+    if (solid && !this.moving) for (const t of footprint(ref)) room.unblock(t.x, t.y);
     ref.dir = next;
     if (gp) gp.dir = next;
-    // seats with auto-derived footprints re-derive on rotate (dims swap 90°)
-    if (ref.sit && ref.tiles && ref.tiles.length > 1 && prev % 4 !== next % 4) {
-      ref.tiles = ref.tiles.map((t, i) => (i === 0 ? t : { x: ref.x + (t.y - ref.y), y: ref.y + (t.x - ref.x) }));
-      if (gp) gp.tiles = ref.tiles;
-      if (this.moving) this.moving.offs = ref.tiles.map((t) => ({ dx: t.x - ref.x, dy: t.y - ref.y }));
+    if (prev % 4 !== next % 4) {
+      const tiles = room.stampFootprint(ref);
+      if (gp) gp.tiles = tiles;
+      if (this.moving) this.moving.offs = tiles.map((t) => ({ dx: t.x - ref.x, dy: t.y - ref.y }));
     }
+    if (solid && !this.moving) for (const t of footprint(ref)) room.block(t.x, t.y, ref);
     this.renderPreview(); // activeObjectsUpdated -> refreshView
     if (this.moving && this.smallPic) {
       // rotating mid-move: rebuild the cursor pic in the new direction
