@@ -1727,13 +1727,29 @@ let duelClaim = null;
 function startDuelWatchdog() {
   let quietSince = 0;
   duelClaim = setInterval(async () => {
-    if (!duelHost || !duelHost.battle) return;
+    // A duel is abandonable from the moment it EXISTS, not from the moment it
+    // boots into a battle. This used to read `!duelHost || !duelHost.battle`,
+    // which skipped the entire 3-2-1: `battle` is only set when the guest's
+    // `hello` arrives (duelBattle.js), so a guest who closed their browser
+    // during the countdown left the host polling nothing, the row pinned at
+    // 'countdown' forever, and BOTH players permanently refused with "you are
+    // already duelling" - with no way out, because the client only sends
+    // duel-cancel while it still holds a duel object.
+    if (!duelHost) return;
     // Cheap local hint first: their avatar has gone from the room roster, or
     // their relay has fallen silent. Presence is the server's business, but
     // there is no reason to poll an edge function every few seconds while the
     // opponent is visibly standing there swinging.
+    //
+    // The relay-silence half only counts ONCE A BATTLE IS RUNNING. Before that
+    // there is no relay traffic to be silent, and `lastHeardAt` is still 0, so
+    // treating it as a signal would fire a claim on every ordinary countdown -
+    // the server would refuse it (correctly, the opponent is present) and the
+    // player would watch "<name> is still here" flash over their own 3-2-1.
+    // During the countdown the avatar going missing is the only real evidence.
     const theirs = remote.units.get(String(duelHost.opponent || '').toLowerCase());
-    const quiet = !theirs || (performance.now() - (duelHost.lastHeardAt || 0) > 12000);
+    const fighting = !!duelHost.battle;
+    const quiet = !theirs || (fighting && performance.now() - (duelHost.lastHeardAt || 0) > 12000);
     if (!quiet) { quietSince = 0; return; }
     if (!quietSince) { quietSince = performance.now(); return; }
     if (performance.now() - quietSince < 4000) return; // let a hiccup settle
@@ -1741,6 +1757,9 @@ function startDuelWatchdog() {
       const res = await net.send({ t: 'duel-claim' });
       // A win is announced by the server on BOTH mailboxes (duel-ended), so
       // nothing is done with the response here beyond stopping the poll.
+      // A refusal is the NORMAL answer while the opponent's presence row is
+      // still fresh (up to one 20s heartbeat + the 30s TTL): the server owns
+      // that decision and the poll simply keeps asking until it agrees.
       if (res && res.ok && res.ended) clearInterval(duelClaim);
     } catch { /* offline ourselves: the next tick tries again */ }
   }, 3000);

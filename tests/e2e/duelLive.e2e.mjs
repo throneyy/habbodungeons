@@ -547,11 +547,16 @@ const waitCleared = (p, names, timeout = 30000) => p.waitForFunction((ns) => {
 
 // The duel screen folded and this client is back in explore: endDuel's own
 // visible effect, independent of the wording of any message.
+//
+// Deliberately NOT `#roster .roster-row === 0`: endDuel hides the panel but
+// leaves the last fight's roster rows in the hidden DOM. Asserting on them
+// made this fail against a working product - and worse, the same mistake in
+// stageDuel's boot check (rows left over from the PREVIOUS duel satisfy it
+// instantly) is what made a duel that never started look booted.
 const waitDuelOver = (p, timeout = 30000) => p.waitForFunction(() => {
   const panel = document.querySelector('#panel');
   const folded = !panel || panel.classList.contains('hidden');
   return folded
-    && document.querySelectorAll('#roster .roster-row').length === 0
     && !window.__debug.duelHost()
     && !window.__debug.duelGuest();
 }, null, { timeout }).then(() => true).catch(() => false);
@@ -578,12 +583,47 @@ async function stageDuel(host, guest) {
     .then(() => true).catch(() => false);
   if (!prompt) return { ok: false, why: `${guest.name} never got the challenge prompt` };
   await guest.page.click('.party-prompt [data-act="yes"]');
+  // A live duel OBJECT on each client, never roster rows: rows from the
+  // previous duel are still in the hidden DOM, so a row count is true again
+  // the instant the last duel ended and would "boot" a duel that never began.
   const booted = await Promise.all([host, guest].map((p) => p.page.waitForFunction(
-    () => document.querySelectorAll('#roster .roster-row').length === 2,
+    () => !!(window.__debug.duelHost() || window.__debug.duelGuest()),
     null, { timeout: 40000 },
   ).then(() => true).catch(() => false)));
-  if (!booted.every(Boolean)) return { ok: false, why: `battle did not boot (host:${booted[0]} guest:${booted[1]})` };
+  if (!booted.every(Boolean)) return { ok: false, why: `duel did not start (host:${booted[0]} guest:${booted[1]})` };
+  // ...and then the battle itself, which is what a fight needs.
+  const fought = await Promise.all([host, guest].map((p) => p.page.waitForFunction(
+    () => {
+      const c = window.game.controller;
+      return !!(c && (c.battle || c.shadow));
+    }, null, { timeout: 40000 },
+  ).then(() => true).catch(() => false)));
+  if (!fought.every(Boolean)) return { ok: false, why: `battle did not boot (host:${fought[0]} guest:${fought[1]})` };
   return { ok: true };
+}
+
+// Walk a client into the square and onto the first of `wanted` it can reach.
+// Shared by the opening setup and by the RE-OPENED browser the third ending
+// needs (a context closed to simulate a disconnect cannot be reused).
+async function enterSquare(p, wanted) {
+  await p.page.evaluate((id) => window.__debug.gotoRoom(id), ROOM_ID);
+  await p.page.waitForTimeout(2500); // presence re-joins the room's channel
+  return p.page.evaluate(async (opts) => {
+    const pf = await import('/js/pathfinder.js');
+    const ctl = window.game.controller;
+    const u = ctl.unit;
+    const room = window.game.room;
+    const target = opts.wanted.find(
+      (t) => !room.isBlocked(t.x, t.y)
+        && ((u.x === t.x && u.y === t.y) || !!pf.findPath(room, u.x, u.y, t.x, t.y)),
+    );
+    if (!target) return { x: u.x, y: u.y, target: null };
+    ctl.onTap(target);
+    for (let i = 0; i < 120 && (u.x !== target.x || u.y !== target.y); i++) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    return { x: u.x, y: u.y, target, room: room.id };
+  }, { wanted });
 }
 
 const server = await startServer(PORT);
@@ -831,6 +871,25 @@ try {
   ).then(() => true).catch(() => false);
   check('A boots the duel and renders 2 roster rows', bootA);
   check('B boots the duel and renders 2 roster rows', bootB);
+
+  // The watchdog now runs during the countdown as well as the fight, so an
+  // ORDINARY countdown must stay silent. `lastHeardAt` is 0 until the first
+  // relay frame, so treating relay silence as evidence before the battle
+  // exists would fire a claim on every duel ever started and flash the
+  // server's refusal - "<opponent> is still here" - over the player's own
+  // 3-2-1. That is why the watchdog only counts relay silence once a battle is
+  // running, and this is the assertion that keeps it that way.
+  const idleClaims = await Promise.all([a, b].map((p) => p.page.evaluate(
+    () => ({
+      claims: window.__sends.filter((s) => s.t === 'duel-claim').length,
+      stillHere: window.__notices.filter((t) => /is still here/i.test(t)),
+    }),
+  )));
+  console.log(`  claims during a NORMAL countdown ->  ${JSON.stringify(idleClaims)}`);
+  check('a normal countdown sends no abandonment claim at all',
+    idleClaims.every((x) => x.claims === 0));
+  check('...so no “still here” refusal is ever flashed at a duellist',
+    idleClaims.every((x) => x.stillHere.length === 0));
 
   const rA = await rendered(a.page);
   const rB = await rendered(b.page);
@@ -1497,6 +1556,127 @@ try {
   console.log(`  room cleared ${clearSecs.toFixed(1)}s after the disconnect (stale sweep is 90s)`);
   check('the room was cleared by the ending, not by the 90s stale sweep',
     clearSecs < 85);
+
+  // ============ ENDING 3: A DISCONNECT DURING THE 3-2-1 COUNTDOWN ==========
+  // The regression this file exists to hold down. `startDuelWatchdog` used to
+  // bail on `!duelHost.battle`, and `battle` is only set when the guest's
+  // hello lands - so a guest who closed their browser during the countdown was
+  // never claimed against. Measured live before the fix: 124 seconds, ZERO
+  // duel-claim calls sent, the row pinned at 'countdown', and BOTH players then
+  // permanently refused with "you are already duelling" - unrecoverable, since
+  // the client only sends duel-cancel while it still holds a duel object.
+  //
+  // This is the one ending a player cannot work around, so it is asserted the
+  // hardest: the claim must actually be SENT, and both players must be free
+  // afterwards.
+  beat('THIRD DUEL — the guest will vanish during the countdown, not the fight');
+  b = await openPlayer(PORT, e2eName('DuelB'), { classId: 'fighter' });
+  bClosed = false;
+  check(`${b.name}'s browser is back`, !!b.seed.ok);
+  const bBack = await enterSquare(b, TILES.B);
+  console.log(`  ${b.name} back in the square at (${bBack.x},${bBack.y})`);
+  check(`${b.name} rejoined the square`, bBack.room === ROOM_ID);
+  for (const p of [a, c, d]) {
+    await p.page.evaluate(() => { window.__notices.length = 0; window.__watch.length = 0; });
+  }
+
+  // Challenge and accept, but do NOT wait for the battle: the window being
+  // tested is the one before it exists.
+  const at3 = await a.page.evaluate((n) => {
+    const u = window.game?.controller?.remote?.units?.get(n.toLowerCase());
+    return u ? { x: u.x, y: u.y } : null;
+  }, b.name);
+  check(`${a.name} can see ${b.name} again`, !!at3);
+  await a.page.evaluate((t) => window.game.controller.onTap(t), at3);
+  await a.page.waitForSelector('.infostand--human [data-act="duel"]', { timeout: 15000 });
+  await a.page.click('.infostand--human [data-act="duel"]');
+  await b.page.waitForSelector('.party-prompt [data-act="yes"]', { timeout: 25000 });
+  beat(`ACCEPTED — ${b.name} takes the third challenge`);
+  await b.page.click('.party-prompt [data-act="yes"]');
+
+  // The countdown is live on the host and the battle has NOT booted. That
+  // pairing is the precondition of the bug, so it is asserted rather than
+  // assumed - without it this ending would silently become a duplicate of
+  // ending 2.
+  const inCountdown = await a.page.waitForFunction(() => {
+    const h = window.__debug.duelHost();
+    return !!h && !h.battle;
+  }, null, { timeout: 30000 }).then(() => true).catch(() => false);
+  check(`${a.name} is mid-countdown: a duel exists but no battle yet`, inCountdown);
+  const preRow = await duelRows(a.page);
+  console.log(`  row mid-countdown ->  ${JSON.stringify((preRow.rows || [])[0])}`);
+  check('...and the server row says countdown',
+    !preRow.err && ((preRow.rows || [])[0] || {}).status === 'countdown');
+
+  await shot(a.page, 'countdown-disconnect-A.png');
+  const cdAt = Date.now();
+  await b.context.close();
+  bClosed = true;
+  beat(`DISCONNECT — ${b.name}'s browser closed DURING the 3-2-1`);
+
+  const cdNotice = await waitNotice(a.page, 'win the duel', 120000);
+  const cdSecs = ((Date.now() - cdAt) / 1000).toFixed(1);
+  const claims = await a.page.evaluate(
+    () => window.__sends.filter((s) => s.t === 'duel-claim'),
+  );
+  console.log(`  ${a.name} notice   ->  ${JSON.stringify(cdNotice)}  (after ${cdSecs}s)`);
+  console.log(`  duel-claim calls ->  ${JSON.stringify(claims)}`);
+  beat(`COUNTDOWN CLAIM SETTLED — ${a.name} freed ${cdSecs}s after the disconnect`);
+
+  // THE REGRESSION ASSERTION. Before the fix this was 0 for as long as anyone
+  // was willing to wait.
+  check('the host actually SENDS duel-claim for a countdown abandonment',
+    claims.length > 0);
+  check('...and the server settled one of them',
+    claims.some((s) => s.res && s.res.ok && s.res.ended));
+  // The presence rule is untouched: while the opponent's presence row is still
+  // fresh the server refuses, and the client keeps asking rather than
+  // asserting a win of its own.
+  const refusals = claims.filter((s) => s.res && s.res.ok === false);
+  console.log(`  refusals before it settled: ${refusals.length} — ${JSON.stringify([...new Set(refusals.map((s) => s.res.reason))])}`);
+  check('a live opponent is never claimed against (refusals are the normal path)',
+    refusals.every((s) => /is still here/i.test(s.res.reason || '')));
+  check('the abandoned player is told they WON', !!cdNotice && /win the duel/i.test(cdNotice));
+  check('...naming the disconnect', !!cdNotice && /disconnect|left the room/i.test(cdNotice));
+  check(`${a.name}'s duel screen folded back to explore`, await waitDuelOver(a.page));
+  await shot(a.page, 'countdown-disconnect-settled-A.png');
+
+  const cdRows = await duelRows(a.page);
+  console.log(`  duels row (A) ->  ${JSON.stringify((cdRows.rows || [])[0])}`);
+  check('the abandoned COUNTDOWN reached a terminal status',
+    !cdRows.err && liveRows(cdRows).length === 0);
+  check('...specifically done', !cdRows.err && (cdRows.rows[0] || {}).status === 'done');
+
+  // The lockout is what actually hurt a player, so it is proven gone against
+  // the live backend rather than inferred from the row.
+  const freeAgain = await challengeProbe(a.page, c.name);
+  console.log(`  A challenges ${c.name} ->  ${JSON.stringify(freeAgain)}`);
+  check('the survivor is NOT locked out of duelling afterwards',
+    !!freeAgain && freeAgain.ok === true);
+  check('...and specifically not refused “you are already duelling”',
+    !/already duelling/i.test((freeAgain && freeAgain.reason) || ''));
+  await cancelDuel(a.page);
+  await c.page.evaluate(() => {
+    const no = document.querySelector('.party-prompt [data-act="no"]');
+    if (no) no.click();
+  }).catch(() => {});
+
+  // A countdown never painted HP bars, so the bystanders should simply be
+  // clean - and must not have been left watching a fight that never started.
+  const cdC = await watched(c.page, [a.name, b.name]);
+  const cdD = await watched(d.page, [a.name, b.name]);
+  console.log(`  C after countdown-disconnect ->  ${JSON.stringify(cdC)}`);
+  console.log(`  D after countdown-disconnect ->  ${JSON.stringify(cdD)}`);
+  await Promise.all([
+    shot(c.page, 'countdown-disconnect-C.png'),
+    shot(d.page, 'countdown-disconnect-D.png'),
+  ]);
+  for (const [who, st] of [[c.name, cdC], [d.name, cdD]]) {
+    check(`${who} is not left watching a duel that never started`, st.watching === false);
+    check(`${who} has no HP bar over anyone`, st.bars.every((x) => !x.present || x.hp === null));
+    check(`${who} has no crossed swords over anyone`,
+      st.tags.every((t) => !t.marked && !/\u2694/.test(t.text || '')));
+  }
 } catch (e) {
   console.error(`\n  SUITE ABORTED: ${e.message}`);
   state.failed++;
