@@ -12,19 +12,46 @@ export async function broadcast(
   payload: Record<string, unknown>,
 ): Promise<void> {
   try {
-    await fetch(`${SUPABASE_URL}/realtime/v1/api/broadcast`, {
+    const res = await fetch(`${SUPABASE_URL}/realtime/v1/api/broadcast`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "apikey": SERVICE_KEY,
         "Authorization": `Bearer ${SERVICE_KEY}`,
       },
+      // private: true is not cosmetic. The flag decides which topic the
+      // message is published to, and every client subscribes to its mailbox
+      // with { config: { private: true } } (js/supabaseNet.js
+      // _openUserChannel) — so a private:false message lands on a topic
+      // nobody in the app listens to and the prompt is never delivered at
+      // all. It is also the access control: a public user:<uuid> topic can be
+      // subscribed to by anyone holding the anon key and that uuid, i.e.
+      // someone else's invites and trade state. Private topics are gated by
+      // the "realtime read own topics" RLS policy
+      // (supabase/migrations/20260725153009_*.sql), which only admits
+      // user:<their own uid>. Confirmed live with a second Realtime client on
+      // the same topic both ways: the public subscriber received
+      // { from: "<inviter>" }, the app's private channel received nothing.
       body: JSON.stringify({
-        messages: [{ topic, event, payload, private: false }],
+        messages: [{ topic, event, payload, private: true }],
       }),
     });
-  } catch {
-    /* best-effort: a dropped prompt is non-fatal (durable state still syncs) */
+    // fetch only rejects on a TRANSPORT failure — a 400/401/403/500 from the
+    // Realtime endpoint resolves normally, so the bare try/catch here used to
+    // treat every rejected broadcast as a success. The prompt simply never
+    // arrived and there was nothing, anywhere, to say so: the function
+    // returned { ok: true }, the inviter's UI looked fine, and the invitee saw
+    // no invite. Read the response and say what happened.
+    if (!res.ok) {
+      const body = await res.text().catch(() => "<unreadable>");
+      console.error(
+        `[broadcast] ${event} -> ${topic} FAILED ${res.status} ${res.statusText}: ${body}`,
+      );
+    }
+  } catch (e) {
+    // Still non-fatal (durable state syncs over postgres_changes), but never
+    // silent again.
+    console.error(`[broadcast] ${event} -> ${topic} threw:`, (e as Error)?.message ?? e);
   }
 }
 
