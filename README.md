@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 15 unit suites below (743 checks) — must pass
+npm test                 # all 16 unit suites below (759 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 10 e2e suites (9 real Chromium + the duel DB stack)
 ```
@@ -147,6 +147,7 @@ node tests/dailyReward.test.js         # daily-wheel streaks, claim windows, pay
 node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead zone (13 checks)
 node tests/defaultAvatarShoes.test.js  # fallback avatar: studded-sole (cleat) detector, baked sheet (18 checks)
 node tests/buffInspire.test.js         # `buff` consumable kind and Inspire stacking (8 checks)
+node tests/furniLogic.test.js          # furni zdim + canstandon/cansiton/canlayon data, generated furniDims (16 checks)
 node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
 ```
 
@@ -277,16 +278,26 @@ js/supabase.js       isolated Supabase client (esm.sh CDN, graceful offline degr
 js/runStore.js       cloud run persistence (Supabase `runs`) + localStorage hydrate
 
 --- asset pipeline (M4) ---
-tools/fetch-pets.js     download all 35 pet SWFs from the habbo-downloader mirror
-tools/extract-pets.js   pet SWF -> assets/monsters/{pet}/sheet.png + data.json
-tools/extract-furni.js  furni SWF -> assets/props/{class}/ (fetches on demand)
-tools/lib/              zero-dep SWF/XML/PNG readers + pet/furni compositors
-tools/sprites.html      dev viewer: every rig × action × direction, anchor tuner
-                        (http://localhost:8471/tools/sprites.html)
+tools/fetch-furnidata.mjs  cache Habbo's furnidata catalogue (tools/swf/, git-ignored)
+tools/gen-furni-logic.mjs  mirror zdim + canstandon/cansiton/canlayon/canputstuffon
+                           from furnidata into every assets/props/<id>/data.json
+tools/gen-furni-dims.mjs   derive js/furniDims.js from those data.json files
+                           (`--check` fails on drift; tests/furniLogic.test.js runs it)
+tools/report-furni-logic.mjs  what the furni data says vs the hand-authored
+                           walk/sit flags in js/rooms.js and the live layouts
+tools/lib/furnidata.mjs    furnidata fetch/cache + colour-variant collapse
 assets/monsters/        extracted, committed monster rigs the game loads
 assets/props/           extracted, committed furni props
 js/monsterSprites.js    runtime: packed-sheet frames + tints; figure registry
 js/props.js             runtime: prop sheets (view + drop shadow per direction)
+
+The SWF extractors that PRODUCED assets/monsters and assets/props
+(`fetch-pets.js`, `extract-pets.js`, `extract-furni.js`, `import-line.js`,
+the SWF/XML readers under `tools/lib/`, `tools/sprites.html`) were run outside
+this repository and have never been committed to it — the extracted art and
+data.json files are the only surviving output. Anything that needs to change
+about the props library is therefore built against furnidata and the committed
+files, as the four tools above are.
 ```
 
 ## Roadmap (the game layer on top)

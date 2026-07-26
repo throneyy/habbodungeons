@@ -5,6 +5,12 @@
  "size": 64,
  "xdim": 1,
  "ydim": 1,
+ "zdim": 4,
+ "canstandon": false,
+ "cansiton": false,
+ "canlayon": false,
+ "canputstuffon": false,
+ "logicSrc": "furnidata",
  "dirs": [
   0,
   2
