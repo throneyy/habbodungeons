@@ -15,7 +15,10 @@
 // bottom edge minus AVATAR_FOOT_PAD.
 
 import { mkdir, writeFile } from 'node:fs/promises';
-import { PNG } from 'pngjs';
+import { decodePng, encodePng, blankImage } from './png.mjs';
+// Shared with tests/defaultAvatarShoes.test.js — read that module's header for
+// why a bake has to assert on sole pixels at all.
+import { isStudded } from './studDetect.mjs';
 
 // Keep in sync with DEFAULT_FIGURE in js/config.js (read the shoe note there
 // before touching the sh- part — sh-290 bakes soccer cleats).
@@ -45,47 +48,7 @@ async function frame(action, dir, f, size) {
   });
   const res = await fetch(`${IMAGING}?${p}`);
   if (!res.ok) throw new Error(`imaging ${res.status} for ${action}/${dir}/${f}/${size}`);
-  return PNG.sync.read(Buffer.from(await res.arrayBuffer()));
-}
-
-// Studded-sole detector — the reason this baker exists as a checked step.
-//
-// habbo-imaging renders sh-290 (the shoe id every retro tool's default-look
-// sample uses) as a CLEAT when the avatar stands: the bottom pixel row of the
-// frame comes back as separated nubs under the sole, e.g. `##..##..##`, while
-// the same shoe walking and sitting has one solid `####` sole. So the cleats
-// are visible exactly when the avatar is idle — nearly always — and vanish in
-// the walk cycle, which is a maddening thing to debug by eye.
-//
-// A plain shoe's bottom row is at most two runs (one per foot). Three or more
-// short runs is a studded sole, and we refuse to bake it.
-function bottomRowRuns(png) {
-  let bottom = -1;
-  for (let y = 0; y < png.height; y++) {
-    for (let x = 0; x < png.width; x++) {
-      if (png.data[(y * png.width + x) * 4 + 3] > 128) {
-        bottom = y;
-        break;
-      }
-    }
-  }
-  if (bottom < 0) return [];
-  const runs = [];
-  let run = 0;
-  for (let x = 0; x < png.width; x++) {
-    if (png.data[(bottom * png.width + x) * 4 + 3] > 128) run++;
-    else if (run) {
-      runs.push(run);
-      run = 0;
-    }
-  }
-  if (run) runs.push(run);
-  return runs;
-}
-
-function isStudded(png) {
-  const runs = bottomRowRuns(png);
-  return runs.length >= 3 && runs.every((r) => r <= 6);
+  return decodePng(Buffer.from(await res.arrayBuffer()));
 }
 
 function blit(dst, src, dx, dy) {
@@ -105,7 +68,7 @@ const rows = ACTIONS.reduce((n, a) => n + a.frames, 0);
 const studded = [];
 
 for (const [size, dim] of Object.entries(SIZES)) {
-  const sheet = new PNG({ width: dim.w * DIRS.length, height: dim.h * rows });
+  const sheet = blankImage(dim.w * DIRS.length, dim.h * rows);
   let row = 0;
   for (const { action, frames } of ACTIONS) {
     for (let f = 0; f < frames; f++, row++) {
@@ -123,7 +86,7 @@ for (const [size, dim] of Object.entries(SIZES)) {
     }
   }
   await mkdir(OUT, { recursive: true });
-  await writeFile(new URL(`${size}.png`, OUT), PNG.sync.write(sheet));
+  await writeFile(new URL(`${size}.png`, OUT), encodePng(sheet));
   console.log(`${size}.png  ${sheet.width}x${sheet.height}`);
 }
 

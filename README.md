@@ -129,6 +129,7 @@ node tests/battle.test.js       # combat math, AI, phases (35 checks)
 node tests/run.test.js          # items, roster, save/resume, events, leader skills (45 checks)
 node tests/skills.test.js       # Origins skill trees: unlocks, damage/AoE/shield/root (37 checks)
 node tests/sprites.test.js      # M4 asset pipeline: rig math, extracted data, furni cover, fx (28 checks)
+node tests/defaultAvatarShoes.test.js  # fallback avatar: studded-sole (cleat) detector, baked sheet (19 checks)
 ```
 
 ## What's authentic (and where it came from)
