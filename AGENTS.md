@@ -140,6 +140,13 @@ This is not a suspicion. Both halves were established the hard way:
   the CLI cannot deploy with what is in the repo). Never run a bare
   `supabase functions deploy` with no name: it deploys *every* function,
   including unfinished ones belonging to other worktrees.
+
+  The Lovable-chat route is **confirmed working**: after a deploy was requested
+  there, `private:true` began delivering (`partyInviteError` went green on the
+  assertion it had never once reached) and `userByName`'s new throw appeared as
+  a live HTTP 500. So the gap is only the AUTOMATIC trigger — asking explicitly
+  does deploy. Push first, then ask, then verify: a deploy request ships what is
+  in the Lovable project at that moment, not what is in your worktree.
 - **Migrations** — paste the file into the Supabase SQL editor. Write them
   idempotently (`if not exists`, `exception when duplicate_object`) so a second
   application is a no-op, and never assume an earlier migration in the directory
