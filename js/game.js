@@ -875,14 +875,24 @@ export class Game {
     const frac = Math.max(0, unit.stats.hp / unit.stats.maxHp);
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(c.x - w / 2 - 1, top - 1, w + 2, h + 2);
-    ctx.fillStyle = unit.team === 'enemy' ? '#d0453a' : '#57c060';
+    // Team colours mean "me vs the monsters", which is wrong for a DUEL: both
+    // fighters are people, and a spectator watching from the sidelines has no
+    // side at all. Colour those by health instead — same reasoning as the
+    // roster bars in js/battleController.js (hpTint).
+    ctx.fillStyle = unit.duellist
+      ? (frac > 0.5 ? '#57c060' : frac > 0.25 ? '#d98b0b' : '#d0453a')
+      : (unit.team === 'enemy' ? '#d0453a' : '#57c060');
     ctx.fillRect(c.x - w / 2, top, w * frac, h);
-    if (unit.selected || unit.team === 'player') {
+    if (unit.selected || unit.team === 'player' || unit.duellist) {
       ctx.fillStyle = '#e8e0d0';
       ctx.font = `${8 * s}px Tahoma`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(`${unit.name} · ${unit.stats.hp}`, c.x, top - 2 * s);
+      // A duellist watched from the sidelines already carries a DOM name tag
+      // (RemotePlayers), so repeating the name here just stacks two labels on
+      // one head. Show the number only — the tag says who, this says how hurt.
+      const label = unit.duellist ? `${unit.stats.hp}` : `${unit.name} · ${unit.stats.hp}`;
+      ctx.fillText(label, c.x, top - 2 * s);
     }
   }
 

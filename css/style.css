@@ -608,6 +608,14 @@ button.primary:hover {
   line-height: 1.4;
   -webkit-font-smoothing: none;
 }
+/* Duelling, seen from the sidelines (js/duelSpectator.js): the tag already
+   carries a crossed-swords glyph, and this makes the pair unmistakable at a
+   glance in a crowded room without adding another floating widget. */
+.name-tag--duel {
+  background: rgba(120, 24, 20, 0.86);
+  color: #ffdf9a;
+  box-shadow: 0 0 0 1px rgba(255, 190, 90, 0.55);
+}
 
 /* ---- NPC dialogue choices (npc.js) -----------------------------------------
    Small centred tray docked onto the top edge of the chat toolbar: 2-3 reply

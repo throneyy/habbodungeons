@@ -116,6 +116,18 @@ async function openPlayer(port, name) {
       return orig(event, payload);
     };
     net.on('duel-relay', (m) => window.__app.push({ to: m && m.to, from: m && m.from, k: m && m.data && m.data.k }));
+    // ...and the READ-ONLY spectator event. A bystander is now told about the
+    // fight on `duel-watch`, which no command handler subscribes to — the whole
+    // point of the split, so the two are counted separately.
+    window.__watch = [];
+    net.on('duel-watch', (m) => window.__watch.push({ to: m && m.to, from: m && m.from, k: m && m.data && m.data.k }));
+    // Every combat effect this client renders. The floating damage number is
+    // the thing a spectator actually SEES, and it lives for 800ms on a canvas,
+    // so it has to be captured as it is queued rather than screenshotted for.
+    window.__fx = [];
+    const game = window.game;
+    const origFx = game.addFx.bind(game);
+    game.addFx = (fx) => { window.__fx.push({ type: fx.type, text: fx.text, x: fx.x, y: fx.y }); return origFx(fx); };
     // Mailbox events too (duel-asked / duel-state), so the handshake half can be
     // told apart from the battle half when something goes quiet.
     window.__rx = [];
@@ -266,7 +278,10 @@ try {
     });
   }
   await a.page.waitForTimeout(1200);
-  for (const p of [a, b, c]) await p.page.evaluate(() => { window.__rx.length = 0; window.__raw.length = 0; window.__app.length = 0; });
+  for (const p of [a, b, c]) await p.page.evaluate(() => {
+    window.__rx.length = 0; window.__raw.length = 0; window.__app.length = 0;
+    window.__watch.length = 0; window.__fx.length = 0;
+  });
 
   // ---------------------------------------------------- the square, apart
   for (const p of [a, b, c]) {
@@ -440,7 +455,17 @@ try {
   if (!t1b.attacked) await endTurn(b.page);
   check('the turn came back to A', await waitPhase(a.page, 'player'));
 
-  const t2a = await takeTurn(a.page);
+  // Screenshot C *while the blow is landing*. The damage float lives 800ms on a
+  // canvas, so the capture has to race the attack rather than follow it: the
+  // fighters' own turn and the bystander's snapshot run together.
+  await c.page.evaluate(() => { window.__fx.length = 0; });
+  const [t2a] = await Promise.all([
+    takeTurn(a.page),
+    (async () => {
+      await c.page.waitForTimeout(320);
+      await shot(c.page, 'hit-C.png');
+    })(),
+  ]);
   console.log(`  A turn 2      ->  ${JSON.stringify(t2a)}`);
   check('A (host) landed an attack', !!t2a.attacked && t2a.hpAfter < t2a.hpBefore);
 
@@ -505,15 +530,36 @@ try {
         ? { x: u.x, y: u.y, inScene: (window.game.units || []).includes(u), hasTag: !!(remote.tags && remote.tags.get(n.toLowerCase())) }
         : null;
     }
+    const spec = window.__debug.duelWatch();
     return {
       raw: window.__raw.length,
       app: window.__app.length,
+      watch: window.__watch.length,
+      watchKinds: [...new Set(window.__watch.map((r) => r.k))],
       rawKinds: [...new Set(window.__raw.map((r) => r.k))],
       rawTo: [...new Set(window.__raw.map((r) => r.to))],
       roomName: window.game.room && window.game.room.name,
       duelWindow: !!document.querySelector('.duel-window'),
       rosterRows: document.querySelectorAll('#roster .roster-row').length,
       panelVisible: !!document.querySelector('#panel') && !document.querySelector('#panel').classList.contains('hidden'),
+      infostand: !!document.querySelector('.infostand--human'),
+      // What the SPECTATOR renders of the fight.
+      watching: spec.watching,
+      fighters: spec.fighters.slice(),
+      readout: spec.readout(),
+      floats: window.__fx.filter((f) => f.type === 'float').map((f) => f.text),
+      bursts: window.__fx.filter((f) => f.type === 'burst').length,
+      // HP bars: game.drawHpBar draws for any unit carrying stats, and colours
+      // by health when duellist is set. These fields ARE the render source.
+      bars: names.map((n) => {
+        const u = units && units.get(n.toLowerCase());
+        return { name: n, hp: u && u.stats ? u.stats.hp : null, maxHp: u && u.stats ? u.stats.maxHp : null, duellist: !!(u && u.duellist) };
+      }),
+      // the "these two are fighting" cue on the name tags
+      tags: names.map((n) => {
+        const t = remote && remote.tags && remote.tags.get(n.toLowerCase());
+        return { name: n, text: t ? t.textContent : null, marked: !!(t && t.classList.contains('name-tag--duel')) };
+      }),
       seen,
     };
   }, [a.name, b.name]);
@@ -526,10 +572,78 @@ try {
   console.log(`  duellists as C renders them:           ${JSON.stringify(by.seen)}`);
   console.log(`  duellist tiles, truth vs C:            A@${JSON.stringify(finA.units.find((u) => u.name === a.name))}`);
 
+  console.log(`  spectator readout:                     ${JSON.stringify(by.readout)}`);
+  console.log(`  damage numbers C rendered:             ${JSON.stringify(by.floats)}  (bursts: ${by.bursts})`);
+  console.log(`  HP bars C draws:                       ${JSON.stringify(by.bars)}`);
+  console.log(`  name tags C draws:                     ${JSON.stringify(by.tags)}`);
+
   check('C physically RECEIVES the duel stream (it rides the room channel)', by.raw > 0);
-  check('C\'s app code is told about none of it (every frame is addressed elsewhere)', by.app === 0);
+  // THE SPLIT. `duel-relay` means "addressed to me" and is the command path, so
+  // a spectator must still get nothing there. `duel-watch` is the read-only
+  // render feed, and is where the fight now arrives.
+  check('C is told NOTHING on the command event (duel-relay)', by.app === 0);
+  check('C IS told about the fight on the read-only event (duel-watch)', by.watch > 0);
+  check('...and that feed carries the blows, not just the setup',
+    by.watchKinds.includes('fx') && by.watchKinds.includes('start'));
+
+  // ---- what a bystander actually SEES ---------------------------------------
+  check('C is watching the duel', by.watching === true);
+  check('C knows both fighters', by.fighters.length === 2 &&
+    by.fighters.includes(a.name) && by.fighters.includes(b.name));
+  // The headline: a damage number popped on the bystander's screen when a hit
+  // landed. Captured as it was queued, because it only lives 800ms on a canvas.
+  check('a damage number appears on C\u2019s screen when a hit lands', by.floats.length > 0);
+  check('...and it is a real number, not an empty float',
+    by.floats.every((t) => /^\d+!?$/.test(String(t || ''))));
+  check('C also renders the impact ring for each blow', by.bursts > 0);
+  // C's HP must be the duellists' HP. It is copied off the authoritative echo
+  // (serializeFx tHp / the phase snapshot), never recomputed.
+  const truth = {};
+  for (const r of finA.rows) truth[r.name] = Number(r.hp);
+  console.log(`  duellists\u2019 HP:                          ${JSON.stringify(truth)}`);
+  check('C\u2019s HP readout matches the duellists\u2019 screens exactly',
+    by.fighters.every((n) => by.readout[n] === truth[n]));
+  check('C draws an HP bar over BOTH fighters',
+    by.bars.every((x) => x.hp != null && x.maxHp > 0));
+  check('...showing the same HP the fighters see',
+    by.bars.every((x) => x.hp === truth[x.name]));
+  check('those bars are health-coloured, not monster-red (both are people)',
+    by.bars.every((x) => x.duellist === true));
+  check('C can tell the two are duelling, not idling',
+    by.tags.every((t) => t.marked && /\u2694/.test(t.text || '')));
+
+  // ---- ...and stays a pure spectator ----------------------------------------
   check('C renders no duel UI', !by.duelWindow && by.rosterRows === 0);
+  check('C has no battle panel', by.panelVisible === false);
+  check('C has no roster', by.rosterRows === 0);
+  check('C has no infostand open on a fighter', by.infostand === false);
   check('C is still standing in the square', by.roomName === ROOM_NAME);
+
+  // ACTIVE probe: C tries to click a duellist mid-fight. Spectating is
+  // read-only, so the tap must open nothing — no infostand means no Trade,
+  // Duel or Invite button to press at someone who is busy.
+  const meddle = await c.page.evaluate((names) => {
+    const ctl = window.game.controller;
+    const remote = ctl.remote;
+    const u = remote.units.get(names[0].toLowerCase());
+    if (!u) return { tapped: false };
+    ctl.onTap({ x: u.x, y: u.y });
+    return {
+      tapped: true,
+      infostand: !!document.querySelector('.infostand--human'),
+      panel: !!document.querySelector('#panel') && !document.querySelector('#panel').classList.contains('hidden'),
+      roster: document.querySelectorAll('#roster .roster-row').length,
+    };
+  }, [a.name, b.name]);
+  console.log(`  C taps a fighter ->  ${JSON.stringify(meddle)}`);
+  check('tapping a duellist opens no infostand for a spectator',
+    meddle.tapped && meddle.infostand === false);
+  check('...and still gives C no battle panel or roster',
+    meddle.panel === false && meddle.roster === 0);
+  // The command path stayed shut throughout: C sent nothing and was answered
+  // nothing. (heard/rejects would show a refusal frame coming back.)
+  check('C never received a reply on the command event',
+    await c.page.evaluate(() => window.__app.length) === 0);
   // SYMMETRY. The old teardown lifted one duellist out of the room and left the
   // other standing: attack-C.png showed hb-DuelB frozen in the tavern while
   // hb-DuelA had vanished outright. An in-place duel tears nothing down, so

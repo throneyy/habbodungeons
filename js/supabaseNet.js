@@ -130,6 +130,8 @@ export class SupabaseNet {
       'invited', 'declined', 'party',
       'trade-asked', 'trade-state', 'trade-done', 'trade-cancelled', 'trade-error',
       'duel-asked', 'duel-state', 'duel-declined', 'duel-cancelled', 'duel-error',
+      // 'duel-watch' is NOT here: it is not a mailbox event. It is synthesised
+      // in _onRelayed from room-channel traffic addressed to somebody else.
     ]) relay(e);
     await new Promise((res) => ch.subscribe((status) => status === 'SUBSCRIBED' && res()));
     this.userChannel = ch;
@@ -180,10 +182,25 @@ export class SupabaseNet {
   // Point-to-point frames on a shared channel: drop our own echo and anything
   // addressed to somebody else. (broadcast self:false already suppresses the
   // echo; the name check makes it true regardless of channel config.)
+  //
+  // A duel is the exception, and only in one direction. Its stream rides the
+  // ROOM channel, so every frame of a fight already lands on the socket of
+  // everyone standing in the room — they were simply dropped here. A bystander
+  // now gets them re-emitted as `duel-watch`, a SEPARATE, READ-ONLY event.
+  //
+  // The split is the whole safety story. `duel-relay` still means "a frame
+  // addressed to me", so DuelHost/DuelGuest — the only things that can execute
+  // a command — see exactly what they saw before and their from-guards are
+  // untouched. `duel-watch` is wired to nothing but the renderer
+  // (js/duelSpectator.js). A spectator cannot command anything because no
+  // command path is subscribed to the event it receives.
   _onRelayed(event, payload) {
     if (!payload) return;
     if (payload.from && payload.from === this.name) return; // never echo to self
-    if (payload.to && payload.to !== this.name) return; // targeted at someone else
+    if (payload.to && payload.to !== this.name) {
+      if (event === 'duel-relay') this.emit('duel-watch', payload); // read-only
+      return; // ...but never as a frame addressed to me
+    }
     this.emit(event, payload);
   }
 

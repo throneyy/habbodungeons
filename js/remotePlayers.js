@@ -160,13 +160,22 @@ export class RemotePlayers {
   // the two rooms holding different creatures.
   onStruck(msg) {
     if (!msg) return;
-    const u = this.units.get((msg.name || '').toLowerCase());
-    if (u) {
-      this.settleWalk(u);
-      if (msg.dir != null) u.dir = msg.dir; // face the kill, same as the attacker
-      u.attackUntil = performance.now() + ATTACK_MS;
-    }
+    this.playStrike(msg.name, msg.dir);
     if (this.onStrike) this.onStrike(msg);
+  }
+
+  // Put a remote player into the attack pose. Extracted from onStruck so the
+  // duel spectator (js/duelSpectator.js) drives the SAME animation channel a
+  // critter swing does, rather than inventing a second one: the settle-then-
+  // pose ordering below is load-bearing and has already been got wrong once
+  // (see settleWalk). Returns the unit it posed, if it is in this room.
+  playStrike(name, dir) {
+    const u = this.units.get(String(name || '').toLowerCase());
+    if (!u) return null;
+    this.settleWalk(u);
+    if (dir != null) u.dir = dir; // face the blow, same as the attacker
+    u.attackUntil = performance.now() + ATTACK_MS;
+    return u;
   }
 
   // A swinging player is a standing player: ExploreController.strike refuses

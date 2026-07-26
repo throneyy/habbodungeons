@@ -7,6 +7,19 @@ import { Identity } from './identity.js';
 export const ATTACK_MS = 600; // attack jab duration (grab-reach pose)
 const IMPACT_MS = 250; // swing wind-up before the hit lands
 
+// The classic "something just got hit" feedback: an impact ring and a rising
+// damage number. ONE implementation, shared by everything that lands a blow in
+// the explore view — critter kills (landStrike below) and a duel watched from
+// the sidelines (js/duelSpectator.js). A second copy would drift: the colours
+// and durations here are what players read as "that was a crit".
+export function damageFx(game, x, y, z, dmg, crit = false) {
+  game.addFx({ type: 'burst', x, y, z, color: crit ? '#f6c343' : '#ffd9a0', dur: 340 });
+  game.addFx({
+    type: 'float', x, y, z,
+    text: crit ? `${dmg}!` : String(dmg), color: crit ? '#f6c343' : '#fff', dur: 800,
+  });
+}
+
 // A critter's network identity. Both halves come straight from room DATA
 // (the spec's name and its spawn tile), which every client loads identically,
 // so the same creature carries the same id on every machine without anyone
@@ -180,11 +193,7 @@ export class ExploreController {
     if (!c.alive) return;
     c.takeDamage(s.dmg);
     const z = this.game.room.heightAt(c.x, c.y);
-    this.game.addFx({ type: 'burst', x: c.x, y: c.y, z, color: s.crit ? '#f6c343' : '#ffd9a0', dur: 340 });
-    this.game.addFx({
-      type: 'float', x: c.x, y: c.y, z,
-      text: s.crit ? `${s.dmg}!` : String(s.dmg), color: s.crit ? '#f6c343' : '#fff', dur: 800,
-    });
+    damageFx(this.game, c.x, c.y, z, s.dmg, s.crit);
     if (!c.alive) {
       const spec = c.critter.spec;
       if (s.mine) {

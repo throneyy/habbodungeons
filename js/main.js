@@ -37,6 +37,7 @@ import { HumanInfostand } from './humanInfostand.js';
 import { PartyUI } from './party.js';
 import { CoopLeader, CoopMember } from './coopBattle.js';
 import { DuelHost, DuelGuest, hostsDuel } from './duelBattle.js';
+import { DuelSpectator } from './duelSpectator.js';
 import { TradeUI } from './tradeWindow.js';
 import { DuelUI } from './duelWindow.js';
 import { showRoomDiscovery } from './roomBanner.js';
@@ -1415,6 +1416,10 @@ function leaveRunChrome() {
 let exploreRooms = null;
 let chat = null;
 const remote = new RemotePlayers(game, net); // multiplayer presence (verified players)
+// Duels are fought in place, so anyone in the room can watch one. Read-only:
+// it listens on `duel-watch` (frames addressed to somebody else) and only ever
+// poses avatars and pops damage numbers — see js/duelSpectator.js.
+const duelWatch = new DuelSpectator(net, game, remote);
 
 // Multiplayer status chip in the explore bar. Silent when everything works;
 // warns loudly when the player is Habbo-linked but has no Supabase auth session
@@ -1994,6 +1999,7 @@ function leaveExplore() {
   infostand.close();
   tradeUI.detach();
   duelUI.detach();
+  duelWatch.detach();
   party.detach();
   remote.detach();
   net.leaveRoom();
@@ -2041,6 +2047,8 @@ async function startExplore() {
   // our own copy of the critter they hit (RemotePlayers plays their pose)
   remote.onStrike = (m) => explore.onRemoteStrike(m);
   remote.attach();
+  // ...and watch any duel fought in front of us (pure rendering)
+  duelWatch.attach();
   // walking room bots (:npc): wired BEFORE the first setRoom so the opening
   // room spawns its saved bots (explore.onRoom drives RoomBots.onRoom)
   if (!roomBots)
@@ -2055,6 +2063,13 @@ async function startExplore() {
   // tap a player (or yourself) → the human object displayer bottom-right
   explore.onPlayerTap = (unit) => {
     const self = unit === explore.unit;
+    // Tapping someone mid-duel does nothing. Spectating is read-only, and the
+    // infostand is the one surface that could turn a click into an action
+    // against a fighter (Trade / Duel / Invite). The server would refuse all
+    // three anyway — duelFlow.ts checks both players are free — so this is not
+    // the enforcement, just the honest UI: no dead buttons offered to someone
+    // who is watching a fight.
+    if (!self && duelWatch.isFighting(unit.name)) return;
     infostand.open({
       name: self ? (Identity.get() || {}).name || 'Guest' : unit.name,
       figure: self ? figure : unit.figure,
@@ -2367,6 +2382,7 @@ window.__debug = {
   // duel handles (tests/e2e/duelLive.e2e.mjs drives a real three-browser duel)
   duelHost: () => duelHost,
   duelGuest: () => duelGuest,
+  duelWatch: () => duelWatch, // what a BYSTANDER renders of someone else's duel
   // walk into a named explore room — the same path the navigator's room
   // buttons take, so an e2e can stage a duel somewhere other than the room the
   // client happens to boot into

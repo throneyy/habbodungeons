@@ -168,6 +168,14 @@ builds one authoritative Battle over the room both players are already standing
 in, and neither ever leaves the explore view — so bystanders keep watching the
 room while the two fighters gain a battle UI over the top of it.
 
+Anyone else in the room **watches the fight**. The duel stream rides the room
+channel, so every frame already lands on every bystander's socket;
+`js/duelSpectator.js` turns the ones addressed elsewhere into attack poses,
+floating damage numbers, HP bars and a crossed-swords name tag. It listens on
+`duel-watch` — a separate, read-only event — while `duel-relay` (the command
+path) still means "addressed to me", so a spectator cannot interfere by
+construction: no command handler subscribes to the event they receive.
+
 One of them is not a browser suite at all. `tests/e2e/duel.e2e.mjs` boots a real
 PostgreSQL and a real PostgREST in-process and runs the duel edge functions'
 storage layer against them — the queries in `duelStore.ts` and the `duels` RLS
