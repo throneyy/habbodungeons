@@ -54,6 +54,10 @@ export const Identity = {
   setClass(classId) {
     const id = { ...(readLocal() || {}), classId };
     writeLocal(id);
+    // Mirror to the cloud profile (fire-and-forget, same as verify()/sync()) so
+    // the calling survives a cleared localStorage / a new device for a signed-
+    // in player. No-ops silently when offline or not signed in.
+    this.mirror(id).catch(() => {});
     return id;
   },
   isVerified() {
@@ -191,6 +195,7 @@ export const Identity = {
         gardening_level: id.gardeningLevel || 0,
         unlocked_skills: id.unlockedSkills || [],
         last_habbo_skill_sync: id.syncedAt || null,
+        class_id: id.classId || null,
       })
       .eq('id', user.id);
     return !error;
@@ -216,6 +221,10 @@ export const Identity = {
       unlockedSkills: data.unlocked_skills || [],
       verifiedAt: data.habbo_verified_at,
       syncedAt: data.last_habbo_skill_sync,
+      // The calling picked at hero creation (setClass(), mirrored above) is
+      // account-level, same as everything else on this row: the server is
+      // authoritative the moment a verified session can reach it.
+      classId: data.class_id || null,
     };
     writeLocal(id);
     return id;
