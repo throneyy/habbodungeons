@@ -55,6 +55,9 @@ const PORT = portFor(61); // 59 is partyInviteError's; both are worktree-relativ
 // open, and it gives three people room to stand apart.
 const ROOM_ID = 'square';
 const ROOM_NAME = 'The Old Town Square';
+// The real player watching this run from their own browser on the deployed
+// site. Same Supabase project, same room channel, different build.
+const WATCHER = 'throney';
 // Distinct tiles, chosen so A and B start ADJACENT (the duel should then fight
 // from exactly these tiles) with C well clear of both.
 //
@@ -83,6 +86,19 @@ const SHOTS = fileURLToPath(new URL('.artifacts/', import.meta.url));
 mkdirSync(SHOTS, { recursive: true });
 
 const shot = (p, file) => p.screenshot({ path: join(SHOTS, file) }).catch(() => {});
+
+// A wall-clock marker for each beat of the duel, so a human watching the room in
+// their own browser can line up what they SAW against what the test DID.
+const t0 = Date.now();
+const beat = (what) => {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  const ms = String(d.getMilliseconds()).padStart(3, '0');
+  const el = ((Date.now() - t0) / 1000).toFixed(1).padStart(5);
+  console.log(`  ▶ [${hh}:${mm}:${ss}.${ms}  +${el}s]  ${what}`);
+};
 
 async function openPlayer(port, name) {
   const identity = {
@@ -445,11 +461,57 @@ try {
      bystander.before[a.name].y !== bystander.before[b.name].y));
   if (!tile) throw new Error('no presence — cannot start a real duel');
 
+  // ---- WHO ELSE IS IN THIS ROOM --------------------------------------------
+  // The point of this run is that a real player is watching from their own
+  // browser on the deployed site. They are on the same Supabase project and the
+  // same `room:square` channel as these localhost contexts, so if they are
+  // really here they show up in this roster — and if they do not, the run
+  // proves nothing about what they can see.
+  const roster = await a.page.evaluate(() => {
+    const ctl = window.game.controller;
+    const remote = ctl && ctl.remote;
+    const mine = ctl && ctl.unit;
+    const out = [];
+    if (mine) out.push({ name: window.__debug.net.name, x: mine.x, y: mine.y, self: true });
+    for (const [key, u] of (remote && remote.units) || []) {
+      out.push({ name: u.name || key, x: u.x, y: u.y, self: false });
+    }
+    return { room: window.game.room.id, topic: window.__debug.net.roomChannel ? window.__debug.net.roomChannel.topic : null, members: out };
+  });
+  console.log(`
+  --- ROOM ROSTER as ${a.name} sees it (${roster.topic}) ---`);
+  for (const m of roster.members) {
+    console.log(`    ${m.self ? '*' : ' '} ${String(m.name).padEnd(14)} (${m.x},${m.y})${m.self ? '  [this test context]' : ''}`);
+  }
+  const testNames = [a, b, c, d].map((p) => p.name.toLowerCase());
+  const outsiders = roster.members.filter((m) => !testNames.includes(String(m.name).toLowerCase()));
+  const watcher = roster.members.find((m) => String(m.name).toLowerCase() === WATCHER.toLowerCase());
+  console.log(`  outsiders (not this test): ${outsiders.length ? outsiders.map((m) => `${m.name}(${m.x},${m.y})`).join(', ') : 'NONE'}`);
+
+  if (!watcher) {
+    console.error(`
+  ############################################################`);
+    console.error(`  #  ❌  "${WATCHER}" IS NOT IN THIS ROOM.`);
+    console.error(`  #`);
+    console.error(`  #  The roster above is what ${a.name} can see on ${roster.topic}.`);
+    console.error(`  #  Every name in it belongs to this test. Nobody else is here,`);
+    console.error(`  #  so running the duel would prove nothing about what you see.`);
+    console.error(`  #`);
+    console.error(`  #  Check: are you in The Old Town Square (not the tavern), on`);
+    console.error(`  #  habbodungeons.com, with multiplayer connected?`);
+    console.error(`  ############################################################
+`);
+    throw new Error(`"${WATCHER}" not on the room channel — stopping, nobody is watching`);
+  }
+  console.log(`  ✅ "${WATCHER}" IS HERE, standing at (${watcher.x},${watcher.y}) — running the duel.
+`);
+
   // ------------------------------------------------------------- challenge
   await a.page.evaluate((t) => window.game.controller.onTap(t), tile);
   await a.page.waitForSelector('.infostand--human [data-act="duel"]', { timeout: 10000 });
   const duelLive = await a.page.isEnabled('.infostand--human [data-act="duel"]');
   check('A\'s Duel button is live for a room-mate', duelLive);
+  beat(`CHALLENGE SENT — ${a.name} clicks Duel on ${b.name}`);
   await a.page.click('.infostand--human [data-act="duel"]');
 
   const asked = await b.page.waitForFunction(
@@ -463,11 +525,13 @@ try {
   if (!prompt) throw new Error('no duel prompt on B — cannot accept');
 
   // ------------------------------------------------------------- countdown
+  beat(`ACCEPTED — ${b.name} takes the challenge`);
   await b.page.click('.party-prompt [data-act="yes"]');
   const winA = await a.page.waitForSelector('.duel-window', { timeout: 20000 }).then(() => true).catch(() => false);
   const winB = await b.page.waitForSelector('.duel-window', { timeout: 20000 }).then(() => true).catch(() => false);
   check('A renders the duel window', winA);
   check('B renders the duel window', winB);
+  beat('COUNTDOWN STARTED — 3-2-1-GO on both screens');
   const countA = await a.page.textContent('.duel-count').catch(() => null);
   const countB = await b.page.textContent('.duel-count').catch(() => null);
   console.log(`  countdown     ->  A:"${countA}"  B:"${countB}"`);
@@ -520,12 +584,15 @@ try {
 
   // ------------------------------------------------------------- a blow each
   // Turn 1: A closes the gap (6 tiles, move 4) and ends. B closes and swings.
+  beat(`BATTLE BOOTED — fighting in place in ${ROOM_NAME}`);
   const t1a = await takeTurn(a.page);
+  beat(`ATTACK 1 — ${a.name} hits ${b.name} for ${t1a.hpBefore - t1a.hpAfter} (${t1a.hpAfter} left)`);
   console.log(`  A turn 1      ->  ${JSON.stringify(t1a)}`);
   if (!t1a.attacked) await endTurn(a.page);
   check('A\'s phase handed over to B', await waitPhase(b.page, 'enemy'));
 
   const t1b = await takeTurn(b.page);
+  beat(`ATTACK 2 — ${b.name} hits ${a.name} for ${t1b.hpBefore - t1b.hpAfter} (${t1b.hpAfter} left)`);
   console.log(`  B turn 1      ->  ${JSON.stringify(t1b)}`);
   check('B (guest) landed an attack that the host resolved', !!t1b.attacked && t1b.hpAfter < t1b.hpBefore);
 
@@ -553,6 +620,7 @@ try {
       await shot(d.page, 'hit-D.png');
     })(),
   ]);
+  beat(`ATTACK 3 — ${a.name} hits ${b.name} for ${t2a.hpBefore - t2a.hpAfter} (${t2a.hpAfter} left)`);
   console.log(`  A turn 2      ->  ${JSON.stringify(t2a)}`);
   check('A (host) landed an attack', !!t2a.attacked && t2a.hpAfter < t2a.hpBefore);
 
