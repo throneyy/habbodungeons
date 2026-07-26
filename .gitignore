@@ -32,3 +32,7 @@ tests/e2e/.profiles/
 
 # e2e screenshots (duelLive playtest)
 tests/e2e/.artifacts/
+
+# Habbo furnidata cache (~9.6MB) pulled by the furni asset pipeline.
+# Regenerable from https://www.habbo.com/gamedata/furnidata_json/1 — never committed.
+tools/swf/

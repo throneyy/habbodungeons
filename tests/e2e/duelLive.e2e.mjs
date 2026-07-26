@@ -1577,20 +1577,59 @@ try {
   console.log(`  ${b.name} back in the square at (${bBack.x},${bBack.y})`);
   check(`${b.name} rejoined the square`, bBack.room === ROOM_ID);
   for (const p of [a, c, d]) {
-    await p.page.evaluate(() => { window.__notices.length = 0; window.__watch.length = 0; });
+    // __sends TOO. Ending 2's successful claim is still in this array, and
+    // "some claim succeeded" would match it - the assertion below would then
+    // pass for a countdown claim that never happened, which is precisely the
+    // stale-evidence mistake that hid this bug in the first place.
+    await p.page.evaluate(() => {
+      window.__notices.length = 0; window.__watch.length = 0; window.__sends.length = 0;
+    });
   }
 
   // Challenge and accept, but do NOT wait for the battle: the window being
   // tested is the one before it exists.
-  const at3 = await a.page.evaluate((n) => {
-    const u = window.game?.controller?.remote?.units?.get(n.toLowerCase());
-    return u ? { x: u.x, y: u.y } : null;
-  }, b.name);
-  check(`${a.name} can see ${b.name} again`, !!at3);
-  await a.page.evaluate((t) => window.game.controller.onTap(t), at3);
-  await a.page.waitForSelector('.infostand--human [data-act="duel"]', { timeout: 15000 });
-  await a.page.click('.infostand--human [data-act="duel"]');
-  await b.page.waitForSelector('.party-prompt [data-act="yes"]', { timeout: 25000 });
+  // A has just probed a challenge at C and cancelled it, and B's presence row
+  // is seconds old. Either can make this challenge a legitimate refusal, so
+  // the RESPONSE is read rather than blindly waiting for a prompt that a
+  // refused challenge will never produce - a 25s timeout naming nothing is
+  // how this ending failed once already.
+  await cancelDuel(a.page);
+  let sawB = false;
+  let asked3 = null;
+  for (let attempt = 1; attempt <= 4 && !(asked3 && asked3.ok); attempt++) {
+    const at3 = await a.page.evaluate((n) => {
+      const u = window.game?.controller?.remote?.units?.get(n.toLowerCase());
+      return u ? { x: u.x, y: u.y } : null;
+    }, b.name);
+    if (!at3) {
+      console.log(`     └─ attempt ${attempt}: ${a.name} cannot see ${b.name} yet — waiting`);
+      await a.page.waitForTimeout(3000);
+      continue;
+    }
+    sawB = true;
+    await a.page.evaluate(() => { window.__sends.length = 0; });
+    await a.page.evaluate((t) => window.game.controller.onTap(t), at3);
+    await a.page.waitForSelector('.infostand--human [data-act="duel"]', { timeout: 15000 });
+    await a.page.click('.infostand--human [data-act="duel"]');
+    asked3 = await a.page.waitForFunction(
+      () => (window.__sends.find((s) => s.t === 'duel-challenge') || {}).res || null,
+      null, { timeout: 15000 },
+    ).then((h) => h.jsonValue()).catch(() => null);
+    if (asked3 && asked3.ok) break;
+    console.log(`     └─ challenge attempt ${attempt} refused: ${JSON.stringify(asked3)} — retrying`);
+    await a.page.waitForTimeout(4000);
+  }
+  console.log(`  third challenge ->  ${JSON.stringify(asked3)}`);
+  // Retries are logged, not counted as failures: only the final outcome is a
+  // claim about the product. `check` takes (name, cond) and has no soft mode,
+  // so asserting inside the loop would fail the suite for an attempt that the
+  // next one recovered.
+  check(`${a.name} can see ${b.name} again`, sawB);
+  check('the third challenge is accepted by the server', !!asked3 && asked3.ok === true);
+  const prompt3 = await b.page.waitForSelector('.party-prompt [data-act="yes"]', { timeout: 25000 })
+    .then(() => true).catch(() => false);
+  check(`${b.name} received the third challenge prompt`, prompt3);
+  if (!prompt3) throw new Error('no prompt on the re-opened guest — cannot test a countdown abandonment');
   beat(`ACCEPTED — ${b.name} takes the third challenge`);
   await b.page.click('.party-prompt [data-act="yes"]');
 
@@ -1616,6 +1655,14 @@ try {
 
   const cdNotice = await waitNotice(a.page, 'win the duel', 120000);
   const cdSecs = ((Date.now() - cdAt) / 1000).toFixed(1);
+  // The notice paints from the server's duel-ended broadcast, which can beat
+  // the fetch promise that records the winning send. Wait for the send itself
+  // to land in __sends, or the successful call is read a moment too early and
+  // only the refusals are seen.
+  await a.page.waitForFunction(
+    () => window.__sends.some((s) => s.t === 'duel-claim' && s.res && s.res.ok && s.res.ended),
+    null, { timeout: 15000 },
+  ).catch(() => {});
   const claims = await a.page.evaluate(
     () => window.__sends.filter((s) => s.t === 'duel-claim'),
   );
