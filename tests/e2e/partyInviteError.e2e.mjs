@@ -97,7 +97,30 @@ async function openPlayer(port, name) {
   return { page, context, logs, name, seed };
 }
 
-const rx = (p) => p.evaluate(() => window.__rx);
+// Wait for one event to land on a client's own mailbox, then hand back the
+// captured { e, p } record. Every read of __rx must go through this.
+//
+// A bare p.evaluate(() => window.__rx) read races the socket. pushParty()
+// (_shared/party.ts) fans the roster out to every member CONCURRENTLY via
+// Promise.all, so the order the two clients receive it in is not defined —
+// and the A-side read here used to be bare while the B-side waited. It
+// therefore sampled A's buffer in the instant after B's broadcast arrived
+// but before A's had, reported `undefined`, and failed four assertions about
+// a roster the server had in fact sent correctly. Symmetry is the fix: if a
+// value comes off the network, wait for it.
+// `live: true` additionally demands a REAL roster (partyId set), not a
+// teardown. partyStateShape(null) is { leader:null, members:[], partyId:null }
+// and pushParty sends exactly that when a party dissolves — so the disband in
+// the pre-test cleanup below puts a `party` event in the buffer that satisfies
+// a naive search and is not the roster the assertion means. The stale one wins
+// too, since find() returns the FIRST match.
+const waitForEvent = (page, event, { timeout = 20000, live = false } = {}) => page.waitForFunction(
+  (o) => window.__rx.find((r) => r.e === o.e && (!o.live || (r.p && r.p.partyId))) || null,
+  { e: event, live }, { timeout },
+).then((h) => h.jsonValue()).catch(() => null);
+
+// Drop everything captured so far. Setup noise must never be assertable.
+const resetRx = (page) => page.evaluate(() => { window.__rx.length = 0; });
 
 const server = await startServer(PORT);
 let a = null;
@@ -129,6 +152,13 @@ try {
       await invokeFn('party-leave', {});
     });
   }
+  // Disbanding an EXISTING party (there is one whenever a previous run got as
+  // far as the accept) broadcasts a teardown to both mailboxes. Let those land,
+  // then wipe the buffers so the assertions below can only see events this run
+  // actually caused.
+  await a.page.waitForTimeout(1500);
+  await resetRx(a.page);
+  await resetRx(b.page);
 
   // ---------------------------------------------------------- accepted path
   const tile = await a.page.waitForFunction((peer) => {
@@ -169,10 +199,7 @@ try {
   check('nothing logged an invite failure on A',
     !a.logs.some((l) => l.includes('invite failed:')));
 
-  const invited = await b.page.waitForFunction(
-    () => window.__rx.find((r) => r.e === 'invited') || null,
-    null, { timeout: 20000 },
-  ).then((h) => h.jsonValue()).catch(() => null);
+  const invited = await waitForEvent(b.page, 'invited');
   const onPublic = await b.page.evaluate(() => window.__pub);
   check('B receives "invited" on its (private) user: topic', !!invited);
   if (!invited) {
@@ -186,19 +213,17 @@ try {
   // B accepts through the real prompt → both mailboxes get the roster.
   await b.page.waitForSelector('.party-prompt [data-act="accept"]', { timeout: 10000 });
   await b.page.click('.party-prompt [data-act="accept"]');
-  const partyB = await b.page.waitForFunction(
-    () => window.__rx.find((r) => r.e === 'party') || null,
-    null, { timeout: 20000 },
-  ).then((h) => h.jsonValue()).catch(() => null);
+  const partyB = await waitForEvent(b.page, 'party', { live: true });
   check('B receives "party" on its user: topic', !!partyB);
   console.log(`  B user: topic  ->  ${JSON.stringify(partyB)}`);
-  const partyA = (await rx(a.page)).find((r) => r.e === 'party');
+  const partyA = await waitForEvent(a.page, 'party', { live: true });
   check('A receives the same roster on its own topic', !!partyA);
   console.log(`  A user: topic  ->  ${JSON.stringify(partyA)}`);
   check('roster holds both players', partyA && (partyA.p.members || []).length === 2);
   check('A is the leader', partyA && partyA.p.leader === a.name);
   check('A shows the party chip strip',
-    await a.page.isVisible('#partyStrip').catch(() => false));
+    await a.page.waitForSelector('#partyStrip', { state: 'visible', timeout: 10000 })
+      .then(() => true).catch(() => false));
 
   // ---------------------------------------------------------- rejected path
   // A ghost name can never resolve, so this exercises the { ok:false, reason }
