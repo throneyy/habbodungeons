@@ -359,12 +359,14 @@ export class SupabaseNet {
   // ever re-rolls anything and the two simulations cannot drift apart. `dir`
   // rides along so the attacker's avatar plays the swing facing the right way
   // on every screen (see RemotePlayers.onStruck).
-  strike({ id, dir, dmg, crit, impact, respawn }) {
+  // `kind` distinguishes what `id` names: a critter (default, for back-compat
+  // with clients that predate hittable props) or a 'prop' — the training dummy.
+  strike({ id, kind, dir, dmg, crit, impact, respawn }) {
     if (!this.room || !this.roomChannel || !id) return;
     this.roomChannel.send({
       type: 'broadcast',
       event: 'struck',
-      payload: { name: this.name, dir, id, dmg, crit, impact, respawn },
+      payload: { name: this.name, dir, id, kind, dmg, crit, impact, respawn },
     });
   }
 

@@ -10,8 +10,15 @@
 //   A, B  the duellists, standing next to each other. Full flow: sign in, walk,
 //         A taps B and hits Duel, B accepts, both run the 3-2-1-GO off the
 //         server anchor, the battle boots IN THE SQUARE, and each lands a blow.
-//   C     a BYSTANDER off to the side, in no duel at all. Nothing here builds
-//         spectator support; C exists to MEASURE what a non-participant sees.
+//   C     a BYSTANDER off to the side, in no duel at all. C is part of the
+//         test's own choreography (it walks, it taps, it gets cleaned up).
+//   D     a GENUINE bystander. D joins the square BEFORE the duellists ever get
+//         there, is never spoken to, never taps anything, and takes part in no
+//         setup step aimed at the duel. It exists because a real player standing
+//         in the village reported seeing no combat at all while a duel ran, and
+//         C — wired up by the test itself — could not have caught that.
+//         Every hop from "bytes arrived" to "a number was drawn" is counted
+//         separately on D (window.__chain), so a drop names its own link.
 //
 // The walking matters. Remote players do not block tiles, so three clients that
 // just enter a room all stand on its spawn: the first live duel opened with
@@ -61,6 +68,7 @@ const TILES = {
   A: [{ x: 6, y: 8 }, { x: 6, y: 9 }, { x: 5, y: 8 }],
   B: [{ x: 7, y: 8 }, { x: 7, y: 9 }, { x: 6, y: 8 }],
   C: [{ x: 4, y: 11 }, { x: 10, y: 9 }, { x: 9, y: 9 }, { x: 4, y: 10 }],
+  D: [{ x: 9, y: 9 }, { x: 10, y: 9 }, { x: 4, y: 10 }, { x: 4, y: 11 }],
 };
 const { check, state } = makeChecker();
 const exe = findChromium();
@@ -121,6 +129,56 @@ async function openPlayer(port, name) {
     // point of the split, so the two are counted separately.
     window.__watch = [];
     net.on('duel-watch', (m) => window.__watch.push({ to: m && m.to, from: m && m.from, k: m && m.data && m.data.k }));
+
+    // ---- CHAIN TRACE, one counter per link ---------------------------------
+    // A real player standing in the village reported seeing no combat at all
+    // during a duel, so every hop between "the socket received bytes" and "the
+    // screen drew a number" is counted separately. Whichever counter is the
+    // first zero is the link that drops the frame; anything downstream of it is
+    // a symptom, not the cause.
+    window.__chain = {
+      L1_roomTopic: null,      // are we even on the room channel, and which one
+      L2_broadcast: 0,         // the ch.on('broadcast', duel-relay) handler fired
+      L3_onRelayed: 0,         // ...and reached _onRelayed
+      L3_watchBranch: 0,       // ...and took the addressed-to-someone-else branch
+      L4_listeners: null,      // how many duel-watch subscribers exist
+      L5_specFrames: 0,        // DuelSpectator.onFrame was called
+      L5_specKinds: [],
+      L6_specStart: 0,         // ...and onStart accepted it (watching went true)
+      L6_startRejected: null,  // ...or why it did not
+      L7_applyBars: 0,         // ...and bars were pushed onto real avatars
+    };
+    const chain = window.__chain;
+    const spec = window.__debug.duelWatch();
+    chain.L4_listeners = (net.handlers && net.handlers.get && net.handlers.get('duel-watch'))
+      ? net.handlers.get('duel-watch').size : null;
+
+    const origRelayed = net._onRelayed.bind(net);
+    net._onRelayed = (event, payload) => {
+      if (event === 'duel-relay') {
+        chain.L3_onRelayed++;
+        if (payload && payload.to && payload.to !== net.name) chain.L3_watchBranch++;
+      }
+      return origRelayed(event, payload);
+    };
+    const origFrame = spec.onFrame.bind(spec);
+    spec.onFrame = (m) => {
+      chain.L5_specFrames++;
+      const k = m && m.data && m.data.k;
+      if (k && !chain.L5_specKinds.includes(k)) chain.L5_specKinds.push(k);
+      const was = spec.watching;
+      const r = origFrame(m);
+      if (k === 'start') {
+        if (spec.watching && !was) chain.L6_specStart++;
+        else if (!spec.watching) {
+          chain.L6_startRejected =
+            `roomId=${m.data.roomId} here=${window.game.room && window.game.room.id} units=${(m.data.units || []).length}`;
+        }
+      }
+      return r;
+    };
+    const origBars = spec.applyBars.bind(spec);
+    spec.applyBars = () => { chain.L7_applyBars++; return origBars(); };
     // Every combat effect this client renders. The floating damage number is
     // the thing a spectator actually SEES, and it lives for 800ms on a canvas,
     // so it has to be captured as it is queued rather than screenshotted for.
@@ -255,19 +313,44 @@ const waitPhase = (p, team, timeout = 25000) => p.waitForFunction((t) => {
 }, team, { timeout }).then(() => true).catch(() => false);
 
 const server = await startServer(PORT);
-let a = null; let b = null; let c = null;
+let a = null; let b = null; let c = null; let d = null;
 const bystander = {};
+const genuine = {};
 
 try {
   a = await openPlayer(PORT, e2eName('DuelA'));
   b = await openPlayer(PORT, e2eName('DuelB'));
   c = await openPlayer(PORT, e2eName('DuelC'));
-  for (const p of [a, b, c]) check(`${p.name} profile row seeded`, p.seed.ok);
-  if (![a, b, c].every((p) => p.seed.ok)) {
+  d = await openPlayer(PORT, e2eName('DuelD'));
+  for (const p of [a, b, c, d]) check(`${p.name} profile row seeded`, p.seed.ok);
+  if (![a, b, c, d].every((p) => p.seed.ok)) {
     // AGENTS.md: explicit quota exhaustion looks like this. Say so rather than
     // letting it read as a duel bug.
-    throw new Error(`profile seed failed: ${[a, b, c].map((p) => p.seed.reason).filter(Boolean).join(' | ')}`);
+    throw new Error(`profile seed failed: ${[a, b, c, d].map((p) => p.seed.reason).filter(Boolean).join(' | ')}`);
   }
+
+  // ---- D enters the square FIRST, and is then left entirely alone -----------
+  // The duellists arrive into a room D is already standing in, which is the
+  // ordering a real villager experiences. D takes part in no setup below: no
+  // duel-cancel, no tap, no challenge. It only stands there and watches.
+  check('the genuine bystander walked into the square first',
+    await d.page.evaluate((id) => window.__debug.gotoRoom(id), ROOM_ID) === true);
+  await d.page.waitForTimeout(2500); // its room channel subscribes before anyone else's
+  const dStood = await d.page.evaluate(async (wanted) => {
+    const pf = await import('/js/pathfinder.js');
+    const ctl = window.game.controller;
+    const u = ctl.unit;
+    const room = window.game.room;
+    const t = wanted.find((q) => !room.isBlocked(q.x, q.y)
+      && ((u.x === q.x && u.y === q.y) || !!pf.findPath(room, u.x, u.y, q.x, q.y)));
+    if (!t) return { x: u.x, y: u.y };
+    ctl.onTap(t);
+    for (let i = 0; i < 120 && (u.x !== t.x || u.y !== t.y); i++) {
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    return { x: u.x, y: u.y };
+  }, TILES.D);
+  console.log(`  ${d.name} (genuine bystander) standing at ${JSON.stringify(dStood)} BEFORE the duellists arrive`);
 
   // Reused accounts carry state: a duel left over from a previous run makes the
   // next challenge a legitimate 'already duelling' rejection.
@@ -278,7 +361,7 @@ try {
     });
   }
   await a.page.waitForTimeout(1200);
-  for (const p of [a, b, c]) await p.page.evaluate(() => {
+  for (const p of [a, b, c, d]) await p.page.evaluate(() => {
     window.__rx.length = 0; window.__raw.length = 0; window.__app.length = 0;
     window.__watch.length = 0; window.__fx.length = 0;
   });
@@ -458,12 +541,16 @@ try {
   // Screenshot C *while the blow is landing*. The damage float lives 800ms on a
   // canvas, so the capture has to race the attack rather than follow it: the
   // fighters' own turn and the bystander's snapshot run together.
-  await c.page.evaluate(() => { window.__fx.length = 0; });
+  for (const p of [c, d]) await p.page.evaluate(() => { window.__fx.length = 0; });
   const [t2a] = await Promise.all([
     takeTurn(a.page),
     (async () => {
       await c.page.waitForTimeout(320);
       await shot(c.page, 'hit-C.png');
+    })(),
+    (async () => {
+      await d.page.waitForTimeout(320);
+      await shot(d.page, 'hit-D.png');
     })(),
   ]);
   console.log(`  A turn 2      ->  ${JSON.stringify(t2a)}`);
@@ -682,25 +769,109 @@ try {
   });
   check('C\u2019s view of where each fighter stands matches the real fight',
     bystander.tracking.every(Boolean));
+
+  // ================= THE GENUINE BYSTANDER (D) ==============================
+  // D joined the square before the duellists, was never spoken to, and did
+  // nothing but stand there. If the spectator layer only works for a client the
+  // test itself wired up, this is where that shows.
+  genuine.at = await d.page.evaluate((names) => {
+    const remote = window.game?.controller?.remote;
+    const units = remote && remote.units;
+    const spec = window.__debug.duelWatch();
+    const chain = window.__chain;
+    chain.L1_roomTopic = window.__debug.net.roomChannel
+      ? window.__debug.net.roomChannel.topic : null;
+    return {
+      chain,
+      specAttached: spec.unsubs.length,
+      watching: spec.watching,
+      fighters: spec.fighters.slice(),
+      readout: spec.readout(),
+      floats: window.__fx.filter((f) => f.type === 'float').map((f) => f.text),
+      bursts: window.__fx.filter((f) => f.type === 'burst').length,
+      roomId: window.game.room && window.game.room.id,
+      panelVisible: !!document.querySelector('#panel') && !document.querySelector('#panel').classList.contains('hidden'),
+      rosterRows: document.querySelectorAll('#roster .roster-row').length,
+      duelWindow: !!document.querySelector('.duel-window'),
+      bars: names.map((n) => {
+        const u = units && units.get(n.toLowerCase());
+        return { name: n, hp: u && u.stats ? u.stats.hp : null, maxHp: u && u.stats ? u.stats.maxHp : null, duellist: !!(u && u.duellist) };
+      }),
+      tags: names.map((n) => {
+        const t = remote && remote.tags && remote.tags.get(n.toLowerCase());
+        return { name: n, marked: !!(t && t.classList.contains('name-tag--duel')) };
+      }),
+      poses: names.map((n) => {
+        const u = units && units.get(n.toLowerCase());
+        return { name: n, everSwung: !!(u && u.attackUntil > 0) };
+      }),
+    };
+  }, [a.name, b.name]);
+
+  const g = genuine.at;
+  console.log(`\n  --- GENUINE BYSTANDER (${d.name}) chain trace ---`);
+  console.log(`  L1 room channel:        ${g.chain.L1_roomTopic}`);
+  console.log(`  L3 _onRelayed fired:    ${g.chain.L3_onRelayed}   (watch branch: ${g.chain.L3_watchBranch})`);
+  console.log(`  L4 duel-watch listeners:${g.chain.L4_listeners}`);
+  console.log(`  L5 spectator frames:    ${g.chain.L5_specFrames}   kinds: ${JSON.stringify(g.chain.L5_specKinds)}`);
+  console.log(`  L6 start accepted:      ${g.chain.L6_specStart}   ${g.chain.L6_startRejected ? `(rejected: ${g.chain.L6_startRejected})` : ''}`);
+  console.log(`  L7 applyBars calls:     ${g.chain.L7_applyBars}`);
+  console.log(`  renders  ->  floats:${JSON.stringify(g.floats)} bursts:${g.bursts}`);
+  console.log(`  bars     ->  ${JSON.stringify(g.bars)}`);
+  console.log(`  readout  ->  ${JSON.stringify(g.readout)}`);
+
+  // Supabase prefixes the topic ('realtime:room:square'), so match the suffix.
+  check('D is on the same room channel as the duel',
+    String(g.chain.L1_roomTopic || '').endsWith(`room:${ROOM_ID}`));
+  check('D\u2019s socket delivered duel frames into _onRelayed', g.chain.L3_onRelayed > 0);
+  check('...which took the addressed-to-someone-else branch', g.chain.L3_watchBranch > 0);
+  check('D has the spectator subscribed to duel-watch', g.chain.L4_listeners >= 1 && g.specAttached >= 1);
+  check('D\u2019s spectator was handed those frames', g.chain.L5_specFrames > 0);
+  check('...including the start and the blows',
+    g.chain.L5_specKinds.includes('start') && g.chain.L5_specKinds.includes('fx'));
+  check('D accepted the start frame and began watching', g.chain.L6_specStart > 0 && g.watching === true);
+  check('D knows both fighters', g.fighters.length === 2 &&
+    g.fighters.includes(a.name) && g.fighters.includes(b.name));
+
+  // The two things a real player said were missing.
+  check('D RENDERS a damage number when a hit lands', g.floats.length > 0);
+  check('...a real number, not an empty float',
+    g.floats.every((t) => /^\d+!?$/.test(String(t || ''))));
+  check('D renders the impact ring too', g.bursts > 0);
+  check('D draws an HP bar over BOTH fighters',
+    g.bars.every((x) => x.hp != null && x.maxHp > 0));
+  check('...with the same HP the duellists see',
+    g.bars.every((x) => x.hp === truth[x.name]));
+  check('D\u2019s HP readout matches the duellists\u2019 screens', 
+    g.fighters.every((n) => g.readout[n] === truth[n]));
+  check('D\u2019s bars are health-coloured (both fighters are people)',
+    g.bars.every((x) => x.duellist === true));
+  check('D saw the fighters swing', g.poses.every((x) => x.everSwung));
+  check('D can tell they are duelling', g.tags.every((t) => t.marked));
+
+  // ...and D is still a pure spectator.
+  check('D has no battle panel, roster or duel window',
+    g.panelVisible === false && g.rosterRows === 0 && g.duelWindow === false);
+  check('D never left the square', g.roomId === ROOM_ID);
 } catch (e) {
   console.error(`\n  SUITE ABORTED: ${e.message}`);
   state.failed++;
-  for (const p of [a, b, c]) if (p) await shot(p.page, `abort-${p.name}.png`);
+  for (const p of [a, b, c, d]) if (p) await shot(p.page, `abort-${p.name}.png`);
 } finally {
-  for (const p of [a, b, c]) {
+  for (const p of [a, b, c]) { // NOT d: it was never in a duel to cancel
     if (!p) continue;
     await p.page.evaluate(async () => {
       const { invokeFn } = await import('/js/backend.js');
       await invokeFn('duel-cancel', {});
     }).catch(() => {});
   }
-  for (const p of [a, b, c]) {
+  for (const p of [a, b, c, d]) {
     if (p && p.logs.length) {
       const notable = p.logs.filter((l) => /fail|error|denied|rate limit|anonymous sign-in/i.test(l));
       if (notable.length) console.log(`  [${p.name}] console: ${notable.slice(0, 6).join(' | ')}`);
     }
   }
-  for (const p of [a, b, c]) if (p) await p.context.close().catch(() => {});
+  for (const p of [a, b, c, d]) if (p) await p.context.close().catch(() => {});
   server.kill();
 }
 

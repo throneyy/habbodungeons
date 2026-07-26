@@ -26,6 +26,7 @@ import {
   DuelHost, DuelGuest, DUEL_CIDS, hostsDuel,
   placeDuellists, blockedSnapshot, duelRoomView,
 } from '../js/duelBattle.js';
+import { DuelSpectator } from '../js/duelSpectator.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -77,15 +78,27 @@ function wire(n = 2) {
         handlers.get(t).add(fn);
         return () => handlers.get(t).delete(fn);
       },
+      listenerCount(t) {
+        return (handlers.get(t) || new Set()).size;
+      },
       emit(t, m) {
         for (const fn of [...(handlers.get(t) || [])]) fn(m);
       },
+      // Mirrors SupabaseNet._onRelayed exactly, including the read-only split:
+      // the addressee gets `duel-relay` (the command path), and everyone ELSE
+      // in the room gets the same frame as `duel-watch` (the spectator feed).
+      // The fake transport has to model that or the unit suite cannot see what
+      // an onlooker sees — and a test whose wire is kinder than the real one is
+      // the reason a bug reaches a player.
       send(msg) {
         if (!msg || msg.t !== 'duel-relay') return;
         const payload = { ...msg, from: name };
         for (const other of nets) {
           if (other === net) continue; // never echo to self
-          if (payload.to && payload.to !== other.name) continue; // targeted elsewhere
+          if (payload.to && payload.to !== other.name) {
+            other.emit('duel-watch', payload); // read-only: renderers only
+            continue;
+          }
           other.emit('duel-relay', payload);
         }
       },
@@ -219,6 +232,23 @@ function faceOff(d) {
 
 const live = [];
 const track = (d) => (live.push(d), d);
+
+// What an ONLOOKER's client is, reduced to what the spectator touches: a
+// renderer it queues effects into, and the remote avatars it dresses.
+function spectatorGame() {
+  const room = liveRoom();
+  return { room, fx: [], addFx(f) { this.fx.push(f); }, units: [] };
+}
+function spectatorRemote() {
+  const mk = (name) => ({ name, x: 6, y: 7, dir: 4, stats: null, room: liveRoom(), stop() {} });
+  const units = new Map([[HOST.toLowerCase(), mk(HOST)], [GUEST.toLowerCase(), mk(GUEST)]]);
+  const marked = new Set();
+  const tags = new Map([...units.keys()].map((k) => [k, {
+    textContent: k, dataset: {},
+    classList: { add: () => marked.add(k), remove: () => marked.delete(k), contains: () => marked.has(k) },
+  }]));
+  return { units, tags, marked, playStrike() {} };
+}
 
 // ---- boot ------------------------------------------------------------------
 console.log('boot');
@@ -413,6 +443,91 @@ console.log('room identity + obstacles');
     d.battle.room.isBlocked(3, 3) === d.guest.shadow.room.isBlocked(3, 3) &&
     d.battle.room.isBlocked(9, 9) === d.guest.shadow.room.isBlocked(9, 9));
   check('and the real room object was never mutated', guestRoom.isBlocked(3, 3) === true);
+}
+
+// ---- watching somebody else's duel -----------------------------------------
+// The spectator layer is a RENDERER fed by frames addressed to other people.
+// These cover the wiring that decides whether it ever gets to render at all.
+console.log('spectating');
+{
+  const d = track(duel());
+  const start = d.host.lastStart;
+  check('the start frame names both fighters, so an onlooker can label them',
+    (start.units || []).length === 2 && start.units.every((u) => !!u.name && !!u.cid));
+  check('...and carries their opening HP', start.units.every((u) => u.stats && u.stats.maxHp > 0));
+
+  // Phase frames are the late-joiner's way in, so they must carry the two
+  // names and the room — a snapshot alone is all cids and numbers.
+  const phases = [];
+  d.netM.on('duel-watch', (m) => { if (m.data && m.data.k === 'phase') phases.push(m.data); });
+  d.host.syncPhase(true);
+  check('a phase frame reaches a third party in the room', phases.length === 1);
+  check('...and names both fighters',
+    phases[0].fighters && phases[0].fighters.length === 2 &&
+    phases[0].fighters.includes(HOST) && phases[0].fighters.includes(GUEST));
+  check('...and says which room the fight is in', phases[0].roomId === ROOM_ID);
+  check('the fighters are in host-then-guest order, matching the cid snapshot',
+    phases[0].fighters[0] === HOST && phases[0].fighters[1] === GUEST &&
+    phases[0].units[0].cid === DUEL_CIDS[0] && phases[0].units[1].cid === DUEL_CIDS[1]);
+  check('a phase frame still carries the live HP', phases[0].units.every((u) => u.maxHp > 0));
+
+}
+{
+  // THE LATE JOINER. `start` is sent exactly once, so a client that was not
+  // listening at that instant — someone who walked into the room mid-duel, or
+  // whose channel subscribed a second behind — used to see two statues for the
+  // whole fight. It now bootstraps from the next phase frame.
+  const d = track(duel());
+  const watcher = new DuelSpectator(d.netM, spectatorGame(), spectatorRemote());
+  watcher.attach();
+
+  // Arrive AFTER the start frame has already gone out.
+  check('a late arrival is not watching yet', watcher.watching === false);
+  d.netM.emit('duel-watch', { from: HOST, to: GUEST, data: { k: 'fx', kind: 'attack', attacker: DUEL_CIDS[0], target: DUEL_CIDS[1], dmg: 4, tHp: 30 } });
+  check('...and cannot attribute a blow it has no roster for', watcher.watching === false);
+
+  faceOff(d); // syncPhase(true) — the next turn boundary
+  check('the next phase frame brings it in', watcher.watching === true);
+  check('it learned both fighters from that frame alone',
+    watcher.fighters.length === 2 &&
+    watcher.fighters.includes(HOST) && watcher.fighters.includes(GUEST));
+  check('...and the right name for each seat',
+    watcher.names.get(DUEL_CIDS[0]) === HOST && watcher.names.get(DUEL_CIDS[1]) === GUEST);
+  check('...and their live HP', Object.values(watcher.readout()).every((h) => h > 0));
+
+  // From here it renders like any other onlooker.
+  const before = watcher.readout()[GUEST];
+  d.netM.emit('duel-watch', { from: HOST, to: GUEST, data: { k: 'fx', kind: 'attack', attacker: DUEL_CIDS[0], target: DUEL_CIDS[1], dmg: 4, tHp: before - 4 } });
+  check('a blow now lands on its readout', watcher.readout()[GUEST] === before - 4);
+  check('...and it drew a damage number', watcher.game.fx.some((f) => f.type === 'float' && f.text === '4'));
+  check('...and an impact ring', watcher.game.fx.some((f) => f.type === 'burst'));
+  check('it marked both fighters as duelling', watcher.remote.marked.size === 2);
+
+  d.netM.emit('duel-watch', { from: HOST, to: GUEST, data: { k: 'end', result: 'won' } });
+  check('the end frame stops it watching', watcher.watching === false);
+  check('...and gives the room its ordinary avatars back',
+    watcher.remote.marked.size === 0 &&
+    [...watcher.remote.units.values()].every((u) => u.stats === null));
+  watcher.detach();
+}
+{
+  // A spectator must never be a command path: it has no way to send.
+  const d = track(duel());
+  // Baseline first: the duel() helper puts its own probe on duel-relay, so what
+  // matters is the subscriptions ATTACHING THE SPECTATOR adds.
+  const beforeWatch = d.netM.listenerCount('duel-watch');
+  const beforeRelay = d.netM.listenerCount('duel-relay');
+  const watcher = new DuelSpectator(d.netM, spectatorGame(), spectatorRemote());
+  watcher.attach();
+  check('attaching a spectator subscribes it to duel-watch',
+    d.netM.listenerCount('duel-watch') === beforeWatch + 1);
+  check('...and to duel-relay, the command event, not at all',
+    d.netM.listenerCount('duel-relay') === beforeRelay);
+  check('it holds no send path at all',
+    typeof watcher.send !== 'function' && typeof watcher.relay !== 'function' &&
+    typeof watcher.sendCommand !== 'function');
+  watcher.detach();
+  check('detaching unsubscribes it', d.netM.listenerCount('duel-watch') === beforeWatch);
 }
 
 // ---- bystanders on the room channel ----------------------------------------

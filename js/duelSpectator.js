@@ -85,11 +85,53 @@ export class DuelSpectator {
   onFrame(msg) {
     const d = (msg && msg.data) || {};
     this.lastFrameAt = performance.now();
+    // Walked out of the room the fight is in: stop dressing avatars we can no
+    // longer see, and never carry a stale fight into the next room.
+    const here = this.game.room && this.game.room.id;
+    if (this.watching && this.roomId && here && here !== this.roomId) this.stop();
+
     if (d.k === 'start') return this.onStart(d, msg.from);
-    if (!this.watching) return; // mid-duel arrival: wait for a start/phase pair
+    // A duel already under way. `start` went out before we were listening — we
+    // walked into the room late, or our channel subscribed a moment behind — so
+    // bootstrap from the next phase frame instead. Phase frames repeat at every
+    // turn boundary and carry both fighters' names for exactly this reason
+    // (DuelHost.relay), which turns a missed start from a permanent blackout
+    // into a wait of one turn.
+    if (!this.watching && d.k === 'phase' && Array.isArray(d.fighters)) this.adopt(d);
+    if (!this.watching) return; // still nothing we could attribute to anyone
     if (d.k === 'fx') return this.onFx(d);
     if (d.k === 'phase') return this.onPhase(d);
     if (d.k === 'end') return this.stop();
+  }
+
+  /** Join a fight already in progress, from a phase frame. Same end state as
+   *  onStart, assembled from the snapshot instead of the opening roster. */
+  adopt(d) {
+    const here = this.game.room && this.game.room.id;
+    if (d.roomId && here && d.roomId !== here) return;
+    const names = (d.fighters || []).filter(Boolean);
+    const snap = d.units || [];
+    if (names.length !== 2 || snap.length !== 2) return;
+    this.names.clear();
+    this.hp.clear();
+    // Seat order is the host's: `fighters` is [host, guest] and the snapshot is
+    // in the host's own cid order (p0 = host, e0 = guest), so the two line up.
+    this.fighters = names;
+    snap.forEach((s, i) => {
+      if (!s || !s.cid || !names[i]) return;
+      this.names.set(s.cid, names[i]);
+      this.hp.set(names[i].toLowerCase(), { hp: s.hp, maxHp: s.maxHp });
+    });
+    if (this.names.size !== 2) {
+      this.names.clear();
+      this.hp.clear();
+      this.fighters = [];
+      return;
+    }
+    this.roomId = d.roomId || here;
+    this.watching = true;
+    this.applyBars();
+    this.markTags(true);
   }
 
   /** A duel began in this room. Learn who is fighting and dress them for it. */

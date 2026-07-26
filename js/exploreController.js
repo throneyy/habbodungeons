@@ -12,13 +12,21 @@ const IMPACT_MS = 250; // swing wind-up before the hit lands
 // the explore view — critter kills (landStrike below) and a duel watched from
 // the sidelines (js/duelSpectator.js). A second copy would drift: the colours
 // and durations here are what players read as "that was a crit".
-export function damageFx(game, x, y, z, dmg, crit = false) {
-  game.addFx({ type: 'burst', x, y, z, color: crit ? '#f6c343' : '#ffd9a0', dur: 340 });
+export function damageFx(game, x, y, z, dmg, crit = false, start = 0) {
+  const at = start ? { start } : {};
+  game.addFx({ type: 'burst', x, y, z, color: crit ? '#f6c343' : '#ffd9a0', dur: 340, ...at });
   game.addFx({
     type: 'float', x, y, z,
-    text: crit ? `${dmg}!` : String(dmg), color: crit ? '#f6c343' : '#fff', dur: 800,
+    text: crit ? `${dmg}!` : String(dmg), color: crit ? '#f6c343' : '#fff', dur: 800, ...at,
   });
 }
+
+// A hittable prop's network identity, built the same way a critter's is: from
+// room DATA (the prop's id and its declared tile), which every client loads
+// identically, so the training dummy in the corner is the same dummy on every
+// machine without anyone allocating ids. Props do not wander, so position is a
+// safe part of the key.
+export const propId = (prop) => `${prop.id}@${prop.x},${prop.y}`;
 
 // A critter's network identity. Both halves come straight from room DATA
 // (the spec's name and its spawn tile), which every client loads identically,
@@ -174,6 +182,14 @@ export class ExploreController {
   // attack pose is RemotePlayers' half of the job; this half is the wound.
   onRemoteStrike(msg) {
     if (!msg || !msg.id) return;
+    // Props and critters both ride the `struck` broadcast; `kind` says which,
+    // and a prop is the simpler case (no HP, no death, no respawn) so it lands
+    // immediately rather than joining the strike queue.
+    if (msg.kind === 'prop') {
+      const p = this.propById(msg.id);
+      if (p) this.hitProp(p, msg.dmg | 0, !!msg.crit, msg.impact);
+      return;
+    }
     const c = this.critterById(msg.id);
     if (!c) return; // already dead here, or a room we're not standing in
     this.strikes.push({
@@ -420,25 +436,51 @@ export class ExploreController {
 
   // The dummy swing: face it, hold the wave pose, wobble the prop at impact
   // and pop a damage floater — classic training-dummy feedback.
+  // Swing at a hittable prop (the training dummy).
+  //
+  // This used to be PURELY LOCAL: it drew its own burst and float and told
+  // nobody, so in the whole history of the game no player had ever seen another
+  // player hit a dummy. The critter hunt three functions up has always
+  // broadcast. Now this does too, the same way: the attacker rolls ONCE and
+  // puts the result on the wire, and every receiver replays that roll rather
+  // than making its own — otherwise two screens show different numbers for one
+  // swing.
   attack(prop) {
     const u = this.unit;
     const now = performance.now();
     if (u.attackUntil > now) return; // mid-swing already
     this.face(prop); // POV snaps to the dummy with every swing
     u.attackUntil = now + ATTACK_MS;
-    prop.hitAt = now + IMPACT_MS; // drawProp wobbles from this timestamp
-    const dmg = 3 + Math.floor(Math.random() * 15);
+    const roll = 3 + Math.floor(Math.random() * 15);
     const crit = Math.random() < 0.15;
+    // The final number, doubled here rather than at render time: the wire value
+    // must BE the damage, or a receiver reading `dmg` would show a different
+    // figure from the attacker's own screen on every crit.
+    const dmg = crit ? roll * 2 : roll;
+    this.hitProp(prop, dmg, crit, IMPACT_MS);
+    const net = this.remote && this.remote.net;
+    if (net && typeof net.strike === 'function') {
+      net.strike({ kind: 'prop', id: propId(prop), dir: u.dir, dmg, crit, impact: IMPACT_MS });
+    }
+  }
+
+  // Land a blow on a prop: the wobble and the classic feedback, on the
+  // attacker's timing. Shared by the local swing and the replay of somebody
+  // else's (onRemoteStrike), so both screens show the same thing.
+  hitProp(prop, dmg, crit, impact) {
+    const at = performance.now() + (impact ?? IMPACT_MS);
+    prop.hitAt = at; // drawProp wobbles from this timestamp
     const z = this.game.room.heightAt(prop.x, prop.y);
-    this.game.addFx({
-      type: 'burst', x: prop.x, y: prop.y, z,
-      color: crit ? '#f6c343' : '#ffd9a0', dur: 340, start: now + IMPACT_MS,
-    });
-    this.game.addFx({
-      type: 'float', x: prop.x, y: prop.y, z,
-      text: crit ? `${dmg * 2}!` : String(dmg),
-      color: crit ? '#f6c343' : '#fff', dur: 800, start: now + IMPACT_MS,
-    });
+    damageFx(this.game, prop.x, prop.y, z, dmg, crit, at);
+  }
+
+  // The prop a broadcast strike is aimed at, resolved against OUR copy of the
+  // room. Matches on the id built from room data, so it finds the same object
+  // the attacker hit.
+  propById(id) {
+    const room = this.game.room;
+    if (!room) return null;
+    return (room.props || []).find((p) => p.hittable && propId(p) === id) || null;
   }
 
   onHover() {}

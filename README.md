@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 14 unit suites below (577 checks) — must pass
+npm test                 # all 14 unit suites below (600 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 10 e2e suites (9 real Chromium + the duel DB stack)
 ```
@@ -140,7 +140,7 @@ node tests/battle.test.js              # damage math, line of sight, targeting, 
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (75 checks)
 node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, clock skew (95 checks)
-node tests/duelBattle.test.js           # duel battle: in-place arena, placement, host authority, no AI (123 checks)
+node tests/duelBattle.test.js           # duel battle: in-place, placement, spectating, host authority, no AI (146 checks)
 node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
 node tests/dailyReward.test.js         # daily-wheel streaks, claim windows, payout table (23 checks)
 node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead zone (13 checks)
@@ -167,6 +167,13 @@ Duels are fought **in place**: there is no arena and no scene change. The host
 builds one authoritative Battle over the room both players are already standing
 in, and neither ever leaves the explore view — so bystanders keep watching the
 room while the two fighters gain a battle UI over the top of it.
+
+`duelLive` runs FOUR browsers: two duellists, a bystander the test choreographs,
+and a fourth that enters the room before the duellists and is then left entirely
+alone — the only one that can catch a spectator layer which works solely for
+clients the test itself wired up. Every hop from "bytes arrived" to "a number was
+drawn" is counted separately on it (`window.__chain`), so a dropped frame names
+its own link.
 
 Anyone else in the room **watches the fight**. The duel stream rides the room
 channel, so every frame already lands on every bystander's socket;

@@ -158,6 +158,10 @@ export class RemotePlayers {
   // damage floater, the death and the respawn happen on this client too — the
   // critter is real on every machine, so a swing that isn't replayed leaves
   // the two rooms holding different creatures.
+  // Carries BOTH kinds of swing: a critter kill and a hit on a hittable prop
+  // (the training dummy), told apart by msg.kind downstream. This half is
+  // identical either way — pose the swinger — so it stays kind-agnostic and
+  // the wound is the explore controller's half (onRemoteStrike).
   onStruck(msg) {
     if (!msg) return;
     this.playStrike(msg.name, msg.dir);

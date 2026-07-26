@@ -217,7 +217,21 @@ export class DuelHost extends CoopLeader {
   }
 
   relay(data, to = null) {
-    this.net.send({ t: 'duel-relay', data, to: to || this.opponent });
+    // Phase frames carry the two fighters' NAMES and the room, which nothing
+    // else about a phase snapshot does (it is all cids and numbers).
+    //
+    // That is for the benefit of onlookers, not the guest. A spectator
+    // (js/duelSpectator.js) learns who is fighting from the `start` frame — and
+    // `start` is sent exactly once, so anyone whose client was not listening at
+    // that instant could never begin watching: someone who walked into the room
+    // mid-duel, or whose room channel finished subscribing a second late, saw
+    // two statues for the rest of the fight. Phase frames repeat at every turn
+    // boundary, so decorating them turns a missed start into a wait of one
+    // turn instead of a permanent blackout.
+    const payload = data && data.k === 'phase'
+      ? { ...data, roomId: this.room ? this.room.id : null, fighters: [this.getName(), this.opponent] }
+      : data;
+    this.net.send({ t: 'duel-relay', data: payload, to: to || this.opponent });
   }
 
   // In a duel BOTH sides are players, so both teams take commands...
