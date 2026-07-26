@@ -29,6 +29,14 @@ export const CLASSES = {
     name: 'Ranger', archetype: 'ranged', color: '#4f9d5a',
     move: 4, range: 3, min: 2, maxHp: 26, atk: 9, def: 4, spd: 6,
     blurb: 'Bowfire from afar. Wants distance and high ground.',
+    // A dagger for the one tile the bow can't draw on (min 2 means range 1 is
+    // dead). Deliberately weak: 6 vs the bow's 9 (-3, about a third off) so the
+    // bow is always the better choice whenever there's a choice — this exists
+    // so an adjacent ranger isn't a guaranteed free kill, not so melee stops
+    // being the ranger's hard counter. min/max are pinned to plug EXACTLY the
+    // bow's dead zone (max = the bow's min - 1): see the contiguity guard in
+    // the test file.
+    closeRange: { min: 1, max: 1, atk: 6 },
   },
   mage: {
     name: 'Mage', archetype: 'magic', color: '#4f8fd0',
@@ -77,10 +85,28 @@ export function tileDistance(x0, y0, x1, y1) {
   return Math.max(Math.abs(x0 - x1), Math.abs(y0 - y1));
 }
 
+// A unit's set of usable attack profiles at its CURRENT (level/equipment-
+// scaled) stats: the primary window everyone has (stats.min..stats.range at
+// stats.atk), plus — currently only the ranger — an optional `closeRange`
+// secondary profile plugging the dead zone below the primary's min. The two
+// windows are constructed to be contiguous and non-overlapping
+// (closeRange.max === primary.min - 1), so picking a profile for a given
+// distance is never ambiguous.
+export function statsProfiles(stats) {
+  const primary = { min: stats.min, max: stats.range, atk: stats.atk };
+  return stats.closeRange ? [primary, stats.closeRange] : [primary];
+}
+
+// Which profile a unit would use to hit something `d` tiles away, or null if
+// out of range on every profile it has.
+export function statsProfileFor(stats, d) {
+  return statsProfiles(stats).find((p) => d >= p.min && d <= p.max) || null;
+}
+
 // Deterministic damage (no RNG in M1 — tactics first, dice later): floor of
 // base (atk minus def, min 1) scaled by the triangle and height multipliers.
-export function computeDamage(attacker, target) {
-  const atk = attacker.stats.atk + (attacker.buffAtk || 0); // Bard's Inspire
+export function computeDamage(attacker, target, atkOverride) {
+  const atk = (atkOverride ?? attacker.stats.atk) + (attacker.buffAtk || 0); // Bard's Inspire
   const base = Math.max(1, atk - target.stats.def);
   const mult =
     triangleMultiplier(attacker.cls.archetype, target.cls.archetype) *

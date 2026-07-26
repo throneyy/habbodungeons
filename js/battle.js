@@ -1,5 +1,5 @@
 import { canStep, DIRECTIONS, rotationBetween } from './pathfinder.js';
-import { computeDamage, heightMultiplier, hasLineOfSight, tileDistance } from './classes.js';
+import { computeDamage, heightMultiplier, hasLineOfSight, tileDistance, statsProfileFor } from './classes.js';
 import { runEnemyTurn } from './ai.js';
 
 // Vandal Hearts-style tactics battle. Phases:
@@ -137,7 +137,7 @@ export class Battle {
     return this.units.filter((t) => {
       if (!t.alive || t.team === unit.team) return false;
       const d = tileDistance(fromX, fromY, t.x, t.y);
-      if (d < unit.stats.min || d > unit.stats.range) return false;
+      if (!statsProfileFor(unit.stats, d)) return false;
       return hasLineOfSight(this.room, fromX, fromY, t.x, t.y, fromZ, t.tileZ);
     });
   }
@@ -146,7 +146,9 @@ export class Battle {
   resolveAttack(attacker, target) {
     attacker.dir = rotationBetween(attacker.x, attacker.y, target.x, target.y) ?? attacker.dir;
     const buffed = attacker.buffAtk > 0;
-    const dmg = computeDamage(attacker, target);
+    const d = tileDistance(attacker.x, attacker.y, target.x, target.y);
+    const profile = statsProfileFor(attacker.stats, d);
+    const dmg = computeDamage(attacker, target, profile ? profile.atk : undefined);
     attacker.buffAtk = 0; // Inspire is spent on this swing
     target.takeDamage(dmg);
     const killed = !target.alive;

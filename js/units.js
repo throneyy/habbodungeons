@@ -46,6 +46,9 @@ export class Unit extends Avatar {
       move: base.move + (eq.move || 0),
       range: base.range,
       min: base.min,
+      closeRange: base.closeRange
+        ? { min: base.closeRange.min, max: base.closeRange.max, atk: base.closeRange.atk + bump + (eq.atk || 0) }
+        : null,
     };
 
     // Per-turn flags, reset at the start of each of this unit's phases.
