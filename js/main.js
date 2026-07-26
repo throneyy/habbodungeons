@@ -21,6 +21,7 @@ import { BotCatalog } from './botCatalog.js';
 import { ROOM_BOTS } from './botsData.js';
 import { ADMIN_NAMES } from './config.js';
 import { figureWithArmor, CONSUMABLES, ITEMS, RARITY } from './items.js';
+import { consumeFromRun, rosterTargets, battleTargets } from './consumableEffects.js';
 import { propSprites } from './props.js';
 import { clothingPoof } from './clothingPoof.js';
 import { ClothingCatalog } from './clothingCatalog.js';
@@ -1352,54 +1353,16 @@ function equipFromBattleHand(mutate) {
 }
 
 // Consumables mid-battle act on the LIVE units — a potion that only touched
-// the roster would be overwritten by writeBack when the battle ends.
+// the roster would be overwritten by writeBack when the battle ends. The
+// effect itself is resolved in js/consumableEffects.js; this only picks which
+// targets it runs against.
 function useBattleItem(itemId) {
   const r = run.run;
   const b = battle.battle;
-  const c = CONSUMABLES[itemId];
-  if (!r || !c) return false;
+  if (!r || !CONSUMABLES[itemId]) return false;
   const inBattle = b && (b.phase === 'player' || b.phase === 'enemy');
   if (!inBattle) return useConsumable(itemId, r); // between rooms: roster-level
-  const idx = r.inventory.indexOf(itemId);
-  if (idx < 0) return false;
-  const players = b.units.filter((u) => u.team === 'player' && u.alive);
-  const leaderU = players.find((u) => u.useSprites) || players[0];
-  let did = false;
-  switch (c.effect.kind) {
-    case 'heal':
-      if (leaderU && leaderU.stats.hp < leaderU.stats.maxHp) {
-        leaderU.stats.hp = Math.min(leaderU.stats.maxHp, leaderU.stats.hp + c.effect.n);
-        did = true;
-      }
-      break;
-    case 'healAll':
-      for (const u of players) {
-        if (u.stats.hp < u.stats.maxHp) {
-          u.stats.hp = Math.min(u.stats.maxHp, u.stats.hp + c.effect.n);
-          did = true;
-        }
-      }
-      break;
-    case 'revive': {
-      // only heroes who fell in an EARLIER battle can rejoin (a corpse on
-      // this field would just be re-downed by writeBack)
-      const fallen = r.squad.find((m) => m.hp <= 0 && !b.units.some((u) => u.id === m.id));
-      if (fallen) {
-        fallen.hp = Math.ceil(memberStats(fallen).maxHp / 2);
-        did = true;
-      }
-      break;
-    }
-    case 'xp':
-      if (leaderU) {
-        leaderU.xp += c.effect.n;
-        did = true;
-      }
-      break;
-  }
-  if (!did) return false;
-  r.inventory.splice(idx, 1);
-  r.save();
+  if (!consumeFromRun(r, itemId, battleTargets(r, b))) return false;
   battle.render(); // roster hp bars update immediately
   return true;
 }
@@ -1760,45 +1723,8 @@ function isRoomAdmin() {
 // (full HP, nobody fallen) so the item isn't burned for nothing.
 function useConsumable(itemId, rr = null) {
   const r = rr || (Run.hasSave() ? Run.load(buildDungeon) : null);
-  const c = CONSUMABLES[itemId];
-  if (!r || !c) return false;
-  const idx = r.inventory.indexOf(itemId);
-  if (idx < 0) return false;
-  const leader = r.squad.find((m) => m.leader) || r.squad[0];
-  const maxOf = (m) => memberStats(m).maxHp;
-  let did = false;
-  switch (c.effect.kind) {
-    case 'heal':
-      if (leader.hp > 0 && leader.hp < maxOf(leader)) {
-        leader.hp = Math.min(maxOf(leader), leader.hp + c.effect.n);
-        did = true;
-      }
-      break;
-    case 'healAll':
-      for (const m of r.squad) {
-        if (m.hp > 0 && m.hp < maxOf(m)) {
-          m.hp = Math.min(maxOf(m), m.hp + c.effect.n);
-          did = true;
-        }
-      }
-      break;
-    case 'revive': {
-      const fallen = r.squad.find((m) => m.hp <= 0);
-      if (fallen) {
-        fallen.hp = Math.ceil(maxOf(fallen) / 2);
-        did = true;
-      }
-      break;
-    }
-    case 'xp':
-      leader.xp += c.effect.n;
-      did = true;
-      break;
-  }
-  if (!did) return false;
-  r.inventory.splice(idx, 1);
-  r.save();
-  return true;
+  if (!r) return false;
+  return consumeFromRun(r, itemId, rosterTargets(r));
 }
 
 // Apply an equip/unequip to the run's leader (the player), then poof: white
