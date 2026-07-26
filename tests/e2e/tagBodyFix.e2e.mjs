@@ -126,7 +126,19 @@ try {
   }
 
   // And confirm the depth-occlusion condition itself is gone: whatever tile
-  // the peer is now at, is it ever hidden behind a prop drawn after it?
+  // the peer is now at, is it ever hidden behind a prop drawn after it? Each
+  // leave+rejoin above respawns a brand-new remote Unit (RemotePlayers.spawn),
+  // which loads a fresh AvatarSprites set — give the last one a moment to
+  // finish loading before asserting drawable, so this doesn't flake on a
+  // sprite set that's still mid-fetch from the rapid rejoin.
+  await W.page.waitForFunction(
+    (n) => {
+      const u = window.__debug.remote.units.get(n.toLowerCase());
+      return u && u.sprites && u.sprites.ready;
+    },
+    nameP,
+    { timeout: 5000 }
+  ).catch(() => {});
   const finalOcclusionCheck = await W.page.evaluate((n) => {
     const u = window.__debug.remote.units.get(n.toLowerCase());
     if (!u) return { unitExists: false };

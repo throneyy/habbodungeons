@@ -40,6 +40,12 @@ export class SupabaseNet {
     this._rosterSent = false;
     this._heartbeat = null;
     this.classId = 'fighter'; // the calling this session is playing — see connect()
+    // Self-healing shadow of who we currently believe is in the room (keyed by
+    // lowercased name, same key RemotePlayers uses). Updated by every join/
+    // leave diff AND reconciled from scratch on every subsequent presence
+    // sync — see _onPresenceSync for why: a bare Realtime diff event can be
+    // dropped without this, permanently losing a peer who leaves and rejoins.
+    this._roster = new Map();
   }
 
   get active() {
@@ -179,6 +185,7 @@ export class SupabaseNet {
     if (!this._connected || !this.sb) return; // _open() re-joins after connect
     this._leaveRoomChannel();
     this._rosterSent = false;
+    this._roster = new Map(); // fresh room = fresh shadow roster (see constructor)
     const ch = this.sb.channel(`room:${roomId}`, {
       config: {
         private: true, // enforces realtime.messages RLS (room:% policy)
@@ -211,26 +218,66 @@ export class SupabaseNet {
     };
   }
 
+  // Presence 'sync' fires after EVERY join/leave diff is applied (not just
+  // once) — it's the full, authoritative current state of the channel. The
+  // first sync after a join() gives RemotePlayers a clean full snapshot
+  // ('roster': clear + respawn everyone). Every sync after that reconciles
+  // our own shadow roster (this._roster) against the real presence state and
+  // emits whatever 'enter'/'left' the discrete diff handlers below SHOULD
+  // have already emitted — making it a no-op in the normal case, since those
+  // handlers keep this._roster current as they fire.
+  //
+  // This reconciliation is what actually matters: Realtime's join/leave diff
+  // events are not guaranteed to arrive as clean discrete pairs — a peer who
+  // leaves and rejoins in quick succession can have that collapse into a sync
+  // with no separate 'join' diff for the rejoin. The old code only ever
+  // processed the FIRST sync (guarded by _rosterSent) and threw every later
+  // one away, so a peer lost that way never came back: their name tag and
+  // Unit vanished on the 'leave' diff (which did fire), and nothing ever
+  // re-added them, because the one event that could have (sync) was being
+  // unconditionally ignored. Confirmed live with two real Supabase clients
+  // doing rapid leaveRoom()+join() at a 50-100ms gap (reproduced permanent
+  // loss ~1-in-4 to 1-in-8 tries pre-fix, 0-for-30 after) and regression-
+  // tested by tests/e2e/presenceChurnFix.e2e.mjs.
   _onPresenceSync(ch, roomId) {
-    if (this._rosterSent) return; // enter/left carry subsequent changes
     const state = ch.presenceState();
-    const members = [];
+    const current = new Map(); // name.toLowerCase() -> member snapshot
     for (const [key, metas] of Object.entries(state)) {
       if (key === this.userId) continue;
-      if (metas && metas[0]) members.push(this._member(metas[0]));
+      if (!metas || !metas[0]) continue;
+      const member = this._member(metas[0]);
+      if (member.name) current.set(member.name.toLowerCase(), member);
     }
-    this._rosterSent = true;
-    this.emit('roster', { room: roomId, members });
+
+    if (!this._rosterSent) {
+      this._rosterSent = true;
+      this._roster = current;
+      this.emit('roster', { room: roomId, members: [...current.values()] });
+      return;
+    }
+
+    for (const [key, member] of current) {
+      if (!this._roster.has(key)) this.emit('enter', { member });
+    }
+    for (const [key, prev] of this._roster) {
+      if (!current.has(key) && prev.name) this.emit('left', { name: prev.name });
+    }
+    this._roster = current;
   }
 
   _onPresenceJoin(newPresences) {
     for (const meta of newPresences || []) {
-      if (meta.name && meta.name !== this.name) this.emit('enter', { member: this._member(meta) });
+      if (!meta.name || meta.name === this.name) continue;
+      const member = this._member(meta);
+      this._roster.set(member.name.toLowerCase(), member);
+      this.emit('enter', { member });
     }
   }
   _onPresenceLeave(leftPresences) {
     for (const meta of leftPresences || []) {
-      if (meta.name) this.emit('left', { name: meta.name });
+      if (!meta.name) continue;
+      this._roster.delete(meta.name.toLowerCase());
+      this.emit('left', { name: meta.name });
     }
   }
 
@@ -306,6 +353,8 @@ export class SupabaseNet {
     }
     this._leaveRoomChannel();
     this.room = null;
+    this._rosterSent = false;
+    this._roster = new Map(); // stop believing anyone from that room is still present
   }
 
   // ---- generic sender: party / trade / co-op relay -----------------------
