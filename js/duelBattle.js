@@ -600,9 +600,24 @@ export class DuelGuest extends CoopMember {
     const mineNow = blockedSnapshot(live);
     const hostBlocked = d.blocked || mineNow;
     if (mineNow.join('|') !== hostBlocked.join('|')) {
+      // Name the tiles, not just the counts. A bare count difference has been
+      // showing up in live runs with nobody able to say what caused it, and the
+      // two sides are only ever the room's PROPS (room.blockers never holds
+      // players), so the differing keys identify the piece of furniture — which
+      // is the whole diagnosis. The likeliest source is that each client builds
+      // its own rooms from `AdminApi.loadLayouts()` at explore start
+      // (js/main.js), and that fetch can fail to defaults, be served stale, or
+      // predate an admin edit that the other client already has.
+      const theirs = new Set(hostBlocked);
+      const mine = new Set(mineNow);
+      const onlyHere = mineNow.filter((k) => !theirs.has(k));
+      const onlyThere = hostBlocked.filter((k) => !mine.has(k));
       console.warn(
         `[duel] blocked-tile mismatch with the host (${mineNow.length} here, ` +
-        `${hostBlocked.length} there) — adopting the host's snapshot`
+        `${hostBlocked.length} there) — adopting the host's snapshot. ` +
+        `Only here: ${onlyHere.join(' ') || 'none'}. ` +
+        `Only on the host: ${onlyThere.join(' ') || 'none'}. ` +
+        `Room ${live.id} (${live.props ? live.props.length : 0} props here).`
       );
     }
     const room = duelRoomView(live, hostBlocked);

@@ -169,6 +169,12 @@ builds one authoritative Battle over the room both players are already standing
 in, and neither ever leaves the explore view — so bystanders keep watching the
 room while the two fighters gain a battle UI over the top of it.
 
+`duelLive` refuses to run unless a real human is standing in the room watching,
+because a run nobody sees proves nothing about what a player sees. That name
+defaults to this repo's admin (`throney`); anyone else exports their own:
+`HD_DUEL_WATCHER=<habbo name>`, or `HD_DUEL_WATCHER=` (empty) to drop the
+requirement on CI.
+
 `duelLive` runs FOUR browsers: two duellists, a bystander the test choreographs,
 and a fourth that enters the room before the duellists and is then left entirely
 alone — the only one that can catch a spectator layer which works solely for

@@ -57,7 +57,19 @@ const ROOM_ID = 'square';
 const ROOM_NAME = 'The Old Town Square';
 // The real player watching this run from their own browser on the deployed
 // site. Same Supabase project, same room channel, different build.
-const WATCHER = 'throney';
+//
+// Configurable, because a hardcoded name is one person's name: this repo's
+// admin is `throney` (ADMIN_NAMES in js/config.js) and that stays the default,
+// but any other developer exports their own Habbo name instead:
+//
+//   HD_DUEL_WATCHER=myhabbo  node tests/e2e/duelLive.e2e.mjs
+//
+// Set it EMPTY to drop the requirement entirely (CI, or a headless run nobody
+// is watching). The suite still runs in full — browser D is an in-test client
+// the test never wires up, so the spectator layer is still measured on a client
+// that was left alone; what is lost is the confirmation that a HUMAN on the
+// deployed build saw the same fight.
+const WATCHER = process.env.HD_DUEL_WATCHER ?? 'throney';
 // Distinct tiles, chosen so A and B start ADJACENT (the duel should then fight
 // from exactly these tiles) with C well clear of both.
 //
@@ -577,10 +589,16 @@ try {
   }
   const testNames = [a, b, c, d].map((p) => p.name.toLowerCase());
   const outsiders = roster.members.filter((m) => !testNames.includes(String(m.name).toLowerCase()));
-  const watcher = roster.members.find((m) => String(m.name).toLowerCase() === WATCHER.toLowerCase());
+  const watcher = WATCHER
+    ? roster.members.find((m) => String(m.name).toLowerCase() === WATCHER.toLowerCase())
+    : null;
   console.log(`  outsiders (not this test): ${outsiders.length ? outsiders.map((m) => `${m.name}(${m.x},${m.y})`).join(', ') : 'NONE'}`);
 
-  if (!watcher) {
+  if (!WATCHER) {
+    console.log(`  ℹ  HD_DUEL_WATCHER is empty — no human observer required.`);
+    console.log(`     Browser D still measures a client the test never wires up.
+`);
+  } else if (!watcher) {
     console.error(`
   ############################################################`);
     console.error(`  #  ❌  "${WATCHER}" IS NOT IN THIS ROOM.`);
@@ -591,12 +609,17 @@ try {
     console.error(`  #`);
     console.error(`  #  Check: are you in The Old Town Square (not the tavern), on`);
     console.error(`  #  habbodungeons.com, with multiplayer connected?`);
+    console.error(`  #`);
+    console.error(`  #  Not you? Export your own name instead:`);
+    console.error(`  #    HD_DUEL_WATCHER=<habbo name> node tests/e2e/duelLive.e2e.mjs`);
+    console.error(`  #  ...or HD_DUEL_WATCHER= (empty) to run with nobody watching.`);
     console.error(`  ############################################################
 `);
     throw new Error(`"${WATCHER}" not on the room channel — stopping, nobody is watching`);
-  }
-  console.log(`  ✅ "${WATCHER}" IS HERE, standing at (${watcher.x},${watcher.y}) — running the duel.
+  } else {
+    console.log(`  ✅ "${WATCHER}" IS HERE, standing at (${watcher.x},${watcher.y}) — running the duel.
 `);
+  }
 
   // ------------------------------------------------------------- challenge
   await a.page.evaluate((t) => window.game.controller.onTap(t), tile);
