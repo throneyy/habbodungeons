@@ -129,8 +129,22 @@ node tests/battle.test.js       # combat math, AI, phases (35 checks)
 node tests/run.test.js          # items, roster, save/resume, events, leader skills (45 checks)
 node tests/skills.test.js       # Origins skill trees: unlocks, damage/AoE/shield/root (37 checks)
 node tests/sprites.test.js      # M4 asset pipeline: rig math, extracted data, furni cover, fx (28 checks)
+node tests/duel.test.js               # duel handshake: decline, cancel, busy/offline targets, clock-skew-proof countdown (95 checks)
 node tests/defaultAvatarShoes.test.js  # fallback avatar: studded-sole (cleat) detector, baked sheet (19 checks)
 ```
+
+The duel suite also has an end-to-end half that runs against a REAL database —
+PostgreSQL + PostgREST booted in-process — to prove the storage layer the
+in-memory tests can't reach (duelStore.ts's queries, and the `duels` RLS policy
+rejecting direct client writes). It needs the PostgREST binary once:
+
+```
+npm run test:e2e:setup             # once: downloads PostgREST to .gg/bin (~16MB)
+node tests/e2e/duel.e2e.mjs        # migration, handshake, RLS write rejection (50 checks)
+```
+
+`embedded-postgres` is pinned to an EXACT version (no caret): it is a beta, and
+a silent bump would change the Postgres binaries the harness boots.
 
 ## What's authentic (and where it came from)
 

@@ -36,6 +36,7 @@ import { HumanInfostand } from './humanInfostand.js';
 import { PartyUI } from './party.js';
 import { CoopLeader, CoopMember } from './coopBattle.js';
 import { TradeUI } from './tradeWindow.js';
+import { DuelUI } from './duelWindow.js';
 import { showRoomDiscovery } from './roomBanner.js';
 import { openDailyReward } from './dailyRewardOverlay.js';
 import { applyReward } from './dailyReward.js';
@@ -1460,6 +1461,10 @@ const tradeUI = new TradeUI(net, () => (Identity.get() || {}).name || ''); // th
 tradeUI.getHand = getHand; // the Hand doubles as the stash box during a trade
 infostand.onTrade = (name) => tradeUI.ask(name);
 infostand.canTrade = () => tradeUI.canTrade();
+const duelUI = new DuelUI(net, () => (Identity.get() || {}).name || ''); // the duel challenge handshake
+infostand.onDuel = (name) => duelUI.ask(name);
+// One challenge at a time, and never mid-trade (the server enforces both too).
+infostand.canDuel = () => duelUI.canDuel() && !tradeUI.open;
 
 // ---- co-op descents ---------------------------------------------------------
 // Leader: hosts the run — CoopLeader streams the battle to the party.
@@ -1786,6 +1791,7 @@ function seedBag() {
 function leaveExplore() {
   infostand.close();
   tradeUI.detach();
+  duelUI.detach();
   party.detach();
   remote.detach();
   net.leaveRoom();
