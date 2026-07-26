@@ -9,11 +9,32 @@ import { broadcast, userTopic } from "./realtime.ts";
 export const PARTY_MAX = 4;
 export const INVITE_TTL_MS = 60_000;
 
+// Resolve a player by their Habbo name. null means GENUINELY NOT FOUND and
+// nothing else — callers turn it into "no such player", so it has to be true.
+//
+// The error used to be discarded here, which made every query failure
+// indistinguishable from an empty result. maybeSingle() errors on two or more
+// matches (PGRST116), so once two accounts claimed one name BOTH became
+// permanently uninvitable while the API blamed the name: "no such player" for
+// someone standing right there. It took a live database dump to see, because
+// the lie was total — no log, no status, no trace.
+//
+// 20260726180000_profiles_unique_habbo_username.sql makes the duplicate case
+// impossible going forward. This throws anyway: an unread error is exactly how
+// the first one hid, and the next failure here (dropped connection, revoked
+// grant, schema drift) deserves a 500 that says so over a confident wrong
+// answer. Callers need no change — none of them could act on the distinction.
 export async function userByName(svc: SupabaseClient, name: string) {
-  const { data } = await svc.from("profiles")
+  const { data, error } = await svc.from("profiles")
     .select("id, habbo_username, habbo_figure")
     .ilike("habbo_username", name)
     .maybeSingle();
+  if (error) {
+    console.error(
+      `[userByName] lookup failed for ${JSON.stringify(name)}: ${error.code} ${error.message}`,
+    );
+    throw new Error(`profile lookup failed (${error.code})`);
+  }
   return data;
 }
 
