@@ -339,16 +339,52 @@ for f in verify-habbo-link sync-habbo-skills fetch-habbo-profile habbo-imaging p
 done
 ```
 
-The `duels` RLS is SELECT-only for participants by design (writes go through the
-service role inside the `duel-*` functions). Once the table exists, confirm both
-halves in the SQL editor:
+### Confirming `duels` is SELECT-only — and why the obvious probe cannot
+
+The `duels` RLS is SELECT-only for participants by design: writes go through the
+service role inside the `duel-*` functions. Verifying that has one trap.
+
+**An UPDATE or DELETE against the EMPTY table proves nothing.** PostgREST
+answers `204 No Content` whether RLS filtered every candidate row away or no
+policy existed at all — zero rows matched either way. Do not record that 204 as
+a pass; it is not evidence.
+
+The question is only answerable against a **real row**, aimed at by the user RLS
+is supposed to trust: a **participant in that duel**. That is also the threat
+that matters. An outsider being locked out is uninteresting; a participant who
+can write the table is the actual hole — they could flip their own `status`,
+rewrite `starts_at` so the countdown fires early, or delete a duel they are
+losing.
+
+```bash
+node tests/e2e/duelRlsLive.probe.mjs
+```
+
+It creates a real duel through the deployed `duel-challenge`, tries every write
+as a participant, re-reads the row, then cancels through the function and leaves
+the table at 0 rows. Named `.probe.mjs` so the routine sweep does not
+auto-discover it — it costs three anonymous sign-ins from the shared 30/hour/IP
+budget. Use `Prefer: return=representation`: a permitted UPDATE echoes the rows
+it changed, a refused one yields `[]`.
+
+**Verified live 2026-07-26, 16/16.** Both participants read the row; a
+non-participant sees nothing; UPDATE `status`, UPDATE `starts_at` and DELETE all
+return `[]`; INSERT is a hard `42501`; the row re-reads byte-identical. The
+clincher is the control: `duel-cancel` then deleted the exact row the
+participant's own DELETE had just failed to touch — same row, same statement,
+different authority.
+
+Belt-and-braces check in the SQL editor:
 
 ```sql
 select policyname, cmd from pg_policies
 where schemaname='public' and tablename='duels';
 -- expect exactly one row: "duels party read" / SELECT. Any INSERT/UPDATE/DELETE
--- policy here is a hole: it would let a client put itself in a duel, skip the
--- countdown, or restart it by writing the table directly.
+-- policy here is a hole.
+
+select grantee, privilege_type from information_schema.role_table_grants
+where table_schema='public' and table_name='duels';
+-- authenticated: SELECT only. service_role: everything.
 ```
 
 Then `npm run test:e2e`. `classIdCloudSync.e2e.mjs` is the canary for migration
