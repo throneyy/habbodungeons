@@ -65,14 +65,19 @@ try {
   const beforePick = await pageA.evaluate(() => window.__debug.Identity.classId());
   console.log(`context A classId before pick: ${JSON.stringify(beforePick)}`);
 
-  const mirrorOk = await pageA.evaluate(async () => {
+  const mirrorErr = await pageA.evaluate(async () => {
     window.__debug.Identity.setClass('cleric');
     // setClass() fires mirror() fire-and-forget; await an explicit second
     // call (idempotent -- just re-syncs current local state) so the test
     // doesn't race the network write.
     return window.__debug.Identity.mirror();
   });
-  check('context A: setClass(\'cleric\') mirrored to the cloud profile successfully', mirrorOk === true);
+  // mirror() returns null on success and an error/skip object otherwise. This
+  // was `=== true` when mirror() returned `!error`; the contract inverted.
+  // Comparing against null rather than falsiness keeps it strict -- a
+  // {skipped:'no-session'} return means the row was never written, not a pass.
+  console.log(`context A mirror() -> ${JSON.stringify(mirrorErr)}`);
+  check('context A: setClass(\'cleric\') mirrored to the cloud profile successfully', mirrorErr === null);
 
   const localAfterPick = await pageA.evaluate(() => window.__debug.Identity.classId());
   console.log(`context A classId after pick: ${JSON.stringify(localAfterPick)}\n`);

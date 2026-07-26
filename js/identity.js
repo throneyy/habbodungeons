@@ -30,6 +30,42 @@ function writeLocal(id) {
   }
 }
 
+// Is this the unique-name violation, as opposed to any other 23505 on the row?
+// profiles' key is profiles_habbo_username_lower_key, a partial index on
+// lower(btrim(habbo_username)) — so the column name shows up in the constraint
+// name, and PostgREST spreads the detail across code/message/details/constraint
+// depending on version. Check all of them rather than betting on one field.
+export function isNameTakenError(error) {
+  if (!error || error.code !== '23505') return false;
+  const haystack = [error.message, error.details, error.hint, error.constraint]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  return haystack.includes('habbo_username');
+}
+
+// Log a mirror failure loudly and hand the error back unchanged.
+//
+// Returns the SAME object it was given: callers get the real PostgrestError
+// (code/message/details/hint), not a reworded copy, so nothing is lost between
+// here and a caller that wants to branch on the code.
+export function reportMirrorError(error, id = null) {
+  const code = error?.code ?? '(no code)';
+  const message = error?.message ?? String(error);
+  if (isNameTakenError(error)) {
+    // The one failure a player can actually act on, so it gets a plain-language
+    // line. One account per Habbo name, case-insensitively: this row lost the
+    // race for it, and the local identity now disagrees with the cloud until
+    // the name is released or this account re-links.
+    console.error(
+      `[habbo-dungeons] cloud profile NOT saved: the Habbo name ${JSON.stringify(id?.name ?? null)} is already claimed by a different account (${code}: ${message})`,
+    );
+  } else {
+    console.error(`[habbo-dungeons] cloud profile mirror failed (${code}): ${message}`);
+  }
+  return error;
+}
+
 export const Identity = {
   get: readLocal,
   figure() {
@@ -176,13 +212,35 @@ export const Identity = {
   },
 
   // --- cloud mirror (no-op when signed out or offline) ---
-  async mirror(id = readLocal()) {
-    const sb = await getSupabase();
-    if (!sb || !id) return false;
+  //
+  // Returns null when the row was written, otherwise an object saying why not.
+  // NOTE THE INVERSION: this used to return `!error`, so `true` meant success.
+  // Now a TRUTHY return is a FAILURE. `if (await mirror())` reads like a
+  // success check and means the opposite — every caller either ignores the
+  // result or compares against null (tests/e2e/classIdCloudSync.e2e.mjs).
+  //
+  // Why it changed: `!error` collapsed "the write landed", "you are offline",
+  // "you are not signed in" and "the database refused this row" into one bit,
+  // and all four callers then dropped even that with .catch(() => {}). A
+  // player's name, figure, class and skill levels could fail to persist on
+  // every single mirror and nothing anywhere said a word. That is the same
+  // shape of bug as userByName discarding its error (_shared/party.ts): the
+  // failure was not merely unhandled, it was unobservable.
+  //
+  // `skipped: true` marks the deliberate no-ops. They are not errors — playing
+  // offline or as a guest is a supported mode, so they log nothing; they are
+  // still reported so a caller that CARES whether the cloud has the row can
+  // tell "written" from "never attempted".
+  async mirror(id = readLocal(), client = undefined) {
+    // `client` is a test seam: passing one skips getSupabase(), whose dynamic
+    // esm.sh import cannot resolve under Node. Production callers pass nothing.
+    const sb = client ?? (await getSupabase());
+    if (!sb) return { skipped: true, code: 'offline', message: 'no Supabase client — cloud features off' };
+    if (!id) return { skipped: true, code: 'no-identity', message: 'nothing to mirror' };
     const {
       data: { user },
     } = await sb.auth.getUser();
-    if (!user) return false;
+    if (!user) return { skipped: true, code: 'no-session', message: 'not signed in — local only' };
     const { error } = await sb
       .from('profiles')
       .update({
@@ -198,7 +256,8 @@ export const Identity = {
         class_id: id.classId || null,
       })
       .eq('id', user.id);
-    return !error;
+    if (error) return reportMirrorError(error, id);
+    return null;
   },
 
   // Adopt the cloud profile locally after signing in (if it has a linked Habbo).
