@@ -29,3 +29,6 @@ habbo-dungeons-supabase-handoff.zip
 
 # e2e browser profiles (reused Supabase anon sessions — see partyInviteError.e2e.mjs)
 tests/e2e/.profiles/
+
+# e2e screenshots (duelLive playtest)
+tests/e2e/.artifacts/

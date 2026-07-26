@@ -126,7 +126,7 @@ node tests/pathfinder.test.js
 ```
 npm test                 # all 14 unit suites below (538 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
-npm run test:e2e         # 9 e2e suites (8 real Chromium + the duel DB stack)
+npm run test:e2e         # 10 e2e suites (9 real Chromium + the duel DB stack)
 ```
 
 Unit suites, each runnable on its own. Counts are the assertions each one
@@ -149,11 +149,18 @@ node tests/buffInspire.test.js         # `buff` consumable kind and Inspire stac
 node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
 ```
 
-End-to-end suites are `tests/e2e/*.e2e.mjs`, nine of them: presence churn,
+End-to-end suites are `tests/e2e/*.e2e.mjs`, ten of them: presence churn,
 party invite delivery, cloud sync, critter combat sync, room bots, daily
-reward, move tracking, tag bodies, and the duel handshake. Eight drive real
-Chromium against a static server and bind real ports, so `run-suites.mjs` runs
-them sequentially and takes a machine-wide lock for the duration.
+reward, move tracking, tag bodies, the duel handshake, and the three-browser
+duel playtest. Nine drive real Chromium against a static server and bind real
+ports, so `run-suites.mjs` runs them sequentially and takes a machine-wide lock
+for the duration.
+
+`tests/e2e/duelLive.e2e.mjs` is the only suite that fights a real duel: three
+browsers on the live project, two duelling and one bystander standing in the
+room to measure what a non-participant sees. It reuses persistent browser
+profiles (like `partyInviteError`) so repeat runs mint no new anonymous users,
+and drops screenshots of all three clients into `tests/e2e/.artifacts/`.
 
 One of them is not a browser suite at all. `tests/e2e/duel.e2e.mjs` boots a real
 PostgreSQL and a real PostgREST in-process and runs the duel edge functions'
