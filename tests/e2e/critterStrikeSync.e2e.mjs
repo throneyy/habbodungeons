@@ -29,9 +29,9 @@ import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
-import { findChromium, startServer, makeChecker } from './lib.mjs';
+import { findChromium, startServer, makeChecker, portFor } from './lib.mjs';
 
-const PORT = 8657;
+const PORT = portFor(57); // per-worktree base (lib.mjs), was 8657
 const ROOM_BUTTON = 2; // #exploreBar: 0 tavern, 1 square, 2 Fogwood Forest (mirkwood)
 const ROOM_ID = 'mirkwood';
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));

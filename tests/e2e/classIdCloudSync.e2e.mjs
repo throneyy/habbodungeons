@@ -24,9 +24,9 @@
 //
 // Run: node tests/e2e/classIdCloudSync.e2e.mjs
 import { chromium } from 'playwright-core';
-import { findChromium, startServer, makeChecker } from './lib.mjs';
+import { findChromium, startServer, makeChecker, portFor } from './lib.mjs';
 
-const PORT = 8654;
+const PORT = portFor(54); // per-worktree base (lib.mjs), was 8654
 const { check, state } = makeChecker();
 const exe = findChromium();
 if (!exe) { console.error('SKIP: no local Chromium build found'); process.exit(0); }

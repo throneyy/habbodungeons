@@ -17,9 +17,13 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
-import { findChromium, startServer, makeChecker, seedProfile } from './lib.mjs';
+import { findChromium, startServer, makeChecker, seedProfile, e2eName, portFor } from './lib.mjs';
 
-const PORT = 8659;
+// Derived from the worktree directory name, not hardcoded: this suite used to
+// carry its own 'pi-' prefix and a literal 8659, which is the one namespacing
+// scheme nothing enforced. In the hub tree portFor(59) is still 8659, so the
+// port only moves where it has to.
+const PORT = portFor(59);
 const { check, state } = makeChecker();
 const exe = findChromium();
 if (!exe) { console.error('SKIP: no local Chromium build found'); process.exit(0); }
@@ -135,10 +139,11 @@ try {
   // party-invite answered "no such player" for someone standing right there,
   // which is several steps upstream of anything this suite means to assert.
   //
-  // The 'pi-' prefix is this worktree's; a hyphen, never an underscore, because
-  // _ is a single-character WILDCARD in ILIKE.
-  a = await openPlayer(PORT, 'pi-InvA');
-  b = await openPlayer(PORT, 'pi-InvB');
+  // The prefix comes from lib.mjs (e2eName), so it tracks the worktree instead
+  // of being retyped here; it uses a hyphen, never an underscore, because _ is
+  // a single-character WILDCARD in ILIKE.
+  a = await openPlayer(PORT, e2eName('InvA'));
+  b = await openPlayer(PORT, e2eName('InvB'));
   check('A profile row seeded', a.seed.ok);
   check('B profile row seeded', b.seed.ok);
   if (!a.seed.ok || !b.seed.ok) throw new Error(`profile seed failed: ${a.seed.reason || b.seed.reason}`);

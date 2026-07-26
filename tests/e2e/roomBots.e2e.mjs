@@ -9,10 +9,10 @@ import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
-import { findChromium, startServer, openPlayer, enterFreeRoam, makeChecker } from './lib.mjs';
+import { findChromium, startServer, openPlayer, enterFreeRoam, makeChecker, portFor } from './lib.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const PORT = 8633;
+const PORT = portFor(33); // per-worktree base (lib.mjs), was 8633
 const { check, state } = makeChecker();
 mkdirSync(join(ROOT, '.gg', 'screenshots'), { recursive: true });
 

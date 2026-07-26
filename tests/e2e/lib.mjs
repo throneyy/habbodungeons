@@ -18,6 +18,44 @@ import { chromium } from 'playwright-core';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
+// ---------------------------------------------------------------- worktree id
+// Six agents run six git worktrees against ONE Supabase project, so every suite
+// has to be distinguishable from the same suite running next door. Both halves
+// below are derived from the worktree DIRECTORY NAME, so nobody has to remember
+// to export anything; HD_SLUG / HD_PORT_BASE exist only as overrides.
+//
+// This is not hypothetical tidiness. Four profiles rows once claimed the two
+// hardcoded e2e names (InvA/InvB) because parallel runs shared one project, and
+// userByName() resolves with .ilike().maybeSingle() — which ERRORS on multiple
+// matches rather than picking one. Both accounts became permanently uninvitable
+// while the API blamed the name ("no such player"). The unique index added in
+// 20260726180000_profiles_unique_habbo_username.sql turns a name clash into a
+// hard 23505, so namespacing is now mandatory rather than merely tidy: without
+// it the second worktree to seed "InvA" fails outright.
+const WORKTREES = {
+  duel: 'dl',
+  'party-invite': 'pi',
+  'profiles-unique': 'pu',
+  'test-infra': 'ti',
+  combat: 'cb',
+};
+const DIR = ROOT.replace(/[\\/]+$/, '').split(/[\\/]/).pop().toLowerCase();
+export const SLUG = process.env.HD_SLUG || WORKTREES[DIR] || 'hb';
+
+// Hyphen, never underscore: userByName matches with ILIKE, where _ is a
+// single-character WILDCARD — "pi_InvA" would also match "piXInvA".
+export const e2eName = (base) => `${SLUG}-${base}`;
+
+// Fixed per worktree, NOT an OS-assigned free port. partyInviteError reuses
+// persistent browser profiles to avoid burning anonymous sign-ins (Supabase
+// allows 30/hour per IP), and localStorage is scoped to origin INCLUDING PORT —
+// a shifting port silently yields a fresh unauthenticated session every run.
+// That cost real debugging time once: a probe on the wrong port read an empty
+// profiles table that was actually full, and the emptiness looked like data loss.
+const PORT_BASES = { dl: 8700, pi: 8800, pu: 8900, ti: 9000, cb: 9100 };
+export const PORT_BASE = Number(process.env.HD_PORT_BASE || PORT_BASES[SLUG] || 8600);
+export const portFor = (offset) => PORT_BASE + offset;
+
 export function findChromium() {
   const base = join(process.env.LOCALAPPDATA || '', 'ms-playwright');
   const candidates = [

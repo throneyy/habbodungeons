@@ -11,10 +11,10 @@ import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
-import { findChromium, startServer, makeChecker } from './lib.mjs';
+import { findChromium, startServer, makeChecker, portFor } from './lib.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const PORT = 8634;
+const PORT = portFor(34); // per-worktree base (lib.mjs), was 8634
 const RUN_MS = 70000; // > the requested 60s, with margin
 const POLL_MS = 2000;
 const { check, state } = makeChecker();

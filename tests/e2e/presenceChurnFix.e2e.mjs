@@ -28,9 +28,9 @@
 // emits the enter/left events the discrete handlers should have fired if
 // they didn't already. Run: node tests/e2e/presenceChurnFix.e2e.mjs
 import { chromium } from 'playwright-core';
-import { findChromium, startServer, makeChecker } from './lib.mjs';
+import { findChromium, startServer, makeChecker, portFor } from './lib.mjs';
 
-const PORT = 8653;
+const PORT = portFor(53); // per-worktree base (lib.mjs), was 8653
 const GAPS = [50, 100];
 const TRIALS_PER_GAP = 8;
 const { check, state } = makeChecker();
