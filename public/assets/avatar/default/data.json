@@ -1,0 +1,40 @@
+{
+ "figure": "hr-100-61.hd-180-1.ch-210-66.lg-270-82.sh-300-62",
+ "note": "Default Habbo look — local fallback avatar. Baked by tools/bake-default-avatar.mjs.",
+ "dirs": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7
+ ],
+ "sizes": {
+  "m": {
+   "file": "m.png",
+   "w": 64,
+   "h": 110
+  },
+  "s": {
+   "file": "s.png",
+   "w": 33,
+   "h": 56
+  }
+ },
+ "actions": {
+  "std": {
+   "row": 0,
+   "frames": 1
+  },
+  "sit": {
+   "row": 1,
+   "frames": 1
+  },
+  "wlk": {
+   "row": 2,
+   "frames": 4
+  }
+ }
+}

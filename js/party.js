@@ -4,13 +4,14 @@
 // Server truth lives in server/presence.js — this renders the `party`
 // roster broadcasts and sends invite/accept/decline/party-leave/disband.
 // The Invite entry point is the human infostand's button (humanInfostand.js).
-import { IMAGING_URL } from './config.js';
+import { IMAGING_URL, DEFAULT_FIGURE } from './config.js';
 
 const PARTY_MAX = 4;
 
+// A member with no figure shows the default Habbo's head, never an empty chip.
 function headUrl(figure) {
   const p = new URLSearchParams({
-    figure: figure || '',
+    figure: figure || DEFAULT_FIGURE,
     action: 'std',
     direction: '2',
     head_direction: '2',

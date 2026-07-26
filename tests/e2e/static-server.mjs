@@ -19,12 +19,25 @@ const TYPES = {
   '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.ico': 'image/x-icon',
 };
 
+// Vite serves public/ AT THE ROOT URL, so absolute asset paths the game uses
+// (/assets/monsters/…, /assets/avatar/default/…) live under public/ on disk.
+// Resolve the project root first, then public/, or the harness 404s on art the
+// real dev/prod server happily serves.
+const ROOTS = [ROOT, join(ROOT, 'public')];
+function resolve(p) {
+  for (const base of ROOTS) {
+    const full = normalize(join(base, p));
+    if (full.startsWith(base) && existsSync(full) && statSync(full).isFile()) return full;
+  }
+  return null;
+}
+
 http
   .createServer((req, res) => {
     let p = decodeURIComponent((req.url || '/').split('?')[0]);
     if (p === '/') p = '/index.html';
-    const full = normalize(join(ROOT, p));
-    if (!full.startsWith(ROOT) || !existsSync(full) || !statSync(full).isFile()) {
+    const full = resolve(p);
+    if (!full) {
       res.writeHead(404).end('not found');
       return;
     }

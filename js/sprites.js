@@ -1,4 +1,4 @@
-import { IMAGING_URL, WALK_FRAMES } from './config.js';
+import { IMAGING_URL, WALK_FRAMES, DEFAULT_FIGURE } from './config.js';
 import { weaponFor } from './classWeapons.js';
 
 // A full sprite set for one figure, rendered live by the official
@@ -19,7 +19,9 @@ import { weaponFor } from './classWeapons.js';
 // since bots never swing and a fighting avatar's hand is already spoken for.
 export class AvatarSprites {
   constructor(figure, size = 'm', classId = 'fighter', carry = null) {
-    this.figure = figure;
+    // An empty figure makes imaging render its own nonsense stand-in — ask for
+    // the default Habbo instead (js/config.js DEFAULT_FIGURE).
+    this.figure = figure || DEFAULT_FIGURE;
     this.size = size;
     this.classId = classId;
     this.weapon = weaponFor(classId);

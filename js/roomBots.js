@@ -15,7 +15,7 @@ import { avatarSpritesFor } from './sprites.js';
 import { botDef } from './botsData.js';
 import { chatterFor, modeOf } from './botChatter.js';
 import { tileToScreen } from './iso.js';
-import { IMAGING_URL } from './config.js';
+import { IMAGING_URL, DEFAULT_FIGURE } from './config.js';
 
 const HEAD_PX = { 1: 104, 0.5: 52 }; // name-tag anchor above the head, by zoom
 const BUBBLE_HEAD_PX = 104; // ChatOverlay.sayAs scales this by room.zoom itself
@@ -132,9 +132,9 @@ export class RoomBot extends Avatar {
     this.nextBark = chatterFor(def.key) ? 0 : Infinity;
     this.stats = null; // no HP bar (Game.drawUnit skips stat-less entities)
     this.bot = true; // picking flag: this unit is a room bot
-    // Game.drawToken is the fallback while the imaging PNGs are still loading
-    // (or offline); it reads unit.cls.color/name, which only Units carry, and
-    // a throw in there kills the whole render loop.
+    // Game.drawToken (the default-Habbo stand-in) covers a bot while its
+    // imaging PNGs load, or offline. It only reads unit.team, but other UI
+    // reaches for unit.cls, and a throw mid-render kills the whole loop.
     this.cls = { color: '#8a8a8a', name: 'Bot' };
   }
 }
@@ -467,7 +467,7 @@ export class RoomBots {
 // bot previews holding the same drink it holds in the room.
 export function avatarUrl(figure, dir = 4, size = 'm', carry = null) {
   const p = new URLSearchParams({
-    figure: figure || '',
+    figure: figure || DEFAULT_FIGURE, // never an empty figure — render the default Habbo
     action: carry == null ? 'std' : `crr=${carry}`,
     direction: String(dir),
     head_direction: String(dir),

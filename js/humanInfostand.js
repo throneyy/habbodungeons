@@ -4,15 +4,16 @@
 // (dir 4), motto line, then the action row — Invite to Party / Add Friend /
 // Trade (stubbed). Tapping any player in Free Roam opens it; tapping yourself
 // opens the self view (no invite).
-import { IMAGING_URL } from './config.js';
+import { IMAGING_URL, DEFAULT_FIGURE } from './config.js';
 import { isSupabase, invokeFn } from './backend.js';
 import { addFriend, isFriend } from './toolbarIcons.js';
 
 // full-body render, standing, facing the camera (dir 4) — the client's
-// room_obj_disp_avatar member
+// room_obj_disp_avatar member. A missing figure falls back to the default
+// Habbo, not to an empty frame (or imaging's nonsense-figure output).
 function avatarUrl(figure) {
   const p = new URLSearchParams({
-    figure: figure || '',
+    figure: figure || DEFAULT_FIGURE,
     action: 'std',
     direction: '4',
     head_direction: '4',
@@ -48,7 +49,7 @@ export class HumanInfostand {
       <div class="infostand-info">
         <div class="infostand-name"><span>${escapeHtml(player.name)}</span><button class="infostand-close" title="Close">&times;</button></div>
         <div class="infostand-preview infostand-preview--human">
-          ${player.figure ? `<img alt="${escapeHtml(player.name)}" src="${avatarUrl(player.figure)}" />` : ''}
+          <img alt="${escapeHtml(player.name)}" src="${avatarUrl(player.figure)}" />
         </div>
         <div class="infostand-desc infostand-motto">${player.self ? 'This is you!' : '&nbsp;'}</div>
       </div>

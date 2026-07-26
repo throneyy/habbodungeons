@@ -2,6 +2,16 @@ import { TILE_W, TILE_H, Z_STEP, TILE_THICKNESS, AVATAR_FOOT_PAD, WALK_FRAME_MS 
 import { tileToScreen, pointInDiamond } from './iso.js';
 import { propSprites } from './props.js';
 import { relaxDrawDepths } from './depth.js';
+import { defaultAvatar } from './defaultAvatar.js';
+
+// The offline/still-loading stand-in is the default Habbo (js/defaultAvatar.js):
+// fetched once, from local art, the moment the renderer module loads.
+defaultAvatar.load();
+
+// Fallback-only recolour so an unrendered enemy still reads as hostile instead
+// of joining a crowd of identical newbies. Multiplied over the baked art, the
+// way the client recolours: shading survives, the hue doesn't.
+const ENEMY_TINT = '#e0736a';
 
 const COLORS = {
   topA: '#7c7364',
@@ -752,7 +762,7 @@ export class Game {
       const pad = AVATAR_FOOT_PAD[sp.size] || 0;
       ctx.drawImage(fr, Math.round(c.x - fr.width / 2), Math.round(c.y - fr.height + pad - sitLift));
     } else {
-      this.drawToken(unit, c, zoom);
+      this.drawToken(unit, c, zoom, act, tick, sitLift);
     }
     // Three-pass seat rendering: the seat's front cutout (armrests, throne
     // fronts, away-facing backrests — the layers the furni's visualization
@@ -837,33 +847,23 @@ export class Game {
     ctx.restore();
   }
 
-  // Placeholder combatant chip (enemies, and players until sprites load).
-  drawToken(unit, c, zoom) {
-    const { ctx } = this;
-    const s = zoom;
-    const bodyH = 30 * s;
-    const w = 18 * s;
-    const teamRing = unit.team === 'enemy' ? '#c0392b' : '#2d7dd2';
-    ctx.fillStyle = unit.cls.color;
-    roundRect(ctx, c.x - w / 2, c.y - bodyH, w, bodyH - 4 * s, 5 * s);
-    ctx.fill();
-    ctx.lineWidth = 2 * s;
-    ctx.strokeStyle = teamRing;
-    ctx.stroke();
-    // head
-    ctx.beginPath();
-    ctx.arc(c.x, c.y - bodyH - 2 * s, 7 * s, 0, Math.PI * 2);
-    ctx.fillStyle = '#f2d7b8';
-    ctx.fill();
-    ctx.lineWidth = 1.5 * s;
-    ctx.strokeStyle = teamRing;
-    ctx.stroke();
-    // class initial
-    ctx.fillStyle = 'rgba(0,0,0,0.75)';
-    ctx.font = `bold ${11 * s}px Tahoma`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(unit.cls.name[0], c.x, c.y - bodyH / 2 - 2 * s);
+  // Fallback avatar for anyone whose own art isn't up yet (or never will be:
+  // offline, dead proxy, a remote member with no figure). It is the default
+  // Habbo — baked local frames drawn exactly like a live habbo-imaging PNG:
+  // centred on the tile, bottom edge lifted by the foot pad, 1:1 pixels (the
+  // 's' sheet in half-scale rooms) so it never blurs or scales off-grid.
+  drawToken(unit, c, zoom, act = 'std', tick = 0, sitLift = 0) {
+    const size = zoom < 1 ? 's' : 'm';
+    const tint = unit.team === 'enemy' ? ENEMY_TINT : null;
+    const fr = defaultAvatar.get(act, unit.dir, tick, size, tint);
+    if (!fr || !fr.img) return; // sheets still loading — the shadow holds the tile
+    const pad = AVATAR_FOOT_PAD[size] || 0;
+    this.ctx.drawImage(
+      fr.img, fr.x, fr.y, fr.w, fr.h,
+      Math.round(c.x - fr.w / 2),
+      Math.round(c.y - fr.h + pad - sitLift),
+      fr.w, fr.h
+    );
   }
 
   drawHpBar(unit, c, zoom) {
@@ -899,16 +899,6 @@ export class Game {
       ctx.stroke();
     }
   }
-}
-
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
 }
 
 function shade(hex, amt) {

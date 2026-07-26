@@ -35,8 +35,26 @@ export const IMAGING_URL = isSupabase() ? `${functionsBase()}/habbo-imaging` : '
 // function instead — see js/habboApi.js / js/humanInfostand.js.
 export const ORIGINS_API = '/api/origins';
 
-// A real Origins figure (used until the player loads their own character).
-export const DEFAULT_FIGURE = 'hr-125-1104.hd-190-1026.ch-260-1314.lg-280-1189.sh-295-62';
+// THE default Habbo — the look every account starts as in the hotel: short
+// black hair (hr-100-61), standard head (hd-180-1), mustard sweater
+// (ch-210-66), blue jeans (lg-270-82), plain shoes (sh-300-62). Used wherever
+// a figure is missing (before the player links a character, a remote member
+// who arrived without one, the offline sprite fallback) so an unknown avatar
+// reads as "a Habbo" and never as an invented mascot.
+//
+// SHOES ARE sh-300, NOT the sh-290 that every retro dev tool (Minerva,
+// Avatara, the old CMS configs) ships in its default-look sample. On today's
+// habbo-imaging, sh-290's STANDING sprite is a studded boot: its bottom pixel
+// row renders as three separated nubs (`##..##..##`) under the sole — soccer
+// cleats. Its walking and sitting sprites are the plain-soled shoe (`####`),
+// so the cleats only show while an avatar stands still, which is most of the
+// time. sh-300 is the same plain shoe silhouette with a solid sole in every
+// pose and direction. tools/bake-default-avatar.mjs asserts this (see its
+// stud check) so a future figure edit can't quietly put the cleats back.
+//
+// This exact string is baked into public/assets/avatar/default/ by
+// tools/bake-default-avatar.mjs — re-run the baker if it ever changes.
+export const DEFAULT_FIGURE = 'hr-100-61.hd-180-1.ch-210-66.lg-270-82.sh-300-62';
 
 // habbo-imaging PNGs have a little transparent padding below the feet;
 // this nudges the sprite so the feet sit on the tile centre. Tuned visually.
