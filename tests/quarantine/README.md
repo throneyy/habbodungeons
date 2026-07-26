@@ -1,6 +1,6 @@
 # Quarantined test suites
 
-These four suites are **recovered code that does not pass**. They run via
+These three suites are **recovered code that does not pass**. They run via
 `npm run test:quarantine`, which reports failures but **always exits 0**, so a
 suite in here can never block a commit or a green `npm test`.
 
@@ -23,8 +23,9 @@ in this tree at all — so it documented five suites that had never been here.
 The vanilla suites survived only as **unreachable stash objects** (`c4000eb`,
 `284ba17` — "WIP on main", 25 Jul 03:15), recoverable but referenced by no
 branch, and would have been destroyed by the next `git gc`. All eight were
-recovered from `c4000eb`. Four passed clean and now live in `tests/`; these four
-did not.
+recovered from `c4000eb`. Four passed clean and went straight into `tests/`;
+`battle` has since been promoted after its one stale assertion was retired,
+leaving these three.
 
 They were recovered verbatim apart from the depth fix the move required:
 `'../js/…'` became `'../../js/…'`, and the two computed
@@ -33,16 +34,6 @@ assertion was altered — a quarantined suite is only worth keeping if it still
 says what it originally said.
 
 ## Why each one is quarantined
-
-### `battle.test.js` — 34 pass, 1 stale assertion
-`ranger cannot hit adjacent (min range 2)` contradicts shipped behaviour.
-Commit `9d6f0e4` deliberately gave the ranger a close-range dagger to plug the
-range-1 dead zone, and shipped `tests/rangerCloseRange.test.js` as the
-replacement coverage. **The assertion is wrong, not the code.**
-
-*To promote:* delete that one assertion (its intent now lives in
-`rangerCloseRange.test.js`) and move the file into `tests/`. This is the closest
-of the four to being green.
 
 ### `gimmicks.test.js` — 43 pass, 1 failure
 `kit floor art exists in the props library` reads
