@@ -26,6 +26,13 @@ export class Battle {
     // Victory/defeat condition — DATA from the battle node (js/dungeon.js),
     // engine stays generic. Default 'eliminate' preserves M1–M4 behaviour.
     this.objective = normalizeObjective(opts.objective);
+    // Who drives the enemy phase. Normally js/ai.js does (every dungeon
+    // battle). A DUEL passes false: the 'enemy' team is the other PLAYER, so
+    // the phase must sit and wait for their relayed command instead of
+    // planning one (js/duelBattle.js closes it via endEnemyPhase). This is the
+    // engine's ONLY notion of PvP — it still just sees 'player' vs 'enemy',
+    // with no second code path through any of the combat maths.
+    this.enemyAi = opts.enemyAi !== false;
     this._ended = false;
     this._enemy = null; // enemy-phase progress state
     this.startPlayerPhase();
@@ -277,15 +284,33 @@ export class Battle {
     return this.livingPlayers().every((u) => u.done);
   }
 
+  allEnemiesDone() {
+    return this.livingEnemies().every((u) => u.done);
+  }
+
   endPlayerPhase() {
     if (this.phase !== 'player') return;
     this.applyEndTurnHazards('player'); // standing in fire bites as your phase closes
     if (this.phase !== 'player') return; // ...and may end the battle outright
     this.phase = 'enemy';
     this.livingEnemies().forEach((u) => u.resetTurn());
-    this._enemy = { queue: this.livingEnemies().slice(), current: null, state: 'idle', until: 0 };
+    // No AI ticker in a duel: the phase belongs to the other player, and the
+    // only thing that can move a unit in it is a command they send.
+    this._enemy = this.enemyAi
+      ? { queue: this.livingEnemies().slice(), current: null, state: 'idle', until: 0 }
+      : null;
     this.logMsg('— Enemy phase —');
     this.onChange();
+  }
+
+  // Close an enemy phase nobody's AI ran (duels). Same boundary work
+  // tickEnemyPhase does when its queue empties: burn, then hand back.
+  endEnemyPhase() {
+    if (this.phase !== 'enemy') return;
+    this.applyEndTurnHazards('enemy');
+    if (this.phase !== 'enemy') return; // the burn may have ended it
+    this.turn++;
+    this.startPlayerPhase();
   }
 
   // ------------------------------------------------------------- tile effects
@@ -466,7 +491,7 @@ export class Battle {
   // Called every render frame. Advances the enemy phase; player movement is
   // driven by each Unit's own Avatar.update (called by the renderer).
   update(now) {
-    if (this.phase === 'enemy') this.tickEnemyPhase(now);
+    if (this.phase === 'enemy' && this.enemyAi) this.tickEnemyPhase(now);
   }
 
   tickEnemyPhase(now) {

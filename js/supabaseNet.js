@@ -174,6 +174,13 @@ export class SupabaseNet {
   }
 
   _onPartyEvent(event, payload) {
+    this._onRelayed(event, payload);
+  }
+
+  // Point-to-point frames on a shared channel: drop our own echo and anything
+  // addressed to somebody else. (broadcast self:false already suppresses the
+  // echo; the name check makes it true regardless of channel config.)
+  _onRelayed(event, payload) {
     if (!payload) return;
     if (payload.from && payload.from === this.name) return; // never echo to self
     if (payload.to && payload.to !== this.name) return; // targeted at someone else
@@ -200,6 +207,13 @@ export class SupabaseNet {
     ch.on('broadcast', { event: 'moved' }, ({ payload }) => this.emit('moved', payload));
     ch.on('broadcast', { event: 'chatted' }, ({ payload }) => this.emit('chatted', payload));
     ch.on('broadcast', { event: 'struck' }, ({ payload }) => this.emit('struck', payload));
+    // The duel battle stream (js/duelBattle.js). It rides the ROOM channel,
+    // not the user:<id> mailbox, because realtime.messages' write policy only
+    // admits `room:%` and `party:%` topics — a client POST to a user: topic is
+    // answered 202 and then silently dropped by RLS. Duellists are always
+    // room-mates (duelFlow.ts enforces it at challenge AND at accept), so the
+    // room channel is both permitted and exactly the right scope.
+    ch.on('broadcast', { event: 'duel-relay' }, ({ payload }) => this._onRelayed('duel-relay', payload));
     ch.subscribe(async (status) => {
       if (status !== 'SUBSCRIBED') return;
       await ch.track({ name: this.name, figure: this.figure, classId: this.classId, ...this.pos });
@@ -385,6 +399,16 @@ export class SupabaseNet {
   async send(msg) {
     if (!this.active || !msg || typeof msg.t !== 'string') return;
     const t = msg.t;
+    // The duel battle stream rides the room channel (both duellists are in it).
+    if (t === 'duel-relay') {
+      if (!this.roomChannel) return;
+      this.roomChannel.send({
+        type: 'broadcast',
+        event: t,
+        payload: { ...msg, t, from: this.name },
+      });
+      return;
+    }
     // Co-op relay rides the party broadcast channel directly (leader-relay).
     if (t === 'descend' || t === 'descend-ack' || t === 'relay') {
       if (!this.partyChannel) return;

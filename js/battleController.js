@@ -46,6 +46,9 @@ export class BattleController {
     for (const u of [...players, ...enemies]) this.game.addUnit(u);
     this.battle = new Battle(room, [...players, ...enemies], {
       objective: opts.objective,
+      // duels pass false: the enemy team is the other player, so js/ai.js
+      // must never plan its phase (js/duelBattle.js)
+      enemyAi: opts.enemyAi,
       onChange: () => this.render(),
       onLog: (m) => this.appendLog(m),
       onEnd: opts.onEnd || (() => {}),

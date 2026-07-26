@@ -36,6 +36,7 @@ import { RemotePlayers } from './remotePlayers.js';
 import { HumanInfostand } from './humanInfostand.js';
 import { PartyUI } from './party.js';
 import { CoopLeader, CoopMember } from './coopBattle.js';
+import { DuelHost, DuelGuest, hostsDuel } from './duelBattle.js';
 import { TradeUI } from './tradeWindow.js';
 import { DuelUI } from './duelWindow.js';
 import { showRoomDiscovery } from './roomBanner.js';
@@ -1466,6 +1467,8 @@ const duelUI = new DuelUI(net, () => (Identity.get() || {}).name || ''); // the 
 infostand.onDuel = (name) => duelUI.ask(name);
 // One challenge at a time, and never mid-trade (the server enforces both too).
 infostand.canDuel = () => duelUI.canDuel() && !tradeUI.open;
+// GO! landed on both screens off one server anchor: boot the arena.
+duelUI.onReady = (state) => startDuel(state);
 
 // ---- co-op descents ---------------------------------------------------------
 // Leader: hosts the run — CoopLeader streams the battle to the party.
@@ -1560,6 +1563,100 @@ function showCoopEnd(reason, share) {
       <div class="camp-actions"><button id="coopDone" class="hd-btn hd-btn--green">Back to the square ▸</button></div>
     </div>`;
   $('coopDone').addEventListener('click', () => {
+    unskinOverlay();
+    startExplore();
+  });
+}
+
+// ---- PvP duels --------------------------------------------------------------
+// The handshake (js/duelWindow.js) lands both clients in 'ready' at the same
+// server instant; from there the CHALLENGER hosts. The host runs one ordinary
+// Battle with its own unit on team 'player' and the guest's on team 'enemy'
+// (js/battle.js never learns this is PvP), and the guest replays that stream
+// and sends commands for the unit it owns. See js/duelBattle.js.
+let duelHost = null;
+let duelGuest = null;
+const battleDom = () => ({ banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log') });
+
+// My duellist: the calling I'm playing, my Habbo figure, and my run leader's
+// level when I have a save (so a duel is fought by the hero I've been playing).
+function myDuellist() {
+  const r = Run.hasSave() ? Run.load(buildDungeon) : null;
+  const leader = r && (r.squad.find((m) => m.leader) || r.squad[0]);
+  return {
+    name: myName(),
+    classId: Identity.classId() || 'fighter',
+    figure,
+    level: leader ? leader.level : 1,
+  };
+}
+
+function duelScreen() {
+  hideAll();
+  startRunChrome();
+  panel.classList.remove('hidden');
+  showRoomDiscovery('The Duelling Ground');
+}
+
+function startDuel(state) {
+  if (duelHost || duelGuest) return; // one duel at a time
+  duelUI.close(); // the countdown window has said its piece
+  // Stay in the room channel: the duel stream rides it (and we are still
+  // standing in that room as far as everyone else is concerned).
+  leaveExplore({ keepRoom: true });
+  hideAll();
+  const me = myDuellist();
+  if (hostsDuel(state)) {
+    duelHost = new DuelHost(net, myName, state.opponent);
+    duelHost.onBoot = () => duelScreen();
+    duelHost.onDuelEnd = (result) =>
+      setTimeout(
+        () => endDuel(result === 'won' ? 'You win the duel!' : `${state.opponent} wins the duel.`),
+        1200
+      );
+    game.setController(battle); // bc.start() builds the arena into the renderer
+    duelHost.arm({ bc: battle, me });
+    return;
+  }
+  duelGuest = new DuelGuest(net, game, battleDom(), myName);
+  duelGuest.activate(state.opponent, {
+    waiting: (html) => {
+      hideAll();
+      overlay.classList.remove('hidden');
+      skinOverlay();
+      overlay.innerHTML = `
+        <div class="hd-landing" style="width:min(560px,96vw)">
+          <div class="hd-card">
+            <div class="hd-card-header">Duel</div>
+            <div class="hd-card-body"><p style="margin:0">${html}</p></div>
+          </div>
+        </div>`;
+    },
+    battleReady: () => duelScreen(),
+    exit: (reason) => endDuel(reason),
+  }, me);
+}
+
+// Duel over (a KO, or the connection): tear both roles down and walk back out
+// into the square.
+function endDuel(reason) {
+  if (duelHost) duelHost.end();
+  if (duelGuest) duelGuest.deactivate();
+  duelHost = null;
+  duelGuest = null;
+  leaveRunChrome();
+  hideAll();
+  overlay.classList.remove('hidden');
+  skinOverlay();
+  overlay.innerHTML = `
+    <div class="hd-landing" style="width:min(560px,96vw)">
+      <div class="hd-card">
+        <div class="hd-card-header">Duel</div>
+        <div class="hd-card-body"><p style="margin:0">${reason}</p></div>
+      </div>
+      <div class="camp-actions"><button id="duelDone" class="hd-btn hd-btn--green">Back to the square ▸</button></div>
+    </div>`;
+  $('duelDone').addEventListener('click', () => {
     unskinOverlay();
     startExplore();
   });
@@ -1789,13 +1886,19 @@ function seedBag() {
 
 // Tear down explore-session chrome (chat, music, editor) before leaving the
 // room world for an overlay flow (a gate, the debug menu).
-function leaveExplore() {
+//
+// `keepRoom` holds the room channel (and this player's presence row) open:
+// a duel is fought IN the room it was thrown in, and its battle stream rides
+// that very channel (js/duelBattle.js), so dropping it would cut the duel off
+// mid-countdown. It also skips duelUI.detach(), which would send duel-cancel
+// and call the duel off on the way into it.
+function leaveExplore({ keepRoom = false } = {}) {
   infostand.close();
   tradeUI.detach();
-  duelUI.detach();
+  if (!keepRoom) duelUI.detach();
   party.detach();
   remote.detach();
-  net.leaveRoom();
+  if (!keepRoom) net.leaveRoom();
   updateMpStatus();
   if (furniCat) furniCat.close();
   if (botCat) botCat.close();

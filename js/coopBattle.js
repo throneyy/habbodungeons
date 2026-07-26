@@ -47,9 +47,21 @@ export class CoopLeader {
     this.lastStart = null; // re-sent to rejoining members
     this.phaseStartedAt = 0;
     this.turnTimeoutMs = TURN_TIMEOUT_MS; // overridable (tests dial it down)
+    // Does an idle player's unit get auto-acted by the companion AI? True for
+    // co-op (a battle must never stall on someone who wandered off). A DUEL
+    // sets it false: nothing may ever act for a duellist (js/duelBattle.js).
+    this.autoAct = true;
     this.timer = null;
     this.confirmTimer = null;
-    this.unsubs = [
+    this.unsubs = this.subscribe();
+  }
+
+  // The net events this authority listens on. Split out so a subclass can
+  // ride a different transport with the same brain: the duel host takes the
+  // room channel's `duel-relay` instead of the party stream.
+  subscribe() {
+    const net = this.net;
+    return [
       net.on('descend-ack', (m) => this.onAck(m)),
       net.on('relay', (m) => this.onRelay(m)),
       net.on('party', (m) => this.onPartyChange(m)),
@@ -275,16 +287,33 @@ export class CoopLeader {
     }
   }
 
+  // Which units a remote client may ever command. Co-op: the player squad
+  // only — the enemy team is this client's AI and is nobody else's to move.
+  commandable(unit) {
+    return unit.team === 'player';
+  }
+
+  // The phase a unit's owner may act in. Co-op commands only ever land in the
+  // player phase; in a duel the guest's unit is team 'enemy' and acts in the
+  // enemy phase, which is the whole reason this is a lookup and not a literal.
+  phaseFor(unit) {
+    return 'player';
+  }
+
   // Validate + execute one member command against the live engine.
   handleCommand(from, cmd) {
     const b = this.battle;
-    if (!b || b.phase !== 'player') return this.reject(from, 'not your phase');
+    if (!b) return this.reject(from, 'not your phase');
     const unit = this.byCid.get(cmd.cid);
-    if (!unit || !unit.alive || unit.team !== 'player') return this.reject(from, 'no such unit');
+    if (!unit || !unit.alive || !this.commandable(unit)) return this.reject(from, 'no such unit');
+    // Ownership before phase: both gates can be shut at once (a duellist
+    // reaching for the OTHER player's unit is also reaching outside their
+    // phase), and "not your unit" is the refusal that names what happened.
     const own = this.owners.get(unit.id);
     if (!own || !own.owner || own.owner.toLowerCase() !== String(from).toLowerCase()) {
       return this.reject(from, 'not your unit');
     }
+    if (b.phase !== this.phaseFor(unit)) return this.reject(from, 'not your phase');
     if (unit.acted) return this.reject(from, 'unit already acted');
 
     if (cmd.type === 'move') {
@@ -323,6 +352,10 @@ export class CoopLeader {
   afterCommand() {
     const b = this.battle;
     if (b.phase === 'player' && b.allPlayersDone()) b.endPlayerPhase();
+    // A duel's enemy phase has no AI ticker to notice it is over (battle.js
+    // enemyAi:false), so the authority closes it the same way it closes the
+    // player phase: when every living unit of that team is done.
+    else if (b.phase === 'enemy' && !b.enemyAi && b.allEnemiesDone()) b.endEnemyPhase();
     if (this.bc) {
       this.bc.refreshOverlays();
       this.bc.render();
@@ -349,7 +382,7 @@ export class CoopLeader {
       this.afterCommand();
     }
     // 60s idle members: the companion AI acts their unit so nothing stalls
-    if (b.phase === 'player' && performance.now() - this.phaseStartedAt > this.turnTimeoutMs) {
+    if (this.autoAct && b.phase === 'player' && performance.now() - this.phaseStartedAt > this.turnTimeoutMs) {
       const idle = [...this.byCid.values()].find(
         (u) => u.team === 'player' && u.alive && !u.done && this.ownedByMember(u) && !this.pendingMoves.has(u)
       );
@@ -487,8 +520,21 @@ export class SpectateController {
     return this.member.myUnits();
   }
 
+  // The team this client's own units sit on, and therefore the phase it may
+  // command in — the two share a name in the engine ('player' / 'enemy').
+  // Co-op members always play the player team. A DUEL guest's own unit is the
+  // host's team-'enemy' unit, which this client renders as its own: same
+  // engine, same phase names, opposite seat (js/duelBattle.js).
+  get myTeam() {
+    return 'player';
+  }
+
+  get foeTeam() {
+    return this.myTeam === 'player' ? 'enemy' : 'player';
+  }
+
   get commanding() {
-    return this.member.shadow && this.member.shadow.phase === 'player';
+    return this.member.shadow && this.member.shadow.phase === this.myTeam;
   }
 
   onTap(tile) {
@@ -518,7 +564,7 @@ export class SpectateController {
       return;
     }
 
-    if (here && here.team === 'enemy' && this.game.overlays.target.has(k)) {
+    if (here && here.team === this.foeTeam && this.game.overlays.target.has(k)) {
       this.member.sendCommand({ type: 'attack', cid: this.member.cidOf(this.sel), target: this.member.cidOf(here) });
       this.sel.acted = true; // optimistic; the phase snapshot is the truth
       this.deselect();

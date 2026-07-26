@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 13 unit suites below (454 checks) — must pass
+npm test                 # all 14 unit suites below (517 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 9 e2e suites (8 real Chromium + the duel DB stack)
 ```
@@ -140,6 +140,7 @@ node tests/battle.test.js              # damage math, line of sight, targeting, 
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (75 checks)
 node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, clock skew (95 checks)
+node tests/duelBattle.test.js           # duel battle: host authority, phase ownership, never any AI (63 checks)
 node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
 node tests/dailyReward.test.js         # daily-wheel streaks, claim windows, payout table (23 checks)
 node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead zone (13 checks)

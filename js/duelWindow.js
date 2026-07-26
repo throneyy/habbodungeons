@@ -23,6 +23,11 @@ export class DuelUI {
     this.state = null; // last duel-state frame
     this.skew = null; // ms to add to Date.now() for server time (see onState)
     this.timer = null; // countdown repaint loop
+    // Fired ONCE when the countdown lands in 'ready' — main.js boots the
+    // battle from there (js/duelBattle.js). Both clients reach this off the
+    // same server anchor, so both boot at the same instant.
+    this.onReady = null;
+    this.readyFired = false;
     this.unsubs = [
       net.on('duel-asked', (m) => this.showAsk(m.from)),
       net.on('duel-state', (m) => this.onState(m)),
@@ -132,6 +137,7 @@ export class DuelUI {
     this.el = null;
     this.state = null;
     this.skew = null; // the next duel measures its own offset
+    this.readyFired = false;
   }
 
   // ------------------------------------------------------------ the window
@@ -183,7 +189,7 @@ export class DuelUI {
     if (p.phase === 'ready') {
       status.textContent = `Duel ready — ${st.opponent} is facing you.`;
       status.className = 'duel-status lock';
-      this.stopClock(); // the clock has nothing left to say until combat exists
+      this.stopClock(); // the clock has nothing left to say: combat takes over
     } else {
       status.textContent = p.phase === 'go' ? 'GO!' : 'Get ready...';
       status.className = 'duel-status';
@@ -196,6 +202,15 @@ export class DuelUI {
     b.textContent = 'Cancel';
     b.onclick = () => this.cancel();
     actions.appendChild(b);
+
+    // LAST, once this window is fully painted and needs nothing more from
+    // itself: the handler boots the arena and closes this window (close()
+    // nulls this.el), so anything after it would be reaching into a window
+    // that no longer exists.
+    if (p.phase === 'ready' && !this.readyFired) {
+      this.readyFired = true;
+      if (this.onReady) this.onReady(st);
+    }
   }
 
   // Session teardown (leaving explore) — walking away calls it off server-side.
