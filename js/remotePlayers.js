@@ -170,6 +170,17 @@ export class RemotePlayers {
 
   // Wrap the local explore unit so every accepted walk reports its
   // destination once (walkTo is the single choke point for explore moves).
+  //
+  // Also broadcasts the unit's ACTUAL spawn tile right away, rather than
+  // waiting for its first voluntary step: SupabaseNet.pos starts at its
+  // class default (0,0) and is only ever updated by move(), so anyone who
+  // joins a room and just stands there — even for the brief window before
+  // their first walk — was presence-broadcasting world tile (0,0) to every
+  // other client. In a room where (0,0) sits behind scene geometry, that
+  // reads as a name tag with no visible body: the avatar is legitimately
+  // depth-occluded by a prop at the wrong, never-updated position, while the
+  // DOM name tag (never depth-tested) stays fully visible regardless.
+  // Confirmed live via tests/e2e/depthOcclusionConfirm.e2e.mjs.
   bindLocalUnit(unit) {
     if (!unit || unit._netBound) return;
     unit._netBound = true;
@@ -179,6 +190,7 @@ export class RemotePlayers {
       if (ok) this.net.move(x, y);
       return ok;
     };
+    this.net.move(unit.x, unit.y); // real spawn tile, not the (0,0) default
   }
 
   // Called from the explore controller's frame update: keep name tags glued

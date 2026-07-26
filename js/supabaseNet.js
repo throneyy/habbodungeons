@@ -235,8 +235,27 @@ export class SupabaseNet {
   }
 
   move(x, y) {
-    if (!this.room) return;
+    // Update this.pos BEFORE the room check (only the network broadcast below
+    // needs an active room). Without this, a caller that sets the local
+    // player's true spawn position (RemotePlayers.bindLocalUnit, called right
+    // after game.addUnit but not guaranteed to run after join() sets
+    // this.room — see main.js's room-switch handler, which calls
+    // game.setRoom() BEFORE net.join()) would have its update silently
+    // dropped, leaving this.pos stuck at the constructor default
+    // { x: 0, y: 0 }. The next join()'s subscribe callback spreads this.pos
+    // into the channel's presence payload, so it then broadcasts world tile
+    // (0,0) to every other client as this player's position — which, in a
+    // room where (0,0) sits behind scene geometry
+    // (a building, wall, etc.), depth-occludes the avatar on the canvas
+    // while the player's DOM name tag (js/remotePlayers.js, never
+    // depth-tested against props) still renders fully visible: a floating
+    // tag with no visible body. Confirmed live via
+    // tests/e2e/depthOcclusionConfirm.e2e.mjs. Every room-join now always
+    // broadcasts the caller's REAL position immediately (see
+    // RemotePlayers.bindLocalUnit), so nobody is ever represented at the
+    // stale (0,0) default once they actually have a spawn tile.
     this.pos = { x, y, dir: this.pos.dir };
+    if (!this.room) return;
     if (this.roomChannel) {
       this.roomChannel.send({ type: 'broadcast', event: 'moved', payload: { name: this.name, x, y } });
     }
