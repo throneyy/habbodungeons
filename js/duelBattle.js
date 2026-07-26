@@ -398,7 +398,14 @@ export class DuelHost extends CoopLeader {
     const theirs = duelUnit(view, { ...hello, ...spots[1], name: this.opponent, owner: this.opponent }, 1);
     const battle = this.bc.start(view, [mine], [theirs], {
       enemyAi: false, // the enemy phase belongs to a person, not to js/ai.js
-      objective: { type: 'eliminate' },
+      // 'eliminate' is the right RULE (drop the other side) with the wrong
+      // WORDS for a duel, and the objective line reaches the log — which the
+      // start frame replays onto the guest's screen too.
+      objective: {
+        type: 'eliminate',
+        text: `Duel vs ${this.opponent}`,
+        doneText: 'The duel is decided.',
+      },
       inPlace: true, // fight in the live room: do NOT rebuild the scene
       duel: { opponent: this.opponent },
       onEnd: (result) => this.onDuelEnd && this.onDuelEnd(result),
@@ -618,7 +625,14 @@ export class DuelGuest extends CoopMember {
     this.duelUnits = units;
     // Query-only engine over the same units: legality hints and banner text.
     // enemyAi:false here too, so nothing on this screen can ever plan a turn.
-    this.shadow = new Battle(room, units, { enemyAi: false, objective: { type: 'eliminate' } });
+    this.shadow = new Battle(room, units, {
+      enemyAi: false,
+      objective: {
+        type: 'eliminate',
+        text: `Duel vs ${this.leaderName}`,
+        doneText: 'The duel is decided.',
+      },
+    });
     if (this.dom.log) this.dom.log.innerHTML = '';
     for (const line of d.log || []) this.controller.appendLog(line);
     if (this.ui.battleReady) this.ui.battleReady(live.name);

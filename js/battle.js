@@ -458,6 +458,12 @@ export class Battle {
   // Human-readable objective, with live progress. `done` = past-tense summary.
   objectiveText(done = false) {
     const o = this.objective;
+    // A caller may supply its own wording for both states. Used by duels, where
+    // "Defeat all enemies" is dungeon-speak aimed at a person — the same defect
+    // already fixed in the banner and the roster, and it reached the LOG too
+    // (and through it the guest's screen, since the start frame replays the
+    // host's log). Data, not a branch: the engine still has no notion of PvP.
+    if (o.text) return done ? (o.doneText || o.text) : o.text;
     const left = Math.max(0, o.turns - (this.turn - 1)); // turns still to hold
     const plural = (n) => (n === 1 ? '' : 's');
     switch (o.type) {

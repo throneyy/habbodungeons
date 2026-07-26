@@ -67,8 +67,12 @@ const WATCHER = 'throney';
 // is open in the source can be blocked live: (9,11) reads walkable in
 // buildRooms([]) and is solid on the real square. Hardcoding one tile makes the
 // suite fail for a furniture change that has nothing to do with duels.
+// The duellists start APART now, not side by side. placeDuellists no longer
+// drags them together (it only un-stacks and un-blocks), so the gap survives
+// into the fight and somebody has to walk — which is the point: a ranger
+// should be able to shoot across it, and a fighter should have to close it.
 const TILES = {
-  A: [{ x: 6, y: 8 }, { x: 6, y: 9 }, { x: 5, y: 8 }],
+  A: [{ x: 3, y: 8 }, { x: 3, y: 9 }, { x: 4, y: 8 }],
   B: [{ x: 7, y: 8 }, { x: 7, y: 9 }, { x: 6, y: 8 }],
   C: [{ x: 4, y: 11 }, { x: 10, y: 9 }, { x: 9, y: 9 }, { x: 4, y: 10 }],
   D: [{ x: 9, y: 9 }, { x: 10, y: 9 }, { x: 4, y: 10 }, { x: 4, y: 11 }],
@@ -100,23 +104,33 @@ const beat = (what) => {
   console.log(`  ▶ [${hh}:${mm}:${ss}.${ms}  +${el}s]  ${what}`);
 };
 
-async function openPlayer(port, name) {
+async function openPlayer(port, name, build = {}) {
+  // A duellist is the player's ACTUAL character, so the two fighters are
+  // deliberately different: a ranger who has ground out an Origins tree skill
+  // and is carrying gear, against a plain melee fighter. Two fighters standing
+  // adjacent proved almost nothing about the engine — this exercises reach,
+  // walking, equipment stats and a real unlocked skill.
   const identity = {
     name,
     figure: 'hd-180-1.ch-255-66.lg-280-110.sh-305-62',
     uniqueId: `e2e-${name.toLowerCase()}`,
     verifiedAt: new Date().toISOString(),
-    classId: 'fighter',
+    classId: build.classId || 'fighter',
+    // What Identity.unlockedSkills() reads. 'net' is Fishing 5 — a damage +
+    // root skill with range 3, so it is castable without closing.
+    unlockedSkills: build.skillIds || [],
+    fishingLevel: build.fishingLevel || 0,
+    gardeningLevel: build.gardeningLevel || 0,
   };
   const context = await chromium.launchPersistentContext(join(PROFILE_DIR, name), {
     executablePath: exe,
     headless: true,
     viewport: { width: 1100, height: 750 },
   });
-  await context.addInitScript((id) => {
-    localStorage.setItem('habbo-dungeons-identity', JSON.stringify(id));
-    localStorage.setItem('habbo-dungeons-char', JSON.stringify({ name: id.name, figure: id.figure }));
-  }, identity);
+  await context.addInitScript((seed) => {
+    localStorage.setItem('habbo-dungeons-identity', JSON.stringify(seed.id));
+    localStorage.setItem('habbo-dungeons-char', JSON.stringify({ name: seed.id.name, figure: seed.id.figure }));
+  }, { id: identity });
   const page = context.pages()[0] || await context.newPage();
   const logs = [];
   page.on('console', (m) => logs.push(m.text()));
@@ -254,6 +268,10 @@ const rendered = (p) => p.evaluate(() => {
       name: u.name, team: u.team, x: u.x, y: u.y,
       hp: u.stats ? u.stats.hp : null, maxHp: u.stats ? u.stats.maxHp : null,
       level: u.level, classId: u.classId,
+      // the character that travelled: reach, and the unlocked tree skills
+      range: u.stats ? u.stats.range : null,
+      atk: u.stats ? u.stats.atk : null,
+      skills: (u.skills || []).map((s) => s.id),
     })) : [],
   };
 });
@@ -262,7 +280,7 @@ const rendered = (p) => p.evaluate(() => {
 // Fighters are move 4 / range 1. In place they start adjacent, so the attack is
 // usually reachable at once; the move half stays in for the cases where the
 // placement rule had to separate them.
-const takeTurn = (p) => p.evaluate(async () => {
+const takeTurn = (p, opts = {}) => p.evaluate(async (o) => {
   const c = window.game.controller;
   const isGuest = typeof c.myUnits === 'function';
   const b = isGuest ? c.shadow : c.battle;
@@ -274,6 +292,9 @@ const takeTurn = (p) => p.evaluate(async () => {
   if (b.phase !== myTeam) return { err: `not my phase (phase=${b.phase}, mine=${myTeam})` };
 
   const nap = (ms) => new Promise((r) => setTimeout(r, ms));
+  const from = { x: mine.x, y: mine.y };
+  const gap = () => Math.max(Math.abs(mine.x - foe.x), Math.abs(mine.y - foe.y));
+  const startGap = gap();
   c.onTap({ x: mine.x, y: mine.y }); // select
   await nap(120);
 
@@ -285,9 +306,21 @@ const takeTurn = (p) => p.evaluate(async () => {
       const [x, y] = k.split(',').map(Number);
       return { x, y };
     });
-    const d = (t) => Math.abs(t.x - foe.x) + Math.abs(t.y - foe.y);
-    const best = tiles.sort((m, n) => d(m) - d(n))[0];
-    if (best) {
+    // PLAY THE CLASS, don't just charge. Closing to melee is correct for a
+    // fighter and actively wrong for a ranger: its bow has min 2, so standing
+    // adjacent drops it onto the close-range dagger (atk 6 vs the bow's 9) and
+    // throws away the entire reason to be a ranger. Prefer a tile that puts the
+    // foe inside [min, range]; among those, stand as FAR back as allowed.
+    const cheb = (t) => Math.max(Math.abs(t.x - foe.x), Math.abs(t.y - foe.y));
+    const st = mine.stats;
+    const good = tiles.filter((t) => cheb(t) >= (st.min || 1) && cheb(t) <= st.range);
+    const best = good.length
+      ? good.sort((m, n) => cheb(n) - cheb(m))[0] // hang back at max reach
+      : tiles.sort((m, n) => cheb(m) - cheb(n))[0]; // can't reach at all: close in
+    // A no-op "move" onto the tile we already occupy is not a move. A ROOTED
+    // duellist's move set collapses to exactly that one tile, so without this
+    // the timeline would report a walk that never happened.
+    if (best && (best.x !== mine.x || best.y !== mine.y)) {
       moved = { x: best.x, y: best.y };
       c.onTap(best);
       // the walk animates; the engine settles the unit at the end of it
@@ -298,14 +331,68 @@ const takeTurn = (p) => p.evaluate(async () => {
     }
   }
   const hpBefore = foe.stats.hp;
+  const rootedBefore = foe.rooted || 0;
+
+  // A REAL UNLOCKED TREE SKILL, cast the way a player casts one: pick it out of
+  // the action list, then tap the target. Every duel run so far produced plain
+  // swings only, so the skill half of the command set — the half a player
+  // actually grinds Fishing/Gardening for — has never been exercised live.
+  //
+  // enterSkill takes an INDEX on the guest's controller (the relay sends the
+  // index, not the object) and ignores the second argument on the host's, so
+  // passing both keeps one driver working from either seat.
+  const skills = mine.skills || [];
+  const skillIdx = skills.findIndex(
+    (sk) => sk && sk.target === 'enemy' && b.skillTargets(mine, sk).includes(foe),
+  );
+  let skill = null;
+  if (o.useSkill && skillIdx >= 0) {
+    const sk = skills[skillIdx];
+    const castFrom = { x: mine.x, y: mine.y };
+    const castAt = { x: foe.x, y: foe.y };
+    const reach = gap();
+    c.enterSkill(sk, skillIdx);
+    await nap(200);
+    c.onTap({ x: foe.x, y: foe.y });
+    await nap(1100); // resolve + relay + the guest's phase snapshot
+    skill = {
+      id: sk.id, name: sk.name, kind: sk.kind,
+      castFrom, castAt, reach,
+      dmg: hpBefore - foe.stats.hp,
+      rootedBefore,
+      // BOTH halves of a root, because the turn boundary moves it between them:
+      // resolveSkill sets `rooted`, then the victim's resetTurn converts it into
+      // `rootedThisTurn` (the flag moveTiles actually reads) and decrements the
+      // counter. Casting ends the caster's phase, so by the time this is read
+      // the handover has usually already happened and `rooted` is back to 0 —
+      // reading only that would report a root that plainly did land as absent.
+      rootedAfter: foe.rooted || 0,
+      rootedTurnAfter: !!foe.rootedThisTurn,
+      foeHpAfter: foe.stats.hp,
+    };
+  }
+
+  // A plain swing, unless the skill has already spent this unit's turn.
+  const hpBeforeAtk = foe.stats.hp;
   let attacked = false;
-  if (inRange()) {
+  if (!mine.acted && inRange()) {
     c.onTap({ x: foe.x, y: foe.y });
     attacked = true;
     await nap(900); // let the swing resolve + relay
   }
-  return { moved, attacked, hpBefore, hpAfter: foe.stats.hp, at: { x: mine.x, y: mine.y }, foeAt: { x: foe.x, y: foe.y } };
-});
+  return {
+    moved, attacked, skill, hpBefore, hpAfter: foe.stats.hp,
+    atkDmg: attacked ? hpBeforeAtk - foe.stats.hp : 0,
+    from, at: { x: mine.x, y: mine.y }, foeAt: { x: foe.x, y: foe.y },
+    startGap, range: gap(), // reach the blow was actually struck at
+    cls: mine.classId, skills: skills.map((s) => s.id),
+    skillIdx,
+    // How many tiles this unit could reach this turn. A rooted duellist's set
+    // collapses to its own tile — that is how a root is observed from outside.
+    moveTiles: b.moveTiles(mine).size,
+    rooted: mine.rooted || 0, rootedThisTurn: !!mine.rootedThisTurn,
+  };
+}, opts);
 
 // End the acting unit's turn without attacking (closes a phase after a move).
 const endTurn = (p) => p.evaluate(async () => {
@@ -334,8 +421,13 @@ const bystander = {};
 const genuine = {};
 
 try {
-  a = await openPlayer(PORT, e2eName('DuelA'));
-  b = await openPlayer(PORT, e2eName('DuelB'));
+  // A: a RANGER (range 3, min 2) carrying Net, an unlocked Fishing tree skill.
+  // B: a plain melee FIGHTER (range 1). Different classes, so the run exercises
+  // reach, walking and a real skill rather than two identical melee swings.
+  a = await openPlayer(PORT, e2eName('DuelA'), {
+    classId: 'ranger', skillIds: ['net'], fishingLevel: 10,
+  });
+  b = await openPlayer(PORT, e2eName('DuelB'), { classId: 'fighter' });
   c = await openPlayer(PORT, e2eName('DuelC'));
   d = await openPlayer(PORT, e2eName('DuelD'));
   for (const p of [a, b, c, d]) check(`${p.name} profile row seeded`, p.seed.ok);
@@ -425,8 +517,8 @@ try {
     }
   }
   const away = (p, q) => Math.max(Math.abs(p.x - q.x), Math.abs(p.y - q.y));
-  check('the two duellists are standing next to each other, on separate tiles',
-    away(stood[a.name], stood[b.name]) === 1);
+  check('the two duellists are standing APART, with a gap to close or shoot across',
+    away(stood[a.name], stood[b.name]) > 1);
   check('the bystander is standing clear of both',
     away(stood[c.name], stood[a.name]) >= 2 && away(stood[c.name], stood[b.name]) >= 2);
   await a.page.waitForTimeout(1500); // let the walks broadcast
@@ -577,24 +669,148 @@ try {
     JSON.stringify(rA.units.map((u) => [u.name, u.x, u.y])) === JSON.stringify(rB.units.map((u) => [u.name, u.x, u.y])));
   check('both clients agree on starting HP',
     JSON.stringify(rA.rows.map((r) => r.hp)) === JSON.stringify(rB.rows.map((r) => r.hp)));
+  // ---- what just shipped: the real character, and a real gap ---------------
+  const uA = rA.units.find((u) => u.name === a.name);
+  const uB = rA.units.find((u) => u.name === b.name);
+  console.log(`  A unit        ->  ${JSON.stringify(uA)}`);
+  console.log(`  B unit        ->  ${JSON.stringify(uB)}`);
+  check('A fights as a RANGER, not a default fighter', uA.classId === 'ranger');
+  check('B fights as a fighter', uB.classId === 'fighter');
+  check('the two duellists are DIFFERENT classes', uA.classId !== uB.classId);
+  check('A carries its unlocked tree skill into the duel',
+    (uA.skills || []).includes('net'));
+  check('...and the guest’s client agrees it has it',
+    ((rB.units.find((u) => u.name === a.name) || {}).skills || []).includes('net'));
+  check('a ranger keeps its ranged reach (3) in a duel', uA.range === 3);
+  check('...and the fighter keeps melee reach (1)', uB.range === 1);
+  check('the ranger has less HP than the fighter (real class stats)',
+    uA.maxHp < uB.maxHp);
+  // Placement no longer drags them together.
+  const gap0 = Math.max(Math.abs(uA.x - uB.x), Math.abs(uA.y - uB.y));
+  console.log(`  opening gap   ->  ${gap0} tiles`);
+  check('the duel opens with the fighters APART, as they were standing', gap0 > 1);
+  check('...so the melee fighter cannot reach yet', gap0 > uB.range);
+
   check('A (host) opens on the player phase', rA.phase === 'player');
   check('B (guest) sees the same phase', rB.phase === 'player');
   check('B renders its own duellist as the player side',
     !!rB.rows.find((r) => r.name === b.name && r.side === 'player'));
 
-  // ------------------------------------------------------------- a blow each
-  // Turn 1: A closes the gap (6 tiles, move 4) and ends. B closes and swings.
+  // ---------------------------------------------------- the fight itself
+  // The two start APART, so the opening is a real tactical exchange rather than
+  // two adjacent fighters trading swings:
+  //
+  //   turn 1  A (ranger) casts NET across the gap — damage + ROOT
+  //   turn 1  B (fighter) is rooted: cannot move, cannot reach, loses the turn
+  //   turn 2  A looses a plain bow shot from range
+  //   turn 2  B (root expired) closes the distance and swings
+  //   turn 3  A shoots again — the beat the bystander screenshots are taken on
   beat(`BATTLE BOOTED — fighting in place in ${ROOM_NAME}`);
-  const t1a = await takeTurn(a.page);
-  beat(`ATTACK 1 — ${a.name} hits ${b.name} for ${t1a.hpBefore - t1a.hpAfter} (${t1a.hpAfter} left)`);
+
+  // One line per thing that actually HAPPENED, read out of the driver's own
+  // report so the tiles and numbers are what the engine did.
+  const beatTurn = (who, foeName, t, label) => {
+    if (!t || t.err) return beat(`${label} — ${who}: ${(t && t.err) || 'no report'}`);
+    if (t.moved) beat(`MOVE — ${who} walks (${t.from.x},${t.from.y}) → (${t.at.x},${t.at.y})`);
+    if (t.skill) {
+      const s = t.skill;
+      beat(
+        `SKILL — ${who} casts ${s.name} on ${foeName}: ` +
+        `(${s.castFrom.x},${s.castFrom.y}) → (${s.castAt.x},${s.castAt.y}) at range ${s.reach}, ` +
+        `${s.dmg} damage (${foeName} ${s.foeHpAfter} left)` +
+        `${s.rootedAfter > s.rootedBefore ? `, ROOTED ${s.rootedAfter}` : ''}`,
+      );
+    }
+    if (t.attacked) {
+      beat(`${label} — ${who} hits ${foeName} for ${t.atkDmg} (${t.hpAfter} left) from range ${t.range}`);
+    } else if (!t.skill) {
+      beat(
+        `NO ACTION — ${who} could not reach ${foeName} (range ${t.range})` +
+        `${t.rootedThisTurn ? ' — ROOTED, move set is 1 tile' : ''}`,
+      );
+    }
+  };
+
+  // What a client can see of the fight without having resolved any of it.
+  const seenBy = (p) => p.evaluate(() => {
+    const c = window.game.controller;
+    const b = c.shadow || c.battle;
+    const el = document.querySelector('#log');
+    return {
+      log: el ? el.textContent : '',
+      units: (b ? b.units : []).map((u) => ({
+        name: u.name, hp: u.stats ? u.stats.hp : null,
+        rooted: u.rooted || 0, rootedThisTurn: !!u.rootedThisTurn,
+      })),
+    };
+  });
+
+  // ---- turn 1: the ranger casts a REAL unlocked tree skill ----------------
+  const t1a = await takeTurn(a.page, { useSkill: true });
+  beatTurn(a.name, b.name, t1a, 'ATTACK 1');
   console.log(`  A turn 1      ->  ${JSON.stringify(t1a)}`);
-  if (!t1a.attacked) await endTurn(a.page);
+
+  check('the ranger found its unlocked skill in range', t1a.skillIdx >= 0);
+  check('the ranger CAST its unlocked tree skill', !!t1a.skill && t1a.skill.id === 'net');
+  check('...from range, without closing to melee', !!t1a.skill && t1a.skill.reach >= 2);
+  check('the skill did damage', !!t1a.skill && t1a.skill.dmg > 0);
+  check('...and rooted the target',
+    !!t1a.skill && (t1a.skill.rootedAfter > t1a.skill.rootedBefore || t1a.skill.rootedTurnAfter));
+
+  // SERVER-SIDE RESOLUTION. The host's Battle is the authority in a duel; the
+  // guest never runs resolveSkill. So the proof that the skill resolved on the
+  // authority (rather than only painting on the caster's screen) is that the
+  // GUEST's own client — a separate browser — shows the same HP, the same root,
+  // and the log line the authority's logMsg produced and relayed.
+  const gSaw = await seenBy(b.page);
+  const hSaw = await seenBy(a.page);
+  console.log(`  guest log     ->  ${JSON.stringify(gSaw.log.slice(-160))}`);
+  console.log(`  guest units   ->  ${JSON.stringify(gSaw.units)}`);
+  console.log(`  host  units   ->  ${JSON.stringify(hSaw.units)}`);
+  check('the skill resolved SERVER-SIDE: the guest\u2019s log carries the authority\u2019s line',
+    /Net/.test(gSaw.log));
+  check('...and that log no longer speaks dungeon at a person',
+    !/Defeat all enemies/.test(gSaw.log) && /Duel vs /.test(gSaw.log));
+  check('...naming caster and target', new RegExp(`${a.name}.*Net.*${b.name}`).test(gSaw.log));
+  check('...and the guest shows the SAME HP the authority applied',
+    JSON.stringify(gSaw.units.map((u) => [u.name, u.hp])) ===
+    JSON.stringify(hSaw.units.map((u) => [u.name, u.hp])));
+  const gRoot = gSaw.units.find((u) => u.name === b.name) || {};
+  check('...and the guest knows its duellist is ROOTED',
+    gRoot.rooted > 0 || gRoot.rootedThisTurn === true);
+  check('both clients agree on the root, counter and flag',
+    JSON.stringify(gSaw.units.map((u) => [u.name, u.rooted, u.rootedThisTurn])) ===
+    JSON.stringify(hSaw.units.map((u) => [u.name, u.rooted, u.rootedThisTurn])));
+
+  if (!t1a.attacked && !t1a.skill) await endTurn(a.page);
   check('A\'s phase handed over to B', await waitPhase(b.page, 'enemy'));
 
+  // ---- turn 1: the rooted fighter loses its move --------------------------
   const t1b = await takeTurn(b.page);
-  beat(`ATTACK 2 — ${b.name} hits ${a.name} for ${t1b.hpBefore - t1b.hpAfter} (${t1b.hpAfter} left)`);
+  beatTurn(b.name, a.name, t1b, 'ATTACK 2');
   console.log(`  B turn 1      ->  ${JSON.stringify(t1b)}`);
-  check('B (guest) landed an attack that the host resolved', !!t1b.attacked && t1b.hpAfter < t1b.hpBefore);
+  check('the rooted fighter could not move', t1b.moveTiles <= 1);
+  check('...so it could not reach across the gap', t1b.attacked === false);
+  check('...and its own client knows why', t1b.rootedThisTurn === true);
+  if (!t1b.attacked && !t1b.skill) await endTurn(b.page);
+  check('the turn came back to A', await waitPhase(a.page, 'player'));
+
+  // ---- turn 2: a plain bow shot, then the freed fighter closes ------------
+  const t2a = await takeTurn(a.page);
+  beatTurn(a.name, b.name, t2a, 'ATTACK 1');
+  console.log(`  A turn 2      ->  ${JSON.stringify(t2a)}`);
+  check('the ranger also lands a plain shot', !!t2a.attacked && t2a.atkDmg > 0);
+  check('...still from range, without closing', t2a.range >= 2);
+  if (!t2a.attacked && !t2a.skill) await endTurn(a.page);
+  check('B gets its phase back', await waitPhase(b.page, 'enemy'));
+
+  const t2b = await takeTurn(b.page);
+  beatTurn(b.name, a.name, t2b, 'ATTACK 2');
+  console.log(`  B turn 2      ->  ${JSON.stringify(t2b)}`);
+  check('the root expired, so the fighter could move again', t2b.moveTiles > 1);
+  check('B (guest) landed an attack that the host resolved', !!t2b.attacked && t2b.atkDmg > 0);
+  check('the melee fighter struck only once adjacent', t2b.range <= 1);
+  check('...having closed the gap to do it', t2b.startGap > 1 ? t2b.moved !== null : true);
 
   let afterB1 = await rendered(a.page);
   let afterB2 = await rendered(b.page);
@@ -602,14 +818,14 @@ try {
     JSON.stringify(afterB1.rows.map((r) => [r.name, r.hp])) === JSON.stringify(afterB2.rows.map((r) => [r.name, r.hp])));
   console.log(`  after B blow  ->  A:${JSON.stringify(afterB1.rows.map((r) => [r.name, r.hp]))}  B:${JSON.stringify(afterB2.rows.map((r) => [r.name, r.hp]))}`);
 
-  if (!t1b.attacked) await endTurn(b.page);
-  check('the turn came back to A', await waitPhase(a.page, 'player'));
+  if (!t2b.attacked && !t2b.skill) await endTurn(b.page);
+  check('the turn came back to A again', await waitPhase(a.page, 'player'));
 
   // Screenshot C *while the blow is landing*. The damage float lives 800ms on a
   // canvas, so the capture has to race the attack rather than follow it: the
   // fighters' own turn and the bystander's snapshot run together.
   for (const p of [c, d]) await p.page.evaluate(() => { window.__fx.length = 0; });
-  const [t2a] = await Promise.all([
+  const [t3a] = await Promise.all([
     takeTurn(a.page),
     (async () => {
       await c.page.waitForTimeout(320);
@@ -620,9 +836,13 @@ try {
       await shot(d.page, 'hit-D.png');
     })(),
   ]);
-  beat(`ATTACK 3 — ${a.name} hits ${b.name} for ${t2a.hpBefore - t2a.hpAfter} (${t2a.hpAfter} left)`);
-  console.log(`  A turn 2      ->  ${JSON.stringify(t2a)}`);
-  check('A (host) landed an attack', !!t2a.attacked && t2a.hpAfter < t2a.hpBefore);
+  beatTurn(a.name, b.name, t3a, 'ATTACK 3');
+  console.log(`  A turn 3      ->  ${JSON.stringify(t3a)}`);
+  check('A (host) landed an attack', !!t3a.attacked && t3a.atkDmg > 0);
+  // THE RANGER'S WHOLE REASON TO EXIST: reach.
+  console.log(`  A turn 1 reach ->  startGap ${t1a.startGap}, cast at ${t1a.skill && t1a.skill.reach}, moved: ${JSON.stringify(t1a.moved)}`);
+  check('the ranger acted from RANGE, without closing to melee', t1a.skill.reach >= 2);
+  check('...and never walked into contact', t1a.range > 1);
 
   const finA = await rendered(a.page);
   const finB = await rendered(b.page);
@@ -643,9 +863,11 @@ try {
   console.log(`  captions B    ->  ${JSON.stringify(finB.rows.map((r) => [r.name, r.cls, r.fill]))}`);
   console.log(`  units A       ->  ${JSON.stringify(finA.units)}`);
   console.log(`  units B       ->  ${JSON.stringify(finB.units)}`);
-  check('both duellists actually took a wound',
-    finA.rows.every((r) => r.hp && Number(r.hp) > 0) &&
-    finA.rows.some((r) => Number(r.hp) < 34) && finA.rows.filter((r) => Number(r.hp) < 34).length === 2);
+  // Compared against each fighter's OWN maxHp: the two are different classes
+  // now (ranger 26, fighter 34), so a hardcoded number would silently pass for
+  // the ranger whether or not it had been touched.
+  check('both duellists actually took a wound, and both are still standing',
+    finA.units.every((u) => u.hp > 0 && u.hp < u.maxHp));
 
   // ---- the three UI defects this pass was meant to close --------------------
   // The roster caption used to drop the level for team 'enemy' (correct for a
