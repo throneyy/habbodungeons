@@ -228,6 +228,23 @@ async function openPlayer(port, name, build = {}) {
     const game = window.game;
     const origFx = game.addFx.bind(game);
     game.addFx = (fx) => { window.__fx.push({ type: fx.type, text: fx.text, x: fx.x, y: fx.y }); return origFx(fx); };
+    // Every notice the duel UI puts on screen. `You win the duel!` is a
+    // .party-prompt--notice that DELETES ITSELF after 3.5s (DuelUI.flash), so a
+    // waitForSelector racing a claim that can take most of a minute would miss
+    // the very message it is there to prove. Recorded as it is inserted, from
+    // the DOM rather than from any internal, because the string a player reads
+    // is the thing under test.
+    window.__notices = [];
+    new MutationObserver((muts) => {
+      for (const m of muts) {
+        for (const n of m.addedNodes) {
+          if (n.nodeType !== 1 || !n.classList || !n.classList.contains('party-prompt')) continue;
+          const t = (n.textContent || '').trim();
+          if (t) window.__notices.push(t);
+        }
+      }
+    }).observe(document.body, { childList: true });
+
     // Mailbox events too (duel-asked / duel-state), so the handshake half can be
     // told apart from the battle half when something goes quiet.
     window.__rx = [];
@@ -427,8 +444,134 @@ const waitPhase = (p, team, timeout = 25000) => p.waitForFunction((t) => {
   return !!b && b.phase === t;
 }, team, { timeout }).then(() => true).catch(() => false);
 
+// ------------------------------------------------------------- endings: ops
+
+// THE SERVER'S OWN RECORD of every duel this player is in. RLS on `duels` is
+// participants-only SELECT (20260726120000_duels.sql), so this is read from a
+// duellist's session and is the row itself — not the client's belief about it.
+// A fight that ends must reach 'done'; 'asked' or 'countdown' is the pair still
+// looking busy to duel-challenge, which is what would leave them unable to
+// duel again.
+const duelRows = (p) => p.evaluate(async () => {
+  const sb = await window.__debug.supabase(); // async: it lazy-loads the client
+  if (!sb) return { err: 'no supabase client on this page' };
+  const { data, error } = await sb
+    .from('duels')
+    .select('id,status,a_name,b_name,room_id,updated_at')
+    .order('updated_at', { ascending: false })
+    .limit(10);
+  if (error) return { err: `${error.code || ''} ${error.message}`.trim() };
+  return { rows: data || [] };
+});
+
+const LIVE_STATUS = ['asked', 'countdown'];
+const liveRows = (r) => (r.rows || []).filter((x) => LIVE_STATUS.includes(x.status));
+
+// Ask the LIVE backend whether this player may duel again, by actually trying.
+// A settled row frees both sides; an unsettled one answers "already duelling",
+// which is the exact refusal a stuck row produces for a real player.
+const challengeProbe = (p, name) => p.evaluate(async (n) => {
+  const { invokeFn } = await import('/js/backend.js');
+  try {
+    return await invokeFn('duel-challenge', { name: n });
+  } catch (e) {
+    return { ok: false, reason: `threw: ${e.message}` };
+  }
+}, name);
+
+const cancelDuel = (p) => p.evaluate(async () => {
+  const { invokeFn } = await import('/js/backend.js');
+  try { return await invokeFn('duel-cancel', {}); } catch { return null; }
+}).catch(() => null);
+
+// What a BYSTANDER still has dressed on screen. The two things that must not
+// outlive the fight are the HP bar (unit.stats — explore avatars carry none)
+// and the crossed-swords tag.
+const watched = (p, names) => p.evaluate((ns) => {
+  const remote = window.game?.controller?.remote;
+  const units = remote && remote.units;
+  const spec = window.__debug.duelWatch();
+  return {
+    watching: spec.watching,
+    fighters: spec.fighters.slice(),
+    endFrames: (window.__watch || []).filter((w) => w.k === 'end').length,
+    watchKinds: [...new Set((window.__watch || []).map((w) => w.k))],
+    bars: ns.map((n) => {
+      const u = units && units.get(n.toLowerCase());
+      return { name: n, present: !!u, hp: u && u.stats ? u.stats.hp : null, duellist: !!(u && u.duellist) };
+    }),
+    tags: ns.map((n) => {
+      const t = remote && remote.tags && remote.tags.get(n.toLowerCase());
+      return { name: n, present: !!t, text: t ? t.textContent : null, marked: !!(t && t.classList.contains('name-tag--duel')) };
+    }),
+  };
+}, names);
+
+// Wait for a bystander to put the room back to normal: no fight being watched,
+// and for every fighter still visible, no HP bar and no crossed swords.
+//
+// A fighter who is GONE counts as clear — a closed browser takes its avatar out
+// of the room with it, and there is nothing left to draw a bar over.
+const waitCleared = (p, names, timeout = 30000) => p.waitForFunction((ns) => {
+  const remote = window.game?.controller?.remote;
+  const units = remote && remote.units;
+  const spec = window.__debug.duelWatch();
+  if (spec.watching) return false;
+  return ns.every((n) => {
+    const u = units && units.get(n.toLowerCase());
+    const t = remote && remote.tags && remote.tags.get(n.toLowerCase());
+    const barGone = !u || !u.stats;
+    const tagGone = !t || !t.classList.contains('name-tag--duel');
+    return barGone && tagGone;
+  });
+}, names, { timeout }).then(() => true).catch(() => false);
+
+// The duel screen folded and this client is back in explore: endDuel's own
+// visible effect, independent of the wording of any message.
+const waitDuelOver = (p, timeout = 30000) => p.waitForFunction(() => {
+  const panel = document.querySelector('#panel');
+  const folded = !panel || panel.classList.contains('hidden');
+  return folded
+    && document.querySelectorAll('#roster .roster-row').length === 0
+    && !window.__debug.duelHost()
+    && !window.__debug.duelGuest();
+}, null, { timeout }).then(() => true).catch(() => false);
+
+const waitNotice = (p, source, timeout = 30000) => p.waitForFunction(
+  (src) => (window.__notices || []).find((t) => new RegExp(src, 'i').test(t)) || null,
+  source, { timeout },
+).then((h) => h.jsonValue()).catch(() => null);
+
+// Stage a fresh duel between two live clients through the real UI: tap, Duel,
+// accept, both boot. Returns false if any leg of it did not land.
+async function stageDuel(host, guest) {
+  const at = await host.page.evaluate((n) => {
+    const u = window.game?.controller?.remote?.units?.get(n.toLowerCase());
+    return u ? { x: u.x, y: u.y } : null;
+  }, guest.name);
+  if (!at) return { ok: false, why: `${host.name} cannot see ${guest.name} in the room` };
+  await host.page.evaluate((t) => window.game.controller.onTap(t), at);
+  const btn = await host.page.waitForSelector('.infostand--human [data-act="duel"]', { timeout: 15000 })
+    .then(() => true).catch(() => false);
+  if (!btn) return { ok: false, why: 'no Duel button on the infostand' };
+  await host.page.click('.infostand--human [data-act="duel"]');
+  const prompt = await guest.page.waitForSelector('.party-prompt [data-act="yes"]', { timeout: 25000 })
+    .then(() => true).catch(() => false);
+  if (!prompt) return { ok: false, why: `${guest.name} never got the challenge prompt` };
+  await guest.page.click('.party-prompt [data-act="yes"]');
+  const booted = await Promise.all([host, guest].map((p) => p.page.waitForFunction(
+    () => document.querySelectorAll('#roster .roster-row').length === 2,
+    null, { timeout: 40000 },
+  ).then(() => true).catch(() => false)));
+  if (!booted.every(Boolean)) return { ok: false, why: `battle did not boot (host:${booted[0]} guest:${booted[1]})` };
+  return { ok: true };
+}
+
 const server = await startServer(PORT);
 let a = null; let b = null; let c = null; let d = null;
+// B's browser is closed ON PURPOSE mid-suite (the disconnect ending), so every
+// later use of it has to know that rather than discover it as an exception.
+let bClosed = false;
 const bystander = {};
 const genuine = {};
 
@@ -1166,13 +1309,184 @@ try {
   check('D has no battle panel, roster or duel window',
     g.panelVisible === false && g.rosterRows === 0 && g.duelWindow === false);
   check('D never left the square', g.roomId === ROOM_ID);
+
+  // ======================= ENDING 1: A FORFEIT ==============================
+  // The fight above is still live and both fighters are still standing, which
+  // is the point: a forfeit is a decision taken MID-FIGHT, not a way of
+  // acknowledging a knockout that already happened.
+  //
+  // Nothing here is simulated. B presses the real Forfeit button, the live
+  // duel-forfeit function settles the real row, and the win arrives on each
+  // player's own mailbox stamped from their own side.
+  for (const p of [a, b, c, d]) {
+    await p.page.evaluate(() => { window.__notices.length = 0; window.__watch.length = 0; });
+  }
+  const forfeitBtn = await b.page.evaluate(() => {
+    const btn = [...document.querySelectorAll('#actions button')]
+      .find((x) => x.textContent.trim() === 'Forfeit');
+    if (!btn) return false;
+    btn.click();
+    return true;
+  });
+  check(`${b.name} has a Forfeit button mid-fight`, forfeitBtn === true);
+  beat(`FORFEIT — ${b.name} yields to ${a.name}`);
+  if (!forfeitBtn) throw new Error('no Forfeit button on the guest — cannot test the ending');
+
+  // ---- the survivor is told, in words, that they won ----------------------
+  const winNotice = await waitNotice(a.page, 'win the duel', 30000);
+  const loseNotice = await waitNotice(b.page, 'lost the duel|forfeit', 30000);
+  console.log(`  ${a.name} notice   ->  ${JSON.stringify(winNotice)}`);
+  console.log(`  ${b.name} notice   ->  ${JSON.stringify(loseNotice)}`);
+  check('the surviving player is told they WON', !!winNotice && /win the duel/i.test(winNotice));
+  check('...and the message names the forfeit as the reason',
+    !!winNotice && /forfeit/i.test(winNotice));
+  check('the player who yielded is told they LOST',
+    !!loseNotice && /lost the duel/i.test(loseNotice));
+  check('each side is told from its OWN point of view — no shared payload',
+    !!winNotice && !!loseNotice && winNotice !== loseNotice);
+  check(`${a.name}'s duel screen folded back to explore`, await waitDuelOver(a.page));
+  check(`${b.name}'s duel screen folded back to explore`, await waitDuelOver(b.page));
+  beat('FORFEIT SETTLED — both screens back in the square');
+
+  // ---- the row is terminal, so neither is left looking "already duelling" --
+  const rowsAfterForfeit = await duelRows(a.page);
+  const rowsAfterForfeitB = await duelRows(b.page);
+  console.log(`  duels row (A) ->  ${JSON.stringify(rowsAfterForfeit).slice(0, 400)}`);
+  check('the challenger can read the duel row (participant RLS)', !rowsAfterForfeit.err);
+  check('the forfeiter can read it too', !rowsAfterForfeitB.err);
+  check('the forfeited duel reached a TERMINAL status',
+    !rowsAfterForfeit.err && liveRows(rowsAfterForfeit).length === 0);
+  check('...specifically done, not cancelled — this fight was decided',
+    !rowsAfterForfeit.err && (rowsAfterForfeit.rows[0] || {}).status === 'done');
+  check('and the loser’s own view of the row agrees',
+    !rowsAfterForfeitB.err && liveRows(rowsAfterForfeitB).length === 0);
+
+  // ---- the bystanders put the room back --------------------------------
+  // The failure this guards is specific: a fight that ends without telling the
+  // room leaves HP bars and crossed swords hanging over two idle avatars until
+  // DuelSpectator's 90s stale sweep. Both are asserted CLEARED, and the `end`
+  // frame is counted, so a pass cannot come from the sweep instead.
+  const clearedC = await waitCleared(c.page, [a.name, b.name], 25000);
+  const clearedD = await waitCleared(d.page, [a.name, b.name], 25000);
+  const afterC = await watched(c.page, [a.name, b.name]);
+  const afterD = await watched(d.page, [a.name, b.name]);
+  console.log(`  C after forfeit ->  ${JSON.stringify(afterC)}`);
+  console.log(`  D after forfeit ->  ${JSON.stringify(afterD)}`);
+  await Promise.all([shot(c.page, 'forfeit-C.png'), shot(d.page, 'forfeit-D.png')]);
+
+  for (const [who, st, ok] of [[c.name, afterC, clearedC], [d.name, afterD, clearedD]]) {
+    check(`${who} stopped watching when the duel was forfeited`, ok && st.watching === false);
+    check(`${who} took the HP bars back off both avatars`,
+      st.bars.every((x) => !x.present || x.hp === null));
+    check(`${who} took the crossed swords off both name tags`,
+      st.tags.every((t) => !t.marked && !/\u2694/.test(t.text || '')));
+    check(`${who} was TOLD the duel ended (not left to the 90s stale sweep)`,
+      st.endFrames > 0);
+  }
+
+  // ======================= ENDING 2: A DISCONNECT ===========================
+  // A second real duel, then one browser is closed OUTRIGHT — no forfeit, no
+  // goodbye, the same thing a player does by shutting the lid. The survivor
+  // must not be stranded in a fight nobody can finish.
+  //
+  // Booting this duel at all is the operational proof of the paragraph above:
+  // duel-challenge refuses a player whose last row is unsettled, so a second
+  // duel between the SAME two players can only start if the forfeit really did
+  // free them both.
+  beat('SECOND DUEL — staging a fresh fight between the same two players');
+  for (const p of [a, b, c, d]) {
+    await p.page.evaluate(() => { window.__notices.length = 0; window.__watch.length = 0; });
+  }
+  const staged = await stageDuel(a, b);
+  if (!staged.ok) console.error(`     └─ ${staged.why}`);
+  check('the two players can duel AGAIN after the forfeit (the row freed them)',
+    staged.ok === true);
+  if (!staged.ok) throw new Error(`second duel would not start: ${staged.why}`);
+  beat('SECOND DUEL BOOTED — both fighting in the square again');
+
+  const liveDuring = await duelRows(a.page);
+  check('...and the server has a LIVE row for it while it is being fought',
+    !liveDuring.err && liveRows(liveDuring).length === 1);
+
+  // ---- pull the plug ------------------------------------------------------
+  await shot(b.page, 'predisconnect-B.png');
+  const disconnectAt = Date.now();
+  await b.context.close();
+  bClosed = true;
+  beat(`DISCONNECT — ${b.name}'s browser is closed outright, mid-duel`);
+
+  // The claim is not instant BY DESIGN and the budget below is the sum of the
+  // real constants, not a guess: the host's watchdog waits ~16s for the relay
+  // to go quiet, then polls duel-claim every 3s, and the SERVER refuses every
+  // one of those until the abandoned player's presence row goes stale — up to
+  // one heartbeat (20s, js/supabaseNet.js) plus PRESENCE_TTL_MS (30s). Roughly
+  // 70s worst case. Anything less would be a client asserting a disconnect,
+  // which is exactly what claimFlow refuses to let it do.
+  const claimNotice = await waitNotice(a.page, 'win the duel', 120000);
+  const claimSecs = ((Date.now() - disconnectAt) / 1000).toFixed(1);
+  console.log(`  ${a.name} notice   ->  ${JSON.stringify(claimNotice)}  (after ${claimSecs}s)`);
+  beat(`CLAIM SETTLED — ${a.name} awarded the win ${claimSecs}s after the disconnect`);
+  check('the abandoned player is told they WON', !!claimNotice && /win the duel/i.test(claimNotice));
+  check('...and the message says the opponent disconnected',
+    !!claimNotice && /disconnect|left the room/i.test(claimNotice));
+  check(`${a.name}'s duel screen folded back to explore`, await waitDuelOver(a.page));
+  await shot(a.page, 'disconnect-A.png');
+
+  // ---- terminal row, so the survivor is not stuck "already duelling" ------
+  const rowsAfterClaim = await duelRows(a.page);
+  console.log(`  duels row (A) ->  ${JSON.stringify(rowsAfterClaim).slice(0, 400)}`);
+  check('the abandoned duel reached a TERMINAL status',
+    !rowsAfterClaim.err && liveRows(rowsAfterClaim).length === 0);
+  check('...specifically done — an abandoned fight was still decided',
+    !rowsAfterClaim.err && (rowsAfterClaim.rows[0] || {}).status === 'done');
+
+  // ...and prove it operationally against the live backend: the survivor can
+  // throw down a new gauntlet at once. A stuck row answers "already duelling".
+  const freeProbe = await challengeProbe(a.page, c.name);
+  console.log(`  A challenges ${c.name} ->  ${JSON.stringify(freeProbe)}`);
+  check('the surviving player is free to duel again immediately',
+    !!freeProbe && freeProbe.ok === true);
+  check('...and is not refused as “already duelling”',
+    !/already duelling/i.test((freeProbe && freeProbe.reason) || ''));
+  await cancelDuel(a.page);
+  await c.page.evaluate(() => {
+    const no = document.querySelector('.party-prompt [data-act="no"]');
+    if (no) no.click();
+  }).catch(() => {});
+
+  // ---- and the room stops looking like a fight ---------------------------
+  const clearedC2 = await waitCleared(c.page, [a.name, b.name], 30000);
+  const clearedD2 = await waitCleared(d.page, [a.name, b.name], 30000);
+  const endC = await watched(c.page, [a.name, b.name]);
+  const endD = await watched(d.page, [a.name, b.name]);
+  const clearSecs = (Date.now() - disconnectAt) / 1000;
+  console.log(`  C after disconnect ->  ${JSON.stringify(endC)}`);
+  console.log(`  D after disconnect ->  ${JSON.stringify(endD)}`);
+  await Promise.all([shot(c.page, 'disconnect-C.png'), shot(d.page, 'disconnect-D.png')]);
+
+  for (const [who, st, ok] of [[c.name, endC, clearedC2], [d.name, endD, clearedD2]]) {
+    check(`${who} stopped watching the abandoned duel`, ok && st.watching === false);
+    check(`${who} left no HP bar hanging over an idle avatar`,
+      st.bars.every((x) => !x.present || x.hp === null));
+    check(`${who} left no crossed swords on an idle name tag`,
+      st.tags.every((t) => !t.marked && !/\u2694/.test(t.text || '')));
+    check(`${who} was TOLD the duel ended`, st.endFrames > 0);
+  }
+  // The 90s stale sweep (DuelSpectator.STALE_MS) would eventually clear the
+  // room on its own, which would make the four checks above pass for entirely
+  // the wrong reason. Beating it is the assertion that the ENDING did it.
+  console.log(`  room cleared ${clearSecs.toFixed(1)}s after the disconnect (stale sweep is 90s)`);
+  check('the room was cleared by the ending, not by the 90s stale sweep',
+    clearSecs < 85);
 } catch (e) {
   console.error(`\n  SUITE ABORTED: ${e.message}`);
   state.failed++;
-  for (const p of [a, b, c, d]) if (p) await shot(p.page, `abort-${p.name}.png`);
+  // B may have been closed on purpose already — screenshotting it would throw
+  // inside the abort handler and hide the real failure.
+  for (const p of [a, bClosed ? null : b, c, d]) if (p) await shot(p.page, `abort-${p.name}.png`);
 } finally {
-  for (const p of [a, b, c]) { // NOT d: it was never in a duel to cancel
-    if (!p) continue;
+  const openPages = [a, bClosed ? null : b, c].filter(Boolean);
+  for (const p of openPages) { // NOT d: it was never in a duel to cancel
     await p.page.evaluate(async () => {
       const { invokeFn } = await import('/js/backend.js');
       await invokeFn('duel-cancel', {});
