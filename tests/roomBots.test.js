@@ -26,24 +26,50 @@ check('keys are unique + persistable', new Set(ROOM_BOTS.map((b) => b.key)).size
   ROOM_BOTS.every((b) => /^[\w-]{1,40}$/.test(b.key)));
 
 // ---- the roster ----------------------------------------------------------
-// Recovered Havana `rooms_bots` roster: exactly these 9, in this order. Frank
-// and Mandy are NOT in the dump and must not reappear as invented figures.
+// Recovered Havana `rooms_bots` roster: all 33 rows of the INSERT, the first
+// nine in the order they were first committed, then the rest in dump id order.
+// Frank and Mandy are NOT in the dump and must not reappear as invented figures.
 console.log('roster');
-const EXPECTED_KEYS = ['harry', 'marcus', 'piers', 'ingemar', 'chloe', 'jem', 'miho', 'amber', 'ray'];
-check('roster is exactly the 9 recovered bots, in order',
+const EXPECTED_KEYS = [
+  'harry', 'marcus', 'piers', 'ingemar', 'chloe', 'jem', 'miho', 'amber', 'ray',
+  'xenia', 'pamela', 'regina', 'james', 'marion', 'brone', 'dave', 'sadie',
+  'reginaldo', 'billy', 'phillip', 'ariel', 'marcel', 'berith',
+  'dj_von_beathoven', 'maarit', 'scubajoe', 'skye', 'gino', 'carlo', 'lofar',
+  'eric', 'laura', 'tao',
+];
+check('roster is exactly the 33 recovered bots, in order',
   JSON.stringify(ROOM_BOTS.map((b) => b.key)) === JSON.stringify(EXPECTED_KEYS));
 check('no placeholder bots survive', !ROOM_BOTS.some((b) => ['frank', 'mandy', 'guide', 'bouncer', 'barkeep', 'sage', 'guildmaster'].includes(b.key)));
-check('every bot has a name and a motto',
-  ROOM_BOTS.every((b) => b.name && typeof b.motto === 'string' && b.motto.length > 0));
-check('figures are all distinct', new Set(ROOM_BOTS.map((b) => b.figure)).size === ROOM_BOTS.length);
+check('every bot has a name and a motto string',
+  ROOM_BOTS.every((b) => b.name && typeof b.motto === 'string'));
+// ScubaJoe's `mission` is genuinely empty in the dump — he is the only one.
+check('only ScubaJoe has an empty motto',
+  JSON.stringify(ROOM_BOTS.filter((b) => b.motto === '').map((b) => b.key)) === JSON.stringify(['scubajoe']));
+check('names carry no stray whitespace (the dump stores "Eric  ")',
+  ROOM_BOTS.every((b) => b.name === b.name.trim()) && botDef('eric').name === 'Eric');
+// Two figure strings really are duplicated in the source data. They are kept
+// verbatim rather than nudged apart, so distinctness is asserted as 31 of 33.
+const DUPLICATE_FIGURES = [['chloe', 'ariel'], ['berith', 'laura']];
+check('figures are distinct apart from the dump\'s own two duplicate pairs',
+  new Set(ROOM_BOTS.map((b) => b.figure)).size === ROOM_BOTS.length - DUPLICATE_FIGURES.length);
+check('...and those pairs are exactly the known ones',
+  DUPLICATE_FIGURES.every(([a, b]) => botDef(a).figure === botDef(b).figure));
 check('figures are well-formed part-colour pairs',
   ROOM_BOTS.every((b) => b.figure.split('.').every((p) => /^[a-z]{2}-\d+-\d+$/.test(p))));
 check('every figure carries a head part (hd-)',
   ROOM_BOTS.every((b) => b.figure.split('.').some((p) => p.startsWith('hd-'))));
 
 // ---- carry ---------------------------------------------------------------
+// A carry is set only where the dump's `hand_items` names something HAND_ITEMS
+// has (first match in the list wins). Bots whose list maps to nothing — e.g.
+// Reginaldo's 'Water,Juice,Lemonade,Tea', Carlo's 'Pizza,Water,Drink' — get no
+// carry at all rather than a guessed id.
 console.log('carry');
-const CARRIERS = { marcus: 'Cola', ingemar: 'Coffee', chloe: 'Cola', jem: 'Cola', ray: 'Cola' };
+const CARRIERS = {
+  marcus: 'Cola', ingemar: 'Coffee', chloe: 'Cola', jem: 'Cola', ray: 'Cola',
+  regina: 'Coffee', billy: 'Coffee', phillip: 'Cola', ariel: 'Coffee',
+  scubajoe: 'Cola', skye: 'Cola', lofar: 'Cola',
+};
 check('exactly the expected bots carry something',
   JSON.stringify(ROOM_BOTS.filter((b) => b.carry != null).map((b) => b.key)) ===
   JSON.stringify(Object.keys(CARRIERS)));
@@ -54,7 +80,7 @@ check('carry ids are real entries in HAND_ITEMS',
 check('no bot carries Soda4 (id 49 has no art upstream)',
   !ROOM_BOTS.some((b) => b.carry === 49));
 check('non-carriers leave the field unset',
-  ['harry', 'piers', 'miho', 'amber'].every((k) => botDef(k).carry === undefined));
+  ['harry', 'piers', 'miho', 'amber', 'reginaldo', 'carlo', 'tao', 'xenia'].every((k) => botDef(k).carry === undefined));
 check('handItemId is name-exact and throws on a typo', (() => {
   try { handItemId('cola'); return false; } catch { return handItemId('Cola') === 5; }
 })());

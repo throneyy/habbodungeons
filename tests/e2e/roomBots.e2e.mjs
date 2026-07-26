@@ -59,16 +59,30 @@ try {
       rosterCarry: ROOM_BOTS[1].carry,
     };
   });
-  check('catalogue lists all 9 recovered bots', cat.count === 9);
+  // the full Havana `rooms_bots` dump: 33 rows, the first nine in commit order
+  // then the rest in dump id order (js/botsData.js)
+  const ROSTER = [
+    'Harry', 'Marcus', 'Piers', 'Ingemar', 'Chloe', 'Jem', 'Miho', 'Amber', 'Ray',
+    'Xenia', 'Pamela', 'Regina', 'James', 'Marion', 'Brone', 'Dave', 'Sadie',
+    'Reginaldo', 'Billy', 'Phillip', 'Ariel', 'Marcel', 'Berith',
+    'DJ von Beathoven', 'Maarit', 'ScubaJoe', 'Skye', 'Gino', 'Carlo', 'Lofar',
+    'Eric', 'Laura', 'Tao',
+  ];
+  check('catalogue lists all 33 recovered bots', cat.count === 33);
   check('cells are named in roster order',
-    JSON.stringify(cat.names) === JSON.stringify(['Harry', 'Marcus', 'Piers', 'Ingemar', 'Chloe', 'Jem', 'Miho', 'Amber', 'Ray']));
+    JSON.stringify(cat.names) === JSON.stringify(ROSTER));
+  check('names are trimmed (the dump stores "Eric  ")',
+    cat.names.every((n) => n === n.trim()));
   check('cells show the motto under the name', cat.mottos[0] === 'Happy to help' &&
-    cat.mottos[8] === 'Chill out and have a coconut!');
+    cat.mottos[8] === 'Chill out and have a coconut!' &&
+    cat.mottos[ROSTER.indexOf('Tao')] === 'Tea is serenity');
+  check('ScubaJoe\'s empty motto renders as an empty line, not "undefined"',
+    cat.mottos[ROSTER.indexOf('ScubaJoe')] === '');
   check('a non-carrier thumb is the plain stand pose',
     /action=std/.test(decodeURIComponent(cat.thumb)));
   check('a carrier thumb renders holding its item',
     decodeURIComponent(cat.carryThumb).includes(`action=crr=${cat.rosterCarry}`));
-  check('footer counts the shelf', /9 bots/.test(cat.foot));
+  check('footer counts the shelf', /33 bots/.test(cat.foot));
 
   // search narrows the shelf (matches the motto text too)
   await admin.fill('.bot-cat .furni-cat-search', 'katana');
