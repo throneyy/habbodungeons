@@ -110,3 +110,75 @@ six-worktree e2e pass can therefore exceed the refill rate.
 
 **Rule: any e2e presence/roster timeout → grep the captured page logs for
 `anonymous sign-in failed` before touching feature code.**
+
+## Git does not deploy the backend
+
+**Pushing `supabase/functions/` updates the files in the Lovable project. It does
+NOT redeploy the running runtime.** Pushing `supabase/migrations/` never applies
+anything at all. Both need a manual trigger, and until you pull one the server
+keeps executing whatever it executed before, while git shows your fix as landed.
+
+This is not a suspicion. Both halves were established the hard way:
+
+- **Migrations.** `profiles.class_id` was declared in git for over a day and the
+  live database still answered `42703: column does not exist`. The
+  `habbo_username` unique index sat unapplied until it was pasted into the SQL
+  editor by hand. Of 58 files in `supabase/migrations/`, only three govern the
+  live schema — the rest are superseded by the V2 reset, which opens with
+  `drop table … cascade`.
+- **Functions.** A `deployedAt` marker was added to `party-invite`'s success
+  response and pushed to both branches. Ten minutes later the live function was
+  still returning a bare `{ ok: true }`. Meanwhile `gpt-engineer-app[bot]`
+  reacted to that same push within two minutes by regenerating `bun.lock` on
+  `main` — so the integration is watching, and `main` is the branch it watches.
+  It rebuilds the frontend bundle and leaves the backend alone.
+
+**To actually deploy:**
+
+- **Functions** — ask in Lovable chat, or `supabase functions deploy <name>`
+  (needs a personal access token; `.env` holds only the publishable anon key, so
+  the CLI cannot deploy with what is in the repo). Never run a bare
+  `supabase functions deploy` with no name: it deploys *every* function,
+  including unfinished ones belonging to other worktrees.
+- **Migrations** — paste the file into the Supabase SQL editor. Write them
+  idempotently (`if not exists`, `exception when duplicate_object`) so a second
+  application is a no-op, and never assume an earlier migration in the directory
+  has run — read a questionable column through `to_jsonb(row)` rather than naming
+  it, or a missing column aborts the whole file at parse time.
+
+### Verifying a deploy landed: the version marker
+
+Do not infer a deploy from the absence of an error. Temporarily add a field to a
+response that no previously deployed build could return, push, wait, then call
+the live function and look for it:
+
+```ts
+const DEPLOY_MARKER = "2026-07-26-ab12cd";   // date + random suffix
+return json({ ok: true, deployedAt: DEPLOY_MARKER });
+```
+
+Present → the pipeline reached the server. Absent → it is running old code and
+every fix to that function is untested. Revert the marker once it has answered;
+a diagnostic has no business in an API response.
+
+The trick generalises: to tell whether *any* server-side change is live, find an
+input whose OLD and NEW behaviour differ unmistakably. Comparing error *wording*
+usually fails — `userByName`'s "no such player" is byte-identical before and
+after its error-handling fix, because on a genuine miss both versions see
+`error: null` and return `null`. What discriminates is an input that forces the
+query to error: `.ilike()` treats `%` as a wildcard, so the name `pi-Inv%`
+matches two rows, `maybeSingle()` raises PGRST116, and old code answers HTTP 200
+`"no such player"` where new code throws HTTP 500.
+
+**Two traps when probing from a browser:**
+
+- An unhandled 500 never passes through `_shared/cors.ts`, so it carries no
+  `Access-Control-Allow-Origin` and a page `fetch` dies as an opaque
+  `TypeError: Failed to fetch`. Call the function from Node instead — no CORS —
+  or you will misread a live throw as a network fault.
+- The Realtime broadcast endpoint returns **202 even when RLS silently discards
+  the write** (confirmed: a client POST to its own `user:` topic returns 202 and
+  delivers nothing, because the write policy admits only `room:%` and `party:%`).
+  `realtime.ts`'s `if (!res.ok)` therefore cannot fire for an RLS drop, so the
+  absence of a `[broadcast] … FAILED` line in the logs is **not** evidence that a
+  broadcast succeeded.
