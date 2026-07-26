@@ -8,7 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/run-suites.mjs unit",
+    "test:quarantine": "node tests/run-suites.mjs quarantine",
+    "test:e2e": "node tests/run-suites.mjs e2e"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

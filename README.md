@@ -124,13 +124,41 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-node tests/pathfinder.test.js   # movement rules (27 checks)
-node tests/battle.test.js       # combat math, AI, phases (35 checks)
-node tests/run.test.js          # items, roster, save/resume, events, leader skills (45 checks)
-node tests/skills.test.js       # Origins skill trees: unlocks, damage/AoE/shield/root (37 checks)
-node tests/sprites.test.js      # M4 asset pipeline: rig math, extracted data, furni cover, fx (28 checks)
-node tests/defaultAvatarShoes.test.js  # fallback avatar: studded-sole (cleat) detector, baked sheet (19 checks)
+npm test                 # all 11 unit suites below (325 checks) — must pass
+npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
+npm run test:e2e         # 7 browser suites (real Chromium, static server, ports)
 ```
+
+Unit suites, each runnable on its own. Counts are the assertions each one
+actually prints:
+
+```
+node tests/pathfinder.test.js          # movement rules: diagonals, drops, void corners (27 checks)
+node tests/run.test.js                 # items, roster, save/resume, events, leader skills (49 checks)
+node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root (37 checks)
+node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
+node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (75 checks)
+node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
+node tests/dailyReward.test.js         # daily-wheel streaks, claim windows, payout table (23 checks)
+node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead zone (13 checks)
+node tests/defaultAvatarShoes.test.js  # fallback avatar: studded-sole (cleat) detector, baked sheet (18 checks)
+node tests/buffInspire.test.js         # `buff` consumable kind and Inspire stacking (8 checks)
+node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
+```
+
+Browser suites are `tests/e2e/*.e2e.mjs` (7 of them: presence, party/duel
+delivery, cloud sync, room bots, daily reward, move tracking, tag bodies). They
+need Chromium and bind real ports, so `run-suites.mjs` runs them sequentially.
+
+### Quarantine
+
+`tests/quarantine/` holds four suites recovered from an abandoned history that
+**do not pass**: `battle` (34 pass, 1 assertion made stale by the ranger
+close-range dagger), `gimmicks` (43 pass, 1 prop-path failure), and `realms` /
+`sprites` (cannot start — prop paths, and a `tools/lib/` that was never ported).
+`npm run test:quarantine` runs them and reports, but always exits 0, so a broken
+suite can't gate a commit. `tests/quarantine/README.md` explains each failure
+and what promoting it requires.
 
 ## What's authentic (and where it came from)
 
