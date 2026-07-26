@@ -1903,6 +1903,9 @@ async function startExplore() {
   // multiplayer presence: verified players connect to the hub and appear to
   // each other; guests stay solo-local (exactly today's game)
   explore.remote = remote;
+  // wildlife combat is client-simulated: replay other players' swings against
+  // our own copy of the critter they hit (RemotePlayers plays their pose)
+  remote.onStrike = (m) => explore.onRemoteStrike(m);
   remote.attach();
   // walking room bots (:npc): wired BEFORE the first setRoom so the opening
   // room spawns its saved bots (explore.onRoom drives RoomBots.onRoom)

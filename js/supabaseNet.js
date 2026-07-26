@@ -198,6 +198,7 @@ export class SupabaseNet {
     ch.on('presence', { event: 'leave' }, ({ leftPresences }) => this._onPresenceLeave(leftPresences));
     ch.on('broadcast', { event: 'moved' }, ({ payload }) => this.emit('moved', payload));
     ch.on('broadcast', { event: 'chatted' }, ({ payload }) => this.emit('chatted', payload));
+    ch.on('broadcast', { event: 'struck' }, ({ payload }) => this.emit('struck', payload));
     ch.subscribe(async (status) => {
       if (status !== 'SUBSCRIBED') return;
       await ch.track({ name: this.name, figure: this.figure, classId: this.classId, ...this.pos });
@@ -315,6 +316,23 @@ export class SupabaseNet {
       type: 'broadcast',
       event: 'chatted',
       payload: { name: this.name, text, mode },
+    });
+  }
+
+  // A swing at a room critter. Wildlife has no server authority at all: every
+  // client runs its own copy of the same creature (js/exploreController.js),
+  // so combat only reaches other players if the roll itself is broadcast.
+  // The whole outcome travels together — damage, crit, the wind-up before it
+  // lands, and the rebirth delay to use if this blow kills — so no receiver
+  // ever re-rolls anything and the two simulations cannot drift apart. `dir`
+  // rides along so the attacker's avatar plays the swing facing the right way
+  // on every screen (see RemotePlayers.onStruck).
+  strike({ id, dir, dmg, crit, impact, respawn }) {
+    if (!this.room || !this.roomChannel || !id) return;
+    this.roomChannel.send({
+      type: 'broadcast',
+      event: 'struck',
+      payload: { name: this.name, dir, id, dmg, crit, impact, respawn },
     });
   }
 

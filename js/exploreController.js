@@ -4,8 +4,15 @@ import { furniSprites, monsterSprites } from './monsterSprites.js';
 import { PROJ_SPRITE } from './battleController.js';
 import { Identity } from './identity.js';
 
-const ATTACK_MS = 600; // attack jab duration (grab-reach pose)
+export const ATTACK_MS = 600; // attack jab duration (grab-reach pose)
 const IMPACT_MS = 250; // swing wind-up before the hit lands
+
+// A critter's network identity. Both halves come straight from room DATA
+// (the spec's name and its spawn tile), which every client loads identically,
+// so the same creature carries the same id on every machine without anyone
+// having to allocate or hand out ids. Home tile — not current position —
+// because critters wander: the id must survive the drift.
+export const critterId = (spec, tile) => `${spec.name}@${tile.x},${tile.y}`;
 
 // a prop's occupied tiles (multi-tile furni declare them, 1×1 default)
 const footprint = (p) => (p.tiles && p.tiles.length ? p.tiles : [{ x: p.x, y: p.y }]);
@@ -90,7 +97,10 @@ export class ExploreController {
     // tiny prey stats: just an HP pool for the bar — they never attack
     u.stats = { maxHp: spec.hp, hp: spec.hp, atk: 0, def: 0, spd: 0, move: 0, range: 1, min: 0 };
     u.sprites = monsterSprites(spec.look.pet, { tint: spec.look.tint, recolor: spec.look.recolor });
-    u.critter = { spec, home: tile, nextWander: performance.now() + 1000 + Math.random() * 4000 };
+    u.critter = {
+      spec, home: tile, id: critterId(spec, tile),
+      nextWander: performance.now() + 1000 + Math.random() * 4000,
+    };
     this.game.addUnit(u);
     this.critters.push(u);
     return u;
@@ -98,6 +108,11 @@ export class ExploreController {
 
   critterAt(x, y) {
     return this.critters.find((u) => u.alive && u.x === x && u.y === y) || null;
+  }
+
+  // Resolve a broadcast strike back onto our own copy of that creature.
+  critterById(id) {
+    return this.critters.find((u) => u.alive && u.critter.id === id) || null;
   }
 
   // Walk up and swing at a critter (double-tap gesture, like the dummy).
@@ -116,6 +131,13 @@ export class ExploreController {
   }
 
   // The swing itself: attack pose now, damage lands at impact (update()).
+  //
+  // Wildlife is simulated on every client independently — there is no server
+  // authority over a critter's HP — so the roll is broadcast the moment it is
+  // made and every other client queues the IDENTICAL strike against its own
+  // copy of the same creature (see onRemoteStrike). Damage, death and the
+  // rebirth timestamp are all carried on the wire, so nothing downstream is
+  // allowed to re-roll and drift.
   strike(critter) {
     const u = this.unit;
     const now = performance.now();
@@ -123,9 +145,32 @@ export class ExploreController {
     if (!critter.alive) return;
     this.face(critter);
     u.attackUntil = now + ATTACK_MS;
-    const dmg = 4 + Math.floor(Math.random() * 6);
+    const roll = 4 + Math.floor(Math.random() * 6);
     const crit = Math.random() < 0.15;
-    this.strikes.push({ unit: critter, at: now + IMPACT_MS, dmg: crit ? dmg * 2 : dmg, crit });
+    const dmg = crit ? roll * 2 : roll;
+    const respawn = critter.critter.spec.respawnMs;
+    this.strikes.push({ unit: critter, at: now + IMPACT_MS, dmg, crit, respawn, mine: true });
+    const net = this.remote && this.remote.net;
+    if (net && typeof net.strike === 'function') {
+      net.strike({ dir: u.dir, id: critter.critter.id, dmg, crit, impact: IMPACT_MS, respawn });
+    }
+  }
+
+  // Someone else's swing (RemotePlayers.onStruck relays it here): replay their
+  // roll against our copy of that critter on their timing. Their avatar's
+  // attack pose is RemotePlayers' half of the job; this half is the wound.
+  onRemoteStrike(msg) {
+    if (!msg || !msg.id) return;
+    const c = this.critterById(msg.id);
+    if (!c) return; // already dead here, or a room we're not standing in
+    this.strikes.push({
+      unit: c,
+      at: performance.now() + (msg.impact ?? IMPACT_MS),
+      dmg: msg.dmg | 0,
+      crit: !!msg.crit,
+      respawn: msg.respawn,
+      mine: false, // their kill, their XP — we only render it
+    });
   }
 
   // Impact: apply the wound, pop the classic feedback, queue the respawn
@@ -142,15 +187,21 @@ export class ExploreController {
     });
     if (!c.alive) {
       const spec = c.critter.spec;
-      this.game.addFx({
-        type: 'float', x: c.x, y: c.y, z, text: `+${spec.xp} xp`, color: '#9fe38a', dur: 1100, start: performance.now() + 350,
-      });
+      if (s.mine) {
+        this.game.addFx({
+          type: 'float', x: c.x, y: c.y, z, text: `+${spec.xp} xp`, color: '#9fe38a', dur: 1100, start: performance.now() + 350,
+        });
+      }
+      // No jitter: the delay rides on the wire (s.respawn) so every client
+      // rebirths this creature at the same moment. A local Math.random() here
+      // would put the same critter back on its home tile seconds apart on two
+      // screens — visibly two different woods.
       this.respawns.push({
         spec, tile: c.critter.home,
-        at: performance.now() + spec.respawnMs + Math.random() * 3000,
+        at: performance.now() + (s.respawn ?? spec.respawnMs),
       });
       this.critters = this.critters.filter((u) => u !== c);
-      if (this.onKill) this.onKill(spec);
+      if (s.mine && this.onKill) this.onKill(spec);
     }
   }
 

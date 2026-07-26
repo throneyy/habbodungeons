@@ -10,6 +10,7 @@ import { Unit } from './units.js';
 import { avatarSpritesFor } from './sprites.js';
 import { tileToScreen } from './iso.js';
 import { DEFAULT_FIGURE } from './config.js';
+import { ATTACK_MS } from './exploreController.js';
 
 const HEAD_PX = { 1: 104, 0.5: 52 }; // bubble/name anchor above the head, by zoom
 
@@ -21,11 +22,16 @@ export class RemotePlayers {
     this.units = new Map(); // lower-cased name -> Unit
     this.tags = new Map(); // lower-cased name -> DOM name tag
     this.layer = null; // name-tag layer (created on first attach)
+    // set per explore session (main.js): (payload) => ExploreController
+    // .onRemoteStrike — the wound half of a broadcast swing, applied to this
+    // client's own copy of the critter that was hit.
+    this.onStrike = null;
     this.unsubs = [
       net.on('roster', (m) => this.onRoster(m)),
       net.on('enter', (m) => this.onEnter(m)),
       net.on('moved', (m) => this.onMoved(m)),
       net.on('chatted', (m) => this.onChatted(m)),
+      net.on('struck', (m) => this.onStruck(m)),
       net.on('left', (m) => this.onLeft(m)),
     ];
   }
@@ -46,6 +52,7 @@ export class RemotePlayers {
   // Session teardown (leaving Free Roam for an overlay flow).
   detach() {
     this.clear();
+    this.onStrike = null;
     if (this.layer) {
       this.layer.remove();
       this.layer = null;
@@ -143,6 +150,46 @@ export class RemotePlayers {
     const p = u.renderPos(performance.now());
     const headPx = HEAD_PX[this.game.room.zoom] || 104;
     this.chat.bubble(msg.text, msg.name, p, headPx, msg.mode || 'say');
+  }
+
+  // A remote player swung at a room critter. Two halves, and both must run
+  // even if the other doesn't: play their attack pose (only possible if their
+  // Unit is spawned here) and hand the roll to the explore controller so the
+  // damage floater, the death and the respawn happen on this client too — the
+  // critter is real on every machine, so a swing that isn't replayed leaves
+  // the two rooms holding different creatures.
+  onStruck(msg) {
+    if (!msg) return;
+    const u = this.units.get((msg.name || '').toLowerCase());
+    if (u) {
+      this.settleWalk(u);
+      if (msg.dir != null) u.dir = msg.dir; // face the kill, same as the attacker
+      u.attackUntil = performance.now() + ATTACK_MS;
+    }
+    if (this.onStrike) this.onStrike(msg);
+  }
+
+  // A swinging player is a standing player: ExploreController.strike refuses
+  // to fire mid-step, so if our replay of their walk is still running when
+  // their strike arrives, it's OUR replay that's behind — they're already
+  // parked beside the critter. Settle the unit onto the destination they
+  // committed to (the same "committed tile is the truth" rule onMoved uses on
+  // divergence) before posing it, because Avatar.action() returns 'wlk' for
+  // any unit with a live step no matter what attackUntil says — the swing
+  // would otherwise be silently swallowed by the tail of the walk and the
+  // observer would watch a critter die to nothing. Confirmed by
+  // tests/e2e/critterStrikeSync.e2e.mjs, which strikes with the walk
+  // deliberately still in flight.
+  settleWalk(u) {
+    const dest =
+      u.pendingTarget ||
+      ((u.path || []).length ? u.path[u.path.length - 1] : u.step ? { x: u.step.tx, y: u.step.ty } : null);
+    if (!dest) return; // already standing still — nothing to settle
+    u.stop(); // clears path + pendingTarget
+    u.step = null;
+    u.x = dest.x;
+    u.y = dest.y;
+    u.z = u.room.heightAt(dest.x, dest.y) || 0;
   }
 
   onLeft(msg) {
