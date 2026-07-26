@@ -9,6 +9,8 @@ import {
 } from '../js/consumableEffects.js';
 import { makeMember, memberStats } from '../js/run.js';
 import { CONSUMABLES } from '../js/items.js';
+import { Unit } from '../js/units.js';
+import { CLASSES } from '../js/classes.js';
 
 let failed = 0;
 function check(label, cond) {
@@ -36,6 +38,14 @@ function fakeUnit(id, hp, { leader = false, team = 'player', xp = 0 } = {}) {
   };
 }
 const fakeBattle = (units) => ({ units });
+
+// A REAL Unit for the buff tests: buffs live on the unit, not in the adapter,
+// so a hand-rolled stub would assert nothing. Only a room with heightAt is
+// needed (Avatar reads it once for z).
+const fakeRoom = { heightAt: () => 0 };
+function buffableUnit(id, hp, { leader = false, team = 'player', classId = 'fighter' } = {}) {
+  return new Unit(fakeRoom, null, 0, 0, { id, team, classId, hp, useSprites: leader });
+}
 
 // ---- heal ------------------------------------------------------------------
 console.log('heal');
@@ -208,12 +218,99 @@ console.log('xp');
   check('battle: grants xp to the leader unit', u.xp === 3);
 }
 
+// ---- buff ------------------------------------------------------------------
+// Battle-scoped: it raises the LIVE unit's stats and is discarded with the
+// unit at writeBack. It must never touch buffAtk, which is Inspire's.
+console.log('buff');
+{
+  const u = buffableUnit('u1', 10, { leader: true });
+  const base = u.stats.atk;
+  const run = fakeRun([]);
+  const did = resolveEffect({ kind: 'buff', stat: 'atk', n: 3 }, battleTargets(run, fakeBattle([u])));
+  check('battle: raises the leader unit\'s ATK', did && u.stats.atk === base + 3);
+  check('battle: records the buff on the unit', u.buffs.length === 1 && u.buffs[0].n === 3);
+}
+{
+  // the Ranger's dagger profile is fed by the same atk bonus as the bow
+  const u = buffableUnit('r1', 10, { leader: true, classId: 'ranger' });
+  const bow = u.stats.atk;
+  const dagger = u.stats.closeRange.atk;
+  const run = fakeRun([]);
+  resolveEffect({ kind: 'buff', stat: 'atk', n: 3 }, battleTargets(run, fakeBattle([u])));
+  check('battle: raises closeRange.atk too (ranger keeps the buff in melee)',
+    u.stats.atk === bow + 3 && u.stats.closeRange.atk === dagger + 3);
+}
+{
+  const u = buffableUnit('u1', 10, { leader: true });
+  const run = fakeRun([]);
+  const t = battleTargets(run, fakeBattle([u]));
+  resolveEffect({ kind: 'buff', stat: 'atk', n: 3 }, t);
+  check('battle: leaves buffAtk at 0 so Inspire is unaffected', u.buffAtk === 0);
+  resolveEffect({ kind: 'buff', stat: 'atk', n: 3 }, t);
+  check('battle: a second tonic stacks additively',
+    u.stats.atk === CLASSES.fighter.atk + 6 && u.buffs.length === 2);
+}
+{
+  const u = buffableUnit('u1', 10, { leader: true });
+  const base = { def: u.stats.def, spd: u.stats.spd };
+  const run = fakeRun([]);
+  const t = battleTargets(run, fakeBattle([u]));
+  const d = resolveEffect({ kind: 'buff', stat: 'def', n: 2 }, t);
+  const s = resolveEffect({ kind: 'buff', stat: 'spd', n: 1 }, t);
+  check('battle: def and spd need no new kind',
+    d && s && u.stats.def === base.def + 2 && u.stats.spd === base.spd + 1);
+}
+{
+  const u = buffableUnit('u1', 10, { leader: true });
+  const before = { ...u.stats };
+  const run = fakeRun([]);
+  const t = battleTargets(run, fakeBattle([u]));
+  const bogus = resolveEffect({ kind: 'buff', stat: 'luck', n: 3 }, t);
+  const missing = resolveEffect({ kind: 'buff', n: 3 }, t);
+  const nan = resolveEffect({ kind: 'buff', stat: 'atk' }, t);
+  check('battle: an unknown, missing or amount-less stat is refused (no NaN)',
+    bogus === false && missing === false && nan === false
+    && u.stats.atk === before.atk && u.buffs.length === 0);
+}
+{
+  // between rooms there is no live Unit to hold the buff, so the tonic is kept
+  const lead = member({ name: 'Lead', leader: true });
+  const run = fakeRun([lead], ['strength_tonic']);
+  const ok = consumeFromRun(run, 'strength_tonic', rosterTargets(run));
+  check('roster: refuses a buff and keeps the item',
+    ok === false && run.inventory.length === 1 && run.saves === 0);
+}
+{
+  const u = buffableUnit('u1', 10, { leader: true });
+  const base = u.stats.atk;
+  const run = fakeRun([], ['strength_tonic']);
+  const ok = consumeFromRun(run, 'strength_tonic', battleTargets(run, fakeBattle([u])));
+  check('battle: the shipped Strength Tonic grants +3 ATK and is spent',
+    ok && u.stats.atk === base + 3 && run.inventory.length === 0 && run.saves === 1);
+}
+{
+  // the fx hook is what draws the gold burst + "+n ATK" floater
+  const u = buffableUnit('u1', 10, { leader: true });
+  const fx = [];
+  const battle = { units: [u], onFx: (e) => fx.push(e) };
+  resolveEffect({ kind: 'buff', stat: 'atk', n: 3 }, battleTargets(fakeRun([]), battle));
+  check('battle: fires the buff fx once, on the drinker',
+    fx.length === 1 && fx[0].kind === 'buff' && fx[0].target === u && fx[0].amount === 3);
+}
+{
+  // a unit built from a saved buff list (forward-compat with run scope)
+  const u = new Unit(fakeRoom, null, 0, 0, { classId: 'ranger', buffs: [{ stat: 'atk', n: 2 }] });
+  check('constructor: opts.buffs folds into stats at build time',
+    u.stats.atk === CLASSES.ranger.atk + 2
+    && u.stats.closeRange.atk === CLASSES.ranger.closeRange.atk + 2);
+}
+
 // ---- unknown / malformed ---------------------------------------------------
 console.log('guards');
 {
   const run = fakeRun([member({ name: 'Lead', leader: true, hp: 1 })]);
   check('an unknown kind resolves to false (item not eaten)',
-    resolveEffect({ kind: 'buff', n: 3 }, rosterTargets(run)) === false);
+    resolveEffect({ kind: 'transmute', n: 3 }, rosterTargets(run)) === false);
   check('a missing effect resolves to false', resolveEffect(null, rosterTargets(run)) === false);
   check('missing targets resolve to false', resolveEffect({ kind: 'heal', n: 1 }, null) === false);
 }
@@ -249,13 +346,19 @@ console.log('consumeFromRun');
   check('a null run is refused', consumeFromRun(null, 'health_potion', null) === false);
 }
 {
-  // every shipped consumable resolves through the roster adapter
+  // every shipped consumable resolves through SOME adapter. Most kinds land on
+  // the roster; `buff` is battle-scoped by design, so it is asserted through
+  // the battle adapter instead (see the buff section below for the refusal).
   const kinds = new Set(Object.values(CONSUMABLES).map((c) => c.effect.kind));
   check('every shipped consumable kind is handled by the resolver',
     [...kinds].every((kind) => {
       const lead = member({ name: 'Lead', leader: true, hp: 1 });
       const dead = member({ name: 'Dead', hp: 0 });
       const run = fakeRun([lead, dead]);
+      if (kind === 'buff') {
+        const u = buffableUnit('u1', 10, { leader: true });
+        return resolveEffect({ kind, stat: 'atk', n: 1 }, battleTargets(run, fakeBattle([u]))) === true;
+      }
       return resolveEffect({ kind, n: 1 }, rosterTargets(run)) === true;
     }));
 }

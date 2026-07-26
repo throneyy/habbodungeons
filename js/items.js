@@ -76,9 +76,11 @@ export const ITEMS = {
 };
 
 // Consumables: one-shot potions and curios that live in the backpack next to
-// equipment but are USED, not worn. `effect` is applied by main.js
-// (useConsumable): heal = leader, healAll = whole living squad, revive =
-// first fallen member at half HP, xp = leader experience. Icons are real
+// equipment but are USED, not worn. `effect` is resolved by
+// js/consumableEffects.js: heal = leader, healAll = whole living squad,
+// revive = first fallen member at half HP, xp = leader experience,
+// buff = raise the battle leader's `stat` by n for the rest of the battle
+// (atk/def/spd; refused outside combat, so the item is kept). Icons are real
 // extracted furni (the fantasy potion line and friends).
 export const CONSUMABLES = {
   health_potion: { name: 'Health Potion', rarity: 'common', effect: { kind: 'heal', n: 8 }, effectText: 'Restores 8 HP', blurb: 'Tastes like cherries. Mostly.', icon: 'fantasy_c22_redpotion' },
@@ -86,7 +88,7 @@ export const CONSUMABLES = {
   witchs_brew: { name: "Witch's Brew", rarity: 'uncommon', effect: { kind: 'healAll', n: 5 }, effectText: 'Restores 5 HP to the whole party', blurb: 'Do not ask what floats in it.', icon: 'hween_c19_potions' },
   revival_crystal: { name: 'Revival Crystal', rarity: 'epic', effect: { kind: 'revive' }, effectText: 'Revives a fallen hero at half HP', blurb: 'It hums with a second chance.', icon: 'fantasy_c22_crystal' },
   rune_of_knowledge: { name: 'Rune of Knowledge', rarity: 'uncommon', effect: { kind: 'xp', n: 2 }, effectText: 'Grants 2 XP', blurb: 'The stone whispers old lessons.', icon: 'fantasy_c22_rune' },
-  strength_tonic: { name: 'Strength Tonic', rarity: 'uncommon', effect: { kind: 'heal', n: 4 }, effectText: 'Restores 4 HP', blurb: 'Green, fizzy, and full of spinach.', icon: 'fantasy_c22_greenpotion' },
+  strength_tonic: { name: 'Strength Tonic', rarity: 'uncommon', effect: { kind: 'buff', stat: 'atk', n: 3 }, effectText: '+3 ATK for the rest of the battle', blurb: 'Green, fizzy, and full of spinach.', icon: 'fantasy_c22_greenpotion' },
 };
 
 // Anything a backpack can hold: equipment or consumable.
