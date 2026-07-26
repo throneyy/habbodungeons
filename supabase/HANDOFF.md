@@ -11,8 +11,14 @@ The same static client runs two ways (selected by hostname in `js/backend.js`):
 (Lovable) → Supabase** (Edge Functions + Realtime). On Lovable you are always on
 the Supabase path.
 
-There are **19 edge functions** (the plan said ~20; the real count is 19 — all
-listed in §3).
+There are **23 edge functions**: the 19 listed in §3 plus the four `duel-*` added
+later (§3a).
+
+> **Currently OUT OF DATE on the live project `cswyarorrvzbunodiftf`** — three
+> migrations and four functions are in git but were never applied/deployed. See
+> **§5, "What is still undeployed"**, which also records which deploy paths
+> actually work from this machine and which need a human. Git does not deploy
+> this backend; pushing `supabase/` changes files and nothing else.
 
 ---
 
@@ -183,6 +189,26 @@ linger as ghosts in the roster until their row ages out on the next write.
 
 ---
 
+## 3a. The four `duel-*` functions
+
+Added after the original 19. All four are declared in `config.toml` with
+`verify_jwt = true`, which is both correct and the platform default: each one
+calls `requireUser()` and returns its own `401 {ok:false, reason:"sign in
+first"}`, so an anonymous caller is refused by the function rather than by the
+gateway.
+
+| # | Function | verify_jwt | Notes |
+|---|---|---|---|
+| 20 | `duel-challenge` | true | throw the gauntlet; validates same-room + both-free |
+| 21 | `duel-accept` | true | re-validates, then stamps the ONE `starts_at` anchor |
+| 22 | `duel-decline` | true | |
+| 23 | `duel-cancel` | true | either side, any time before combat |
+
+They need the `duels` table (`20260726120000_duels.sql`) — deploy the functions
+**after** that migration, or every call fails on a missing relation.
+
+---
+
 ## 4. Point the client at your Lovable project
 
 `js/supabase.js` resolves the URL + anon key in this order: `window.HD_SUPABASE_URL`
@@ -207,6 +233,126 @@ Confirm in the browser console on the live Lovable URL:
 document.querySelector('meta[name="hd-supabase-url"]').content
 ```
 and that the Network tab shows calls going to `https://<your-ref>.functions.supabase.co`.
+
+---
+
+## 5. What is still undeployed — and who can deploy it
+
+Measured against the live project on 2026-07-26, with the anon key from `.env`.
+Every claim below is a recorded HTTP response, not an assumption.
+
+### The gap
+
+| Item | Live state | Probe |
+| --- | --- | --- |
+| `20260726000000_add_class_id_to_profiles.sql` | **not applied** | `profiles?select=class_id` → `42703 column profiles.class_id does not exist` |
+| `20260726120000_duels.sql` | **not applied** | `duels?select=id` → `PGRST205 Could not find the table 'public.duels'` |
+| `20260726180000_profiles_unique_habbo_username.sql` | **partly applied** | the unique index EXISTS (a live e2e run hit `duplicate key ... profiles_habbo_username_lower_key`), so it was pasted by hand at some point; whether the whole file ran is unconfirmed — re-run it, it is idempotent |
+| `duel-challenge/accept/decline/cancel` | **not deployed** | `POST` → **404** |
+
+**404 vs 401 is the discriminator.** A deployed-but-auth-gated function answers
+**401** (`party-invite`, `stash-bank` both do). **404** means the function is not
+there at all. Do not read a 401 as "missing".
+
+### Which deploy path works from a dev machine
+
+Docker is **not** the blocker, and `supabase start` is not needed — nothing here
+requires a local stack. Both remote paths are Docker-free:
+
+- `supabase functions deploy <name> --project-ref <ref> --use-api` — `--use-api`
+  bundles server-side, so no Docker daemon. **Needs a personal access token.**
+- `supabase db push --db-url <postgres connection string>` — talks straight to
+  the remote database, no Docker and no access token. **Needs the database
+  password.**
+
+**Neither credential exists in this repo or on this machine.** `.env` holds only
+`VITE_SUPABASE_PUBLISHABLE_KEY`, whose JWT decodes to `"role":"anon"` — enough to
+read through RLS and call functions, and nothing else. There is no
+`SUPABASE_ACCESS_TOKEN` in the environment and no CLI login on disk
+(`~/.supabase` holds only `telemetry.json`). Confirmed:
+
+```
+$ npx supabase functions deploy duel-challenge --project-ref <ref> --use-api
+Access token not provided. Supply an access token by running `supabase login`
+or setting the SUPABASE_ACCESS_TOKEN environment variable.
+```
+
+That error arrives **before** any Docker check, which is the proof that
+credentials are the blocker and Docker is a red herring.
+
+### So a human has to do one of these
+
+**Option 1 — Lovable chat (no credentials needed, confirmed to work).** Push
+first, then ask Lovable's chat to deploy the functions. A deploy request ships
+what is in the Lovable project *at that moment*, not what is in your worktree.
+This route is established: a previous `party-invite` deploy requested this way
+landed and turned a red e2e assertion green.
+
+**Option 2 — SQL editor + CLI, for whoever holds the credentials.**
+
+1. **Migrations — Dashboard → SQL Editor.** Paste each file whole and run, in
+   this order (all three are idempotent; a second run is a no-op):
+   1. `20260726000000_add_class_id_to_profiles.sql` (`add column if not exists`)
+   2. `20260726120000_duels.sql` (`create table if not exists`, policy guarded
+      with `exception when duplicate_object`, publication guarded)
+   3. `20260726180000_profiles_unique_habbo_username.sql` (reads `class_id`
+      through `to_jsonb(row)` precisely so it survives being run before #1)
+
+   Or, with the database password: `supabase db push --db-url <conn string>`.
+
+2. **Functions — with an access token from Dashboard → Account → Access Tokens:**
+   ```bash
+   export SUPABASE_ACCESS_TOKEN=sbp_...
+   npx supabase functions deploy duel-challenge duel-accept duel-decline duel-cancel \
+     --project-ref cswyarorrvzbunodiftf --use-api
+   ```
+   **Name the four functions explicitly.** A bare `functions deploy` deploys
+   *every* function in the directory, re-rolling all 19 working ones for no
+   reason. Never pass `--prune`.
+
+3. **Re-assert the public gates.** §3 warns that a deploy can reset `verify_jwt`
+   to `true`; that would break guest linking and avatar rendering. The five
+   functions that must stay `false` are `verify-habbo-link`, `sync-habbo-skills`,
+   `fetch-habbo-profile`, `habbo-imaging`, `presence-reap`. Check them with the
+   probe in the next section — it needs no credentials.
+
+### Verify the deploy landed (anon key only, no credentials)
+
+```bash
+URL=$(grep VITE_SUPABASE_URL .env | sed 's/.*=//' | tr -d '"\r')
+KEY=$(grep PUBLISHABLE .env | sed 's/.*=//' | tr -d '"\r')
+
+# schema: both must return data/[] rather than an error code
+curl -s "$URL/rest/v1/profiles?select=class_id&limit=1" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+curl -s "$URL/rest/v1/duels?select=id&limit=1"          -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+
+# functions: 401 = deployed and gated (GOOD). 404 = still missing.
+for f in duel-challenge duel-accept duel-decline duel-cancel; do
+  echo "$f -> $(curl -s -o /dev/null -w '%{http_code}' -X POST "$URL/functions/v1/$f" \
+    -H "apikey: $KEY" -H "content-type: application/json" -d '{}')"
+done
+
+# §3 gates: these five must NOT answer 401 with no Authorization header
+for f in verify-habbo-link sync-habbo-skills fetch-habbo-profile habbo-imaging presence-reap; do
+  echo "$f -> $(curl -s -o /dev/null -w '%{http_code}' -X POST "$URL/functions/v1/$f" \
+    -H "apikey: $KEY" -H "content-type: application/json" -d '{}')"
+done
+```
+
+The `duels` RLS is SELECT-only for participants by design (writes go through the
+service role inside the `duel-*` functions). Once the table exists, confirm both
+halves in the SQL editor:
+
+```sql
+select policyname, cmd from pg_policies
+where schemaname='public' and tablename='duels';
+-- expect exactly one row: "duels party read" / SELECT. Any INSERT/UPDATE/DELETE
+-- policy here is a hole: it would let a client put itself in a duel, skip the
+-- countdown, or restart it by writing the table directly.
+```
+
+Then `npm run test:e2e`. `classIdCloudSync.e2e.mjs` is the canary for migration
+#1 and fails **only** on this gap.
 
 ---
 

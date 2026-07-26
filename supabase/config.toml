@@ -52,3 +52,16 @@ verify_jwt = true
 verify_jwt = true
 [functions.trade-cancel]
 verify_jwt = true
+# --- duels. All four resolve the caller with requireUser() and answer their own
+# 401 "sign in first", so verify_jwt = true is both correct and the platform
+# default. Declared anyway: every other function here states its value, and an
+# undeclared function is one whose gate is whatever the dashboard last decided
+# rather than what the repo says.
+[functions.duel-challenge]
+verify_jwt = true
+[functions.duel-accept]
+verify_jwt = true
+[functions.duel-decline]
+verify_jwt = true
+[functions.duel-cancel]
+verify_jwt = true
