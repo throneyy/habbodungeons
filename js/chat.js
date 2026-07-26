@@ -94,16 +94,24 @@ export class ChatOverlay {
     if (this.onSay) this.onSay(text, mode);
   }
 
-  // Bot-style line from a non-player speaker (NPCs — see npc.js):
+  // Bot-style line from a non-player speaker (NPCs — see npc.js — and the
+  // ambient room-bot chatter in js/roomBots.js):
   // speaker = { name, x, y, z, headPx } — headPx is how far above the tile
   // centre the bubble anchors (a money tree is taller than an avatar).
-  sayAs(text, speaker) {
+  //
+  // `mode` is the mode the line was authored with: 'say' (default), 'shout' or
+  // 'whisper'. A non-say mode stacks its class ON TOP of the bot pill, so a
+  // shouting bot keeps the gray bot bubble AND gets the bold shout text — the
+  // recovered chatter marks real shouts (js/botChatter.js) and they would
+  // otherwise all render flat.
+  sayAs(text, speaker, mode = 'say') {
     const room = this.game.room;
     if (!room) return;
     const headPx = (speaker.headPx || 104) * room.zoom;
-    this.bubble(text, speaker.name, speaker, headPx, 'bot');
+    this.bubble(text, speaker.name, speaker, headPx, mode === 'say' ? ['bot'] : ['bot', mode]);
   }
 
+  // `mode` is one class suffix or a list of them (see sayAs).
   bubble(text, speakerName, pos, headPx, mode) {
     const room = this.game.room;
     const c = tileToScreen(pos.x, pos.y, pos.z, room.zoom);
@@ -111,7 +119,8 @@ export class ChatOverlay {
     const headY = Math.round(c.y + this.game.cam.y - headPx);
 
     const el = document.createElement('div');
-    el.className = `chat-bubble chat-bubble--${mode}`;
+    const modes = Array.isArray(mode) ? mode : [mode];
+    el.className = ['chat-bubble', ...modes.map((m) => `chat-bubble--${m}`)].join(' ');
     const name = document.createElement('b');
     name.textContent = speakerName + ': ';
     const msg = document.createElement('span');

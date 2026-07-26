@@ -1907,7 +1907,13 @@ async function startExplore() {
   // walking room bots (:npc): wired BEFORE the first setRoom so the opening
   // room spawns its saved bots (explore.onRoom drives RoomBots.onRoom)
   if (!roomBots)
-    roomBots = new RoomBots(game, { isAdmin: isRoomAdmin, getEditor: () => editor });
+    roomBots = new RoomBots(game, {
+      isAdmin: isRoomAdmin,
+      getEditor: () => editor,
+      // a getter, not the overlay: `chat` is built further down this same boot
+      // path, so it is still null at this point
+      getChat: () => chat,
+    });
   explore.bots = roomBots;
   // tap a player (or yourself) → the human object displayer bottom-right
   explore.onPlayerTap = (unit) => {

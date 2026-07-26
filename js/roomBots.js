@@ -13,14 +13,24 @@
 import { Avatar } from './avatar.js';
 import { avatarSpritesFor } from './sprites.js';
 import { botDef } from './botsData.js';
+import { chatterFor, modeOf } from './botChatter.js';
 import { tileToScreen } from './iso.js';
 import { IMAGING_URL } from './config.js';
 
 const HEAD_PX = { 1: 104, 0.5: 52 }; // name-tag anchor above the head, by zoom
+const BUBBLE_HEAD_PX = 104; // ChatOverlay.sayAs scales this by room.zoom itself
 export const LEASH = 2; // max tiles a bot drifts from its home tile
 const WANDER_MIN_MS = 2500;
 const WANDER_SPREAD_MS = 4500;
 const IDLE_CHANCE = 0.45; // ...and sometimes it just stands there
+
+// Ambient chatter cadence. Per-bot timers are deliberately slow and widely
+// spread, but they are NOT enough on their own: 33 bots in one room converge
+// on "several ready at once" often enough to paper the screen with bubbles.
+// BARK_COOLDOWN_MS is the room-wide floor between any two bot bubbles.
+export const BARK_MIN_MS = 14000;
+export const BARK_SPREAD_MS = 16000;
+export const BARK_COOLDOWN_MS = 4500;
 
 // ---- pure helpers (DOM-free, unit-tested in tests/roomBots.test.js) --------
 
@@ -68,6 +78,42 @@ export function wanderTarget(room, bot, isOccupied = () => false, rnd = Math.ran
   return opts[Math.floor(rnd() * opts.length)];
 }
 
+// When a bot should next consider speaking. Spread is wide on purpose: bots
+// placed together (a whole cafe staff dropped in one go) would otherwise stay
+// in lockstep, all firing into the same cooldown and mostly being swallowed.
+export function nextBarkAt(now, rnd = Math.random) {
+  return now + BARK_MIN_MS + rnd() * BARK_SPREAD_MS;
+}
+
+// A random idle line for a bot key, or null when that bot has nothing to say.
+// ONLY the `speech` bucket: `response` and `unrecognised` are player-triggered
+// and still carry unexpanded %drink% / %lowercaseDrink% template tokens, which
+// would render literally in a bubble. The 11 bots in SILENT_BOTS have no
+// CHATTER entry at all, so they land on the null here and never speak.
+export function speechLine(key, rnd = Math.random) {
+  const chatter = chatterFor(key);
+  const lines = (chatter && chatter.speech) || [];
+  if (!lines.length) return null;
+  return lines[Math.floor(rnd() * lines.length)] || null;
+}
+
+// Should this bot speak on this frame? Returns the line to say, or null.
+//
+// `state` is the shared room-wide cooldown record ({ lastBarkAt }) — passing
+// one object across every bot is what makes the global floor global. A bot
+// whose own timer is ready but who loses the cooldown race is REscheduled
+// rather than left hot, so it doesn't re-roll on every subsequent frame.
+// `rnd` is injectable for deterministic tests, exactly like wanderTarget.
+export function tryBark(bot, now, state, rnd = Math.random) {
+  if (!bot || now < bot.nextBark) return null;
+  bot.nextBark = nextBarkAt(now, rnd);
+  if (now - (state.lastBarkAt ?? -Infinity) < BARK_COOLDOWN_MS) return null;
+  const line = speechLine(bot.key, rnd);
+  if (!line) return null;
+  state.lastBarkAt = now;
+  return line;
+}
+
 // ---- the entity -----------------------------------------------------------
 
 export class RoomBot extends Avatar {
@@ -81,6 +127,9 @@ export class RoomBot extends Avatar {
     this.carry = def.carry ?? null;
     this.home = { x: spec.x, y: spec.y };
     this.nextWander = 0;
+    // Infinity for a silent bot (js/botChatter.js SILENT_BOTS): its timer can
+    // never come due, so it is skipped before any roll is even attempted.
+    this.nextBark = chatterFor(def.key) ? 0 : Infinity;
     this.stats = null; // no HP bar (Game.drawUnit skips stat-less entities)
     this.bot = true; // picking flag: this unit is a room bot
     // Game.drawToken is the fallback while the imaging PNGs are still loading
@@ -93,11 +142,17 @@ export class RoomBot extends Avatar {
 // ---- the manager ----------------------------------------------------------
 
 export class RoomBots {
-  // opts: { isAdmin: () => bool, getEditor: () => RoomEditor|null }
-  constructor(game, { isAdmin = () => false, getEditor = () => null } = {}) {
+  // opts: { isAdmin: () => bool, getEditor: () => RoomEditor|null,
+  //         getChat: () => ChatOverlay|null }
+  // getChat is a getter, not the overlay itself: main.js builds RoomBots before
+  // the ChatOverlay exists.
+  constructor(game, { isAdmin = () => false, getEditor = () => null, getChat = () => null } = {}) {
     this.game = game;
     this.isAdmin = isAdmin;
     this.getEditor = getEditor;
+    this.getChat = getChat;
+    // one shared cooldown record for the whole room — see tryBark
+    this.barkState = { lastBarkAt: -Infinity };
     this.bots = []; // live RoomBot entities in the current room
     this.tags = new Map(); // RoomBot -> DOM name tag
     this.layer = null;
@@ -159,6 +214,9 @@ export class RoomBots {
     const sprites = avatarSpritesFor(def.figure, room.zoom === 1 ? 'm' : 's', 'fighter', def.carry ?? null);
     const bot = new RoomBot(room, sprites, spec, def);
     bot.nextWander = performance.now() + 1000 + Math.random() * 4000;
+    // stagger the opening bark too, so a freshly loaded room doesn't open with
+    // a queue of bots all talking at the cooldown's pace
+    if (bot.nextBark !== Infinity) bot.nextBark = nextBarkAt(performance.now());
     this.game.addUnit(bot);
     this.bots.push(bot);
     const tag = document.createElement('div');
@@ -213,7 +271,9 @@ export class RoomBots {
     if (!this.layer || !this.game.room) return;
     const isOccupied = this.occupancy(controller);
     for (const bot of this.bots) {
-      if (bot !== (this.placing && this.placing.bot)) this.wander(bot, now, isOccupied);
+      if (bot === (this.placing && this.placing.bot)) continue; // the cursor ghost
+      this.wander(bot, now, isOccupied);
+      this.bark(bot, now);
     }
     const zoom = this.game.room.zoom;
     const headPx = HEAD_PX[zoom] || 104;
@@ -231,6 +291,17 @@ export class RoomBots {
     if (Math.random() < IDLE_CHANCE) return;
     const t = wanderTarget(this.game.room, bot, isOccupied);
     if (t) bot.walkTo(t.x, t.y);
+  }
+
+  // Ambient chatter: an idle `speech` line through the same NPC bubble path the
+  // Gatekeeper uses, carrying the line's own shout/whisper mode.
+  bark(bot, now) {
+    const chat = this.getChat();
+    if (!chat) return; // no overlay (headless / pre-boot) — don't burn the timer
+    const line = tryBark(bot, now, this.barkState);
+    if (!line) return;
+    const p = bot.renderPos(now);
+    chat.sayAs(line.text, { name: bot.name, x: p.x, y: p.y, z: p.z, headPx: BUBBLE_HEAD_PX }, modeOf(line));
   }
 
   // ---- placement (the Object Mover feel, for avatars) ---------------------

@@ -1,8 +1,12 @@
 // Walking room bot tests — run with:  node tests/roomBots.test.js
 // Covers the pure helpers behind the :npc command: the saved-layout split
-// (bots ride the same array as furni), the persistence shape, and the wander
-// candidate filter (leash, blocked tiles, teleport pads, height steps).
-import { splitBots, serializeBot, wanderTarget, LEASH } from '../js/roomBots.js';
+// (bots ride the same array as furni), the persistence shape, the wander
+// candidate filter (leash, blocked tiles, teleport pads, height steps) and the
+// ambient chatter roll (per-bot timer + the room-wide bubble cooldown).
+import {
+  splitBots, serializeBot, wanderTarget, LEASH,
+  speechLine, tryBark, nextBarkAt, BARK_MIN_MS, BARK_SPREAD_MS, BARK_COOLDOWN_MS,
+} from '../js/roomBots.js';
 import { ROOM_BOTS, botDef } from '../js/botsData.js';
 import { HAND_ITEMS, handItemId } from '../js/handItems.js';
 import { CHATTER, SILENT_BOTS, chatterFor, modeOf } from '../js/botChatter.js';
@@ -210,6 +214,132 @@ check('the way home stays open', leashOpts.has(`${3 + LEASH},4`));
 check('boxed in returns null', wanderTarget(
   stubRoom({ blocked: [[3, 4], [5, 4], [4, 3], [4, 5]] }), bot(4, 4)
 ) === null);
+
+// ---- ambient chatter (bark) ----------------------------------------------
+// Idle `speech` lines only, gated by a per-bot timer AND a room-wide cooldown.
+console.log('bark');
+const mkBot = (key, nextBark = 0) => ({ key, name: botDef(key).name, nextBark });
+const freshState = () => ({ lastBarkAt: -Infinity });
+const ALWAYS_FIRST = () => 0; // deterministic: always index 0, never a coin-flip
+
+// ---- speechLine: where lines may come from --------------------------------
+check('a talker yields a line from its OWN speech array', ROOM_BOTS.every((b) => {
+  if (SILENT_BOTS.includes(b.key)) return true;
+  const own = CHATTER[b.key].speech;
+  // sweep rnd across the whole array so every index is observed
+  return own.every((_, i) => own.includes(speechLine(b.key, () => i / own.length)));
+}));
+check('silent bots never yield a line',
+  SILENT_BOTS.every((k) => [0, 0.25, 0.5, 0.99].every((r) => speechLine(k, () => r) === null)));
+check('an unknown key yields no line', speechLine('no_such_bot', ALWAYS_FIRST) === null);
+// response/unrecognised are player-triggered and still hold %drink% tokens
+check('lines never come from response/unrecognised', (() => {
+  const speechTexts = new Set(Object.values(CHATTER).flatMap((c) => c.speech.map((l) => l.text)));
+  const otherOnly = Object.values(CHATTER)
+    .flatMap((c) => [...c.response, ...c.unrecognised])
+    .filter((l) => !speechTexts.has(l.text));
+  return otherOnly.length > 0 && ROOM_BOTS.every((b) => {
+    if (SILENT_BOTS.includes(b.key)) return true;
+    const n = CHATTER[b.key].speech.length;
+    return Array.from({ length: n }, (_, i) => speechLine(b.key, () => i / n))
+      .every((l) => !otherOnly.some((o) => o.text === l.text));
+  });
+})());
+check('no ambient line can contain an unexpanded %token%', ROOM_BOTS.every((b) =>
+  SILENT_BOTS.includes(b.key) || CHATTER[b.key].speech.every((l) => !/%\w+%/.test(l.text))));
+
+// ---- tryBark: the per-bot timer -------------------------------------------
+check('a bot with a future timer stays quiet',
+  tryBark(mkBot('harry', 10_000), 500, freshState(), ALWAYS_FIRST) === null);
+check('a due bot barks', (() => {
+  const line = tryBark(mkBot('harry'), 1000, freshState(), ALWAYS_FIRST);
+  return line !== null && line.text === CHATTER.harry.speech[0].text;
+})());
+check('barking reschedules the bot into the future', (() => {
+  const bot = mkBot('harry');
+  tryBark(bot, 1000, freshState(), ALWAYS_FIRST);
+  return bot.nextBark >= 1000 + BARK_MIN_MS && bot.nextBark <= 1000 + BARK_MIN_MS + BARK_SPREAD_MS;
+})());
+check('nextBarkAt spans exactly the configured window',
+  nextBarkAt(0, () => 0) === BARK_MIN_MS &&
+  Math.abs(nextBarkAt(0, () => 1) - (BARK_MIN_MS + BARK_SPREAD_MS)) < 1e-9);
+
+// ---- tryBark: silent bots --------------------------------------------------
+check('silent bots never bark, however long they wait',
+  SILENT_BOTS.every((k) => tryBark(mkBot(k), 1e9, freshState(), ALWAYS_FIRST) === null));
+check('a silent bot does not consume the global cooldown', (() => {
+  const state = freshState();
+  tryBark(mkBot('xenia'), 1000, state, ALWAYS_FIRST); // silent
+  return state.lastBarkAt === -Infinity && tryBark(mkBot('harry'), 1000, state, ALWAYS_FIRST) !== null;
+})());
+
+// ---- tryBark: the room-wide cooldown --------------------------------------
+check('a second bot is suppressed inside the cooldown', (() => {
+  const state = freshState();
+  const first = tryBark(mkBot('harry'), 1000, state, ALWAYS_FIRST);
+  const second = tryBark(mkBot('marcus'), 1000 + BARK_COOLDOWN_MS - 1, state, ALWAYS_FIRST);
+  return first !== null && second === null;
+})());
+check('...and speaks again once the cooldown elapses', (() => {
+  const state = freshState();
+  tryBark(mkBot('harry'), 1000, state, ALWAYS_FIRST);
+  return tryBark(mkBot('marcus'), 1000 + BARK_COOLDOWN_MS, state, ALWAYS_FIRST) !== null;
+})());
+check('a suppressed bot is rescheduled, not left hot re-rolling every frame', (() => {
+  const state = freshState();
+  tryBark(mkBot('harry'), 1000, state, ALWAYS_FIRST);
+  const loser = mkBot('marcus');
+  tryBark(loser, 1000, state, ALWAYS_FIRST); // swallowed by the cooldown
+  return loser.nextBark >= 1000 + BARK_MIN_MS;
+})());
+check('all 33 due at once still yields exactly one bubble', (() => {
+  const state = freshState();
+  return ROOM_BOTS.map((b) => tryBark(mkBot(b.key), 5000, state, ALWAYS_FIRST)).filter(Boolean).length === 1;
+})());
+check('over a long window the rate stays under the cooldown', (() => {
+  // every bot forced permanently ready, isolating the global gate
+  const state = freshState();
+  const bots = ROOM_BOTS.map((b) => mkBot(b.key));
+  const SPAN = 60_000;
+  let said = 0;
+  for (let now = 0; now <= SPAN; now += 100) {
+    for (const b of bots) {
+      b.nextBark = 0;
+      if (tryBark(b, now, state, ALWAYS_FIRST)) said++;
+    }
+  }
+  return said <= Math.ceil(SPAN / BARK_COOLDOWN_MS) + 1;
+})());
+
+// ---- modes survive the trip ------------------------------------------------
+check('shout mode is carried through on a known shout', (() => {
+  const i = CHATTER.jem.speech.findIndex((l) => l.mode === 'shout');
+  const line = speechLine('jem', () => i / CHATTER.jem.speech.length);
+  return line.mode === 'shout' && modeOf(line) === 'shout';
+})());
+check('a barked line keeps its mode all the way out of tryBark', (() => {
+  const line = tryBark(mkBot('laura'), 1000, freshState(), ALWAYS_FIRST); // laura's one line is a shout
+  return line && modeOf(line) === 'shout';
+})());
+check('tryBark returns the CHATTER line object itself, so any mode travels',
+  // identity, not a copy: whatever `mode` a line carries reaches bark() untouched
+  tryBark(mkBot('laura'), 1000, freshState(), ALWAYS_FIRST) === CHATTER.laura.speech[0]);
+check('every ambient line reports a real mode', ROOM_BOTS.every((b) => {
+  if (SILENT_BOTS.includes(b.key)) return true;
+  const n = CHATTER[b.key].speech.length;
+  return Array.from({ length: n }, (_, i) => speechLine(b.key, () => i / n))
+    .every((l) => ['say', 'shout', 'whisper'].includes(modeOf(l)));
+}));
+// Data fact worth pinning: every whisper in the dump lives in `unrecognised`
+// (miho, skye, carlo) and none in `speech`, so ambient emits say + shout only.
+// If a whisper is ever added to a speech bucket this still works (the mode is
+// passed opaquely, per the identity check above) — this just records today.
+check("the dump's whispers are all outside speech (ambient can't reach them)", (() => {
+  const whisperers = Object.entries(CHATTER)
+    .filter(([, c]) => [...c.response, ...c.unrecognised].some((l) => l.mode === 'whisper'))
+    .map(([k]) => k);
+  return whisperers.length === 3 && !Object.values(CHATTER).some((c) => c.speech.some((l) => l.mode === 'whisper'));
+})());
 
 console.log(failed ? `\n${failed} test(s) failed` : '\nall room-bot tests passed');
 process.exit(failed ? 1 : 0);
