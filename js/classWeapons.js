@@ -14,9 +14,11 @@
 //          should never be seen swinging a sword, so there is no melee
 //          fallback for them; every attack pose they have holds the bow.
 //   idle - held whenever NOT mid-swing (the 'std' pose, and the off frame of
-//          the 'atk' cycle). Optional: only the cleric has one today (the
-//          lantern), so their Heal-adjacent stance reads as "support", not
-//          "unarmed" — everyone else is empty-handed until they swing.
+//          the 'atk' cycle). Optional: the cleric has one (the lantern), so
+//          their Heal-adjacent stance reads as "support", not "unarmed"; the
+//          ranger has one too (their own bow — an idle ranger should always
+//          be seen holding it, not just mid-attack/mid-shot). Everyone else
+//          is empty-handed until they swing.
 //   bow  - held during the 'bow' pose (js/exploreController.js shoot(), the
 //          ranged-attack draw — originally archery-only, now the general
 //          "attacking from range" pose for any class the archery target
@@ -33,7 +35,7 @@ export const CLASS_WEAPON = Object.freeze({
   fighter: { atk: ID.Sword },
   barbarian: { atk: ID.Bat },
   rogue: { atk: ID.Dagger },
-  ranger: { atk: ID.Bow, bow: ID.Bow },
+  ranger: { atk: ID.Bow, idle: ID.Bow, bow: ID.Bow },
   mage: { atk: ID.Wand, bow: ID.SpellBook },
   warlock: { atk: ID.TreeBranch },
   cleric: { atk: ID.Hammer, idle: ID.Lantern, bow: ID.SpellBook },
