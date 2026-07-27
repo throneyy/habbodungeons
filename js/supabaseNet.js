@@ -21,6 +21,30 @@
 import { getSupabase } from './supabase.js';
 import { invokeFn } from './backend.js';
 
+// The `party` broadcast shape, rebuilt client-side for _rehydrateParty.
+//
+// This is a deliberate mirror of partyStateShape() in
+// supabase/functions/_shared/partyShape.ts, NOT an independent format: the
+// server is still the only writer, and this only reconstructs what the last
+// push would have said. It is copied rather than imported because that module
+// lives in the Deno functions tree, and making the browser bundle reach into
+// supabase/functions/ to build the client would couple the shipped site to the
+// edge-function source layout.
+//
+// A hand-copy of a shared format is exactly the kind of thing that silently
+// drifts, so it is not left on trust: tests/partyRehydrate.test.js runs the
+// REAL server function and this one over the same rows and fails on any
+// difference, down to the null-party teardown shape.
+export function partyShapeOf(party) {
+  if (!party) return { partyId: null, leader: null, members: [] };
+  const leaderRow = (party.members || []).find((m) => m.user_id === party.leader_id);
+  return {
+    partyId: party.id,
+    leader: (leaderRow && leaderRow.name) ?? null,
+    members: (party.members || []).map((m) => ({ name: m.name, figure: m.figure })),
+  };
+}
+
 export class SupabaseNet {
   constructor() {
     this.handlers = new Map();
@@ -119,7 +143,63 @@ export class SupabaseNet {
     this._openLayoutChannel();
     this._connected = true;
     this.emit('open', {});
+    // Membership is durable; the `party` broadcast that carries it is not.
+    // Ask Postgres directly rather than waiting for a push that is not coming.
+    await this._rehydrateParty();
     if (this.room) this.join(this.room);
+  }
+
+  // ---- party rehydrate ----------------------------------------------------
+  // A client only ever learned it was in a party from a `party` broadcast, and
+  // those are pushed ON CHANGE (pushParty). Nothing replays them. So a reload
+  // or a dropped socket left the roster empty on screen while party_members
+  // still held the row: the player saw no party, so never thought to press
+  // Leave, and was uninvitable to everyone because party-invite reads that same
+  // row and answers "already in a party". Both sides then believed they were
+  // partyless, and only one of them was wrong.
+  //
+  // Reading it back on connect closes that with no new message type and no
+  // server change: `authenticated` already holds SELECT on parties and
+  // party_members, and the V2 RLS (`in_party(party_id, auth.uid())`) scopes it
+  // to the caller's own party. The result is fed through _onUserEvent('party')
+  // - the very path a real broadcast takes - so PartyUI rehydrates through its
+  // existing handler and the co-op relay channel is re-subscribed by the same
+  // _syncPartyChannel call, with no second code path to keep in step.
+  //
+  // Best-effort by design: a failure here must not take multiplayer down with
+  // it, and the next real broadcast still corrects everything.
+  async _rehydrateParty() {
+    if (!this.sb || !this.userId) return;
+    let shape;
+    // The try covers the QUERIES ONLY. Delivering the event sits outside it on
+    // purpose: wrapping the dispatch too would silently swallow anything a
+    // subscriber throws while rendering the roster, turning a visible UI bug
+    // into a party that just never appears - the exact failure mode this whole
+    // function exists to end. A real broadcast does not catch for its handlers
+    // either, and this must behave identically to one.
+    try {
+      const { data: mine } = await this.sb.from('party_members')
+        .select('party_id').eq('user_id', this.userId).maybeSingle();
+      if (!mine) {
+        shape = partyShapeOf(null);
+      } else {
+        const [{ data: party }, { data: members }] = await Promise.all([
+          this.sb.from('parties')
+            .select('id, leader_id').eq('id', mine.party_id).maybeSingle(),
+          this.sb.from('party_members')
+            .select('user_id, name, figure, joined_at')
+            .eq('party_id', mine.party_id)
+            .order('joined_at', { ascending: true }),
+        ]);
+        // A membership row whose party is gone is not a party. Send the
+        // teardown shape rather than nothing, so a client still holding a stale
+        // roster drops it instead of rendering members who left long ago.
+        shape = party ? partyShapeOf({ ...party, members: members ?? [] }) : partyShapeOf(null);
+      }
+    } catch {
+      return; // offline / RLS / schema drift: leave it to the next broadcast
+    }
+    this._onUserEvent('party', shape);
   }
 
   // ---- private mailbox: prompts + party/trade state from edge functions ----

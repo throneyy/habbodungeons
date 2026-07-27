@@ -5,6 +5,12 @@
 // the invariants can't be bypassed by a direct table write.
 import { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 import { broadcast, userTopic } from "./realtime.ts";
+import { partyStateShape } from "./partyShape.ts";
+
+// Re-exported so every existing importer of party.ts keeps working unchanged,
+// and so the broadcast shape has exactly ONE definition now that the client
+// rebuilds it on connect too (SupabaseNet._rehydrateParty).
+export { partyStateShape };
 
 export const PARTY_MAX = 4;
 export const INVITE_TTL_MS = 60_000;
@@ -54,17 +60,6 @@ export async function partyById(svc: SupabaseClient, partyId: string) {
     .select("user_id, name, figure, joined_at")
     .eq("party_id", partyId).order("joined_at", { ascending: true });
   return { ...party, members: members ?? [] };
-}
-
-// Presence-side "party" broadcast shape, rendered by js/party.js onState().
-export function partyStateShape(party: any | null) {
-  if (!party) return { leader: null, members: [] as any[], partyId: null as string | null };
-  const leaderRow = party.members.find((m: any) => m.user_id === party.leader_id);
-  return {
-    partyId: party.id,
-    leader: leaderRow?.name ?? null,
-    members: party.members.map((m: any) => ({ name: m.name, figure: m.figure })),
-  };
 }
 
 // Push the current roster to every member's personal topic (the `party`
