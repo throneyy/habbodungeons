@@ -858,17 +858,26 @@ button.primary:hover {
 }
 
 /* ---- party formation (multiplayer) -----------------------------------------
-   Roster chip strip docked above the chat toolbar (leader crown + imaging
-   heads) and the invite prompt, both in the infostand's dark panel family. */
+   Roster panel pinned to the right edge (leader crown + imaging heads) and
+   the invite prompt, both in the infostand's dark panel family.
+
+   Right edge, vertically centred: it shares the 10px gutter and the exact
+   panel skin of .infostand and .hand, so the right rail reads as one column
+   of surfaces rather than three unrelated boxes. It sits BETWEEN them --
+   .hand is top:30px, .infostand is bottom:70px -- and the party is capped at
+   4 members (PARTY_MAX), so the panel's height is bounded and the rail
+   cannot grow into either neighbour. */
 #partyStrip {
   position: fixed;
-  left: 10px;
-  bottom: 44px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 7;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  flex-direction: column;
+  gap: 4px;
+  width: 146px; /* same rail width as .infostand */
+  padding: 6px;
   color: #eee;
   background: rgba(24, 24, 24, 0.82);
   border-radius: 8px;
@@ -877,37 +886,136 @@ button.primary:hover {
   -webkit-font-smoothing: none;
   user-select: none;
 }
-.party-label {
+.party-title {
+  margin: 0;
+  padding: 1px 2px 3px;
+  font: inherit;
   font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   filter: url(#crispify);
 }
-.party-chip {
+.party-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.party-row {
   display: flex;
   align-items: center;
-  gap: 3px;
-  padding: 1px 6px 1px 3px;
+  gap: 5px;
+  padding: 2px 4px;
   background: rgba(255, 255, 255, 0.12);
-  border-radius: 9px;
+  border-radius: 6px;
 }
-.party-chip.me {
+.party-row.me {
   background: rgba(246, 195, 67, 0.25);
 }
-.party-chip img {
-  width: 22px;
-  height: 22px;
+/* The head is the row's anchor: fixed box so every name starts on the same
+   x, and the crown overlaps its top-left corner instead of taking a column
+   of its own (which would indent the leader's name out of alignment). */
+.party-row-head {
+  position: relative;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  /* Neutral tile UNDER the head, so a head that fails to load (imaging
+     offline) leaves a quiet empty socket instead of a broken-image glyph.
+     js/party.js hides the <img> on error rather than letting the browser
+     draw its own placeholder. */
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 4px;
+}
+.party-row-head img {
+  width: 26px;
+  height: 26px;
   object-fit: cover;
   object-position: top;
   image-rendering: pixelated;
 }
-.party-crown {
-  color: #f6c343;
+.party-row-head img.is-missing {
+  visibility: hidden;
 }
-.party-chip-name {
-  max-width: 80px;
+.party-crown {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  color: #f6c343;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.9);
+}
+/* flex:1 is load-bearing, not cosmetic: without it this column is sized by
+   its widest child (the name), so every member's health bar came out a
+   different length. The bar must be a fixed rail to be readable at a glance,
+   so the column takes the whole remaining row width and the name ellipsises
+   inside it. */
+.party-row-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0; /* lets the name ellipsis instead of pushing the row wide */
+}
+.party-row-name {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   filter: url(#crispify);
+}
+/* Reserved slot for the health bar. Deliberately an EMPTY track: HP is not
+   wired to the roster yet (js/party.js render()), and a bar drawn at some
+   invented width would assert a stat the server never sent. Add a fill
+   element inside .party-hp when real HP arrives -- the space is already
+   accounted for, so nothing below it will shift. */
+.party-hp {
+  display: block;
+  height: 4px;
+}
+.party-hp-track {
+  display: block;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+.party-leave {
+  align-self: stretch;
+  margin-top: 2px;
+}
+/* Screen-reader-only: the crown is decorative (aria-hidden), so "(leader)"
+   carries that fact in text rather than relying on a glyph or on colour. */
+.party-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* Short viewports: a centred panel would collide with .hand above and the
+   infostand below, so dock it under the hand and let it scroll if it must. */
+@media (max-height: 560px) {
+  #partyStrip {
+    top: 92px;
+    transform: none;
+    max-height: calc(100vh - 170px);
+    overflow-y: auto;
+  }
+}
+/* Narrow screens: the rail would eat the stage, so trim it to the heads and
+   names it needs. Still the right edge -- moving it elsewhere on mobile
+   would break the one placement players learn. */
+@media (max-width: 560px) {
+  #partyStrip {
+    width: 116px;
+    right: 6px;
+  }
 }
 .party-prompt {
   position: fixed;

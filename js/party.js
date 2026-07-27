@@ -1,5 +1,5 @@
-// Party formation UI (Free Roam): the invite prompt and the roster chip
-// strip docked above the chat toolbar.
+// Party formation UI (Free Roam): the invite prompt and the roster panel
+// pinned to the right edge of the stage.
 //
 // Server truth lives in server/presence.js — this renders the `party`
 // roster broadcasts and sends invite/accept/decline/party-leave/disband.
@@ -123,8 +123,19 @@ export class PartyUI {
     this.promptTimer = setTimeout(() => this.closePrompt(), 4000);
   }
 
-  // ------------------------------------------------------------- chip strip
+  // ----------------------------------------------------------- roster panel
 
+  // The roster reads top-to-bottom on the right edge: PARTY header, one row
+  // per member, then the single destructive action at the bottom. It was a
+  // horizontal strip above the chat toolbar, which capped a name at 80px of
+  // ellipsis and had nowhere to put per-member state. A column gives each
+  // member a full-width row, so the name gets real room and the health bar
+  // this reserves has somewhere to live.
+  //
+  // The element keeps id="partyStrip": tests/e2e/partyInviteError.e2e.mjs
+  // waits on that selector to prove the roster rendered, and that suite is
+  // owned by chore/test-harness. Renaming it here would break another
+  // worktree's green test to no benefit.
   render() {
     if (!this.state) {
       if (this.strip) this.strip.remove();
@@ -134,30 +145,51 @@ export class PartyUI {
     if (!this.strip) {
       this.strip = document.createElement('div');
       this.strip.id = 'partyStrip';
+      // A labelled region, not an anonymous div: this is a live roster that
+      // appears and changes on its own, so it needs a name in the a11y tree.
+      this.strip.setAttribute('role', 'region');
+      this.strip.setAttribute('aria-label', 'Party roster');
       document.body.appendChild(this.strip);
     }
     const me = String(this.getName() || '').toLowerCase();
-    const chips = this.state.members
+    const rows = this.state.members
       .map((m) => {
         const lead = m.name.toLowerCase() === this.state.leader.toLowerCase();
         const self = m.name.toLowerCase() === me;
-        return `<div class="party-chip${self ? ' me' : ''}" title="${escapeHtml(m.name)}${lead ? ' (leader)' : ''}">
-          ${lead ? '<span class="party-crown">★</span>' : ''}
-          <img alt="${escapeHtml(m.name)}" src="${headUrl(m.figure)}" />
-          <span class="party-chip-name">${escapeHtml(m.name)}</span>
-        </div>`;
+        return `<li class="party-row${self ? ' me' : ''}">
+          <span class="party-row-head">
+            <img alt="" src="${headUrl(m.figure)}" />
+            ${lead ? '<span class="party-crown" aria-hidden="true">★</span>' : ''}
+          </span>
+          <span class="party-row-main">
+            <span class="party-row-name">${escapeHtml(m.name)}${lead ? '<span class="party-sr"> (leader)</span>' : ''}</span>
+            <span class="party-hp" aria-hidden="true"><span class="party-hp-track"></span></span>
+          </span>
+        </li>`;
       })
       .join('');
+    // .party-hp is an EMPTY reserved slot, deliberately. HP is not plumbed to
+    // the roster yet, so it renders an unfilled track and is aria-hidden --
+    // a bar drawn at some invented width would be a lie about a stat the
+    // server never sent. Give it a fill element when real HP arrives.
     this.strip.innerHTML = `
-      <span class="party-label">Party</span>${chips}
+      <h2 class="party-title">Party</h2>
+      <ul class="party-list">${rows}</ul>
       <button class="party-leave infostand-btn">${this.isLeader ? 'Disband' : 'Leave'}</button>`;
     this.strip.querySelector('.party-leave').onclick = () => {
       this.net.send({ t: this.isLeader ? 'disband' : 'party-leave' });
     };
+    // A head that fails to load (imaging down, or offline) would otherwise
+    // draw the browser's broken-image glyph in every row. Hide the img and
+    // let the empty socket behind it show through. Bound here rather than as
+    // an inline onerror= so no member-supplied string is ever parsed as code.
+    for (const img of this.strip.querySelectorAll('.party-row-head img')) {
+      img.addEventListener('error', () => img.classList.add('is-missing'));
+    }
   }
 
   // Session teardown (leaving Free Roam for an overlay flow). The party
-  // itself survives on the server — chips come back on the next render.
+  // itself survives on the server — the roster comes back on the next render.
   detach() {
     this.closePrompt();
     if (this.strip) this.strip.remove();
