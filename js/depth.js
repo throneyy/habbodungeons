@@ -72,33 +72,34 @@ export function relaxDrawDepths(entries) {
         // flat surface at or below a nearby unit's feet: the unit draws
         // after it (never let ground art clip the walker)
         if (stands(a) && b.groundZ != null && b.groundZ <= (a.z ?? 0)) {
-          // Units interact with EVERY flat surface, the room's own tiles
-          // included — that is the original rule and it is what keeps floor
-          // art off a walker's boots. Props interact only with flat-surface
-          // props. Letting furni fight the room's tiles as well adds a pair
-          // for every prop x every tile, and in a room with a raised platform
-          // (the tavern's bar, z=1, with stairs down to z=0) the two surface
-          // rules then chase each other: this rule raises the prop above the
-          // low tiles, the next raises the raised STAIR tile back above the
-          // prop, and the sweep never reaches a fixpoint inside its 6-pass
-          // bound. Draw order then depends on where the sweep happened to
-          // stop, so it changed as the player walked and shook a detached
-          // stair slab across the screen. Measured on the live tavern:
-          // converged=false at 6 passes, vs 3 passes with this guard.
-          if ((a.unit || !b.passive) && near(a, b)) raise(a, b.depth);
+          // Applies to the room's own tiles as well as to flat props: a
+          // counter standing on a platform must outrank the step tile in
+          // front of it, or the stair riser paints through the countertop.
+          if (near(a, b)) raise(a, b.depth);
           continue;
         }
-        // RAISED surface strictly in front (on either axis) of a nearby
-        // unit it should occlude: raise the SURFACE above the unit — never
-        // push the unit down, which would re-break its flat-surface
-        // guarantees. Applies to passive tiles too (a ledge step is exactly
-        // such a tile); a unit standing ON the step is re-raised above it
-        // by the flat rule on the next sweep, so the fixpoint interleaves.
-        // Kept to UNITS deliberately: a raised tile must occlude a walker
-        // standing below and behind it, but raising room tiles above PROPS is
-        // what tore the stairs loose (see above). A prop that a raised surface
-        // should hide is already ordered by the generic box test below.
-        if (a.groundZ != null && b.unit && a.groundZ > (b.z ?? 0)) {
+        // RAISED flat PROP strictly in front (on either axis) of a nearby unit
+        // it should occlude: raise the SURFACE above the unit — never push the
+        // unit down, which would re-break its flat-surface guarantees.
+        //
+        // `!a.passive` is load-bearing, and restores the invariant this file
+        // already states above ("passive entries keep their scalar depth and
+        // are never raised themselves") — which the old code contradicted by
+        // raising room tiles right here. That contradiction is the whole bug:
+        // the rule above raises a prop over the tiles it stands among, this
+        // one raised the tile back over the unit, the generic rule raises a
+        // unit over the prop it overlaps, and the three chase each other. In
+        // the tavern (bar platform z=1, stairs down to z=0) the sweep never
+        // reached a fixpoint inside its 6-pass bound, so draw order depended
+        // on where it happened to stop and shifted as the player walked: a
+        // stair slab tore loose and slid across the screen, the avatar's head
+        // sank into the bar, a barrel punched through it. Measured on the live
+        // tavern: converged=false at 6 passes before, 3 passes after.
+        //
+        // Room tiles lose nothing by sitting this out. A raised tile that
+        // ought to hide something behind it is still handled: units by the
+        // rule above, props by the generic box test below.
+        if (a.groundZ != null && !a.passive && b.unit && a.groundZ > (b.z ?? 0)) {
           if (near(a, b) && (a.x0 > b.x1 || a.y0 > b.y1)) raise(a, b.depth);
           continue;
         }
