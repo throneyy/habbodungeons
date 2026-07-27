@@ -11,16 +11,30 @@ underneath them.
 
 | Worktree | Branch | Dev port | `HD_PORT_BASE` | e2e slug |
 | --- | --- | --- | --- | --- |
-| `Habbo Dungeons/` (**hub**) | `lovable-main` | 5170 | 8600 | `hb` |
-| `hd-trees/duel/` | `feat/duel` | 5171 | 8700 | `dl` |
-| `hd-trees/party-invite/` | `fix/party-invite-delivery` | 5172 | 8800 | `pi` |
-| `hd-trees/profiles-unique/` | `fix/profiles-unique-username` | 5173 | 8900 | `pu` |
-| `hd-trees/test-infra/` | `chore/test-harness` | 5174 | 9000 | `ti` |
-| `hd-trees/combat/` | `feat/class-weapons` | 5175 | 9100 | `cb` |
+| `C:\Users\codyj\Desktop\Habbo Dungeons\` (**hub**) | `lovable-main` | 5170 | 8600 | `hb` |
+| `C:\Users\codyj\hd-trees\duel\` | `feat/duel` | 5171 | 8700 | `dl` |
+| `C:\Users\codyj\hd-trees\party-invite\` | `fix/party-invite-delivery` | 5172 | 8800 | `pi` |
+| `C:\Users\codyj\hd-trees\profiles-unique\` | `fix/profiles-unique-username` | 5173 | 8900 | `pu` |
+| `C:\Users\codyj\hd-trees\test-infra\` | `chore/test-harness` | 5174 | 9000 | `ti` |
+| `C:\Users\codyj\hd-trees\combat\` | `feat/class-weapons` | 5175 | 9100 | `cb` |
 
-`hd-trees/` is a **sibling** of the repo, not a child: a nested worktree would
-show up in `git status`, in Vite's watcher, and in the test runner's
-`readdirSync` discovery.
+`hd-trees\` lives at `C:\Users\codyj\hd-trees\` — **outside the repo folder**,
+not inside it. It used to sit next to the repo on the Desktop; it was moved up to
+the user profile with `git worktree move` (never a filesystem move, which leaves
+every `.git` pointer dangling in both directions). The exact parent does not
+matter and neither does the sibling relationship — what matters is that it is not
+*under* `Habbo Dungeons\`, because a nested worktree would show up in
+`git status`, in Vite's watcher, and in the test runner's `readdirSync`
+discovery.
+
+**Never rename a leaf directory.** `duel`, `party-invite`, `profiles-unique`,
+`test-infra` and `combat` are load-bearing names: `tests/e2e/lib.mjs` derives the
+e2e slug from the worktree directory name (`WORKTREES[DIR]`, where `DIR` is the
+last path segment), and `PORT_BASES` keys off that slug in turn. A renamed leaf
+misses the lookup and falls through to the default `hb` — the HUB's slug — so the
+worktree silently seeds the hub's player names and binds the hub's ports instead
+of failing. Moving the tree elsewhere is free; renaming its last segment is not.
+Use `HD_SLUG` / `HD_PORT_BASE` if a directory name ever genuinely has to change.
 
 ## Rules
 
