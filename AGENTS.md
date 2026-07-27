@@ -11,7 +11,7 @@ underneath them.
 
 | Worktree | Branch | Dev port | `HD_PORT_BASE` | e2e slug |
 | --- | --- | --- | --- | --- |
-| `C:\Users\codyj\Desktop\Habbo Dungeons\` (**hub**) | `lovable-main` | 5170 | 8600 | `hb` |
+| `C:\Users\codyj\Desktop\Habbo Dungeons\` (**hub**) | `integrate/harness-and-duel` | 5170 | 8600 | `hb` |
 | `C:\Users\codyj\hd-trees\duel\` | `feat/duel` | 5171 | 8700 | `dl` |
 | `C:\Users\codyj\hd-trees\party-invite\` | `fix/party-invite-delivery` | 5172 | 8800 | `pi` |
 | `C:\Users\codyj\hd-trees\profiles-unique\` | `fix/profiles-unique-username` | 5173 | 8900 | `pu` |
@@ -47,10 +47,44 @@ Use `HD_SLUG` / `HD_PORT_BASE` if a directory name ever genuinely has to change.
 3. **Never `git add -A`** unless you have personally verified every path it would
    stage. Untracked feature work from an unfinished branch has been swept into
    commits this way before.
-4. **Rebase onto `lovable-main` from your own worktree**, never from the hub.
+4. **Rebase onto `origin/main` from your own worktree**, never from the hub.
+   `origin/main`, not `lovable-main`, and not a local `main` — see “The rebase
+   target is `origin/main`” below for why those are three different commits.
 5. Branches conflict in `js/supabaseNet.js`, `js/main.js` and `README.md` when
    they merge back. Expected and cheap — far cheaper than shared-tree
    contamination.
+
+### The rebase target is `origin/main`
+
+**`origin/main`, `origin/lovable-main` and any local `main` are three different
+commits and drift apart constantly** — measured on 2026-07-26, `origin/main` was
+37 commits ahead of `origin/lovable-main`, which held 1 commit of its own, and
+the hub's local `main` was a further 7 behind `origin/main`, having sat untouched
+since a `fetch` earlier that day. "Rebase onto main" is therefore an ambiguous
+instruction, and the doc used to give both answers: this rule said
+`lovable-main`, the file-ownership section said `origin/main`.
+
+`origin/main` wins, and not by preference — it strictly contains the other. Every
+branch tip that is contained anywhere is contained in it, and the one commit
+`origin/lovable-main` appeared to hold alone (`9a9e77f`, promoting
+`battle.test.js` out of quarantine) turned out to be a **patch-id twin** of
+`f9613a6`, already on `origin/main`: the same change authored twice on two
+branches, which is precisely the duplication rule 1 exists to prevent. Nothing is
+stranded by rebasing onto `origin/main`.
+
+Always the **remote-tracking** ref, freshly fetched. A local `main` is a snapshot
+of whenever you last fetched, and `main` is also the branch
+`gpt-engineer-app[bot]` pushes to unbidden (it regenerates `bun.lock` there), so
+a stale local copy is not merely behind — it can be behind commits you never
+wrote. `git fetch origin` first, every time:
+
+```bash
+git fetch origin && git rebase origin/main
+```
+
+Verify a claim about ancestry rather than assuming it, and mind the argument
+order — `git merge-base --is-ancestor A B` asks whether **A is an ancestor of B**,
+which is the reverse of how "does my branch descend from main" reads out loud.
 
 ## Install
 
