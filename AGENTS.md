@@ -131,7 +131,8 @@ This is not a suspicion. Both halves were established the hard way:
   still returning a bare `{ ok: true }`. Meanwhile `gpt-engineer-app[bot]`
   reacted to that same push within two minutes by regenerating `bun.lock` on
   `main` — so the integration is watching, and `main` is the branch it watches.
-  It rebuilds the frontend bundle and leaves the backend alone.
+  It leaves the backend alone. It rebuilds the frontend for the *Lovable*
+  project only — see the frontend gap below, which is a separate hole.
 
 **To actually deploy:**
 
@@ -153,6 +154,42 @@ This is not a suspicion. Both halves were established the hard way:
   has run — read a questionable column through `to_jsonb(row)` rather than naming
   it, or a missing column aborts the whole file at parse time.
 
+### …and it does not republish the frontend either
+
+**Pushing to `main` updates the Lovable project and its `*.lovable.app` preview
+host. It does NOT republish habbodungeons.com.** The custom domain serves
+whatever bundle was last *published* — a separate, manual action — so the
+reaction you can observe on a push (Lovable ingesting the commit) is not the
+one that reaches players.
+
+Measured on `de579d5` (the `:npc` save fix):
+
+| Time | What happened |
+| --- | --- |
+| 02:29:37Z | pushed to `main` |
+| 02:30:26Z | Lovable regenerated the `og:image` at `id-preview-de579d5e…` — the NEW sha |
+| 02:38:32Z | habbodungeons.com still served `/assets/index-B79oKSXq.js` — the OLD bundle |
+
+So the integration had ingested the commit within 49 seconds and *still* had
+not put it in front of a user nine minutes later. Anything inferred from
+"the push was picked up" is worthless: publish is what ships.
+
+**Verifying it landed: the entry-chunk hash.** Vite content-hashes the entry
+chunk, so `/assets/index-<hash>.js` in the served HTML changes whenever *any*
+module in the graph changes. That makes it a free, zero-instrumentation version
+marker — no `DEPLOY_MARKER` field needed:
+
+```bash
+curl -s https://habbodungeons.com/ | grep -o 'src="/assets/[^"]*"'
+```
+
+Same hash as before your push → **hard proof the deploy did not land**, and
+every client-side fix in it is untested. Different hash → the bundle is new.
+Do not read the `og:image` sha, the preview host, or a green push as evidence:
+all three moved for `de579d5` while the live bundle did not.
+
+**To actually publish:** ask in Lovable (the Publish button / chat), the same
+way functions are deployed. Push first, then ask, then re-check the hash.
 ### Verifying a deploy landed: the version marker
 
 Do not infer a deploy from the absence of an error. Temporarily add a field to a
