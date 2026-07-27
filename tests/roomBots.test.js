@@ -141,10 +141,10 @@ check('%drink% / %lowercaseDrink% template tokens are preserved',
 console.log('splitBots');
 const saved = [
   { id: 'vikings_chair_r', x: 3, y: 5, dir: 6 },
-  { id: 'bot', bot: KEY, x: 7, y: 2, dir: 6 },
+  { id: `bot-${KEY}`, x: 7, y: 2, dir: 6 },
   { id: 'rp_arrow', x: 5, y: 2, dir: 0, walk: true, teleport: { room: 'tavern' } },
-  { id: 'bot', bot: 'ghost_of_a_removed_definition', x: 1, y: 1, dir: 0 },
-  { id: 'bot', bot: ROOM_BOTS[1].key, x: 9, y: 9 },
+  { id: 'bot-ghost_of_a_removed_definition', x: 1, y: 1, dir: 0 },
+  { id: `bot-${ROOM_BOTS[1].key}`, x: 9, y: 9 },
 ];
 const split = splitBots(saved);
 check('props keep every non-bot entry, in order', split.props.length === 2 &&
@@ -155,12 +155,30 @@ check('unknown bot keys are dropped', !split.bots.some((b) => b.bot.startsWith('
 check('missing dir defaults to 4', split.bots[1].dir === 4);
 check('empty / missing input is safe', splitBots([]).bots.length === 0 && splitBots().props.length === 0);
 
+// Layouts written by the first bot client (key in its own `bot` field) still
+// load...
+const legacy = splitBots([{ id: 'bot', bot: KEY, x: 1, y: 2, dir: 0 }]);
+check('legacy { id: "bot", bot } entries still load', legacy.bots.length === 1 &&
+  legacy.bots[0].bot === KEY && legacy.bots[0].x === 1 && legacy.bots[0].dir === 0);
+// ...and the shape a pre-bot save-room-layout build left behind (it rebuilt
+// each entry field by field and never copied `bot`) is dropped, not handed to
+// the furni renderer as a prop with no sprite sheet.
+const stripped = splitBots([{ id: 'bot', x: 1, y: 2, dir: 0 }]);
+check('a server-stripped bot entry is dropped, never treated as furni',
+  stripped.bots.length === 0 && stripped.props.length === 0);
+
 // ---- serializeBot ---------------------------------------------------------
 console.log('serializeBot');
 const ser = serializeBot({ bot: KEY, x: 4, y: 6, dir: 2, home: { x: 4, y: 6 }, junk: true });
 check('shape is exactly the whitelist', JSON.stringify(Object.keys(ser).sort()) ===
-  JSON.stringify(['bot', 'dir', 'id', 'x', 'y']));
-check('id marks it as a bot entry', ser.id === 'bot' && ser.bot === KEY && ser.x === 4 && ser.y === 6 && ser.dir === 2);
+  JSON.stringify(['dir', 'id', 'x', 'y']));
+check('the catalogue key rides in the id', ser.id === `bot-${KEY}` &&
+  ser.x === 4 && ser.y === 6 && ser.dir === 2);
+// save-room-layout preserves `id` verbatim in EVERY build; a separate field is
+// dropped by any build that predates it. Keeping the key in the id is what
+// makes a placed bot survive a save against an undeployed function.
+check('nothing outside the id is needed to resolve the bot',
+  splitBots([{ id: ser.id, x: ser.x, y: ser.y, dir: ser.dir }]).bots[0].bot === KEY);
 check('dir defaults to 4', serializeBot({ bot: KEY, x: 0, y: 0 }).dir === 4);
 check('round-trips through splitBots', (() => {
   const back = splitBots([ser]).bots[0];

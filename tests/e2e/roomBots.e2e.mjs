@@ -191,10 +191,18 @@ try {
     roomBots.place({ x: 7, y: 7 });
     const room = window.game.room;
     const layout = [...room.props.map(serializeProp), ...room.bots.map(serializeBot)];
-    const botEntries = layout.filter((e) => e.id === 'bot');
+    const botEntries = layout.filter((e) => String(e.id).startsWith('bot-'));
+    // What a save-room-layout build that predates bots does to the payload: it
+    // rebuilds every entry from a fixed whitelist, so anything outside
+    // id/x/y/dir (+ walk/gate/front/teleport/tiles) is dropped on the floor.
+    // The catalogue key rides in `id` precisely so it survives that — pushing
+    // the function to git does not deploy it (AGENTS.md), and the first shape
+    // saved as a bare { id: 'bot' }: HTTP 200, bot gone on the next load.
+    const throughOldServer = layout.map((e) => ({ id: e.id, x: e.x, y: e.y, dir: e.dir ?? 0 }));
     const back = splitBots(layout);
     return {
       botEntries,
+      survivesOldServer: splitBots(throughOldServer).bots,
       propsUnchanged: back.props.length === room.props.length,
       botsBack: back.bots,
       gateStillThere: room.props.some((p) => p.id === 'fantasy_c22_archway' && p.teleport && p.teleport.gate),
@@ -203,10 +211,13 @@ try {
     };
   });
   check('Save Layout serializes the bot', persist.botEntries.length === 1 &&
-    JSON.stringify(Object.keys(persist.botEntries[0]).sort()) === JSON.stringify(['bot', 'dir', 'id', 'x', 'y']));
+    JSON.stringify(Object.keys(persist.botEntries[0]).sort()) === JSON.stringify(['dir', 'id', 'x', 'y']));
   check('...and reloads it back into room.bots',
     persist.botsBack.length === 1 && persist.botsBack[0].bot === 'ray' &&
     persist.botsBack[0].x === 7 && persist.botsBack[0].y === 7);
+  check('...even through a server build that predates bots',
+    persist.survivesOldServer.length === 1 && persist.survivesOldServer[0].bot === 'ray' &&
+    persist.survivesOldServer[0].x === 7 && persist.survivesOldServer[0].y === 7);
   check('furni survive the split untouched', persist.propsUnchanged);
   check('the dungeon gate still works', persist.gateStillThere);
   check('the Gatekeeper NPC is untouched', persist.keeperStillThere);

@@ -34,21 +34,45 @@ export const BARK_COOLDOWN_MS = 4500;
 
 // ---- pure helpers (DOM-free, unit-tested in tests/roomBots.test.js) --------
 
+// The saved-layout id prefix that marks an entry as a bot: `bot-<key>`.
+//
+// The key rides INSIDE the id on purpose. save-room-layout validates every
+// entry against a whitelist and rebuilds it field by field, so any field the
+// deployed build doesn't know about is silently dropped — and pushing an edge
+// function to git does not redeploy it (see AGENTS.md). The first shape,
+// `{ id: 'bot', bot: <key> }`, therefore saved as `{ id: 'bot' }` against the
+// still-live pre-bot function: HTTP 200, version bumped, key gone, and the bot
+// vanished on the next load because splitBots can't resolve a keyless entry.
+// `id` is the one field EVERY version of that whitelist preserves verbatim
+// (it only has to match /^[\w-]{1,64}$/), so persistence no longer depends on
+// which build of the function happens to be running.
+const BOT_PREFIX = 'bot-';
+
+// The catalogue key a saved entry names, or null when it isn't a bot entry.
+// Accepts the legacy `{ id: 'bot', bot: <key> }` shape so layouts saved by an
+// older client still load.
+export function botKeyOf(entry) {
+  if (!entry || typeof entry.id !== 'string') return null;
+  if (entry.id === 'bot') return typeof entry.bot === 'string' ? entry.bot : null;
+  return entry.id.startsWith(BOT_PREFIX) ? entry.id.slice(BOT_PREFIX.length) : null;
+}
+
 // Strip a live bot spec down to the whitelisted persistence shape. Only the
 // KEY travels: name/figure live in js/botsData.js.
 export function serializeBot(spec) {
-  return { id: 'bot', bot: spec.bot, x: spec.x, y: spec.y, dir: spec.dir ?? 4 };
+  return { id: `${BOT_PREFIX}${spec.bot}`, x: spec.x, y: spec.y, dir: spec.dir ?? 4 };
 }
 
 // Split a saved layout array into furni props and bot specs. Bot entries with
-// an unknown key (a definition removed since the save) are dropped rather than
-// spawned as a blank avatar.
+// an unknown key (a definition removed since the save, or a key the server
+// blanked) are dropped rather than spawned as a blank avatar.
 export function splitBots(entries) {
   const props = [];
   const bots = [];
   for (const e of entries || []) {
-    if (e && e.id === 'bot') {
-      if (botDef(e.bot)) bots.push({ bot: e.bot, x: e.x, y: e.y, dir: e.dir ?? 4 });
+    const key = botKeyOf(e);
+    if (key !== null || (e && e.id === 'bot')) {
+      if (key && botDef(key)) bots.push({ bot: key, x: e.x, y: e.y, dir: e.dir ?? 4 });
       continue;
     }
     props.push(e);

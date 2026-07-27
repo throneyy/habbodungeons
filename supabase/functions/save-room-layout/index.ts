@@ -14,12 +14,24 @@ function cleanProp(p: any) {
   // Walking room bots (js/roomBots.js) ride the same layout array as furni but
   // carry their own tiny shape: only the catalogue KEY travels, never a figure
   // string (name/figure live in the client's js/botsData.js).
-  if (p && p.id === "bot") {
+  //
+  // The key rides inside the id (`bot-<key>`) so it survives a build of this
+  // function that predates bots: the generic branch below preserves `id`
+  // verbatim, where a separate `bot` field would be dropped on the floor. Do
+  // NOT move the key back out into its own field — that shape saved as a bare
+  // `{ id: 'bot' }` for as long as the deploy lagged the push, and every bot an
+  // admin placed disappeared on reload while the save reported success.
+  const botKey = typeof p?.id === "string" && p.id.startsWith("bot-")
+    ? p.id.slice(4)
+    : p?.id === "bot" && typeof p?.bot === "string"
+    ? p.bot // legacy client
+    : null;
+  if (botKey !== null) {
     if (
-      typeof p.bot !== "string" || !/^[\w-]{1,40}$/.test(p.bot) ||
+      !/^[\w-]{1,40}$/.test(botKey) ||
       !isInt(p.x, 0, 99) || !isInt(p.y, 0, 99) || !isInt(p.dir ?? 0, 0, 7)
     ) throw new Error("bad bot");
-    return { id: "bot", bot: p.bot, x: p.x, y: p.y, dir: p.dir ?? 0 };
+    return { id: `bot-${botKey}`, x: p.x, y: p.y, dir: p.dir ?? 0 };
   }
   if (
     !p || !/^[\w-]{1,64}$/.test(String(p.id)) ||
