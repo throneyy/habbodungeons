@@ -4,9 +4,10 @@
 // candidate filter (leash, blocked tiles, teleport pads, height steps) and the
 // ambient chatter roll (per-bot timer + the room-wide bubble cooldown).
 import {
-  splitBots, serializeBot, wanderTarget, LEASH,
+  splitBots, serializeBot, wanderTarget, LEASH, avatarUrl,
   speechLine, tryBark, nextBarkAt, BARK_MIN_MS, BARK_SPREAD_MS, BARK_COOLDOWN_MS,
 } from '../js/roomBots.js';
+import { AvatarSprites } from '../js/sprites.js';
 import { ROOM_BOTS, botDef } from '../js/botsData.js';
 import { HAND_ITEMS, handItemId } from '../js/handItems.js';
 import { CHATTER, SILENT_BOTS, chatterFor, modeOf } from '../js/botChatter.js';
@@ -65,27 +66,48 @@ check('every figure carries a head part (hd-)',
   ROOM_BOTS.every((b) => b.figure.split('.').some((p) => p.startsWith('hd-'))));
 
 // ---- carry ---------------------------------------------------------------
-// A carry is set only where the dump's `hand_items` names something HAND_ITEMS
-// has (first match in the list wins). Bots whose list maps to nothing — e.g.
-// Reginaldo's 'Water,Juice,Lemonade,Tea', Carlo's 'Pizza,Water,Drink' — get no
-// carry at all rather than a guessed id.
+// NOBODY carries anything, on purpose. 12 bots once did, sourced from the
+// dump's `hand_items` column — but that column lists the drinks a bot SERVES,
+// not what it holds, and only 'Cola' and 'Coffee' resolved in HAND_ITEMS, so
+// twelve distinct bartenders collapsed into the same two props. Empty hands
+// are accurate; guessed ones are invention. See js/botsData.js.
+//
+// The PLUMBING stays — class weapons ride the same mechanism — so this asserts
+// both halves: the roster is empty-handed AND a carry still works end to end,
+// which is what makes re-adding one (with a real source) a data-only change.
 console.log('carry');
-const CARRIERS = {
-  marcus: 'Cola', ingemar: 'Coffee', chloe: 'Cola', jem: 'Cola', ray: 'Cola',
-  regina: 'Coffee', billy: 'Coffee', phillip: 'Cola', ariel: 'Coffee',
-  scubajoe: 'Cola', skye: 'Cola', lofar: 'Cola',
-};
-check('exactly the expected bots carry something',
-  JSON.stringify(ROOM_BOTS.filter((b) => b.carry != null).map((b) => b.key)) ===
-  JSON.stringify(Object.keys(CARRIERS)));
-check('each carry resolves to the right hand-item id',
-  Object.entries(CARRIERS).every(([key, item]) => botDef(key).carry === handItemId(item)));
-check('carry ids are real entries in HAND_ITEMS',
-  ROOM_BOTS.every((b) => b.carry == null || HAND_ITEMS[b.carry] !== undefined));
-check('no bot carries Soda4 (id 49 has no art upstream)',
-  !ROOM_BOTS.some((b) => b.carry === 49));
-check('non-carriers leave the field unset',
-  ['harry', 'piers', 'miho', 'amber', 'reginaldo', 'carlo', 'tao', 'xenia'].every((k) => botDef(k).carry === undefined));
+check('no bot defines a carry', !ROOM_BOTS.some((b) => b.carry != null));
+check('...not even as an explicit null/undefined key',
+  !ROOM_BOTS.some((b) => Object.hasOwn(b, 'carry')));
+check('the removed dozen are all bare-handed now',
+  ['marcus', 'ingemar', 'chloe', 'jem', 'ray', 'regina',
+    'billy', 'phillip', 'ariel', 'scubajoe', 'skye', 'lofar']
+    .every((k) => botDef(k).carry === undefined));
+check('so are the bots that never had one',
+  ['harry', 'piers', 'miho', 'amber', 'reginaldo', 'carlo', 'tao', 'xenia']
+    .every((k) => botDef(k).carry === undefined));
+// A bare roster must not make the sprite set request a carry-decorated pose:
+// an undefined carry has to fall through to the plain action, or every bot
+// would ask imaging for `crr=undefined`.
+check('an empty-handed bot renders the plain poses', (() => {
+  const s = new AvatarSprites(botDef('marcus').figure, 'm', 'fighter', botDef('marcus').carry ?? null);
+  return s.posed('std') === 'std' && s.posed('wlk') === 'wlk' && s.posed('sit') === 'sit';
+})());
+// ...and the mechanism itself is alive, so a future SOURCED hand item is a
+// one-field change rather than a re-implementation.
+check('the carry plumbing still decorates idle/walk/sit', (() => {
+  const s = new AvatarSprites('hd-180-1', 'm', 'fighter', handItemId('Cola'));
+  return s.posed('std') === 'crr=5' && s.posed('wlk') === 'wlk,crr=5' && s.posed('sit') === 'sit,crr=5';
+})());
+check('...and leaves the combat poses alone', (() => {
+  const s = new AvatarSprites('hd-180-1', 'm', 'fighter', handItemId('Cola'));
+  return s.posed('atk') === 'atk' && s.posed('bow') === 'bow';
+})());
+check('...all the way into the imaging URL',
+  decodeURIComponent(avatarUrl('hd-180-1', 2, 's', handItemId('Cola'))).includes('action=crr=5') &&
+  !decodeURIComponent(avatarUrl('hd-180-1', 2, 's', null)).includes('crr='));
+check('HAND_ITEMS is still a real map to resolve one from',
+  HAND_ITEMS[handItemId('Cola')] === 'Cola');
 check('handItemId is name-exact and throws on a typo', (() => {
   try { handItemId('cola'); return false; } catch { return handItemId('Cola') === 5; }
 })());

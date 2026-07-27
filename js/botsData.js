@@ -20,9 +20,9 @@
 // rather than nudged apart to look tidier:
 //   • Chloe and Ariel share hr-500-59.sh-730-107.ch-650-107.hd-600-1.lg-696-96
 //   • Berith and Laura share hr-836-37.lg-715-72.ch-822-62.hd-600-1.sh-730-62
-// 31 distinct figure strings across the 33 bots. Berith and Laura therefore
-// render byte-identically (neither carries anything); Chloe and Ariel don't,
-// only because they hold different drinks (Cola vs Coffee).
+// 31 distinct figure strings across the 33 bots, so both pairs render
+// byte-identically. That is the source data being honest, not a bug to paper
+// over: the dump really does describe two pairs of identical-looking bots.
 //
 // Provenance caveat: Havana is a v14-era Habbo emulator, i.e. a community
 // reconstruction of the hotel's bot roster. Treat this as emulator data, NOT as
@@ -45,22 +45,35 @@
 // direction 2, none matches the empty/nonsense-figure fallback, and the only
 // byte-identical pair is Berith/Laura — a duplicate in the source data itself.
 //
-// `carry` (optional) is a habbo-imaging hand-item id resolved BY NAME from
-// js/handItems.js — never a bare number — and is threaded into the imaging URL
-// as `action=crr=<id>` (js/sprites.js). Bots without one render unchanged.
+// NO BOT CARRIES ANYTHING, and that is deliberate.
 //
-// A carry is set only where the dump's `hand_items` column (the drinks a bot
-// serves) names something HAND_ITEMS actually has, taking the first such name
-// in the list: Regina's 'Coffee' maps, Reginaldo's 'Water,Juice,Lemonade,Tea'
-// maps to nothing at all, so he is left without one. No id is guessed to fill
-// a gap — an unmapped drink means no carry.
+// 12 of them briefly did, sourced from the dump's `hand_items` column. That
+// column is wrong for this purpose: it lists the drinks a bot SERVES — what it
+// would hand you — not what it holds while standing there. Worse, of every
+// drink named across the roster only 'Cola' and 'Coffee' resolved in
+// HAND_ITEMS, so taking the first mappable name collapsed twelve distinct
+// bartenders into the same two props: six identical Colas and four identical
+// Coffees, none of them what the row actually described. Reginaldo's
+// 'Water,Juice,Lemonade,Tea' mapped to nothing at all.
+//
+// The obvious repair — pick a nicer id per bot — is invention, which is the one
+// thing this file exists to avoid (see the Frank and Mandy note above). Empty
+// hands are accurate; guessed hands are a claim the source data does not
+// support. So the field is gone rather than corrected.
+//
+// The `carry` PLUMBING is untouched and still supported everywhere (js/sprites.js
+// threads it into the imaging URL as `action=crr=<id>`, js/roomBots.js keys the
+// sprite cache on it, js/botCatalog.js renders it in the shelf thumbnail): the
+// class weapons in js/classWeapons.js ride the same mechanism, and a future bot
+// with a REAL sourced hand item only has to set `carry` again. It just has to
+// be a habbo-imaging id resolved BY NAME from js/handItems.js, never a bare
+// number.
 //
 // What a bot SAYS lives in js/botChatter.js, keyed by the same `key` as here:
 // the dump's speech / response / unrecognised_response columns. That is a flat
 // pick-a-random-line shape, deliberately not js/dialogueData.js (the branching
 // node/choice machine the prop-NPC Gatekeeper runs on). 11 of the 33 are
 // silent in the source and are simply absent from that map.
-import { handItemId } from './handItems.js';
 
 export const ROOM_BOTS = [
   {
@@ -74,7 +87,6 @@ export const ROOM_BOTS = [
     name: 'Marcus',
     motto: 'Man of Talent',
     figure: 'hr-155-32.sh-290-63.ch-235-78.hd-180-1.lg-285-81',
-    carry: handItemId('Cola'),
   },
   {
     key: 'piers',
@@ -87,21 +99,18 @@ export const ROOM_BOTS = [
     name: 'Ingemar',
     motto: 'Snowballs, schnowballs',
     figure: 'ha-1010-62.ch-210-62.sh-290-80.hd-180-2.lg-270-62',
-    carry: handItemId('Coffee'),
   },
   {
     key: 'chloe',
     name: 'Chloe',
     motto: 'Service with a smile',
     figure: 'hr-500-59.sh-730-107.ch-650-107.hd-600-1.lg-696-96',
-    carry: handItemId('Cola'),
   },
   {
     key: 'jem',
     name: 'Jem',
     motto: "Don't look down",
     figure: 'hr-832-61.lg-715-97.ch-650-71.hd-600-10.sh-730-97',
-    carry: handItemId('Cola'),
   },
   {
     key: 'miho',
@@ -120,7 +129,6 @@ export const ROOM_BOTS = [
     name: 'Ray',
     motto: 'Chill out and have a coconut!',
     figure: 'hr-829-34.lg-281-72.ch-803-62.hd-180-19.sh-295-68',
-    carry: handItemId('Cola'),
   },
   // --- the remaining 24 rows of the dump, in `rooms_bots` id order ---------
   {
@@ -140,7 +148,6 @@ export const ROOM_BOTS = [
     name: 'Regina',
     motto: 'I know, right?',
     figure: 'hr-832-35.sh-730-97.ch-685-62.hd-600-1.lg-715-97',
-    carry: handItemId('Coffee'),
   },
   {
     key: 'james',
@@ -183,14 +190,12 @@ export const ROOM_BOTS = [
     name: 'Billy',
     motto: 'You can call me Bill',
     figure: 'hr-155-35.ch-805-82.sh-290-64.hd-180-1.lg-270-87',
-    carry: handItemId('Coffee'),
   },
   {
     key: 'phillip',
     name: 'Phillip',
     motto: 'Why not try a nice burger?',
     figure: 'sh-300-88.hr-155-40.ch-215-69.hd-180-1.lg-285-64',
-    carry: handItemId('Cola'),
   },
   {
     key: 'ariel',
@@ -198,7 +203,6 @@ export const ROOM_BOTS = [
     motto: 'Happy to help',
     // byte-identical to Chloe's figure in the dump — see the duplicates note above
     figure: 'hr-500-59.sh-730-107.ch-650-107.hd-600-1.lg-696-96',
-    carry: handItemId('Coffee'),
   },
   {
     key: 'marcel',
@@ -230,14 +234,12 @@ export const ROOM_BOTS = [
     name: 'ScubaJoe',
     motto: '', // the dump's `mission` really is empty for this row
     figure: 'hr-125-37.ch-225-62.sh-290-80.hd-180-5.lg-270-62',
-    carry: handItemId('Cola'),
   },
   {
     key: 'skye',
     name: 'Skye',
     motto: 'On the top of the world',
     figure: 'hr-833-34.lg-705-78.ch-819-78.hd-605-2.sh-730-68',
-    carry: handItemId('Cola'),
   },
   {
     key: 'gino',
@@ -256,7 +258,6 @@ export const ROOM_BOTS = [
     name: 'Lofar',
     motto: 'Service without gravity :)',
     figure: 'hr-155-35.ha-1023-62.ch-210-62.sh-290-80.hd-180-1.lg-270-62',
-    carry: handItemId('Cola'),
   },
   {
     key: 'eric',

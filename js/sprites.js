@@ -10,13 +10,15 @@ import { weaponFor } from './classWeapons.js';
 // carry an idle item — see js/classWeapons.js — held whenever not swinging.
 // size 'm' is the normal guest-room avatar, 's' the half-scale public-room one.
 //
-// `carry` (optional) is a plain hand-item id from js/handItems.js HAND_ITEMS —
-// the room bots (js/botsData.js) hold a drink or a slice of pizza. It is the
-// non-combat counterpart to the class weapon: imaging composes a carry with a
-// pose using a comma (`wlk,crr=5`, `sit,crr=5`), so a carrying bot keeps its
-// full walk cycle and sits down without dropping the item. A carry set here
-// takes over the idle/walk/sit poses; the combat poses (atk/bow) are untouched,
-// since bots never swing and a fighting avatar's hand is already spoken for.
+// `carry` (optional) is a plain hand-item id from js/handItems.js HAND_ITEMS.
+// It is the non-combat counterpart to the class weapon: imaging composes a
+// carry with a pose using a comma (`wlk,crr=5`, `sit,crr=5`), so a carrying
+// figure keeps its full walk cycle and sits down without dropping the item.
+// A carry set here takes over the idle/walk/sit poses; the combat poses
+// (atk/bow) are untouched, since a fighting avatar's hand is already spoken
+// for. No room bot sets one today — the dump's hand items named drinks they
+// SERVED, not held (js/botsData.js) — so this path is exercised by the class
+// weapons and stands ready for a bot with a real sourced item.
 export class AvatarSprites {
   constructor(figure, size = 'm', classId = 'fighter', carry = null) {
     // An empty figure makes imaging render its own nonsense stand-in — ask for

@@ -46,17 +46,15 @@ try {
   await runCommand(admin, ':npc');
   await admin.waitForSelector('.bot-cat', { timeout: 5000 });
   const cat = await admin.evaluate(async () => {
-    const { ROOM_BOTS } = await import('/js/botsData.js');
     const cells = [...document.querySelectorAll('.bot-cat .bot-cell')];
-    const marcus = cells[1]; // roster order: harry, marcus, ...
     return {
       count: cells.length,
       names: cells.map((c) => c.querySelector('.fc-name').textContent),
       mottos: cells.map((c) => c.querySelector('.fc-motto').textContent),
       thumb: cells[0].querySelector('img').getAttribute('src'),
-      carryThumb: marcus.querySelector('img').getAttribute('src'),
+      marcusThumb: cells[1].querySelector('img').getAttribute('src'), // roster order: harry, marcus, ...
+      thumbs: cells.map((c) => c.querySelector('img').getAttribute('src')),
       foot: document.querySelector('.bot-cat .furni-cat-foot').textContent,
-      rosterCarry: ROOM_BOTS[1].carry,
     };
   });
   // the full Havana `rooms_bots` dump: 33 rows, the first nine in commit order
@@ -78,10 +76,16 @@ try {
     cat.mottos[ROSTER.indexOf('Tao')] === 'Tea is serenity');
   check('ScubaJoe\'s empty motto renders as an empty line, not "undefined"',
     cat.mottos[ROSTER.indexOf('ScubaJoe')] === '');
-  check('a non-carrier thumb is the plain stand pose',
+  check('a thumb is the plain stand pose',
     /action=std/.test(decodeURIComponent(cat.thumb)));
-  check('a carrier thumb renders holding its item',
-    decodeURIComponent(cat.carryThumb).includes(`action=crr=${cat.rosterCarry}`));
+  // Marcus was the flagship carrier (the dump gave him 'Cola'). `hand_items`
+  // lists what a bot SERVES, not what it holds, and only Cola/Coffee resolved,
+  // so all 12 carriers were dropped rather than guessed at — he must render
+  // bare-handed now, like everyone else.
+  check('Marcus, the ex-carrier, renders a plain std thumbnail',
+    /action=std/.test(decodeURIComponent(cat.marcusThumb)));
+  check('no shelf thumbnail asks imaging for a hand item',
+    cat.thumbs.every((t) => !decodeURIComponent(t).includes('crr=')));
   check('footer counts the shelf', /33 bots/.test(cat.foot));
 
   // search narrows the shelf (matches the motto text too)
@@ -223,26 +227,32 @@ try {
   check('the Gatekeeper NPC is untouched', persist.keeperStillThere);
   check('the RP arrows are untouched', persist.arrowsStillThere === 2);
 
-  // ---- a carrying bot actually holds its item in-room -------------------
-  // Ray (carry: Cola) is on tile 7,7 from the persistence step above.
+  // ---- bots are empty-handed, and the carry mechanism still works --------
+  // Ray is on tile 7,7 from the persistence step above. He used to hold a Cola,
+  // taken from the dump's `hand_items` column — which lists what a bot SERVES,
+  // not what it holds. Only Cola/Coffee resolved, so twelve bartenders rendered
+  // as the same two props; the field was dropped rather than guessed at.
+  // The PLUMBING stays (class weapons ride it), so both halves are asserted:
+  // no bot asks for a hand item, and a set given one still composes it.
   const carry = await admin.evaluate(async () => {
     const roomBots = window.__debug.roomBots();
     const { handItemId } = await import('/js/handItems.js');
+    const { avatarSpritesFor } = await import('/js/sprites.js');
     const ray = roomBots.bots.find((b) => b.key === 'ray');
     const cola = handItemId('Cola');
-    // a fresh non-carrier to compare against (the earlier Harry was picked up)
+    // a second bot, so "bare-handed" is not a single-bot accident
     roomBots.beginPlace(window.__debug.botDefs().find((b) => b.key === 'harry'));
     roomBots.place({ x: 5, y: 7 });
-    // the sprite set requests the carry-decorated poses
+    const harry = roomBots.bots.find((b) => b.key === 'harry');
     const posed = {
       std: ray.sprites.posed('std'),
       wlk: ray.sprites.posed('wlk'),
       sit: ray.sprites.posed('sit'),
-      atk: ray.sprites.posed('atk'), // combat pose must stay untouched
     };
     const url = ray.sprites.spriteUrl(posed.std, 2, 0);
-    // and a non-carrier's poses are unchanged
-    const harry = roomBots.bots.find((b) => b.key === 'harry');
+    // the mechanism itself, exercised explicitly rather than through a bot
+    const held = avatarSpritesFor(ray.figure, 'm', 'fighter', cola);
+    const bare = avatarSpritesFor(ray.figure, 'm', 'fighter', null);
     roomBots.openStand(ray);
     const standImg = document.querySelector('.infostand--bot .infostand-preview--human img').getAttribute('src');
     const standMotto = document.querySelector('.infostand--bot .infostand-motto').textContent;
@@ -253,18 +263,27 @@ try {
       spriteCarry: ray.sprites.carry,
       harryPosedStd: harry ? harry.sprites.posed('std') : null,
       harryCarry: harry ? harry.sprites.carry : 'no-harry',
-      cacheSeparate: ray.sprites !== (harry && harry.sprites),
+      heldPosed: { std: held.posed('std'), wlk: held.posed('wlk'), sit: held.posed('sit'), atk: held.posed('atk') },
+      heldUrl: held.spriteUrl(held.posed('std'), 2, 0),
+      cacheSeparate: held !== bare,
     };
   });
-  check('the carrying bot knows its item', carry.entityCarry === carry.cola && carry.spriteCarry === carry.cola);
-  check('idle pose becomes the carry render', carry.posed.std === `crr=${carry.cola}`);
-  check('walk keeps the item (comma-composed)', carry.posed.wlk === `wlk,crr=${carry.cola}`);
-  check('sit keeps the item', carry.posed.sit === `sit,crr=${carry.cola}`);
-  check('combat pose is left alone', carry.posed.atk === 'atk');
-  check('the imaging URL carries the item', decodeURIComponent(carry.url).includes(`action=crr=${carry.cola}`));
-  check('a non-carrier renders unchanged', carry.harryPosedStd === 'std' && carry.harryCarry === null);
-  check('carry keys the sprite cache separately', carry.cacheSeparate);
-  check('infostand preview holds the item', decodeURIComponent(carry.standImg).includes(`action=crr=${carry.cola}`));
+  check('a placed bot carries nothing', carry.entityCarry === null && carry.spriteCarry === null);
+  check('...so its idle/walk/sit stay the plain poses',
+    carry.posed.std === 'std' && carry.posed.wlk === 'wlk' && carry.posed.sit === 'sit');
+  check('...and the imaging URL never asks for crr=',
+    !decodeURIComponent(carry.url).includes('crr='));
+  check('a second bot is bare-handed too', carry.harryPosedStd === 'std' && carry.harryCarry === null);
+  check('the carry plumbing still composes idle/walk/sit',
+    carry.heldPosed.std === `crr=${carry.cola}` &&
+    carry.heldPosed.wlk === `wlk,crr=${carry.cola}` &&
+    carry.heldPosed.sit === `sit,crr=${carry.cola}`);
+  check('...leaves the combat pose alone', carry.heldPosed.atk === 'atk');
+  check('...and reaches the imaging URL',
+    decodeURIComponent(carry.heldUrl).includes(`action=crr=${carry.cola}`));
+  check('carry still keys the sprite cache separately', carry.cacheSeparate);
+  check('infostand preview shows the plain avatar',
+    !decodeURIComponent(carry.standImg).includes('crr='));
   check('infostand shows the motto', carry.standMotto === 'Chill out and have a coconut!');
 
   // ---- non-admins never see the shelf ----------------------------------
