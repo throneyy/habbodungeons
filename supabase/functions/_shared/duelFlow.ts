@@ -16,6 +16,7 @@ import type { DuelRow, DuelSend, FlowResult, PresenceRow } from "./duel.ts";
 import {
   DUEL_LEAD_IN_MS,
   askFresh,
+  duelLapsed,
   duelStateShape,
   foeOf,
   presenceFresh,
@@ -56,10 +57,18 @@ const no = (reason: string, status = 200, sends: DuelSend[] = []): FlowResult =>
  *  `who` is null for the caller ("you") and the display name for a target.
  *  `except` is the pair's OWN pending ask, which obviously must not make either
  *  of them look busy to each other (it would make accepting — and trade-open's
- *  challenge-back shortcut — impossible). */
+ *  challenge-back shortcut — impossible).
+ *
+ *  The lapsed check is HERE rather than only in the store's query because this
+ *  is where "already duelling" is actually decided, and the decision has to be
+ *  a pure function of (row, now) to be worth testing: an unfinished row is only
+ *  a blocker while it could still be a live duel (duelLapsed). A store that
+ *  hands back debris — every deployment already holding rows that never settled
+ *  — must not be able to pin a pair forever. */
 async function busyReason(
   store: DuelStore,
   userId: string,
+  nowMs: number,
   who: string | null,
   except: (string | undefined)[] = [],
 ) {
@@ -68,7 +77,7 @@ async function busyReason(
     store.isTrading(userId),
     store.isBattling(userId),
   ]);
-  if (duel && !except.includes(duel.id)) {
+  if (duel && !duelLapsed(duel, nowMs) && !except.includes(duel.id)) {
     return who ? `${who} is already duelling` : "you are already duelling";
   }
   if (trading) return who ? `${who} is already trading` : "finish your trade first";
@@ -102,7 +111,7 @@ export async function challengeFlow(
   const pair = [theirAsk?.id, myAsk?.id];
 
   // Am *I* free? (checked before the target's state, like trade-open)
-  const mine = await busyReason(store, me.id, null, pair);
+  const mine = await busyReason(store, me.id, nowMs, null, pair);
   if (mine) return no(mine);
 
   // Both must be standing in the same room, right now. A missing or stale
@@ -117,7 +126,7 @@ export async function challengeFlow(
     return no(`${name} is in another room`);
   }
 
-  const theirs = await busyReason(store, target.id, name, pair);
+  const theirs = await busyReason(store, target.id, nowMs, name, pair);
   if (theirs) return no(theirs);
 
   const myName = await store.displayName(me.id);
@@ -200,9 +209,9 @@ export async function acceptFlow(
     return ok({ duel: null });
   }
 
-  const mine = await busyReason(store, me.id, null, [ask.id]);
+  const mine = await busyReason(store, me.id, nowMs, null, [ask.id]);
   if (mine) return no(mine);
-  const theirs = await busyReason(store, challenger.id, from, [ask.id]);
+  const theirs = await busyReason(store, challenger.id, nowMs, from, [ask.id]);
   if (theirs) {
     await store.dropAsk(ask.id);
     return no(theirs);
@@ -357,7 +366,9 @@ export async function claimFlow(
   nowMs: number,
 ): Promise<FlowResult> {
   const live = await store.countdownOf(me.id);
-  if (!live) return ok({ ended: false });
+  // A row too old to be a live fight decides nothing — there is no win to award
+  // off debris, however offline the other name on it looks.
+  if (!live || duelLapsed(live, nowMs)) return ok({ ended: false });
 
   const foe = foeOf(live, me.id);
   const theirs = await store.presenceOf(foe.id);

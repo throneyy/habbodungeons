@@ -15,6 +15,14 @@
 
 /** An ask goes stale after a minute, like a party invite (INVITE_TTL_MS). */
 export const DUEL_ASK_TTL_MS = 60_000;
+/** Past this age a row in 'asked'/'countdown' cannot possibly still be a live
+ *  duel: the ask TTL, the 3-2-1 and the fight itself are all long over. Such a
+ *  row is debris from a handshake that never settled — a client that crashed
+ *  mid-countdown, a cancel that never arrived — and the reason a pair could get
+ *  pinned as "already duelling" forever, because nothing else ever moves a row
+ *  out of those two statuses. The read side ignores it (duelLapsed below), so
+ *  existing stuck rows stop blocking without any cleanup pass. */
+export const DUEL_MAX_LIFE_MS = 15 * 60_000;
 /** Lead-in between the accept landing and the "3" appearing, so both clients
  *  have their overlay up before the first tick. */
 export const DUEL_LEAD_IN_MS = 700;
@@ -77,6 +85,23 @@ export function presenceFresh(p: PresenceRow | null, nowMs: number): boolean {
 export function askFresh(d: DuelRow, nowMs: number): boolean {
   const born = ms(d.created_at);
   return Number.isFinite(born) ? nowMs - born <= DUEL_ASK_TTL_MS : true;
+}
+
+/** Is this unfinished row too old to still count as a duel? Two horizons, and
+ *  neither of them needs a writer to have tidied up:
+ *
+ *    • an 'asked' row lapses at DUEL_ASK_TTL_MS, the same instant askFresh
+ *      stops letting it be accepted — past that it is an ask nobody can take,
+ *      so it must not make either player look busy either
+ *    • ANY unfinished row is debris past DUEL_MAX_LIFE_MS, countdown included
+ *
+ *  A row with no readable created_at is never lapsed: same benefit of the doubt
+ *  askFresh gives, so a missing timestamp can't silently free a live duel. */
+export function duelLapsed(d: DuelRow, nowMs: number): boolean {
+  const born = ms(d.created_at);
+  if (!Number.isFinite(born)) return false;
+  if (nowMs - born > DUEL_MAX_LIFE_MS) return true;
+  return d.status === "asked" && !askFresh(d, nowMs);
 }
 
 /** The countdown anchor: one absolute instant, stamped on the challenger's row

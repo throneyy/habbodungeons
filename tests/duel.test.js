@@ -10,6 +10,8 @@
 //   • cancel mid-count   — the 3-2-1 killed from either side, both told
 //   • target busy        — duelling / trading / in a battle, never queued
 //   • target offline     — no presence row, or one older than the reaper's TTL
+//   • stale duel rows    — an unfinished row that can no longer be a live duel
+//                          must stop counting as one, read-side, with no cleanup
 // plus the clock-skew defence: a client whose machine clock is wrong (or set
 // forward on purpose) must still hit every phase at the same real moment as
 // its opponent — otherwise the shared starts_at anchor buys nothing.
@@ -28,7 +30,9 @@ import {
   DUEL_ASK_TTL_MS,
   DUEL_LEAD_IN_MS,
   DUEL_COUNTDOWN_MS,
+  DUEL_MAX_LIFE_MS,
   PRESENCE_TTL_MS,
+  duelLapsed,
 } from '../supabase/functions/_shared/duel.ts';
 import { duelPhase, clockOffset, GO_HOLD_MS } from '../js/duelCountdown.js';
 
@@ -487,6 +491,131 @@ console.log('target busy');
     res.body.ok === false && res.body.reason === 'Alice is already trading');
   check('the stale ask is swept on that refusal', w.duels.length === 0);
   check('no countdown starts', res.sends.length === 0);
+}
+
+// ---- stale rows must not pin a pair forever --------------------------------
+// The bug this covers: nothing moves a row out of 'asked'/'countdown' when a
+// handshake dies mid-flight — a client that crashed during the 3-2-1, a cancel
+// that never reached the server — so liveDuelOf kept reporting it and BOTH
+// names on it were "you are already duelling" for good.
+//
+// The store below is the unchanged fake: it hands back every unfinished row,
+// exactly like a database still holding debris. So what these prove is the
+// read-side rule in duelFlow/duel.ts, which is the point — rows already stuck
+// in production stop blocking the moment it deploys, with nothing to clean up.
+console.log('stale duel rows');
+
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+
+/** Plant an unfinished row straight into the table, aged. Nothing in these
+ *  cases ever deletes it — that is the whole point. */
+function planted(w, a, b, status, ageMs) {
+  const born = new Date(w.now - ageMs).toISOString();
+  const row = {
+    id: `d-stuck-${w.duels.length + 1}`,
+    a_user: a.id,
+    b_user: b.id,
+    a_name: a.name,
+    b_name: b.name,
+    room_id: 'lobby',
+    status,
+    starts_at: status === 'countdown' ? born : null,
+    created_at: born,
+  };
+  w.duels.push(row);
+  return row;
+}
+
+{
+  // An hour-old 'countdown': a fight that was started and never settled.
+  const w = world();
+  const alice = w.add('Alice');
+  const bob = w.add('Bob');
+  const carol = w.add('Carol');
+  const dave = w.add('Dave');
+  const stuck = planted(w, bob, carol, 'countdown', HOUR);
+
+  const res = await challengeFlow(w.store, { id: alice.id }, { name: 'Bob' }, w.now);
+  check('an hour-old countdown row no longer makes its player busy', res.body.ok === true);
+  check('the new challenge is really recorded',
+    w.duels.some((d) => d.status === 'asked' && d.a_user === alice.id && d.b_user === bob.id));
+  check('the target still gets their toast', !!sentTo(res, 'duel-asked', bob.id));
+  check('the stuck row is left exactly as it was (no cleanup needed)',
+    w.duels.includes(stuck) && stuck.status === 'countdown');
+  check('the OTHER name on the stuck row is freed too',
+    (await challengeFlow(w.store, { id: carol.id }, { name: 'Dave' }, w.now)).body.ok === true);
+  const accepted = await acceptFlow(w.store, { id: bob.id }, { from: 'Alice' }, w.now);
+  check('and the freed pair can see the handshake through to a countdown',
+    accepted.body.ok === true && sent(accepted, 'duel-state').length === 2);
+}
+{
+  // A 2-minute-old 'asked': past the ask TTL, so nobody can accept it — it must
+  // not keep its two players busy either.
+  const w = world();
+  const alice = w.add('Alice');
+  const bob = w.add('Bob');
+  const carol = w.add('Carol');
+  const dave = w.add('Dave');
+  const stuck = planted(w, carol, bob, 'asked', 2 * MINUTE);
+
+  const res = await challengeFlow(w.store, { id: alice.id }, { name: 'Bob' }, w.now);
+  check('a 2-minute-old ask row no longer makes its target busy', res.body.ok === true);
+  check('an ask past the TTL does not block its own challenger either',
+    (await challengeFlow(w.store, { id: carol.id }, { name: 'Dave' }, w.now)).body.ok === true);
+  check('the lapsed ask row is still sitting in the table', w.duels.includes(stuck));
+  check('the ask that lapsed can still never be accepted',
+    (await acceptFlow(w.store, { id: bob.id }, { from: 'Carol' }, w.now)).body.duel === null);
+}
+{
+  // The caller's own side of it: a stuck row must not lock a player out of
+  // ever duelling again with "you are already duelling".
+  const w = world();
+  const alice = w.add('Alice');
+  const bob = w.add('Bob');
+  planted(w, alice, bob, 'countdown', HOUR);
+  const res = await challengeFlow(w.store, { id: alice.id }, { name: 'Bob' }, w.now);
+  check('a player is not pinned by their OWN stuck countdown', res.body.ok === true);
+  check('the refusal that used to fire is gone',
+    res.body.reason !== 'you are already duelling');
+}
+{
+  // The other half of the rule: fresh rows still block. A liveness check that
+  // frees everybody is not a fix.
+  const w = world();
+  const alice = w.add('Alice');
+  const bob = w.add('Bob');
+  const carol = w.add('Carol');
+  planted(w, bob, carol, 'countdown', 30_000); // half a minute in
+  const res = await challengeFlow(w.store, { id: alice.id }, { name: 'Bob' }, w.now);
+  check('a FRESH countdown still makes its player busy',
+    res.body.ok === false && res.body.reason === 'Bob is already duelling');
+  check('no row is created against a genuinely duelling target', w.duels.length === 1);
+
+  const w2 = world();
+  const a2 = w2.add('Alice');
+  const b2 = w2.add('Bob');
+  const c2 = w2.add('Carol');
+  planted(w2, c2, b2, 'asked', DUEL_ASK_TTL_MS - 1000); // still acceptable
+  check('a FRESH ask still makes its target busy',
+    (await challengeFlow(w2.store, { id: a2.id }, { name: 'Bob' }, w2.now)).body.reason ===
+      'Bob is already duelling');
+}
+{
+  // The two horizons, checked on the pure helper directly.
+  const w = world();
+  const alice = w.add('Alice');
+  const bob = w.add('Bob');
+  const at = (status, ageMs) => planted(w, alice, bob, status, ageMs);
+  check('a countdown lapses only past DUEL_MAX_LIFE_MS',
+    duelLapsed(at('countdown', DUEL_MAX_LIFE_MS - 1000), w.now) === false &&
+    duelLapsed(at('countdown', DUEL_MAX_LIFE_MS + 1000), w.now) === true);
+  check('an ask lapses at the much shorter ask TTL',
+    duelLapsed(at('asked', DUEL_ASK_TTL_MS - 1000), w.now) === false &&
+    duelLapsed(at('asked', DUEL_ASK_TTL_MS + 1000), w.now) === true);
+  check('a row with no readable created_at is given the benefit of the doubt',
+    duelLapsed({ status: 'countdown' }, w.now) === false &&
+    duelLapsed({ status: 'countdown', created_at: 'nonsense' }, w.now) === false);
 }
 
 // ---- target offline --------------------------------------------------------

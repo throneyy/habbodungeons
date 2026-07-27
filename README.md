@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 18 unit suites below (851 checks) — must pass
+npm test                 # all 18 unit suites below (869 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 10 e2e suites (9 real Chromium + the duel DB stack)
 ```
@@ -139,7 +139,7 @@ node tests/skills.test.js              # Origins skill trees: unlocks, damage/Ao
 node tests/battle.test.js              # damage math, line of sight, targeting, turn phases (34 checks)
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (82 checks)
-node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, clock skew (95 checks)
+node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, stale rows, clock skew (113 checks)
 node tests/duelBattle.test.js           # duel battle: in-place, tactics, character, placement, spectating (246 checks)
 node tests/duelEndings.test.js          # duel endings: forfeit, disconnect, walked out, freed to duel again (43 checks)
 node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
