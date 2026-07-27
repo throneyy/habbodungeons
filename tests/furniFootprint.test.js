@@ -17,6 +17,7 @@
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { propFootprint, Room } from '../js/room.js';
 import { serializeProp } from '../js/roomEditor.js';
+import { relaxDrawDepths } from '../js/depth.js';
 import { buildRooms } from '../js/rooms.js';
 import { buildDungeon } from '../js/dungeon.js';
 import { FURNI_DIMS } from '../js/furniDims.js';
@@ -276,6 +277,82 @@ check('a saved layout carries neither lift nor restsOn (no cycle, no stale copy)
 const reloaded = buildRooms({ tavern: JSON.parse(saved) }).find((r) => r.id === 'tavern');
 const reOnTable = reloaded.props.filter((p) => p.restsOn && p.restsOn.id === 'vikings_table_r');
 check(`the feast is STILL on the table after a save/reload round trip (${reOnTable.length} items)`, reOnTable.length === 3 && reOnTable.every((p) => Math.abs(p.lift - 1.1) < 1e-9));
+
+// ------------------------------------------------- draw-order convergence
+// relaxDrawDepths sweeps to a FIXPOINT with a 6-pass safety bound. Nothing
+// ever checked it actually reached one, and a widened flat-surface rule
+// silently stopped it converging in the tavern: the bar is a raised platform
+// (z=1) with stairs down to z=0, and the two surface rules chased each other
+// — one raising furni above the low tiles, the other raising the raised STAIR
+// tile back above the furni. Draw order then depended on where the sweep
+// happened to stop, so it shifted as the player walked: a stair slab tore
+// loose and slid across the screen, the avatar's head sank into the bar and a
+// barrel punched through it.
+//
+// A fixpoint is testable directly: relax twice and the second pass must be a
+// no-op. Asserted on the room that broke, at every tile a player can stand on.
+console.log('draw order reaches a fixpoint (no walk-dependent flicker):');
+function drawEntries(room, unitAt) {
+  const out = [];
+  for (let y = 0; y < room.h; y++)
+    for (let x = 0; x < room.w; x++) {
+      const t = room.tile(x, y);
+      if (t) out.push({ depth: x + y, x0: x, y0: y, x1: x, y1: y, groundZ: t.z, passive: true });
+    }
+  for (const pr of room.props) {
+    const tiles = propFootprint(pr);
+    const xs = tiles.map((t) => t.x);
+    const ys = tiles.map((t) => t.y);
+    const it = {
+      depth: Math.max(...tiles.map((t) => t.x + t.y)),
+      x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys),
+      front: !!pr.front, lift: !!pr.restsOn,
+      z: room.heightAt(pr.x, pr.y) + (pr.lift || 0),
+    };
+    if (pr.walk) it.groundZ = room.heightAt(pr.x, pr.y);
+    out.push(it);
+  }
+  if (unitAt) {
+    out.push({
+      depth: unitAt.x + unitAt.y, unit: true, z: room.heightAt(unitAt.x, unitAt.y),
+      x0: unitAt.x, y0: unitAt.y, x1: unitAt.x, y1: unitAt.y,
+    });
+  }
+  return out;
+}
+function reachesFixpoint(room, unitAt) {
+  const es = drawEntries(room, unitAt);
+  relaxDrawDepths(es);
+  const settled = es.map((e) => e.depth);
+  relaxDrawDepths(es); // a converged list must not move again
+  return es.every((e, i) => Math.abs(e.depth - settled[i]) < 1e-9);
+}
+for (const room of roomsDefault) {
+  const spots = [null];
+  for (let y = 0; y < room.h; y++)
+    for (let x = 0; x < room.w; x++) if (room.tile(x, y) && !room.isBlocked(x, y)) spots.push({ x, y });
+  const bad = spots.filter((s) => !reachesFixpoint(room, s));
+  check(
+    `${room.id}: settles from every standable tile (${spots.length - 1} tiles + empty room)`,
+    bad.length === 0,
+  );
+  if (bad.length) console.error(`        first failures: ${bad.slice(0, 5).map((s) => (s ? `(${s.x},${s.y})` : 'empty')).join(' ')}`);
+}
+// The specific pair from the recording: standing in FRONT of the raised bar
+// (further south), the avatar must never be painted over by it.
+const tavernRoom = roomsDefault.find((r) => r.id === 'tavern');
+const counter = tavernRoom.props.find((p) => p.id === 'vikings_stonedivdr' && p.y <= 2);
+let sunk = [];
+for (let y = 3; y <= 6; y++)
+  for (let x = 1; x <= 11; x++) {
+    if (!tavernRoom.tile(x, y) || tavernRoom.isBlocked(x, y)) continue;
+    const es = drawEntries(tavernRoom, { x, y });
+    relaxDrawDepths(es);
+    const unit = es.find((e) => e.unit);
+    const bar = es.find((e) => e.x0 === counter.tiles[0].x && e.y0 === counter.tiles[0].y && e.groundZ == null && !e.unit);
+    if (bar && y > bar.y1 && unit.depth <= bar.depth) sunk.push(`(${x},${y})`);
+  }
+check(`the avatar is never drawn behind the bar it stands in front of (${sunk.join(' ') || 'clean'})`, sunk.length === 0);
 
 console.log('battle rooms stay winnable:');
 for (const id of ['dungeon', 'realms']) {

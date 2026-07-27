@@ -46,6 +46,10 @@ export function relaxDrawDepths(entries) {
   // grass patch never covers the tree planted on it. This used to read
   // `e.unit`, so only avatars were protected and the square's money tree was
   // painted over by the grass decal in front of it.
+  //
+  // A prop earns that protection only against flat-surface PROPS (rugs, grass,
+  // floor decals), never against the room's own passive tiles — see the
+  // convergence note on the first rule below.
   const stands = (e) => e.groundZ == null && !e.passive;
 
   // Relaxation sweeps until stable. A raise means "draw right after B" —
@@ -68,7 +72,20 @@ export function relaxDrawDepths(entries) {
         // flat surface at or below a nearby unit's feet: the unit draws
         // after it (never let ground art clip the walker)
         if (stands(a) && b.groundZ != null && b.groundZ <= (a.z ?? 0)) {
-          if (near(a, b)) raise(a, b.depth);
+          // Units interact with EVERY flat surface, the room's own tiles
+          // included — that is the original rule and it is what keeps floor
+          // art off a walker's boots. Props interact only with flat-surface
+          // props. Letting furni fight the room's tiles as well adds a pair
+          // for every prop x every tile, and in a room with a raised platform
+          // (the tavern's bar, z=1, with stairs down to z=0) the two surface
+          // rules then chase each other: this rule raises the prop above the
+          // low tiles, the next raises the raised STAIR tile back above the
+          // prop, and the sweep never reaches a fixpoint inside its 6-pass
+          // bound. Draw order then depends on where the sweep happened to
+          // stop, so it changed as the player walked and shook a detached
+          // stair slab across the screen. Measured on the live tavern:
+          // converged=false at 6 passes, vs 3 passes with this guard.
+          if ((a.unit || !b.passive) && near(a, b)) raise(a, b.depth);
           continue;
         }
         // RAISED surface strictly in front (on either axis) of a nearby
@@ -77,7 +94,11 @@ export function relaxDrawDepths(entries) {
         // guarantees. Applies to passive tiles too (a ledge step is exactly
         // such a tile); a unit standing ON the step is re-raised above it
         // by the flat rule on the next sweep, so the fixpoint interleaves.
-        if (a.groundZ != null && stands(b) && a.groundZ > (b.z ?? 0)) {
+        // Kept to UNITS deliberately: a raised tile must occlude a walker
+        // standing below and behind it, but raising room tiles above PROPS is
+        // what tore the stairs loose (see above). A prop that a raised surface
+        // should hide is already ordered by the generic box test below.
+        if (a.groundZ != null && b.unit && a.groundZ > (b.z ?? 0)) {
           if (near(a, b) && (a.x0 > b.x1 || a.y0 > b.y1)) raise(a, b.depth);
           continue;
         }
