@@ -183,6 +183,39 @@ for (const room of roomsDefault) {
   check(`${room.id}: at most one buried seat (${buried.map((p) => `${p.id}@${p.x},${p.y}`).join(', ') || 'none'})`, buried.length <= 1);
 }
 
+// A door buried under correctly-sized furni relocates; the furni stays SOLID.
+// The live square does exactly this: the adventure board (1x2, dir 2) covers
+// (12,6)+(13,6) and the saved layout parks the mirkwood arrow on (13,6).
+console.log('a buried door moves instead of punching a hole:');
+const buried = buildRooms({
+  square: [
+    { id: 'fantasy_c22_adventureboard', x: 12, y: 6, dir: 2 },
+    { id: 'rp_arrow', x: 13, y: 6, dir: 6, walk: true, teleport: { room: 'mirkwood' } },
+  ],
+}).find((r) => r.id === 'square');
+const board = buried.props.find((p) => p.id === 'fantasy_c22_adventureboard');
+const moved = buried.props.find((p) => p.teleport && p.teleport.room === 'mirkwood');
+check('the board keeps BOTH its tiles blocked', board.tiles.length === 2 && board.tiles.every((t) => buried.blockers.get(`${t.x},${t.y}`) === board));
+check('(13,6) stays solid — no walk-through hole in the signboard', buried.isBlocked(13, 6));
+check('the arrow moved off it', !(moved.x === 13 && moved.y === 6));
+check(`the arrow landed on its registered default (13,7), not a random neighbour — got (${moved.x},${moved.y})`, moved.x === 13 && moved.y === 7);
+check('and the tile it landed on is standable', !buried.isBlocked(moved.x, moved.y));
+// Determinism matters: every client builds its rooms independently, so a heal
+// that picked differently per client would desync the blocked-tile set (the
+// "[duel] blocked-tile mismatch with the host" warning).
+const again = buildRooms({
+  square: [
+    { id: 'fantasy_c22_adventureboard', x: 12, y: 6, dir: 2 },
+    { id: 'rp_arrow', x: 13, y: 6, dir: 6, walk: true, teleport: { room: 'mirkwood' } },
+  ],
+}).find((r) => r.id === 'square');
+const moved2 = again.props.find((p) => p.teleport && p.teleport.room === 'mirkwood');
+check(
+  'the heal is deterministic: same layout, same landing tile and same blocker set',
+  moved2.x === moved.x && moved2.y === moved.y &&
+    [...again.blockers.keys()].sort().join('|') === [...buried.blockers.keys()].sort().join('|'),
+);
+
 console.log('battle rooms stay winnable:');
 for (const id of ['dungeon', 'realms']) {
   const d = buildDungeon(id);

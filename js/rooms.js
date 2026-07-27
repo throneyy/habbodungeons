@@ -39,28 +39,59 @@ const GATE_DEFAULTS = {
 
 // A traversal decal (RP arrow, dungeon gate) is only a door if a player can
 // STAND on it, so every one of them ends up here. Its own block is always
-// lifted — it was flagged walkable after the ctor ran. Beyond that, a door
-// buried under OTHER furni would strand players, and that is a live hazard:
-// footprints used to be hand-authored per placement and got the axis wrong, so
-// layouts were saved against footprints a tile off. The square's adventure
-// board (1x2, dir 2) sits across (12,6)+(13,6) with the mirkwood arrow on
-// (13,6) — correct footprints put a solid board on the only exit tile. The
-// module's contract is that the traversal network always comes back complete,
-// so when a layout leaves a door no standable tile at all, the door wins one
-// back and says so. A door with one tile still free (the square's arch, whose
-// far tile holds a goblin statue) is left exactly as the admin placed it.
-function wireDoor(room, p) {
+// lifted — it was flagged walkable after the ctor ran.
+//
+// Beyond that, a door buried under OTHER furni would strand players, and that
+// is a live hazard: footprints used to be hand-authored per placement and got
+// the axis wrong, so layouts were saved against footprints a tile off. The
+// square's adventure board (1x2, dir 2) really sits across (12,6)+(13,6) and
+// the saved layout parks the mirkwood arrow on (13,6) — with correct
+// footprints a solid board covers the only way east.
+//
+// The door MOVES rather than the furni becoming see-through. Punching a hole
+// in the board would leave players walking through a signboard, which is the
+// same class of lie the wrong footprints told; relocating keeps every item
+// solid and the traversal network complete, which is this module's contract.
+// Its registered default tile is tried first (ARROW_DEFAULTS/GATE_DEFAULTS
+// already restore missing arrows to exactly those spots), then neighbours in a
+// FIXED order — determinism matters because every client builds its rooms
+// independently, and a heal that picked differently per client would desync
+// the blocked-tile set. Only if nothing at all is free does the door force its
+// own tile, because being unreachable is worse than overlapping art.
+//
+// A door with one tile still free (the square's arch, whose far tile holds a
+// goblin statue) is left exactly as the admin placed it.
+const NEIGHBOURS = [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+
+function wireDoor(room, p, home = null) {
   for (const t of p.tiles) {
     if (room.blockers.get(`${t.x},${t.y}`) === p) room.unblock(t.x, t.y);
   }
   if (p.tiles.some((t) => !room.isBlocked(t.x, t.y))) return;
   const t = p.tiles[0];
   const by = room.blockers.get(`${t.x},${t.y}`);
+  const buriedBy = by && by.id ? `${by.id} at (${by.x},${by.y})` : 'another item';
+  const free = (x, y) => room.tile(x, y) && !room.isBlocked(x, y);
+
+  const spot =
+    (home && free(home.x, home.y) ? { x: home.x, y: home.y, dir: home.dir ?? p.dir } : null) ||
+    NEIGHBOURS.map(([dx, dy]) => ({ x: p.x + dx, y: p.y + dy, dir: p.dir })).find((s) => free(s.x, s.y));
+
+  if (spot) {
+    p.x = spot.x;
+    p.y = spot.y;
+    p.dir = spot.dir ?? p.dir;
+    room.stampFootprint(p);
+    console.warn(
+      `[rooms] ${room.id}: ${p.id} at (${t.x},${t.y}) was fully covered by ${buriedBy} — ` +
+        `moved to (${p.x},${p.y}). Re-save the layout in the room editor to make it permanent.`,
+    );
+    return;
+  }
   room.unblock(t.x, t.y);
   console.warn(
-    `[rooms] ${room.id}: ${p.id} at (${t.x},${t.y}) was fully covered by ` +
-      `${by && by.id ? `${by.id} at (${by.x},${by.y})` : 'another item'} — freeing the door tile. ` +
-      'Move one of them in the room editor and re-save the layout.',
+    `[rooms] ${room.id}: ${p.id} at (${t.x},${t.y}) was fully covered by ${buriedBy} and has ` +
+      'nowhere free to move — forcing the door tile open. Move one of them in the room editor.',
   );
 }
 
@@ -74,7 +105,7 @@ function wireGates(rooms) {
       if (p.id !== GATE_FURNI) continue;
       p.walk = true; // step INTO the archway to descend
       p.teleport = { gate: true }; // destination comes from the Gatekeeper
-      wireDoor(room, p);
+      wireDoor(room, p, (GATE_DEFAULTS[room.id] || [])[0]);
     }
   }
   return rooms;
@@ -110,7 +141,9 @@ function wireArrows(rooms) {
     }
     for (const p of arrows) {
       p.walk = true;
-      wireDoor(room, p);
+      // an arrow's registered default is keyed by DESTINATION, so a buried one
+      // falls back to the exact tile this room documents for that exit
+      wireDoor(room, p, (ARROW_DEFAULTS[room.id] || []).find((d) => p.teleport && p.teleport.room === d.dest));
     }
   }
   return rooms;
