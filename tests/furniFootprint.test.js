@@ -16,6 +16,7 @@
 // things a moved blocker can break: spawns, doors, seats and reachability.
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { propFootprint, Room } from '../js/room.js';
+import { serializeProp } from '../js/roomEditor.js';
 import { buildRooms } from '../js/rooms.js';
 import { buildDungeon } from '../js/dungeon.js';
 import { FURNI_DIMS } from '../js/furniDims.js';
@@ -215,6 +216,66 @@ check(
   moved2.x === moved.x && moved2.y === moved.y &&
     [...again.blockers.keys()].sort().join('|') === [...buried.blockers.keys()].sort().join('|'),
 );
+
+// ---------------------------------------------------------------- stacking
+// Habbo gives every furni a zdim and a canputstuffon flag; an item dropped on
+// a tile lands on the current stack height and, if it can be stacked on,
+// raises it. room.restack() applies that, replacing three hand-written
+// `lift: 0.45` values that were eyeballed AND silently dropped by the first
+// admin re-save (serializeProp never persisted them) — which is how the
+// tavern's feast ended up served on the floorboards.
+console.log('furni stack on each other by zdim (Habbo\u2019s rule):');
+const tav = roomsDefault.find((r) => r.id === 'tavern');
+const onTable = tav.props.filter((p) => p.restsOn && p.restsOn.id === 'vikings_table_r');
+check(`the feast spread rests on the table (${onTable.length} items)`, onTable.length === 3);
+check('...at the table\u2019s real height 1.1, not the eyeballed 0.45', onTable.every((p) => Math.abs(p.lift - 1.1) < 1e-9));
+const onBar = tav.props.filter((p) => p.restsOn && p.restsOn.id === 'vikings_stonedivdr');
+check(`the bar counter carries its own items at 1.15 (${onBar.length})`, onBar.length > 0 && onBar.every((p) => Math.abs(p.lift - 1.15) < 1e-9));
+check('nothing is left hand-authored: no prop spec ships a literal lift', !readFileSync(new URL('../js/rooms.js', import.meta.url), 'utf8').match(/lift:\s*[\d.]/));
+
+// A support with ZERO height still supports: the money tree's grass patch
+// lifts by nothing, but the tree standing on it must still draw in front.
+// This is why the renderer keys off `restsOn` and not `lift > 0`.
+const zeroLift = new Room({
+  id: 'z', heightmap: ['000', '000', '000'], spawn: { x: 0, y: 0 },
+  props: [
+    { id: 'gothic_carpet', x: 1, y: 1, dir: 0, walk: true }, // zdim 0, canputstuffon
+    { id: 'fantasy_c22_barrel', x: 1, y: 1, dir: 0 },
+  ],
+});
+check('a zero-height rug still counts as a support', zeroLift.props[1].restsOn === zeroLift.props[0]);
+check('...lifting by exactly nothing', zeroLift.props[1].lift === 0);
+
+// canputstuffon=false must NOT support: you cannot rest a rug on a tree.
+const noSupport = new Room({
+  id: 'n', heightmap: ['000', '000', '000'], spawn: { x: 0, y: 0 },
+  props: [
+    { id: 'fantasy_c22_tree', x: 1, y: 1, dir: 0 }, // canputstuffon = false
+    { id: 'gothic_carpet', x: 1, y: 1, dir: 0, walk: true },
+  ],
+});
+check('an item that cannot be stacked on supports nothing', !noSupport.props[1].restsOn && noSupport.props[1].lift === 0);
+
+// Layout order is stacking order, and a prop never rests on itself.
+const multi = new Room({
+  id: 'm', heightmap: ['0000', '0000', '0000'], spawn: { x: 0, y: 0 },
+  props: [
+    { id: 'vikings_table_r', x: 0, y: 1, dir: 0 }, // 3x1, zdim 1.1, canputstuffon
+    { id: 'picnic_food1', x: 1, y: 1, dir: 0 },
+  ],
+});
+check('a 3-tile table carries an item on any of its tiles', multi.props[1].restsOn === multi.props[0] && Math.abs(multi.props[1].lift - 1.1) < 1e-9);
+check('the table itself rests on nothing', !multi.props[0].restsOn && multi.props[0].lift === 0);
+
+// restsOn holds a PROP REFERENCE, so it must never reach the layout JSON — it
+// would be a cycle (table -> food -> table) and throw on save.
+const saved = JSON.stringify(tav.props.map(serializeProp));
+check('a saved layout carries neither lift nor restsOn (no cycle, no stale copy)', !saved.includes('restsOn') && !saved.includes('lift'));
+// The real regression guard: derived altitudes must survive a save/reload,
+// which the hand-authored ones did not.
+const reloaded = buildRooms({ tavern: JSON.parse(saved) }).find((r) => r.id === 'tavern');
+const reOnTable = reloaded.props.filter((p) => p.restsOn && p.restsOn.id === 'vikings_table_r');
+check(`the feast is STILL on the table after a save/reload round trip (${reOnTable.length} items)`, reOnTable.length === 3 && reOnTable.every((p) => Math.abs(p.lift - 1.1) < 1e-9));
 
 console.log('battle rooms stay winnable:');
 for (const id of ['dungeon', 'realms']) {

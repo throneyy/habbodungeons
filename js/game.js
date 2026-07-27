@@ -335,7 +335,15 @@ export class Game {
         kind: 1, prop: pr,
         x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys),
         front: !!(pr.ref && pr.ref.front),
-        lift: !!(pr.ref && pr.ref.lift), // tabletop item: draws above the furni it rests on
+        // Resting ON another prop (Habbo's stack: room.restack). Draws above
+        // whatever supports it, on whichever of the support's tiles it sits.
+        // NOT `lift > 0`: a rug or a grass decal supports at zero height, and
+        // the tree standing on it must still draw in front of it.
+        lift: !!(pr.ref && pr.ref.restsOn),
+        // base height: floor under it plus the stack it rests on. Lets a flat
+        // surface tell whether this prop stands ABOVE it (and so must draw
+        // after it) the same way it already does for a unit's feet.
+        z: this.room.heightAt(pr.x, pr.y) + ((pr.ref && pr.ref.lift) || 0),
       };
       // flat floor-covering prop (rug/decal you stand on): top surface is the
       // floor itself, so it obeys the same above-the-feet occlusion rule
@@ -818,9 +826,11 @@ export class Game {
         sp.get(pr.dir, 0, small);
     }
     if (!main) return;
-    // `lift` raises a prop off the floor by N tile-heights so tabletop items
-    // (a platter on a table, a mug on the bar) sit on the surface instead of
-    // clipping to the ground. Same unit as a chair's `sit`.
+    // `lift` raises a prop off the floor to the top of the stack beneath it,
+    // so tabletop items (a platter on the feast table, a mug on the bar) sit
+    // on the surface instead of clipping to the ground. Derived from the
+    // supporting furni's real zdim by room.restack — same unit as a chair's
+    // `sit` and as the heightmap, 1 unit = Z_STEP px.
     const lift = ref.lift || 0;
     const c = this.p(pr.x, pr.y, this.room.heightAt(pr.x, pr.y) + lift);
     ctx.save();

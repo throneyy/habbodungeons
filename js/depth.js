@@ -40,6 +40,14 @@ export function relaxDrawDepths(entries) {
   // would scramble unrelated orderings.
   const near = (a, b) => a.x0 <= b.x1 + 1 && b.x0 <= a.x1 + 1 && a.y0 <= b.y1 + 1 && b.y0 <= a.y1 + 1;
 
+  // Anything that STANDS in the room rather than lying flat on it: units, and
+  // solid furni. Both have a base height (`z`) and both must win against a
+  // flat surface at or below that base — a rug never covers a wardrobe, and a
+  // grass patch never covers the tree planted on it. This used to read
+  // `e.unit`, so only avatars were protected and the square's money tree was
+  // painted over by the grass decal in front of it.
+  const stands = (e) => e.groundZ == null && !e.passive;
+
   // Relaxation sweeps until stable. A raise means "draw right after B" —
   // uncapped, because a long item's scalar depth can sit several bands above
   // a unit standing at its near end. Pairs can't cycle (the front test is
@@ -59,7 +67,7 @@ export function relaxDrawDepths(entries) {
         if (a === b) continue;
         // flat surface at or below a nearby unit's feet: the unit draws
         // after it (never let ground art clip the walker)
-        if (a.unit && b.groundZ != null && b.groundZ <= (a.z ?? 0)) {
+        if (stands(a) && b.groundZ != null && b.groundZ <= (a.z ?? 0)) {
           if (near(a, b)) raise(a, b.depth);
           continue;
         }
@@ -69,7 +77,7 @@ export function relaxDrawDepths(entries) {
         // guarantees. Applies to passive tiles too (a ledge step is exactly
         // such a tile); a unit standing ON the step is re-raised above it
         // by the flat rule on the next sweep, so the fixpoint interleaves.
-        if (a.groundZ != null && b.unit && a.groundZ > (b.z ?? 0)) {
+        if (a.groundZ != null && stands(b) && a.groundZ > (b.z ?? 0)) {
           if (near(a, b) && (a.x0 > b.x1 || a.y0 > b.y1)) raise(a, b.depth);
           continue;
         }

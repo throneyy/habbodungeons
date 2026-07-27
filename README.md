@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 18 unit suites below (829 checks) — must pass
+npm test                 # all 18 unit suites below (840 checks) — must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 10 e2e suites (9 real Chromium + the duel DB stack)
 ```
@@ -148,7 +148,7 @@ node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead
 node tests/defaultAvatarShoes.test.js  # fallback avatar: studded-sole (cleat) detector, baked sheet (18 checks)
 node tests/buffInspire.test.js         # `buff` consumable kind and Inspire stacking (8 checks)
 node tests/furniLogic.test.js          # furni zdim + canstandon/cansiton/canlayon data, generated furniDims (16 checks)
-node tests/furniFootprint.test.js      # multi-tile footprints derived from dims, verified against the drop-shadow art (38 checks)
+node tests/furniFootprint.test.js      # multi-tile footprints derived from dims, verified against the drop-shadow art, plus zdim stacking (49 checks)
 node tests/identityMirror.test.js      # Identity.mirror() reports a refused cloud write instead of swallowing it (32 checks)
 node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
 ```

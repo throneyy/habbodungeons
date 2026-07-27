@@ -1,4 +1,4 @@
-import { FURNI_DIMS } from './furniDims.js';
+import { FURNI_DIMS, furniLogic } from './furniDims.js';
 
 // A room is defined exactly like Habbo's room models: a heightmap of
 // characters where 'x' is void (unwalkable hole / wall), '0'-'9' are floor
@@ -57,6 +57,56 @@ export class Room {
     // per battle so gimmicks reset naturally.
     this.effects = new Map(); // "x,y" -> effect spec
     for (const e of effects) this.effects.set(`${e.x},${e.y}`, e);
+    this.restack();
+  }
+
+  // Habbo's furni stacking, applied to the whole room.
+  //
+  // Habbo gives every furni type a `zdim` (physical height) and a
+  // `canputstuffon` flag, and an item dropped on a tile lands on top of
+  // whatever is already there: its altitude is the tile's current STACK
+  // HEIGHT, and if it can itself be stacked on, it raises that height by its
+  // own zdim. Both fields now live in every public/assets/props/<id>/data.json
+  // and are mirrored into FURNI_LOGIC, so the altitude is computed instead of
+  // guessed.
+  //
+  // It used to be guessed. `lift: 0.45` was hand-written on three tavern props
+  // to float them onto the feast table, which failed twice over: the number
+  // was eyeballed rather than the table's real 1.1, and serializeProp never
+  // persisted it, so the first admin re-save dropped every lift and the food
+  // fell through the table onto the floor. Deriving it fixes both at once and
+  // survives every future save.
+  //
+  // Layout ORDER is the stacking order, exactly as in Habbo where you drop one
+  // item on top of another: a prop resting on an earlier prop's stack gets
+  // that stack's height. Deterministic, so every client computes the same
+  // altitudes from the same layout.
+  //
+  // Sets two fields per prop:
+  //   lift    — altitude in height units (renderer offset, game.js)
+  //   restsOn — the prop it is standing on, or null. This is what the draw
+  //             order needs: a support with zdim 0 (a rug, a grass decal)
+  //             lifts by nothing but must still draw UNDER what sits on it,
+  //             so "is it resting on something" cannot be inferred from lift.
+  restack() {
+    const stack = new Map(); // "x,y" -> { top, by }
+    for (const p of this.props) {
+      const logic = furniLogic(p.id);
+      let top = 0;
+      let by = null;
+      for (const t of propTiles(p)) {
+        const s = stack.get(`${t.x},${t.y}`);
+        if (s && s.top >= top && s.by !== p) {
+          top = s.top;
+          by = s.by;
+        }
+      }
+      p.lift = top;
+      p.restsOn = by;
+      if (!logic.canPutStuffOn) continue;
+      for (const t of propTiles(p)) stack.set(`${t.x},${t.y}`, { top: top + logic.zdim, by: p });
+    }
+    return this.props;
   }
 
   effectAt(x, y) {
@@ -78,6 +128,7 @@ export class Room {
     this.stampFootprint(p);
     this.props.push(p);
     if (!p.walk && !p.sit) for (const t of p.tiles) this.block(t.x, t.y, p);
+    this.restack(); // the newcomer lands on the stack, and may raise it
     return p;
   }
 

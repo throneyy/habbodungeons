@@ -373,11 +373,15 @@ export function buildRooms(layouts = {}) {
         { id: 'vikings_stool', x: 5, y: 9, dir: 0 },
         { id: 'vikings_stool', x: 6, y: 9, dir: 0 },
         { id: 'vikings_stool', x: 7, y: 9, dir: 0 },
-        // feast spread on the long table: roast platters + bread + ale.
-        // `lift` sits them on the tabletop instead of clipping to the floor.
-        { id: 'picnic_food3', x: 5, y: 8, dir: 0, lift: 0.45 },
-        { id: 'picnic_food1', x: 6, y: 8, dir: 0, lift: 0.45 },
-        { id: 'fantasy_c22_sweetrolls', x: 7, y: 8, dir: 0, lift: 0.45 },
+        // feast spread on the long table: roast platters + bread + ale. They
+        // are listed AFTER the table on purpose — layout order is stacking
+        // order (room.restack), so they land on its 1.1-high top. No hand
+        // `lift`: an eyeballed 0.45 used to be written here and was silently
+        // dropped by the first admin re-save, which is how the feast ended up
+        // served on the floorboards.
+        { id: 'picnic_food3', x: 5, y: 8, dir: 0 },
+        { id: 'picnic_food1', x: 6, y: 8, dir: 0 },
+        { id: 'fantasy_c22_sweetrolls', x: 7, y: 8, dir: 0 },
         // ==== PASS 4: lighting + small props ====
         // floor candelabra flanking the feast table + by the round tables
         { id: 'gothiccandelabra', x: 4, y: 8, dir: 0 },

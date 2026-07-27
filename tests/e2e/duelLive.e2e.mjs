@@ -1744,6 +1744,47 @@ try {
       if (notable.length) console.log(`  [${p.name}] console: ${notable.slice(0, 6).join(' | ')}`);
     }
   }
+
+  // --- blocked-tile mismatch report -------------------------------------
+  //
+  // duelBattle.js's buildReplica warns when a guest's own reading of the room
+  // disagrees with the host's obstacle snapshot. The host wins so nobody ever
+  // desyncs, which is exactly why it went unexplained for so long: it is
+  // invisible unless something looks for it. The filter above does NOT match it
+  // (no 'fail'/'error'/'denied'), so it is hunted explicitly and printed
+  // VERBATIM — the warning names the differing tile keys and the room, and those
+  // keys identify the piece of furniture, which is the whole diagnosis.
+  //
+  // Leading theory is staleness rather than logic: each client builds its rooms
+  // from its own AdminApi.loadLayouts() at explore start (js/main.js), and that
+  // fetch can fail to defaults, be served stale, or predate an admin edit the
+  // other client already has. A run where the warning is ABSENT is evidence,
+  // not proof, so the absence is stated as plainly as a hit would be.
+  const mismatches = [];
+  for (const p of [a, b, c, d]) {
+    for (const l of p ? p.logs : []) if (l.includes('blocked-tile mismatch')) mismatches.push({ who: p.name, line: l });
+  }
+  console.log(`\n  ── blocked-tile mismatch ──`);
+  if (!mismatches.length) {
+    console.log(`  none: no client disagreed with the host's obstacle snapshot in this run.`);
+  } else {
+    console.log(`  ${mismatches.length} occurrence(s) — verbatim:`);
+    for (const m of mismatches) console.log(`  [${m.who}] ${m.line}`);
+  }
+  // Each client's own view, so a hit can be attributed instead of guessed at:
+  // a client that fell back to the DEFAULT layout has a different prop count.
+  for (const p of [a, b, c, d]) {
+    if (!p) continue;
+    const view = await p.page
+      .evaluate(() => {
+        const g = window.game || (window.__hd && window.__hd.game);
+        const r = g && g.room;
+        if (!r) return null;
+        return { room: r.id, props: (r.props || []).length, blocked: r.blockers ? r.blockers.size : -1 };
+      })
+      .catch(() => null);
+    console.log(`  [${p.name}] ${view ? `room ${view.room}: ${view.props} props, ${view.blocked} blocked tiles` : 'room unreadable (page closed)'}`);
+  }
   for (const p of [a, b, c, d]) if (p) await p.context.close().catch(() => {});
   server.kill();
 }

@@ -349,6 +349,7 @@ export class RoomEditor {
     const m = this.moving;
     const room = this.game.room;
     if (!m.ref.walk && !m.ref.sit) for (const t of footprint(m.ref)) room.block(t.x, t.y, m.ref);
+    room.restack(); // dropped on (or off) a table: altitudes shift for real
     delete m.ref.editGhost;
     delete m.ref.editHide;
     if (this.smallPic) {
@@ -383,6 +384,7 @@ export class RoomEditor {
       if (this.moving) this.moving.offs = tiles.map((t) => ({ dx: t.x - ref.x, dy: t.y - ref.y }));
     }
     if (solid && !this.moving) for (const t of footprint(ref)) room.block(t.x, t.y, ref);
+    room.restack(); // a rotated support covers different tiles, so stacks move
     this.renderPreview(); // activeObjectsUpdated -> refreshView
     if (this.moving && this.smallPic) {
       // rotating mid-move: rebuild the cursor pic in the new direction
