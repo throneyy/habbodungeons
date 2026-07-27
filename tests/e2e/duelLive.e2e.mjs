@@ -1630,7 +1630,12 @@ try {
   // next one recovered.
   check(`${a.name} can see ${b.name} again`, sawB);
   check('the third challenge is accepted by the server', !!asked3 && asked3.ok === true);
-  const prompt3 = await b.page.waitForSelector('.party-prompt [data-act="yes"]', { timeout: 25000 })
+  // 60s, not 25s: b's browser was CLOSED and re-opened moments ago, so this wait
+  // covers a cold page boot plus a fresh realtime subscribe. Standalone that
+  // lands in ~8s, but inside `bun run test:e2e` — nine suites deep, four
+  // browsers live — it reproducibly overran 25s while the server had already
+  // returned ok:true, failing the gate on test tightness rather than product.
+  const prompt3 = await b.page.waitForSelector('.party-prompt [data-act="yes"]', { timeout: 60000 })
     .then(() => true).catch(() => false);
   check(`${b.name} received the third challenge prompt`, prompt3);
   if (!prompt3) throw new Error('no prompt on the re-opened guest — cannot test a countdown abandonment');
