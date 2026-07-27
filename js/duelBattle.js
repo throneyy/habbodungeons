@@ -614,7 +614,7 @@ export class DuelGuest extends CoopMember {
       const onlyThere = hostBlocked.filter((k) => !mine.has(k));
       console.warn(
         `[duel] blocked-tile mismatch with the host (${mineNow.length} here, ` +
-        `${hostBlocked.length} there) — adopting the host's snapshot. ` +
+        `${hostBlocked.length} there) - adopting the host's snapshot. ` +
         `Only here: ${onlyHere.join(' ') || 'none'}. ` +
         `Only on the host: ${onlyThere.join(' ') || 'none'}. ` +
         `Room ${live.id} (${live.props ? live.props.length : 0} props here).`

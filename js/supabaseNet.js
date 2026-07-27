@@ -98,7 +98,7 @@ export class SupabaseNet {
         if (error) throw error;
         currentUser = data?.user || null;
       } catch (e) {
-        console.warn('[habbo-dungeons] anonymous sign-in failed — multiplayer off:', e?.message || e);
+        console.warn('[habbo-dungeons] anonymous sign-in failed - multiplayer off:', e?.message || e);
       }
       if (!currentUser) {
         this.identity = null;

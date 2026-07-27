@@ -66,7 +66,7 @@ export class BotCatalog {
       const cell = document.createElement('button');
       cell.type = 'button';
       cell.className = 'furni-cell bot-cell';
-      cell.title = `${def.name} — ${def.motto || 'room bot'}`;
+      cell.title = `${def.name} · ${def.motto || 'room bot'}`;
       const img = document.createElement('img');
       img.alt = def.name;
       img.loading = 'lazy'; // one imaging request per cell, only when scrolled in
@@ -103,7 +103,7 @@ export class BotCatalog {
     img.alt = def.name;
     img.src = avatarUrl(def.figure, 2, 'm', def.carry ?? null);
     const cap = document.createElement('span');
-    cap.textContent = `${def.name} — ${def.motto || 'room bot'}`;
+    cap.textContent = `${def.name} - ${def.motto || 'room bot'}`;
     pop.append(img, cap);
     this.el.appendChild(pop);
     const wr = this.el.getBoundingClientRect();

@@ -187,7 +187,7 @@ export class DuelUI {
 
     const status = this.el.querySelector('.duel-status');
     if (p.phase === 'ready') {
-      status.textContent = `Duel ready — ${st.opponent} is facing you.`;
+      status.textContent = `Duel ready · ${st.opponent} is facing you.`;
       status.className = 'duel-status lock';
       this.stopClock(); // the clock has nothing left to say: combat takes over
     } else {

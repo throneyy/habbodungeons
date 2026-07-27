@@ -162,7 +162,7 @@ export const Identity = {
         });
         data = await res.json();
       } catch {
-        return { ok: false, reason: 'Network error — is the server running?' };
+        return { ok: false, reason: 'Network error: is the server running?' };
       }
     }
     if (!data.ok) return { ok: false, reason: data.reason || 'Verification failed.', motto: data.motto };
@@ -193,7 +193,7 @@ export const Identity = {
         const res = await fetch('/api/habbo/skills?name=' + encodeURIComponent(cur.name));
         data = await res.json();
       } catch {
-        return { ok: false, reason: 'Network error — is the server running?' };
+        return { ok: false, reason: 'Network error - is the server running?' };
       }
     }
     if (!data.ok) return { ok: false, reason: data.reason || 'No skill data found.' };
@@ -235,12 +235,12 @@ export const Identity = {
     // `client` is a test seam: passing one skips getSupabase(), whose dynamic
     // esm.sh import cannot resolve under Node. Production callers pass nothing.
     const sb = client ?? (await getSupabase());
-    if (!sb) return { skipped: true, code: 'offline', message: 'no Supabase client — cloud features off' };
+    if (!sb) return { skipped: true, code: 'offline', message: 'no Supabase client - cloud features off' };
     if (!id) return { skipped: true, code: 'no-identity', message: 'nothing to mirror' };
     const {
       data: { user },
     } = await sb.auth.getUser();
-    if (!user) return { skipped: true, code: 'no-session', message: 'not signed in — local only' };
+    if (!user) return { skipped: true, code: 'no-session', message: 'not signed in - local only' };
     const { error } = await sb
       .from('profiles')
       .update({

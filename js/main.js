@@ -102,7 +102,7 @@ function identityLabel(id) {
 }
 
 // ---- controllers -----------------------------------------------------------
-const battle = new BattleController({ banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log') });
+const battle = new BattleController({ banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log'), hint: $('panelHint') });
 const explore = new ExploreController((s) => ($('exploreStatus').textContent = s));
 const run = new RunController(game, battle, {
   // win or lose, leaving a run drops you back in the tavern
@@ -933,7 +933,7 @@ function collectMonsters() {
       const levels = [...e.levels].sort((a, b) => a - b);
       return {
         ...e,
-        levelLabel: levels.length > 1 ? `Lv ${levels[0]}–${levels[levels.length - 1]}` : `Lv ${levels[0]}`,
+        levelLabel: levels.length > 1 ? `Lv ${levels[0]}-${levels[levels.length - 1]}` : `Lv ${levels[0]}`,
         battleLabel: [...e.battles].sort().join(' · '),
       };
     })
@@ -1486,7 +1486,7 @@ const myName = () => (Identity.get() || {}).name || '';
 const coopMember = new CoopMember(
   net,
   game,
-  { banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log') },
+  { banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log'), hint: $('panelHint') },
   myName
 );
 
@@ -1584,7 +1584,7 @@ function showCoopEnd(reason, share) {
 // and sends commands for the unit it owns. See js/duelBattle.js.
 let duelHost = null;
 let duelGuest = null;
-const battleDom = () => ({ banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log') });
+const battleDom = () => ({ banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log'), hint: $('panelHint') });
 
 // The tile I am standing on right now. An in-place duel starts from the real
 // positions of the two players, so this is what gets sent and placed from.
@@ -2409,7 +2409,7 @@ async function startExplore() {
         document.body.appendChild(hint); // toast above the toolbar
       }
       hint.textContent =
-        'No admin credential — link your Habbo account (admin name) via the landing page, or open /#admin=<token> once (token is printed on server boot / data/admin-token.txt)';
+        'No admin credential - link your Habbo account (admin name) via the landing page, or open /#admin=<token> once (token is printed on server boot / data/admin-token.txt)';
       setTimeout(() => hint.remove(), 10000);
     }
     setTimeout(() => (saveBtn.textContent = 'Save Layout'), 2500);

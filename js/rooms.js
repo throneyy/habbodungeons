@@ -83,7 +83,7 @@ function wireDoor(room, p, home = null) {
     p.dir = spot.dir ?? p.dir;
     room.stampFootprint(p);
     console.warn(
-      `[rooms] ${room.id}: ${p.id} at (${t.x},${t.y}) was fully covered by ${buriedBy} — ` +
+      `[rooms] ${room.id}: ${p.id} at (${t.x},${t.y}) was fully covered by ${buriedBy} - ` +
         `moved to (${p.x},${p.y}). Re-save the layout in the room editor to make it permanent.`,
     );
     return;
@@ -91,7 +91,7 @@ function wireDoor(room, p, home = null) {
   room.unblock(t.x, t.y);
   console.warn(
     `[rooms] ${room.id}: ${p.id} at (${t.x},${t.y}) was fully covered by ${buriedBy} and has ` +
-      'nowhere free to move — forcing the door tile open. Move one of them in the room editor.',
+      'nowhere free to move - forcing the door tile open. Move one of them in the room editor.',
   );
 }
 

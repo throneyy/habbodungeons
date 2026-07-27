@@ -22,7 +22,7 @@ export const EVENTS = {
             m.hp = Math.min(max, m.hp + Math.ceil(max * 0.35));
             healed += m.hp - before;
           }
-          return `Warmth floods the party — restored ${healed} HP across the squad.`;
+          return `Warmth floods the party: restored ${healed} HP across the squad.`;
         },
       },
       {
@@ -35,7 +35,7 @@ export const EVENTS = {
             hurt = Math.min(victim.hp - 1, 8);
             if (hurt > 0) victim.hp -= hurt;
           }
-          return `You take 30 gold from the shrine. It bites back — ${victim ? `${victim.name} loses ${hurt} HP.` : 'but the party is untouched.'}`;
+          return `You take 30 gold from the shrine. It bites back: ${victim ? `${victim.name} loses ${hurt} HP.` : 'but the party is untouched.'}`;
         },
       },
       { label: 'Leave it be', resolve: () => 'You bow your head and move on. Nothing ventured.' },
@@ -83,7 +83,7 @@ export const EVENTS = {
         label: 'Take the pouch',
         resolve: (run) => {
           run.addGold(40);
-          return 'You take the pouch — 40 gold. The wanderer says nothing.';
+          return 'You take the pouch: 40 gold. The wanderer says nothing.';
         },
       },
       { label: 'Walk past', resolve: () => 'You leave the stranger to the dark.' },

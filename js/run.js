@@ -1,6 +1,6 @@
 import { Unit } from './units.js';
 import { CLASSES } from './classes.js';
-import { ITEMS, sumBonuses } from './items.js';
+import { CONSUMABLES, ITEMS, sumBonuses } from './items.js';
 import { treeSkillSpecs } from './skills.js';
 
 export const SAVE_KEY = 'habbo-dungeons-run';
@@ -96,8 +96,26 @@ export class Run {
   livingSquad() {
     return this.squad.filter((m) => m.hp > 0);
   }
+  downedSquad() {
+    return this.squad.filter((m) => m.hp <= 0);
+  }
   isWiped() {
     return this.livingSquad().length === 0;
+  }
+
+  // The revive consumable the backpack is carrying, or null. Found by EFFECT
+  // rather than by id, so this stays true if a second revive item is ever added
+  // — and so the camp button and the thing it spends can never disagree.
+  reviveItem() {
+    return this.inventory.find((id) => CONSUMABLES[id] && CONSUMABLES[id].effect.kind === 'revive') || null;
+  }
+
+  // Camp Revive, the sibling of canRest(): a crystal in the bag AND somebody to
+  // spend it on. Both halves matter — resolveEffect refuses a revive with
+  // nobody fallen, and consumeFromRun would then leave the item untouched, so a
+  // button that ignored this would look broken rather than refuse honestly.
+  canRevive() {
+    return !!this.reviveItem() && this.downedSquad().length > 0;
   }
 
   // ------------------------------------------------------ battle bridge

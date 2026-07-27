@@ -69,6 +69,6 @@ export async function invokeFn(name, body = null, { method = 'POST', query = '' 
       return { ok: res.ok };
     }
   } catch {
-    return { ok: false, reason: 'Network error — cloud unreachable.' };
+    return { ok: false, reason: 'Network error: cloud unreachable.' };
   }
 }

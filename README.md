@@ -124,9 +124,9 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 18 unit suites below (869 checks) — must pass
+npm test                 # all 24 unit suites below (1157 checks) - must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
-npm run test:e2e         # 10 e2e suites (9 real Chromium + the duel DB stack)
+npm run test:e2e         # 11 e2e suites (10 real Chromium + the duel DB stack)
 ```
 
 Unit suites, each runnable on its own. Counts are the assertions each one
@@ -142,7 +142,13 @@ node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling
 node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, stale rows, clock skew (113 checks)
 node tests/duelBattle.test.js           # duel battle: in-place, tactics, character, placement, spectating (246 checks)
 node tests/duelEndings.test.js          # duel endings: forfeit, disconnect, walked out, freed to duel again (43 checks)
+node tests/coopRoster.test.js          # co-op descend confirm: acks keyed by `from`, ready/declined roster (47 checks)
+node tests/coopFallen.test.js          # co-op member downed: fallen banner + watching state, never the waiting one (43 checks)
 node tests/consumableEffects.test.js   # the unified resolver through both target adapters (44 checks)
+node tests/campRevive.test.js          # camp Revive: enable/disable labelling, one crystal spent per hero (56 checks)
+node tests/coopRevive.test.js          # camp revive relayed to the member's browser on the existing phase frame (53 checks)
+node tests/coopOutOfRun.test.js        # a member never revived: out-of-run state, footer hint, ghost roster row (80 checks)
+node tests/uiGlyphs.test.js            # no glyph Volter cannot draw (em dash renders as a music note) (9 checks)
 node tests/dailyReward.test.js         # daily-wheel streaks, claim windows, payout table (23 checks)
 node tests/rangerCloseRange.test.js    # ranger close-range dagger, range-1 dead zone (13 checks)
 node tests/defaultAvatarShoes.test.js  # fallback avatar: studded-sole (cleat) detector, baked sheet (18 checks)
@@ -153,12 +159,41 @@ node tests/identityMirror.test.js      # Identity.mirror() reports a refused clo
 node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
 ```
 
-End-to-end suites are `tests/e2e/*.e2e.mjs`, ten of them: presence churn,
+End-to-end suites are `tests/e2e/*.e2e.mjs`, eleven of them: presence churn,
 party invite delivery, cloud sync, critter combat sync, room bots, daily
-reward, move tracking, tag bodies, the duel handshake, and the three-browser
-duel playtest. Nine drive real Chromium against a static server and bind real
-ports, so `run-suites.mjs` runs them sequentially and takes a machine-wide lock
-for the duration.
+reward, move tracking, tag bodies, the co-op fallen state, the duel handshake,
+and the three-browser duel playtest. Ten drive real Chromium against a static
+server and bind real ports, so `run-suites.mjs` runs them sequentially and takes
+a machine-wide lock for the duration.
+
+`tests/e2e/coopFallen.e2e.mjs` is the visual counterpart to
+`tests/coopFallen.test.js` and `tests/campRevive.test.js`: both unit suites run
+without a DOM and so cannot see CSS at all, while `.banner.fallen b` beats
+`.banner.player b` on source order alone and `.hd-btn:disabled` is the only
+thing that makes a dead button look dead. It covers the two screens that tell a
+player a hero is down — the co-op battle panel and the Camp action row — driving
+a real member through a real descend prompt into a real replica battle, and a
+real camped run through `RunController.resume()`. Colours come back through
+`getComputedStyle`, and PNGs of all eight states land in
+`tests/e2e/screenshots/`: awaiting a turn, acted-and-waiting, fallen, then camp
+with a crystal, camp without one, camp one Revive later, and finally the
+MEMBER's own screen either side of that revive. It needs no backend — frames
+are delivered through `net.emit` — so it mints no anonymous users.
+
+A revived hero belongs to the leader's Run but to somebody else's screen, so
+the camp Revive re-broadcasts the ordinary `phase` snapshot with that unit's
+`alive` flag flipped (`CoopLeader.rosterRevived`) rather than adding a channel
+of its own: the member's `applyPhase` already re-reads hp from it.
+`tests/coopRevive.test.js` runs a real leader and a real member over a real Run
+and Battle to prove the two halves agree.
+
+A member who is never revived drops out of the leader's `start` frame
+altogether, because `instantiateSquad` only builds `livingSquad()`. Their
+client reads that absence as a distinct out-of-run state
+(`SpectateController.outOfRun`, latched through `everHadUnit` so a plain
+spectator is never accused of it) instead of falling back to a waiting screen
+that promises a turn which can never come. `tests/coopOutOfRun.test.js` covers
+the transition across the battle boundary.
 
 `tests/e2e/duelLive.e2e.mjs` is the only suite that fights a real duel: three
 browsers on the live project, walking to distinct tiles in The Old Town Square

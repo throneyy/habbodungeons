@@ -21,10 +21,10 @@
 export const SKILL_TREES = {
   water: {
     name: 'Water', gatedBy: 'fishing', color: '#3fa9d6',
-    blurb: 'Fisherfolk magic — nets, tides, and the things below.',
+    blurb: 'Fisherfolk magic: nets, tides, and the things below.',
     skills: [
       { id: 'net', name: 'Net', kind: 'damage', target: 'enemy', range: 3, radius: 0, power: 8, status: { rooted: 1 },
-        blurb: 'Fling a weighted net — damages and roots a single foe.', req: { skill: 'fishing', level: 5 } },
+        blurb: 'Fling a weighted net: damages and roots a single foe.', req: { skill: 'fishing', level: 5 } },
       { id: 'foam_barrier', name: 'Foam Barrier', kind: 'shield', target: 'ally', range: 2, radius: 0, power: 12,
         blurb: 'A wall of foam shields an ally from the next blows.', req: { skill: 'fishing', level: 20 } },
       { id: 'tidal_wave', name: 'Tidal Wave', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 9,
@@ -32,19 +32,19 @@ export const SKILL_TREES = {
       { id: 'whirlpool', name: 'Whirlpool', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 7, status: { rooted: 1 },
         blurb: 'A sucking vortex damages and roots a cluster of foes.', req: { skill: 'fishing', level: 65 } },
       { id: 'deep_sea_beast', name: 'Deep Sea Beast', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 14,
-        blurb: 'Summon the leviathan — devastating area ruin.', req: { skill: 'fishing', level: 90 } },
+        blurb: 'Summon the leviathan: devastating area ruin.', req: { skill: 'fishing', level: 90 } },
     ],
   },
   nature: {
     name: 'Nature', gatedBy: 'gardening', color: '#5fbf6a',
-    blurb: 'Gardener magic — growth, blessing, and creeping rot.',
+    blurb: 'Gardener magic: growth, blessing, and creeping rot.',
     skills: [
       { id: 'sapling_barrier', name: 'Sapling Barrier', kind: 'shield', target: 'ally', range: 2, radius: 1, power: 8,
         blurb: 'Saplings spring up, shielding you and nearby allies.', req: { skill: 'gardening', level: 5 } },
       { id: 'life_wave', name: 'Life Wave', kind: 'heal', target: 'ally', range: 2, radius: 1, power: 10,
         blurb: 'A pulse of life heals allies around the target.', req: { skill: 'gardening', level: 20 } },
       { id: 'natures_blessing', name: "Nature's Blessing", kind: 'buff', target: 'ally', range: 2, radius: 1, power: 5, buff: { atk: 5 },
-        blurb: 'Bless nearby allies — their next strikes hit harder.', req: { skill: 'gardening', level: 40 } },
+        blurb: 'Bless nearby allies: their next strikes hit harder.', req: { skill: 'gardening', level: 40 } },
       { id: 'decaying_flowers', name: 'Decaying Flowers', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 8,
         blurb: 'Rot blooms among foes, damaging a whole cluster.', req: { skill: 'gardening', level: 65 } },
       { id: 'thorns', name: 'Thorns', kind: 'damage', target: 'self', range: 0, radius: 1, power: 10,

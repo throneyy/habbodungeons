@@ -59,7 +59,7 @@ class DefaultAvatar {
           if (data.figure !== DEFAULT_FIGURE) {
             console.warn(
               `[habbo-dungeons] baked fallback avatar is "${data.figure}" but DEFAULT_FIGURE is ` +
-              `"${DEFAULT_FIGURE}" — re-run tools/bake-default-avatar.mjs.`
+              `"${DEFAULT_FIGURE}" - re-run tools/bake-default-avatar.mjs.`
             );
           }
           this.data = data;

@@ -113,7 +113,7 @@ export function attachToolbarIcons({ toolbar, rooms, currentRoomId, onHelp, onHa
     );
   };
   con.popWrap.appendChild(
-    mkIcon('console', 'Console — friends', con.popWrap, () => {
+    mkIcon('console', 'Console · friends', con.popWrap, () => {
       renderFriends();
       toggle(con.popWrap);
     })
@@ -154,7 +154,7 @@ export function attachToolbarIcons({ toolbar, rooms, currentRoomId, onHelp, onHa
   hand.onEquip = onEquip || null;
   hand.onUnequip = onUnequip || null;
   hand.onUse = onUse || null;
-  mkIcon('inventory', 'Inventory — dungeon loot', wrap, () => {
+  mkIcon('inventory', 'Inventory · dungeon loot', wrap, () => {
     pops.forEach((p) => p.classList.remove('open'));
     // opening an empty hand: give the host a chance to stock it first
     // (main.js seeds the admin demo kit here), then render as usual

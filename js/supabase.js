@@ -51,7 +51,7 @@ export async function getSupabase() {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
       });
     } catch (e) {
-      console.warn('[habbo-dungeons] Supabase unavailable — cloud features off:', e?.message || e);
+      console.warn('[habbo-dungeons] Supabase unavailable - cloud features off:', e?.message || e);
       _client = null;
     }
     return _client;

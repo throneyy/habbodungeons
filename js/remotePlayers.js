@@ -103,7 +103,7 @@ export class RemotePlayers {
     const figure = member.figure || DEFAULT_FIGURE;
     if (!member.figure) {
       console.warn(
-        `[habbo-dungeons] remote player "${member.name}" entered with no figure — ` +
+        `[habbo-dungeons] remote player "${member.name}" entered with no figure - ` +
         'rendering the default figure instead of going invisible. This means their ' +
         'client connected to multiplayer without a linked Habbo figure (see ' +
         'shouldConnectNet in js/net.js).'

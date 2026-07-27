@@ -1,8 +1,38 @@
 import { Run, memberStats } from './run.js';
-import { ITEMS, bonusText, rarityOf, rollItem } from './items.js';
+import { CONSUMABLES, ITEMS, bonusText, rarityOf, rollItem } from './items.js';
+import { consumeFromRun, rosterTargets } from './consumableEffects.js';
 import { bankRunLoot } from './stashApi.js';
 import { EVENTS } from './events.js';
 import { RunStore } from './runStore.js';
+
+// What the camp's Revive button should say and whether it may be pressed.
+//
+// Pure and exported so the enable/disable rules are testable without a DOM:
+// renderCampBody only paints what this returns.
+//
+// A revive is the ONLY way back from hp 0 — js/run.js commits to downed being
+// permanent for the rest of the run, and there is deliberately no gold-priced
+// revive to fall back on — so a disabled button has to say WHICH of the two
+// requirements is missing. "Revive" greyed out with no reason reads as broken,
+// and the player cannot tell whether to go hunting for a crystal or whether
+// the game simply thinks nobody is hurt.
+export function campReviveAction(run) {
+  if (!run) return { enabled: false, label: 'Revive', itemId: null, member: null, reason: 'no run' };
+  const itemId = run.reviveItem();
+  const name = (itemId && CONSUMABLES[itemId] && CONSUMABLES[itemId].name) || 'Revival Crystal';
+  const downed = run.downedSquad();
+  if (!downed.length) {
+    return { enabled: false, label: 'Revive (nobody is downed)', itemId, member: null, reason: 'nobody downed' };
+  }
+  if (!itemId) {
+    return { enabled: false, label: `Revive (no ${name})`, itemId: null, member: null, reason: 'no item' };
+  }
+  // Names the hero who comes back, because the crystal revives the FIRST downed
+  // member and a party can hold more than one corpse. `member` is that same
+  // hero: the caller needs it to tell their PLAYER (co-op), and re-deriving it
+  // after the fact would read the roster once the revive had already changed it.
+  return { enabled: true, label: `Revive ${downed[0].name} (${name})`, itemId, member: downed[0], reason: 'ok' };
+}
 
 // Orchestrates a whole dungeon run: walks the node sequence, launches battles
 // through the BattleController, and renders the between-battle screens (event,
@@ -267,6 +297,32 @@ export class RunController {
       this.renderCampBody();
     });
     actions.appendChild(rest);
+
+    // Revive: the out-of-battle half of the revive path. The effect itself runs
+    // through consumeFromRun + rosterTargets — the SAME resolver the Hand and
+    // the backpack use (js/consumableEffects.js) — so the crystal means exactly
+    // one thing wherever it is cracked, and the inventory spend + save stay in
+    // the one place that already does them. This screen only decides when the
+    // button is live; it does not know what reviving is.
+    //
+    // It lives here at all because the Hand is a BATTLE toolbar that is torn
+    // down with the battle (leaveRunChrome in js/main.js), which left a player
+    // holding a crystal at camp with no way to spend it.
+    const revive = document.createElement('button');
+    revive.className = 'hd-btn hd-btn--white';
+    const rv = campReviveAction(run);
+    revive.textContent = rv.label;
+    revive.disabled = !rv.enabled;
+    revive.addEventListener('click', () => {
+      if (!consumeFromRun(run, rv.itemId, rosterTargets(run))) return; // refused: item untouched
+      // In a party descent the revived hero belongs to somebody ELSE's screen:
+      // the leader owns the Run and just healed a roster row locally, while that
+      // player's client is still holding the corpse from the battle just fought.
+      // Tell them (js/coopBattle.js rosterRevived).
+      if (this.coop) this.coop.rosterRevived(rv.member);
+      this.renderCampBody();
+    });
+    actions.appendChild(revive);
 
     const descend = document.createElement('button');
     descend.className = 'hd-btn hd-btn--green';

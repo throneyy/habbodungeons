@@ -33,6 +33,9 @@ tests/e2e/.profiles/
 # e2e screenshots (duelLive playtest)
 tests/e2e/.artifacts/
 
+# e2e screenshots (coopFallen visual verification) — regenerated every run
+tests/e2e/screenshots/
+
 # Habbo furnidata cache (~9.6MB) pulled by the furni asset pipeline.
 # Regenerable from https://www.habbo.com/gamedata/furnidata_json/1 — never committed.
 tools/swf/

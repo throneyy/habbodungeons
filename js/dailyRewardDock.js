@@ -40,7 +40,7 @@ export function mountDailyDock({ host = document.body, onOpen } = {}) {
     dot.hidden = !claimable;
     dot.classList.toggle('pulse', claimable);
     cta.textContent = 'Ready to claim';
-    el.setAttribute('aria-label', 'Daily Spin \u2014 a free reward is ready. Open daily rewards.');
+    el.setAttribute('aria-label', 'Daily Spin: a free reward is ready. Open daily rewards.');
   }
 
   async function open() {

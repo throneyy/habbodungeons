@@ -183,6 +183,19 @@ button {
 .banner.lost b {
   color: #a32b1d;
 }
+/* a co-op member who is down: the fight is still live, so the phase tint above
+   would otherwise keep colouring a turn that is no longer theirs. Last rule
+   wins over .player/.enemy. */
+.banner.fallen b {
+  color: #6b6b6b;
+}
+/* out of the run entirely: the party descended without them. Same drained grey
+   as .fallen (they are a spectator either way) but a separate class, because
+   the two states say different things and only one of them is about the fight
+   currently on screen. */
+.banner.out b {
+  color: #6b6b6b;
+}
 
 /* action buttons */
 #actions {
@@ -231,6 +244,12 @@ button {
 .roster-row.dead {
   opacity: 0.35;
   text-decoration: line-through;
+}
+/* a hero who is not on this field at all: an out-of-run member's own row, kept
+   so their name does not silently vanish from their own roster. Dashed, because
+   unlike .dead above this one is not a body lying in the room. */
+.roster-row.ghost {
+  border-style: dashed;
 }
 .rname {
   color: #330;

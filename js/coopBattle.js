@@ -87,8 +87,15 @@ export class CoopLeader {
     }, CONFIRM_MS);
   }
 
+  // A member answered the confirm. The sender is `msg.from` — the name
+  // SupabaseNet stamps on every party frame (send(): `{ ...msg, t, from }`),
+  // the same field onRelay/handleCommand and the hello catch-up key off. It is
+  // the ONLY identity on the wire here: CoopMember.activate/decline send just
+  // { t, accept, classId, figure }, so reading msg.name found undefined, missed
+  // every roster entry, and left every member 'pending' until the CONFIRM_MS
+  // timer flipped them to 'declined' — the leader descended alone, always.
   onAck(msg) {
-    const m = this.members.get(String(msg.name).toLowerCase());
+    const m = this.members.get(String(msg.from || '').toLowerCase());
     if (!m || m.status !== 'pending') return;
     m.status = msg.accept ? 'ready' : 'declined';
     if (msg.accept) {
@@ -420,6 +427,37 @@ export class CoopLeader {
     this.relay({ k: 'screen', kind });
   }
 
+  // A roster member was revived between rooms — the leader cracked a Revival
+  // Crystal at camp (RunController.renderCampBody). The leader owns the Run and
+  // did that locally, so without this the member's client still holds the corpse
+  // from the battle just fought and keeps rendering the fallen state.
+  //
+  // It rides the EXISTING phase frame rather than a channel of its own, because
+  // that frame already carries exactly the fact in question: unitSnapshot()
+  // stamps `alive` per unit, and the member's applyPhase already re-reads hp
+  // from it. So the whole revive is expressible as "here is the snapshot again,
+  // with that unit standing" — no new message kind, and no second definition of
+  // what being alive means.
+  //
+  // The last battle's units are still linked here: teardownBattle only runs when
+  // the NEXT battle starts, so at camp this.byCid still holds the finished
+  // field, corpse included. That corpse is the thing the member is looking at.
+  //
+  // Returns whether a unit was actually found and re-broadcast.
+  rosterRevived(member) {
+    if (!member || !this.battle) return false;
+    let unit = null;
+    for (const u of this.byCid.values()) {
+      if (u.id === member.id) { unit = u; break; }
+    }
+    if (!unit || !unit.stats) return false;
+    // Match the roster, which is the authority between rooms (run.js wrote the
+    // half-max hp); the unit is only the wire's view of it.
+    unit.stats.hp = member.hp;
+    this.syncPhase(true); // force: the phase/turn key has not moved
+    return true;
+  }
+
   // End of the whole descent (victory/defeat). shares: per-member loot info.
   descentOver(result, shares = null) {
     for (const m of this.readyMembers()) {
@@ -568,7 +606,7 @@ export class SpectateController {
     }
 
     if (!this.sel) {
-      if (here && this.isMine(here) && !here.done) this.select(here);
+      if (here && this.isMine(here) && here.alive && !here.done) this.select(here);
       return;
     }
 
@@ -586,12 +624,77 @@ export class SpectateController {
       this.render();
       return;
     }
-    if (here && this.isMine(here) && !here.done) this.select(here);
+    if (here && this.isMine(here) && here.alive && !here.done) this.select(here);
     else this.deselect();
   }
 
   isMine(unit) {
     return this.myUnits().includes(unit);
+  }
+
+  /** Has this client been knocked out of the fight? True once it owns units
+   *  and none of them are still standing.
+   *
+   *  Deliberately NOT the same question as "nothing of mine can act": a unit
+   *  that has merely acted is done for the turn and will be back next one,
+   *  whereas hp 0 is permanent — js/run.js's roster commits to downed-for-the
+   *  -rest-of-the-run, with no mid-run revive. Conflating the two is the bug
+   *  this fixes: a dead member fell through to "Waiting for the party…" and
+   *  waited for a turn that was never coming.
+   *
+   *  A member with no units at all (a spectator, or a replica mid-rebuild) is
+   *  not fallen — they never had anything to lose. */
+  get fallen() {
+    const mine = this.myUnits();
+    return mine.length > 0 && !mine.some((u) => u.alive);
+  }
+
+  /** Is this client out of the descent for good? True once it has held a hero
+   *  at some point and now holds none.
+   *
+   *  This is the state AFTER `fallen`, and the two are deliberately separate
+   *  because they promise different things. `fallen` means "your hero is down
+   *  but this fight is still yours to watch"; out-of-run means "the party has
+   *  moved on without you and no later battle will hand you a unit".
+   *
+   *  Derived, not announced: js/run.js's instantiateSquad only builds units for
+   *  livingSquad(), so a member who was never revived simply stops appearing in
+   *  the leader's `start` frame. Owning nothing is therefore the signal - the
+   *  catch being that owning nothing is ALSO true of a spectator who never had
+   *  a hero, which is why this leans on member.everHadUnit rather than on the
+   *  empty roster alone.
+   *
+   *  Without it the member fell through to "Waiting for the party..." for the
+   *  rest of the run: `fallen` returns false with no units (correctly - there
+   *  is no corpse on THIS field to speak of), so the fallen branch could not
+   *  catch them either, and they were promised a turn that could never come. */
+  get outOfRun() {
+    return !!this.member.everHadUnit && this.myUnits().length === 0;
+  }
+
+  /** Could this client command something right now? The footer hint teaches
+   *  unit commands, so this - not any one sidelined state - is what decides
+   *  whether showing it is honest.
+   *
+   *  Framed as a capability rather than as "fallen or out" because there are
+   *  four ways to have nothing to tap and only two of them are those states:
+   *  a plain spectator never had a hero, and at won/lost the battle is over for
+   *  everyone. Enumerating states would have missed both. */
+  get canCommand() {
+    const shadow = this.shadow;
+    if (!shadow) return false;
+    if (shadow.phase !== 'player' && shadow.phase !== 'enemy') return false; // won/lost
+    return this.myUnits().some((u) => u.alive);
+  }
+
+  /** A dead unit is not a live selection: its overlays point at moves it can
+   *  never make and every action button acts on something that cannot act. */
+  dropDeadSelection() {
+    if (!this.sel || this.sel.alive) return;
+    this.sel.selected = false;
+    this.sel = null;
+    this.mode = 'normal';
+    this.activeSkill = null;
   }
 
   select(unit) {
@@ -638,6 +741,7 @@ export class SpectateController {
 
   refreshOverlays() {
     const g = this.game;
+    this.dropDeadSelection();
     if (!g) return;
     g.clearOverlays();
     const u = this.sel;
@@ -660,18 +764,40 @@ export class SpectateController {
     const dom = this.dom;
     const shadow = this.shadow;
     if (!dom.banner || !shadow) return;
-    const mineReady = this.myUnits().some((u) => u.alive && !u.done);
-    const label = {
-      player: mineReady ? `Turn ${shadow.turn}, your unit is ready` : `Turn ${shadow.turn}, party is moving`,
-      enemy: `Turn ${shadow.turn}, enemy phase`,
-      won: 'Victory!',
-      lost: 'Defeated...',
-    }[shadow.phase];
+    this.dropDeadSelection();
+    const fallen = this.fallen;
+    const out = this.outOfRun;
+    const mineReady = !fallen && !out && this.myUnits().some((u) => u.alive && !u.done);
+    // A sidelined member is still WATCHING a live fight, so the phase still
+    // reads out - what changes is that it is no longer addressed to them. The
+    // end-of-battle banners are left alone: won/lost is the party's outcome and
+    // it outranks any one member's state.
+    const live = shadow.phase === 'player' || shadow.phase === 'enemy';
+    // Two ways to be a spectator, in order of finality. Out-of-run OUTRANKS
+    // fallen: once the party has descended without you, "you have fallen" is
+    // last battle's news and would imply this fight is still somehow yours.
+    const aside = out ? 'out' : (fallen ? 'fallen' : null);
+    const label = aside && live
+      ? (out ? 'You are out of the run' : `Turn ${shadow.turn}, you have fallen`)
+      : {
+        player: mineReady ? `Turn ${shadow.turn}, your unit is ready` : `Turn ${shadow.turn}, party is moving`,
+        enemy: `Turn ${shadow.turn}, enemy phase`,
+        won: 'Victory!',
+        lost: 'Defeated...',
+      }[shadow.phase];
     dom.banner.innerHTML = `<b>${label}:</b> <span class="obj">Co-op: ${this.member.leaderName}'s descent</span>`;
-    dom.banner.className = `banner ${shadow.phase}`;
+    dom.banner.className = `banner ${shadow.phase}${aside && live ? ` ${aside}` : ''}`;
 
     dom.actions.innerHTML = '';
-    if (shadow.phase === 'player') {
+    if (out && live) {
+      // The run goes on without them: no unit now and none coming, because
+      // instantiateSquad only ever builds the living. Promise nothing.
+      this.btn('You are watching your party finish the run', null, true);
+    } else if (fallen && live) {
+      // No revive, no rejoin, nothing to press - say so once, plainly, instead
+      // of offering a wait that never ends.
+      this.btn('You are watching the rest of the fight', null, true);
+    } else if (shadow.phase === 'player') {
       if (this.mode === 'skill') {
         this.btn(`Tap a green target for ${this.activeSkill.name}`, null, true);
         this.btn('Back', () => this.cancel());
@@ -693,6 +819,14 @@ export class SpectateController {
       this.btn('Enemy phase…', null, true);
     }
 
+    // The footer hint teaches unit commands ("Tap your unit -> blue to move").
+    // To anyone with nothing to command it is instructions for a thing they do
+    // not have: the action area directly above says there is nothing to press,
+    // and then the hint tells them to tap a unit anyway. It comes back by
+    // itself the moment they can command again (a camp revive does exactly
+    // that), because this is recomputed on every render.
+    if (dom.hint) dom.hint.style.display = this.canCommand ? '' : 'none';
+
     dom.roster.innerHTML = '';
     for (const u of shadow.units) {
       const row = document.createElement('div');
@@ -703,6 +837,29 @@ export class SpectateController {
         `<span class="rcls">${u.cls.name}${u.team === 'player' ? ` L${u.level}` : ''}</span>` +
         `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%"></span></span>` +
         `<span class="rhpn">${u.alive ? u.stats.hp : '✕'}</span>`;
+      dom.roster.appendChild(row);
+    }
+
+    // An out-of-run member's hero is not on this field at all (the leader's
+    // start frame only lists the living), so the loop above cannot draw them
+    // and their own name would simply be absent from their own roster.
+    //
+    // Keep them on it, greyed and struck out, using the details latched while
+    // they still had a unit. Two reasons. It matches what the SAME player saw
+    // one battle earlier, where the fallen state shows their corpse as a dead
+    // row with a cross — vanishing entirely turns one continuous fact ("my hero
+    // is down") into two unrelated-looking screens. And a roster that silently
+    // drops you reads as a disconnect, which is precisely the wrong thing to
+    // suggest to somebody who is still connected and still watching.
+    const ghost = this.outOfRun ? this.member.lastHero : null;
+    if (ghost && live) {
+      const row = document.createElement('div');
+      row.className = 'roster-row player dead ghost';
+      row.innerHTML =
+        `<span class="rname">${ghost.name}</span>` +
+        `<span class="rcls">${ghost.cls} L${ghost.level}</span>` +
+        '<span class="rhp"><span class="rhp-fill" style="width:0%"></span></span>' +
+        '<span class="rhpn">✕</span>';
       dom.roster.appendChild(row);
     }
   }
@@ -741,7 +898,47 @@ export class CoopMember {
     this.cidBack = new Map(); // unit -> cid
     this.controller = null;
     this.promoted = null; // CoopLeader after a leader hand-off
+    // True while the party is on a between-rooms screen (camp / event) rather
+    // than in a battle. A revive can only land here, and here the battle panel
+    // is hidden behind the waiting overlay, so this is what decides whether a
+    // revive needs ANNOUNCING or merely rendering.
+    this.betweenRooms = false;
+    // Have I ever held a hero in this descent? Latched on for the whole descent
+    // once true, because it is what separates "the party left me behind" from
+    // "I am only spectating": both own nothing, and only the first is out of the
+    // run. Read by SpectateController.outOfRun. Cleared by deactivate(), i.e.
+    // when the descent itself ends.
+    this.everHadUnit = false;
+    // Display details of the last hero this client owned: { name, cls, level }.
+    // Latched with everHadUnit, and for the same reason - once the party moves
+    // on without them the leader stops sending their unit at all, so this is
+    // the only record left of who they were playing. Drawn as the greyed ghost
+    // row on their own roster (SpectateController.render).
+    this.lastHero = null;
     this.unsubs = [];
+  }
+
+  // Am I still standing? 'none' when I own no units at all, which is NOT the
+  // same as being down: a spectator and a replica mid-rebuild both own nothing.
+  myLiveness() {
+    const mine = this.myUnits();
+    if (!mine.length) return 'none';
+    return mine.some((u) => u.alive) ? 'up' : 'down';
+  }
+
+  // Latch everHadUnit the moment a frame hands me a hero. Called after any
+  // frame that can change what I own, so the fact is derived from the leader's
+  // ordinary start/phase stream rather than from a message about my status.
+  noteOwnership() {
+    const mine = this.myUnits();
+    if (!mine.length) return;
+    this.everHadUnit = true;
+    const u = mine[0];
+    this.lastHero = {
+      name: u.name,
+      cls: (u.cls && u.cls.name) || u.classId || '',
+      level: u.level || 1,
+    };
   }
 
   // Member accepted the descend confirm: follow the leader's stream.
@@ -771,6 +968,9 @@ export class CoopMember {
     this.byCid.clear();
     this.cidBack.clear();
     this.controller = null;
+    this.betweenRooms = false;
+    this.everHadUnit = false; // a new descent starts with no history
+    this.lastHero = null;
     if (this.promoted) {
       this.promoted.end();
       this.promoted = null;
@@ -826,6 +1026,7 @@ export class CoopMember {
     const dungeon = buildDungeon(d.dungeonId, d.eventPicks || {});
     const node = dungeon && dungeon.nodes[d.nodeIndex];
     if (!node || node.type !== 'battle') return;
+    this.betweenRooms = false; // a battle is starting: the panel is the screen again
     const room = node.makeRoom({ seed: d.seed ?? 0 });
     const enemies = node.makeEnemies(room, {
       seed: d.seed ?? 0,
@@ -864,6 +1065,9 @@ export class CoopMember {
     if (this.dom.log) this.dom.log.innerHTML = '';
     for (const line of d.log || []) this.controller.appendLog(line);
     this.ui.battleReady(d.battleName);
+    // Before the first render: whether I own a hero in THIS battle is what
+    // decides between the ordinary UI and the out-of-run one.
+    this.noteOwnership();
     this.controller.render();
   }
 
@@ -911,6 +1115,7 @@ export class CoopMember {
   // Turn-boundary truth: snap every unit to the leader's snapshot.
   applyPhase(d) {
     if (!this.shadow) return;
+    const was = this.myLiveness();
     this.shadow.phase = d.phase;
     this.shadow.turn = d.turn;
     this.lastSnapshot = d;
@@ -937,6 +1142,18 @@ export class CoopMember {
       u.acted = spec.acted;
       if (!spec.alive && u.stats) u.stats.hp = 0;
     }
+    // Back from the dead. Inside a battle this is impossible (hp 0 is permanent
+    // for the rest of the run), so it means the leader spent a Revival Crystal
+    // at camp. Say so out loud: the member is parked on a "the party makes camp"
+    // overlay with no view of the leader's backpack, so a silent revive is
+    // indistinguishable from still being dead until the next battle starts —
+    // which is exactly the gap this closes.
+    if (this.betweenRooms && was === 'down' && this.myLiveness() === 'up' && this.ui) {
+      this.ui.waiting(
+        `<b>${esc(this.leaderName)}</b> revived you! Waiting for the descent to continue…`
+      );
+    }
+    this.noteOwnership();
     if (this.controller) {
       this.controller.refreshOverlays();
       this.controller.render();
@@ -949,8 +1166,9 @@ export class CoopMember {
   }
 
   applyScreen(d) {
+    this.betweenRooms = true;
     const label = d.kind === 'camp' ? 'The party makes camp' : 'The party weighs a choice';
-    this.ui.waiting(`${label} — <b>${esc(this.leaderName)}</b> is deciding…`);
+    this.ui.waiting(`${label} · <b>${esc(this.leaderName)}</b> is deciding…`);
   }
 
   // Party churn: if the crown lands on ME mid-battle, take over the sim from

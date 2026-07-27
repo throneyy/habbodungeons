@@ -164,7 +164,7 @@ export class Battle {
     if (killed) leveled = attacker.gainXp(10 + target.level * 5);
     this.logMsg(
       `${attacker.name}${buffed ? ' (inspired)' : ''} hits ${target.name} for ${dmg}` +
-        (killed ? ` — ${target.name} falls!` : ` (${target.stats.hp}/${target.stats.maxHp})`)
+        (killed ? ` - ${target.name} falls!` : ` (${target.stats.hp}/${target.stats.maxHp})`)
     );
     if (leveled) this.logMsg(`${attacker.name} reaches level ${attacker.level}!`);
     attacker.moved = true;
@@ -228,14 +228,14 @@ export class Battle {
         total += a.stats.hp - before;
         this.onFx({ kind: 'heal', caster: unit, target: a, amount: a.stats.hp - before });
       }
-      this.logMsg(`${unit.name} casts ${skill.name}${radius ? ' (area)' : ''} — heals ${total}.`);
+      this.logMsg(`${unit.name} casts ${skill.name}${radius ? ' (area)' : ''} - heals ${total}.`);
     } else if (skill.kind === 'shield') {
       const allies = area(unit.team);
       for (const a of allies) {
         a.shield += skill.power;
         this.onFx({ kind: 'shield', caster: unit, target: a, amount: skill.power });
       }
-      this.logMsg(`${unit.name} casts ${skill.name} — +${skill.power} shield to ${allies.length}.`);
+      this.logMsg(`${unit.name} casts ${skill.name} - +${skill.power} shield to ${allies.length}.`);
     } else if (skill.kind === 'buff') {
       const amt = (skill.buff && skill.buff.atk) || skill.power;
       const allies = area(unit.team);
@@ -256,7 +256,7 @@ export class Battle {
         const killed = !f.alive;
         if (killed) kills++;
         this.onFx({ kind: 'skill', caster: unit, target: f, dmg, skill });
-        this.logMsg(`${unit.name}'s ${skill.name} hits ${f.name} for ${dmg}${killed ? ` — ${f.name} falls!` : ''}`);
+        this.logMsg(`${unit.name}'s ${skill.name} hits ${f.name} for ${dmg}${killed ? ` - ${f.name} falls!` : ''}`);
       }
       if (kills) {
         const leveled = unit.gainXp(10 * kills);
@@ -275,7 +275,7 @@ export class Battle {
   startPlayerPhase() {
     this.phase = 'player';
     this.livingPlayers().forEach((u) => u.resetTurn());
-    this.logMsg(`— Turn ${this.turn}: your move —`);
+    this.logMsg(`· Turn ${this.turn}: your move ·`);
     this.checkEnd(); // survive/defend turn counts resolve at the turn boundary
     this.onChange();
   }
@@ -299,7 +299,7 @@ export class Battle {
     this._enemy = this.enemyAi
       ? { queue: this.livingEnemies().slice(), current: null, state: 'idle', until: 0 }
       : null;
-    this.logMsg('— Enemy phase —');
+    this.logMsg('· Enemy phase ·');
     this.onChange();
   }
 
@@ -344,7 +344,7 @@ export class Battle {
     this.logMsg(
       `${unit.name} is caught by ${fx.label || 'a trap'}${dmg ? ` for ${dmg}` : ''}` +
         (fx.status && fx.status.rooted ? ' (rooted)' : '') +
-        (killed ? ` — ${unit.name} falls!` : '')
+        (killed ? ` - ${unit.name} falls!` : '')
     );
     this.checkEnd(); // a trap can down the last unit / the escort ward
     this.onChange();
@@ -358,7 +358,7 @@ export class Battle {
     if (fx.once) fx.spent = true;
     fx.on = !fx.on;
     this.onFx({ kind: 'switch', target: unit, spec: fx });
-    this.logMsg(`${unit.name} throws ${fx.label || 'the switch'}${opened ? ' — something rumbles open!' : ''}`);
+    this.logMsg(`${unit.name} throws ${fx.label || 'the switch'}${opened ? ' - something rumbles open!' : ''}`);
     this.onChange();
   }
 
