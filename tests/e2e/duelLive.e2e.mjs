@@ -55,21 +55,25 @@ const PORT = portFor(61); // 59 is partyInviteError's; both are worktree-relativ
 // open, and it gives three people room to stand apart.
 const ROOM_ID = 'square';
 const ROOM_NAME = 'The Old Town Square';
-// The real player watching this run from their own browser on the deployed
-// site. Same Supabase project, same room channel, different build.
+// OPTIONAL: a real player watching this run from their own browser on the
+// deployed site. Same Supabase project, same room channel, different build.
 //
-// Configurable, because a hardcoded name is one person's name: this repo's
-// admin is `throney` (ADMIN_NAMES in js/config.js) and that stays the default,
-// but any other developer exports their own Habbo name instead:
+// DEFAULTS TO EMPTY — no human required — because this suite runs in the
+// unattended `bun run test:e2e` gate, and a suite that aborts unless a specific
+// person happens to be standing in the live square is a suite the gate can
+// never pass. It previously defaulted to `throney` (this repo's admin, see
+// ADMIN_NAMES in js/config.js), which made `test:e2e` exit 1 on every machine
+// including CI, for a reason that had nothing to do with duelling.
+//
+// Opt IN when a human is genuinely watching and you want that confirmed:
 //
 //   HD_DUEL_WATCHER=myhabbo  node tests/e2e/duelLive.e2e.mjs
 //
-// Set it EMPTY to drop the requirement entirely (CI, or a headless run nobody
-// is watching). The suite still runs in full — browser D is an in-test client
+// With it empty the suite still runs IN FULL — browser D is an in-test client
 // the test never wires up, so the spectator layer is still measured on a client
-// that was left alone; what is lost is the confirmation that a HUMAN on the
-// deployed build saw the same fight.
-const WATCHER = process.env.HD_DUEL_WATCHER ?? 'throney';
+// that was left alone; what is lost is only the confirmation that a HUMAN on
+// the deployed build saw the same fight.
+const WATCHER = process.env.HD_DUEL_WATCHER ?? '';
 // Distinct tiles, chosen so A and B start ADJACENT (the duel should then fight
 // from exactly these tiles) with C well clear of both.
 //
