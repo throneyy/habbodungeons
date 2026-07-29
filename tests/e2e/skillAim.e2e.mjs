@@ -33,6 +33,7 @@
 //   2-aim-support.png   Sapling Barrier aimed: allies lit GREEN
 //   3-aim-selfblast.png Thorns aimed: the 3x3 blast lit red, with a confirm
 //   4-skill-menu.png    the skill list, with a tooltip on every button
+//   5-aim-areastrike.png Whirlpool, the skill the bug was reported against
 import { mkdirSync, rmSync, existsSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -79,9 +80,9 @@ if (!exe) {
   process.exit(1);
 }
 if (!existsSync(SHOTS)) mkdirSync(SHOTS, { recursive: true });
-for (const f of ['1-aim-strike.png', '2-aim-support.png', '3-aim-selfblast.png', '4-skill-menu.png']) {
-  rmSync(`${SHOTS}${f}`, { force: true });
-}
+const CAPTURES = ['1-aim-strike.png', '2-aim-support.png', '3-aim-selfblast.png',
+  '4-skill-menu.png', '5-aim-areastrike.png'];
+for (const f of CAPTURES) rmSync(`${SHOTS}${f}`, { force: true });
 
 const server = await startServer(PORT);
 const browser = await chromium.launch({ executablePath: exe });
@@ -195,6 +196,29 @@ try {
     strikeHover.red > 20 && strikeHover.green < 8);
   await shot(page, '1-aim-strike.png');
 
+  // An AREA strike, which is a different shape through paintSkillAim than the
+  // single-target one above: Whirlpool is the skill the bug was reported
+  // against ("MP attacks are still coming through as a green tile"), and the
+  // report came with a screenshot of the panel reading "Tap a green foe for
+  // Whirlpool". That exact sentence is impossible to produce now - aimPrompt
+  // has no branch that pairs "green" with "foe" - and this pins it.
+  console.log('\nan area strike aims in red too');
+  await page.goto(HARNESS('whirlpool'), { waitUntil: 'load' });
+  await page.waitForSelector('.skill-card');
+  await page.waitForTimeout(300);
+
+  const whirlTiles = await Promise.all([[5, 3], [6, 4], [5, 5]].map(([x, y]) => tileColorAt(page, x, y)));
+  check('every foe an area strike can hit is painted red',
+    whirlTiles.every((p) => classify(p) === 'red'));
+  const whirlPrompt = await page.$eval('#actions button', (el) => el.textContent.replace(/\s+/g, ' ').trim());
+  check('the panel never says "green foe" again', !/green foe/i.test(whirlPrompt));
+  check('it says red foe, and names Whirlpool',
+    whirlPrompt.includes('red foe') && whirlPrompt.includes('Whirlpool'));
+  const whirlCard = await cardText(page);
+  check('the card states the area, the damage and the root',
+    whirlCard.includes('3x3') && whirlCard.includes('for 7') && /root/i.test(whirlCard));
+  await shot(page, '5-aim-areastrike.png');
+
   // ---- 2. a support skill lights its allies GREEN ---------------------------
   console.log('\nsupport aims in green');
   await page.goto(HARNESS('sapling_barrier'), { waitUntil: 'load' });
@@ -258,7 +282,7 @@ try {
   // The screenshots are the artefact: prove they are real images, not 0-byte
   // files from a failed capture.
   console.log('\nscreenshots');
-  for (const f of ['1-aim-strike.png', '2-aim-support.png', '3-aim-selfblast.png', '4-skill-menu.png']) {
+  for (const f of CAPTURES) {
     check(`${f} captured`, existsSync(`${SHOTS}${f}`) && statSync(`${SHOTS}${f}`).size > 3000);
   }
 } finally {
