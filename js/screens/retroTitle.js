@@ -297,17 +297,17 @@ export function renderRetroTitle(deps) {
       </div>
       <div class="rl-slab">
         <div class="rl-grid">
-          <aside class="rl-col rl-col--left" aria-label="Account, records and calling">
+          <aside class="rl-col rl-col--left" aria-label="Account, records, calling and player search">
             ${signInCardHtml({ verified, name })}
             ${recordsCardHtml({ records })}
             ${callingsCardHtml({ classes, classId })}
+            ${searchCardHtml()}
           </aside>
           <main class="rl-col rl-col--lead" id="main">
             ${dungeonsCardHtml({ dungeons })}
             ${newsCardHtml()}
           </main>
           <aside class="rl-col rl-col--right" id="skills" aria-label="Daily skill leaderboards">
-            ${searchCardHtml()}
             ${boardCardHtml('fishing', "Today's Top Anglers", 'Most fishing XP gained across Habbo Origins today. Fishing unlocks the Water skill tree.', 'habbofishing.com')}
             ${boardCardHtml('gardening', "Today's Top Gardeners", 'Most gardening XP gained across Habbo Origins today. Gardening unlocks the Nature skill tree.', 'habbogardening.com')}
           </aside>
