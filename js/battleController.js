@@ -45,10 +45,46 @@ export function rosterBars(u, isDuel) {
   return `<span class="rbars">${html}</span>`;
 }
 
-// ---- skill copy, shared by all three seats ----------------------------------
+// ---- skill aiming, shared by all three seats --------------------------------
 // The dungeon controller, the co-op member and the duel guest each own their
-// own tap loop and panel, but a skill has to READ the same in all three or the
-// same spell teaches three different lessons. This is the single copy of that.
+// own tap loop and panel, but a skill has to LOOK and READ the same in all
+// three or the same spell teaches three different lessons. These four helpers
+// are the single copy of that.
+
+// Paint a skill's legal targets. Hostile casts go in the red set, friendly ones
+// in the green set (see Game.overlays). A self-centered skill has no tile to
+// pick, so its BLAST is painted instead: the tiles it will actually hit, which
+// is the only honest preview of what the button does.
+export function paintSkillAim(game, battle, unit, skill) {
+  const g = game.overlays;
+  const hostile = skill.kind === 'damage';
+  const set = hostile ? g.skillHostile : g.skill;
+  if (skill.target === 'self') {
+    const r = skill.radius || 0;
+    for (let y = unit.y - r; y <= unit.y + r; y++) {
+      for (let x = unit.x - r; x <= unit.x + r; x++) {
+        if (battle.room.tile(x, y)) set.add(`${x},${y}`);
+      }
+    }
+    return;
+  }
+  for (const t of battle.skillTargets(unit, skill)) set.add(`${t.x},${t.y}`);
+}
+
+// Is this tile a legal place to land the skill being aimed? Either colour
+// counts - the split is presentational.
+export function isAimTile(game, key) {
+  return game.overlays.skill.has(key) || game.overlays.skillHostile.has(key);
+}
+
+// What the action bar says while aiming. Names the colour it actually painted,
+// because that sentence is the legend for the tiles.
+export function aimPrompt(skill) {
+  if (skill.target === 'self') return `Tap the red area to cast ${skill.name}`;
+  return skill.kind === 'damage'
+    ? `Tap a red foe for ${skill.name}`
+    : `Tap a green ally for ${skill.name}`;
+}
 
 // The description card: what this spell does, in the panel, while you aim it.
 // Appended into the action row (a full-width flex item) so no screen needed a
@@ -73,8 +109,8 @@ export function appendSkillCard(container, skill) {
 //   tap your unit -> move range (blue) + attackable foes (red)
 //   tap a blue tile -> walks there, then shows foes it can now hit
 //   tap a red foe    -> attacks; turn ends
-//   a skill button   -> highlights its targets (green) and shows what the spell
-//                       actually does; tap a highlighted tile to cast
+//   a skill button   -> highlights its targets (green ally / red foe) and shows
+//                       what the spell does; tap a highlighted tile to cast
 //   "Wait" ends in place. "End Turn" hands the phase to the enemy.
 // Battle outcome is reported via the onEnd passed to start(); the RunController
 // takes over the screen from there.
@@ -218,7 +254,7 @@ export class BattleController {
     const u = this.sel;
     if (!u || !this.myPhase) return;
     if (this.mode === 'skill') {
-      for (const t of this.battle.skillTargets(u, this.activeSkill)) g.overlays.skill.add(`${t.x},${t.y}`);
+      paintSkillAim(g, this.battle, u, this.activeSkill);
       return;
     }
     if (!u.moved) for (const k of this.battle.moveTiles(u)) g.overlays.move.add(k);
@@ -234,11 +270,11 @@ export class BattleController {
 
     if (this.mode === 'skill') {
       const sk = this.activeSkill;
-      // A self-centered skill has no target to pick: its own tile confirms it,
-      // and the caster is the target the engine wants.
-      const selfCast = sk.target === 'self' && this.game.overlays.skill.has(k);
+      // A self-centered skill has no target to pick: any tile of the painted
+      // blast confirms it, and the caster is the target the engine wants.
+      const selfCast = sk.target === 'self' && isAimTile(this.game, k);
       const picked = selfCast ? this.sel
-        : (here && this.game.overlays.skill.has(k) && b.skillTargets(this.sel, sk).includes(here) ? here : null);
+        : (here && isAimTile(this.game, k) && b.skillTargets(this.sel, sk).includes(here) ? here : null);
       if (picked) {
         b.resolveSkill(this.sel, picked, sk);
         this.endUnit();
@@ -436,10 +472,7 @@ export class BattleController {
     if (b.phase === 'player') {
       if (this.mode === 'skill') {
         appendSkillCard(this.dom.actions, this.activeSkill);
-        const noun = this.activeSkill.target === 'enemy' ? 'foe' : 'ally';
-        this.btn(this.activeSkill.target === 'self'
-          ? `Tap the green area to cast ${this.activeSkill.name}`
-          : `Tap a green ${noun} for ${this.activeSkill.name}`, null, true);
+        this.btn(aimPrompt(this.activeSkill), null, true);
         if (this.activeSkill.target === 'self') {
           this.btn(`Cast ${this.activeSkill.name}`, () => this.castSelf());
         }

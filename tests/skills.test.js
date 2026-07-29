@@ -7,6 +7,7 @@ import {
   describeSkill, skillTooltip,
 } from '../js/skills.js';
 import { CLASSES } from '../js/classes.js';
+import { paintSkillAim, isAimTile, aimPrompt } from '../js/battleController.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -275,6 +276,54 @@ console.log('skill descriptions');
   check('the tooltip carries name, facts, effect and notes',
     tip.startsWith('Whirlpool') && tip.includes('8 MP') && tip.includes('\n'));
   check('a tooltip of nothing is empty, not a crash', skillTooltip(null) === '');
+}
+
+// ---- aiming paints the intent, not one colour for everything ---------------
+console.log('\nskill aim colours');
+{
+  const room = flat();
+  const caster = new Unit(room, null, 2, 2, { team: 'player', classId: 'mage' });
+  const ally = new Unit(room, null, 3, 2, { team: 'player', classId: 'fighter' });
+  const foe = new Unit(room, null, 4, 2, { team: 'enemy', classId: 'fighter' });
+  ally.stats.hp = 1; // so a heal has a legal target
+  const b = new Battle(room, [caster, ally, foe], {});
+  const game = () => ({ overlays: { skill: new Set(), skillHostile: new Set() } });
+
+  const hostile = game();
+  paintSkillAim(hostile, b, caster, spec('net'));
+  check('an attack skill paints its target in the RED set',
+    hostile.overlays.skillHostile.has('4,2') && hostile.overlays.skill.size === 0);
+
+  const friendly = game();
+  paintSkillAim(friendly, b, caster, CLASSES.cleric.skill);
+  check('a support skill paints its target in the green set',
+    friendly.overlays.skill.has('3,2') && friendly.overlays.skillHostile.size === 0);
+
+  // A self-centered skill has no target tile to pick, so the BLAST is what
+  // gets painted - the only honest preview of what the button will do.
+  const burst = game();
+  paintSkillAim(burst, b, caster, spec('thorns'));
+  check('a self-centered skill paints its whole blast, in red',
+    burst.overlays.skillHostile.has('2,2') && burst.overlays.skillHostile.has('3,3')
+      && burst.overlays.skillHostile.size === 9);
+  check('the blast never spills off the map', (() => {
+    const corner = new Unit(room, null, 0, 0, { team: 'player', classId: 'mage' });
+    const g = game();
+    paintSkillAim(g, new Battle(room, [corner], {}), corner, spec('thorns'));
+    return g.overlays.skillHostile.size === 4; // a 3x3 clipped to the corner
+  })());
+
+  check('either colour counts as a legal place to cast',
+    isAimTile(hostile, '4,2') && isAimTile(friendly, '3,2') && !isAimTile(hostile, '0,5'));
+
+  // The prompt is the legend for the tiles, so it has to name the colour that
+  // was actually painted.
+  check('the prompt says RED for a strike', aimPrompt(spec('net')).includes('red foe'));
+  check('the prompt says green for support', aimPrompt(CLASSES.cleric.skill).includes('green ally'));
+  check('the prompt asks for a confirm on a self-centered blast',
+    aimPrompt(spec('thorns')).includes('red area'));
+  check('every skill prompt names its own skill',
+    [...Object.values(ALL_TREE_SKILLS)].every((s) => aimPrompt(s).includes(s.name)));
 }
 
 console.log(failed ? `\n${failed} test(s) FAILED` : '\nAll M3 skill tests passed');

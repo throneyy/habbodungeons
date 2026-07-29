@@ -23,7 +23,7 @@ import { Battle } from './battle.js';
 import { Unit } from './units.js';
 import { buildDungeon } from './dungeon.js';
 import {
-  renderBattleFx, rosterBars, appendSkillCard,
+  renderBattleFx, rosterBars, paintSkillAim, isAimTile, aimPrompt, appendSkillCard,
 } from './battleController.js';
 import { skillTooltip } from './skills.js';
 import { figureSprites } from './monsterSprites.js';
@@ -613,8 +613,8 @@ export class SpectateController {
       // A self-centered skill paints its blast rather than a target, so any
       // tile of it confirms the cast (the host resolves it on the caster and
       // ignores `target` - see CoopLeader.applyCommand).
-      const selfCast = this.activeSkill.target === 'self' && this.game.overlays.skill.has(k);
-      if (selfCast || (here && this.game.overlays.skill.has(k))) {
+      const selfCast = this.activeSkill.target === 'self' && isAimTile(this.game, k);
+      if (selfCast || (here && isAimTile(this.game, k))) {
         this.member.sendCommand({
           type: 'skill',
           cid: this.member.cidOf(this.sel),
@@ -783,7 +783,7 @@ export class SpectateController {
     const shadow = this.shadow;
     if (!u || !shadow || !this.commanding) return;
     if (this.mode === 'skill') {
-      for (const t of shadow.skillTargets(u, this.activeSkill)) g.overlays.skill.add(`${t.x},${t.y}`);
+      paintSkillAim(g, shadow, u, this.activeSkill);
       return;
     }
     if (!u.moved) for (const k of shadow.moveTiles(u)) g.overlays.move.add(k);
@@ -835,10 +835,7 @@ export class SpectateController {
     } else if (shadow.phase === 'player') {
       if (this.mode === 'skill') {
         appendSkillCard(dom.actions, this.activeSkill);
-        const noun = this.activeSkill.target === 'enemy' ? 'foe' : 'ally';
-        this.btn(this.activeSkill.target === 'self'
-          ? `Tap the green area to cast ${this.activeSkill.name}`
-          : `Tap a green ${noun} for ${this.activeSkill.name}`, null, true);
+        this.btn(aimPrompt(this.activeSkill), null, true);
         if (this.activeSkill.target === 'self') {
           this.btn(`Cast ${this.activeSkill.name}`, () => this.castSelf());
         }

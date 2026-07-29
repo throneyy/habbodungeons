@@ -40,7 +40,17 @@ export class Game {
     // Tile overlays keyed by "x,y" -> css color, drawn on tile tops. `objective`
     // marks a persistent goal tile (reach/defend/escort) and is deliberately NOT
     // wiped by clearOverlays — it survives selection churn for the whole battle.
-    this.overlays = { move: new Set(), target: new Set(), skill: new Set(), path: new Set(), objective: new Set() };
+    //
+    // `skill` and `skillHostile` are the SAME state (the legal targets of the
+    // skill you are aiming) split by intent, because colour is the only thing
+    // that tells a player which way a cast points. One green set painted Net
+    // and Tidal Wave in ally green over the monsters they were about to kill,
+    // while the panel said "tap a green foe" - green means friend everywhere
+    // else in this UI. Hostile aim reuses the attack red instead.
+    this.overlays = {
+      move: new Set(), target: new Set(), skill: new Set(), skillHostile: new Set(),
+      path: new Set(), objective: new Set(),
+    };
     this.fx = []; // transient combat effects: bursts, floaters, projectiles
     this.onFrame = null;
     this.viewW = 0;
@@ -103,6 +113,7 @@ export class Game {
     this.overlays.move.clear();
     this.overlays.target.clear();
     this.overlays.skill.clear();
+    this.overlays.skillHostile.clear();
     this.overlays.path.clear();
   }
 
@@ -580,7 +591,7 @@ export class Game {
   drawTileOverlay(t) {
     const k = `${t.x},${t.y}`;
     let color = null;
-    if (this.overlays.target.has(k)) color = 'rgba(224,66,66,0.42)';
+    if (this.overlays.target.has(k) || this.overlays.skillHostile.has(k)) color = 'rgba(224,66,66,0.42)';
     else if (this.overlays.skill.has(k)) color = 'rgba(95,191,106,0.42)';
     else if (this.overlays.path.has(k)) color = 'rgba(246,195,67,0.5)';
     else if (this.overlays.move.has(k)) color = 'rgba(74,150,220,0.34)';
@@ -599,7 +610,7 @@ export class Game {
 
   hoverColor(t) {
     const k = `${t.x},${t.y}`;
-    if (this.overlays.target.has(k)) return 'rgba(255,120,120,0.95)';
+    if (this.overlays.target.has(k) || this.overlays.skillHostile.has(k)) return 'rgba(255,120,120,0.95)';
     if (this.overlays.skill.has(k)) return 'rgba(130,240,150,0.95)';
     return 'rgba(255,255,255,0.95)';
   }

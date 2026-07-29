@@ -124,9 +124,9 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 28 unit suites below (1376 checks) - must pass
+npm test                 # all 28 unit suites below (1385 checks) - must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
-npm run test:e2e         # 11 e2e suites (10 real Chromium + the duel DB stack)
+npm run test:e2e         # 12 e2e suites (11 real Chromium + the duel DB stack)
 ```
 
 Unit suites, each runnable on its own. Counts are the assertions each one
@@ -135,7 +135,7 @@ actually prints:
 ```
 node tests/pathfinder.test.js          # movement rules: diagonals, drops, void corners (27 checks)
 node tests/run.test.js                 # items, roster, save/resume, events, leader skills (49 checks)
-node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root, kill-xp parity, and the spec-derived description each skill shows (61 checks)
+node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root, kill-xp parity, spec-derived descriptions, and red/green aim colours (70 checks)
 node tests/mp.test.js                  # the MP pool: prices, canAfford, refusal at the boundary, regen, camp refill, legacy saves, co-op sync (61 checks)
 node tests/battle.test.js              # damage math, line of sight, targeting, turn phases (34 checks)
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
@@ -182,12 +182,25 @@ per battle number and squad size. **Read the caveat block at the top of the file
 before quoting a number from it** - the AI never casts a skill and never equips
 loot, so every rate it prints is a floor, not a prediction of human play.
 
-End-to-end suites are `tests/e2e/*.e2e.mjs`, eleven of them: presence churn,
+End-to-end suites are `tests/e2e/*.e2e.mjs`, twelve of them: presence churn,
 party invite delivery, cloud sync, critter combat sync, room bots, daily
-reward, move tracking, tag bodies, the co-op fallen state, the duel handshake,
-and the three-browser duel playtest. Ten drive real Chromium against a static
-server and bind real ports, so `run-suites.mjs` runs them sequentially and takes
-a machine-wide lock for the duration.
+reward, move tracking, tag bodies, the co-op fallen state, skill aiming, the
+duel handshake, and the three-browser duel playtest. Eleven drive real Chromium
+against a static server and bind real ports, so `run-suites.mjs` runs them
+sequentially and takes a machine-wide lock for the duration.
+
+`tests/e2e/skillAim.e2e.mjs` is the visual counterpart to the skill half of
+`tests/skills.test.js`, and exists for the same reason as the fallen suite
+below: a unit test can prove which overlay SET a skill writes to, but a Set
+name is not a colour. Every skill used to paint its targets from one green
+set, so an attack spell highlighted the monsters it was about to kill in the
+ally colour while the panel said "tap a green foe". This samples the real
+canvas through the renderer's own projection to assert the TILE a player looks
+at is actually red -- both the fill and the cursor outline, which are separate
+paints -- reads the description card out of the real 296px panel, and lands
+four PNGs in `tests/e2e/screenshots/`. It drives
+`tests/e2e/skillAim.harness.html`, which builds a battle from the real
+Game/Room/Unit/Battle/BattleController in the real index.html panel markup.
 
 `tests/e2e/coopFallen.e2e.mjs` is the visual counterpart to
 `tests/coopFallen.test.js` and `tests/campRevive.test.js`: both unit suites run

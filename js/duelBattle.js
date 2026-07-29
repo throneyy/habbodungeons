@@ -65,7 +65,7 @@ import { CoopLeader, CoopMember, SpectateController } from './coopBattle.js';
 import { CLASSES } from './classes.js';
 import { treeSkillSpecs, skillTooltip } from './skills.js';
 import { sumBonuses } from './items.js';
-import { rosterBars, appendSkillCard } from './battleController.js';
+import { rosterBars, aimPrompt, appendSkillCard } from './battleController.js';
 import { figureSprites } from './monsterSprites.js';
 import { rotationBetween } from './pathfinder.js';
 
@@ -509,10 +509,7 @@ export class DuelGuestController extends SpectateController {
     if (this.commanding) {
       if (this.mode === 'skill') {
         appendSkillCard(dom.actions, this.activeSkill);
-        const noun = this.activeSkill.target === 'enemy' ? 'foe' : 'ally';
-        this.btn(this.activeSkill.target === 'self'
-          ? `Tap the green area to cast ${this.activeSkill.name}`
-          : `Tap a green ${noun} for ${this.activeSkill.name}`, null, true);
+        this.btn(aimPrompt(this.activeSkill), null, true);
         if (this.activeSkill.target === 'self') {
           this.btn(`Cast ${this.activeSkill.name}`, () => this.castSelf());
         }

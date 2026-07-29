@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- Visual harness for tests/e2e/skillAim.e2e.mjs.
+
+     A battle screen with a known cast in progress, built from the REAL modules
+     (Game, Room, Unit, Battle, BattleController) and the real index.html panel
+     markup + css/style.css. It exists because the two things under test are
+     pixels: the colour a skill paints its targets, and whether the description
+     card is legible in the 296px panel. A fake DOM can see neither.
+
+     Query params drive it: ?skill=net|heal|thorns picks what the mage aims. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>skill aim harness</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/habbo-ui.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="panel">
+    <div id="banner" class="banner"></div>
+    <div id="actions"></div>
+    <div id="roster"></div>
+    <div id="log"></div>
+    <p id="panelHint" class="info dim">Tap your unit &rarr; blue to move, red to attack or blast, green to aid an ally.</p>
+  </div>
+
+  <script type="module">
+    import { Game } from '/js/game.js';
+    import { Room } from '/js/room.js';
+    import { Unit } from '/js/units.js';
+    import { BattleController } from '/js/battleController.js';
+    import { ALL_TREE_SKILLS } from '/js/skills.js';
+    import { CLASSES } from '/js/classes.js';
+
+    const room = new Room({
+      id: 'harness', name: 'Harness', spawn: { x: 2, y: 6 },
+      heightmap: ['0000000000', '0000000000', '0000000000', '0000000000', '0000000000',
+                  '0000000000', '0000000000', '0000000000'],
+    });
+
+    const game = new Game(document.getElementById('game'));
+    const battle = new BattleController({
+      banner: document.getElementById('banner'),
+      actions: document.getElementById('actions'),
+      roster: document.getElementById('roster'),
+      log: document.getElementById('log'),
+      hint: document.getElementById('panelHint'),
+    });
+    game.setController(battle);
+
+    // A mage who has ground out both Origins trees, so every skill shape (single
+    // strike, area strike, support, self blast) is on one unit.
+    const mage = new Unit(room, null, 4, 4, {
+      team: 'player', classId: 'mage', name: 'Vex', level: 3,
+      skills: [ALL_TREE_SKILLS.net, ALL_TREE_SKILLS.tidal_wave, ALL_TREE_SKILLS.thorns],
+    });
+    const cleric = new Unit(room, null, 3, 5, { team: 'player', classId: 'cleric', name: 'Mira', level: 2 });
+    cleric.stats.hp = 9; // wounded, so Heal has a legal target
+    const foes = [
+      new Unit(room, null, 5, 3, { team: 'enemy', classId: 'fighter', name: 'Skeleton' }),
+      new Unit(room, null, 6, 4, { team: 'enemy', classId: 'rogue', name: 'Sewer Rat' }),
+      new Unit(room, null, 5, 5, { team: 'enemy', classId: 'ranger', name: 'Crypt Spider' }),
+    ];
+
+    battle.start(room, [mage, cleric], foes, { enemyAi: false });
+
+    // ?skill=<id> aims that skill; ?skill=heal uses the Cleric's class skill
+    // (the other spec family, so the harness covers both); anything unknown
+    // (?skill=none) just selects the caster and leaves the skill MENU up.
+    const pick = new URLSearchParams(location.search).get('skill') || 'net';
+    const caster = pick === 'heal' ? cleric : mage;
+    const skill = pick === 'heal' ? CLASSES.cleric.skill : ALL_TREE_SKILLS[pick];
+    battle.select(caster);
+    if (skill) battle.enterSkill(skill);
+
+    // The e2e samples canvas pixels through the renderer's own projection, so
+    // it needs the live Game rather than a guess at where a tile landed.
+    window.__harness = { game, battle, mage, cleric, foes };
+    document.body.dataset.ready = pick;
+  </script>
+</body>
+</html>
