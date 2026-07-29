@@ -2429,6 +2429,11 @@ button.primary:hover {
   image-rendering: pixelated;
   pointer-events: none;
 }
+/* worn gear: present but on a squad member's back — dimmed like the Hand
+   dims items that are mid-trade (.hand-socket.worn) */
+.hw-socket.is-worn canvas {
+  opacity: 0.55;
+}
 .hw-qty {
   position: absolute;
   right: 3px;

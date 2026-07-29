@@ -12,6 +12,7 @@
 // summoned by typing :admin in chat (see attachAdminPanel) — commands, not
 // buttons, exactly like the old client's staff tooling.
 import { Hand } from './hand.js';
+import { Backpack } from './ui/backpack.js';
 
 const ICON = (n) => `assets/ui/icons/${n}.gif`;
 const LS_FRIENDS = 'habbo-dungeons-friends';
@@ -146,20 +147,23 @@ export function attachToolbarIcons({ toolbar, rooms, currentRoomId, onHelp, onHa
     );
   }
 
-  // ---- inventory: the Hand ------------------------------------------------
-  // Not a pop-over: the native container (hand.js) slides in from the
-  // top-right corner, exactly like the Shockwave client's furni hand.
+  // ---- inventory: the Backpack ---------------------------------------------
+  // The visible container is the Backpack (ui/backpack.js), a HabboWindow
+  // dressing of the run save. The Hand itself stays alive and unopened here
+  // — Safe Trading (tradeWindow.js) still borrows it as the stash box via
+  // getHand()/enterTrade, so it can't be retired yet.
   const hand = new Hand();
   sharedHand = hand; // the Safe-trading window borrows it as the stash box
-  hand.onEquip = onEquip || null;
-  hand.onUnequip = onUnequip || null;
-  hand.onUse = onUse || null;
+  const backpack = new Backpack();
+  backpack.onEquip = onEquip || null;
+  backpack.onUnequip = onUnequip || null;
+  backpack.onUse = onUse || null;
   mkIcon('inventory', 'Inventory · dungeon loot', wrap, () => {
     pops.forEach((p) => p.classList.remove('open'));
-    // opening an empty hand: give the host a chance to stock it first
+    // opening an empty backpack: give the host a chance to stock it first
     // (main.js seeds the admin demo kit here), then render as usual
-    if (onHandEmpty && hand.mode !== 'open' && !hand.bag().items.length) onHandEmpty();
-    hand.toggle();
+    if (onHandEmpty && !backpack.isOpen && !backpack.bag().items.length) onHandEmpty();
+    backpack.toggle();
   });
 
   // ---- help ----------------------------------------------------------------
