@@ -275,6 +275,42 @@ export const hostsDuel = (state) => !!(state && state.youChallenged);
 
 // ------------------------------------------------------------------- host
 
+/** Settle a duel the local engine has just decided by KNOCKOUT.
+ *
+ *  A KO is decided by the host's Battle, and nothing on that path talks to the
+ *  backend: `endDuel()` folds the local UI and relays an `end` frame to the
+ *  room so spectators stop drawing HP bars, but the `duels` row that authorises
+ *  the fight is still open when the last unit falls. Left alone it stays open
+ *  until the DUEL_MAX_LIFE_MS sweep a quarter of an hour later, and for the
+ *  whole of that time BOTH players are refused with "you are already duelling"
+ *  — so the one thing anyone wants after a duel, an immediate rematch, is the
+ *  one thing they cannot have.
+ *
+ *  The LOSER settles it, by sending exactly the forfeit the yield button sends.
+ *  That reuses forfeitFlow whole (terminal status 'done', a `duel-ended` on
+ *  each mailbox stamped per recipient, both players freed) and it is
+ *  unforgeable in the only direction that matters: duel-forfeit ends the duel
+ *  against its OWN sender, found from the caller's user id, so the worst a
+ *  liar can do with it is lose a fight they were already losing. The winner
+ *  sends nothing at all, which is why a win can never be claimed by asserting
+ *  one.
+ *
+ *  Sent once per duel (`settled`), and fire-and-forget: our own screen is
+ *  already ending on the KO animation's timer, so a rejected or offline send
+ *  must not tear it down a second time. If it never arrives the row simply
+ *  falls back to the behaviour this fixes — the sweep — rather than to
+ *  anything worse.
+ */
+function settleDuelLoss(side, iLost) {
+  if (!iLost || side.settled) return;
+  side.settled = true;
+  try {
+    Promise.resolve(side.net.send({ t: 'duel-forfeit' })).catch(() => {});
+  } catch {
+    /* transport gone: the sweep is the fallback, as it was before */
+  }
+}
+
 export class DuelHost extends CoopLeader {
   // net: shared Net; getName: () => my Habbo name; opponent: their name
   constructor(net, getName, opponent) {
@@ -286,6 +322,7 @@ export class DuelHost extends CoopLeader {
     this.pendingHello = null; // the guest arrived before the screen did
     this.onBoot = null; // (payload) => void — main.js reveals the battle panel
     this.onDuelEnd = null; // (result) => void — 'won' means the HOST won
+    this.settled = false; // a KO settle has already been sent (send it once)
     this.lastHeardAt = 0; // last frame from the opponent (watchdog hint)
     this.room = null; // the room we are BOTH standing in (set by arm())
     this.myTile = null; // where I am standing right now (set by arm())
@@ -408,7 +445,10 @@ export class DuelHost extends CoopLeader {
       },
       inPlace: true, // fight in the live room: do NOT rebuild the scene
       duel: { opponent: this.opponent },
-      onEnd: (result) => this.onDuelEnd && this.onDuelEnd(result),
+      onEnd: (result) => {
+        settleDuelLoss(this, result === 'lost');
+        if (this.onDuelEnd) this.onDuelEnd(result);
+      },
     });
     this.link(mine, DUEL_CIDS[0]);
     this.link(theirs, DUEL_CIDS[1]);
@@ -514,6 +554,7 @@ export class DuelGuest extends CoopMember {
     super(net, game, dom, getName);
     this.helloTimer = null;
     this.endDelayMs = 1200; // let the killing blow land on screen first
+    this.settled = false; // a KO settle has already been sent (send it once)
     this.duelUnits = []; // what we added to the live scene, so we can take it back out
   }
 
@@ -669,6 +710,12 @@ export class DuelGuest extends CoopMember {
   applyEnd(d) {
     super.applyEnd(d);
     const mine = d.result === 'lost'; // the host's player team lost = I won
+    settleDuelLoss(this, !mine);
+    // Tell main.js the fight is DECIDED, now — not in endDelayMs' time when
+    // exit() fires. The duel-ended the settle above provokes will arrive during
+    // that delay, and main.js has to already know it is an echo of a knockout
+    // it has seen rather than fresh news worth tearing the screen down for.
+    if (this.ui && this.ui.decided) this.ui.decided(mine);
     setTimeout(
       () => this.exit(mine ? 'You win the duel!' : `${this.leaderName} wins the duel.`),
       this.endDelayMs

@@ -2,12 +2,14 @@
 // run with:  node tests/duelEndings.test.js
 //
 // tests/duel.test.js covers the handshake (challenge, accept, decline, cancel):
-// everything up to two players standing ready. This covers the other end, where
-// the fight stops for a reason other than a knockout:
+// everything up to two players standing ready. This covers the other end, how a
+// fight that started actually stops:
 //
 //   FORFEIT       either duellist yields
 //   ABANDONMENT   the other one closed the tab, dropped their connection, or
 //                 walked out of the room mid-fight
+//   KNOCKOUT      somebody's last unit fell — the ordinary way a duel ends,
+//                 and for a long time the only one that never settled its row
 //
 // Both settle through the same three steps, and each is asserted here:
 //   1. the row reaches a TERMINAL status ('done', not 'cancelled' — a decided
@@ -21,6 +23,13 @@
 // same-room is exactly what challengeFlow and acceptFlow already apply, so a
 // closed tab, a dead socket and a walk-out are one definition with three
 // triggers rather than three competing definitions.
+//
+// Nor is the knockout's. A KO is decided by the host's battle engine on the
+// client, and the loser reports it with the SAME duel-forfeit the yield button
+// sends — so there is no fourth ending here, no new flow and no new server
+// verb: the section at the bottom is about what that reuse has to guarantee.
+// tests/duelBattle.test.js owns the other half (that a KO sends it at all, from
+// the loser and only the loser).
 //
 // Same fake world as duel.test.js: the DuelStore port over plain objects, so
 // the real flows run in Node.
@@ -292,6 +301,83 @@ console.log('abandonment');
   check('nor can it be claimed as an abandonment',
     (await claimFlow(w.store, { id: alice.id }, w.now)).body.ended === false);
   check('the ask is still standing', w.liveRow().status === 'asked');
+}
+
+// ---- knockout --------------------------------------------------------------
+// The ending that was missing. main.js routed a KO straight to endDuel(), which
+// folds the local UI and relays an `end` frame to the room's spectators but
+// calls no edge function at all — so a decided fight left a live row behind and
+// the only thing that ever cleared it was the 15 minute DUEL_MAX_LIFE_MS sweep.
+// What that cost was the rematch: the natural thing to do after losing a duel
+// is to ask for another one, and for a quarter of an hour both players were
+// refused with "you are already duelling".
+console.log('knockout');
+{
+  // The KO'd player sends the forfeit their client would have sent had they
+  // pressed yield. Everything below is therefore a claim about forfeitFlow
+  // being enough on its own — which is the point of reusing it.
+  const { w, alice, bob } = await fighting();
+  const res = await forfeitFlow(w.store, { id: bob.id }); // Bob's last unit fell
+
+  check('a knockout settles the row', res.body.ended === true);
+  check('...as decided, not cancelled', w.duels[0].status === 'done');
+  check('...crediting the player still standing', res.body.winner === 'Alice');
+
+  // "Terminal for BOTH sides" is the whole point: a status that freed only the
+  // loser would leave the winner unable to accept the rematch they just earned.
+  check('the loser holds no live duel',
+    (await w.store.liveDuelOf(bob.id)) === null);
+  check('the winner holds no live duel either',
+    (await w.store.liveDuelOf(alice.id)) === null);
+  check('...and neither is mid-countdown',
+    (await w.store.countdownOf(alice.id)) === null &&
+    (await w.store.countdownOf(bob.id)) === null);
+
+  const toA = sentTo(res, 'duel-ended', alice.id);
+  const toB = sentTo(res, 'duel-ended', bob.id);
+  check('both screens are told', !!toA && !!toB);
+  check('each from its own side', toA.payload.youWon === true && toB.payload.youWon === false);
+}
+{
+  // The rematch, at once and in both directions. No clock is advanced between
+  // the knockout and the challenge: `w.now` is the same instant throughout, so
+  // nothing here can be passing because a TTL quietly elapsed.
+  const { w, alice, bob } = await fighting();
+  await forfeitFlow(w.store, { id: bob.id });
+
+  const again = await challengeFlow(w.store, { id: bob.id }, { name: 'Alice' }, w.now);
+  check('the KO’d player can demand a rematch immediately', again.body.ok === true);
+  check('...and it is a NEW duel, not the old row reopened',
+    w.duels.length === 2 && w.duels[1].status === 'asked');
+  check('...which the winner can accept',
+    (await acceptFlow(w.store, { id: alice.id }, { from: 'Bob' }, w.now)).body.ok === true);
+  check('...putting them straight back into a countdown',
+    w.duels[1].status === 'countdown' && w.duels[0].status === 'done');
+}
+{
+  const { w, alice, bob } = await fighting();
+  await forfeitFlow(w.store, { id: bob.id });
+  check('the WINNER can open the rematch just as immediately',
+    (await challengeFlow(w.store, { id: alice.id }, { name: 'Bob' }, w.now)).body.ok === true);
+}
+{
+  // The duel-ended the settle provokes reaches BOTH clients, and the winner's
+  // client sends nothing in reply. Were it ever to answer with a forfeit of its
+  // own, this is what that second call would land on: a settled row, where it
+  // must be an inert no-op rather than something that reaches into whatever
+  // duel those two have started since.
+  const { w, alice, bob } = await fighting();
+  await forfeitFlow(w.store, { id: bob.id });
+  const echo = await forfeitFlow(w.store, { id: alice.id });
+  check('a second forfeit on a settled duel does nothing',
+    echo.body.ok === true && echo.body.ended === false);
+  check('...and tells nobody', echo.sends.length === 0);
+
+  await challengeFlow(w.store, { id: alice.id }, { name: 'Bob' }, w.now);
+  await acceptFlow(w.store, { id: bob.id }, { from: 'Alice' }, w.now);
+  const late = await forfeitFlow(w.store, { id: alice.id });
+  check('a LATE echo would hit the rematch, which is why it is never sent',
+    late.body.ended === true && w.duels[1].status === 'done');
 }
 
 console.log(failed ? `\n${failed} check(s) FAILED` : '\nall duel ending checks passed');

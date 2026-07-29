@@ -74,6 +74,7 @@ function wire(n = 2) {
     const net = {
       name,
       connected: true,
+      sent: [], // EVERY send(), in order — see send() below
       on(t, fn) {
         if (!handlers.has(t)) handlers.set(t, new Set());
         handlers.get(t).add(fn);
@@ -92,6 +93,12 @@ function wire(n = 2) {
       // an onlooker sees — and a test whose wire is kinder than the real one is
       // the reason a bug reaches a player.
       send(msg) {
+        // Recorded before the relay filter, because a duel does not only relay:
+        // it settles ITSELF on a knockout by sending duel-forfeit, and a wire
+        // that quietly swallowed everything that was not a `duel-relay` could
+        // not tell "sent the settle" from "left the row open for fifteen
+        // minutes" — which is the bug this records exist to catch.
+        net.sent.push(msg);
         if (!msg || msg.t !== 'duel-relay') return;
         const payload = { ...msg, from: name };
         for (const other of nets) {
@@ -1151,6 +1158,7 @@ console.log('a blow from each side');
 
 // ---- a knockout ends it on both screens ------------------------------------
 console.log('knockout');
+const forfeits = (net) => net.sent.filter((m) => m && m.t === 'duel-forfeit');
 {
   const d = track(duel());
   d.guest.endDelayMs = 0; // no on-screen beat to wait for in a test
@@ -1166,6 +1174,80 @@ console.log('knockout');
   check('the guest’s screen is told', d.guest.shadow.phase === 'won');
   await new Promise((r) => setTimeout(r, 20));
   check('and the loser is told who won', d.ui.exited === `${HOST} wins the duel.`);
+
+  // A KO is decided by the host's engine and nothing on that path used to talk
+  // to the backend, so the `duels` row stayed open until the 15 minute sweep
+  // and BOTH players were told "you are already duelling" for the whole of it.
+  // The LOSER closes it, with the same duel-forfeit the yield button sends.
+  check('the KO’d player settles the row server-side', forfeits(d.netB).length === 1);
+  check('...and the WINNER sends nothing — a win is never self-declared',
+    forfeits(d.netA).length === 0);
+}
+{
+  // The other way round: the HOST is the one who falls. The settle follows the
+  // loser, not the role — hosting is a question of who challenged whom.
+  const d = track(duel());
+  d.guest.endDelayMs = 0;
+  faceOff(d);
+  hostUnit(d).stats.hp = 1;
+  d.host.syncPhase(true);
+  d.battle.resolveAttack(guestUnit(d), hostUnit(d));
+  check('a host who loses is still the one who settles',
+    d.battle.phase === 'lost' && forfeits(d.netA).length === 1);
+  await new Promise((r) => setTimeout(r, 20));
+  check('...and the guest who WON sends nothing', forfeits(d.netB).length === 0);
+}
+{
+  // The settle is sent once per duel. `duel-ended` comes back on both mailboxes
+  // the moment the server processes it, and further `end` frames can arrive off
+  // the room channel; neither may provoke a second forfeit, or a rematch begun
+  // in the meantime would be the duel that got cancelled.
+  const d = track(duel());
+  d.guest.endDelayMs = 0;
+  faceOff(d);
+  guestUnit(d).stats.hp = 1;
+  d.host.syncPhase(true);
+  d.battle.resolveAttack(hostUnit(d), guestUnit(d));
+  check('one settle after the knockout', forfeits(d.netB).length === 1);
+  d.netB.emit('duel-relay', { from: HOST, to: GUEST, data: { k: 'end', result: 'won' } });
+  d.netB.emit('duel-relay', { from: HOST, to: GUEST, data: { k: 'end', result: 'won' } });
+  await new Promise((r) => setTimeout(r, 20));
+  check('...still one after two more end frames', forfeits(d.netB).length === 1);
+}
+{
+  // Nothing is settled while the fight is still going: a settle sent mid-duel
+  // is a resignation nobody made.
+  const d = track(duel());
+  faceOff(d);
+  d.battle.resolveAttack(hostUnit(d), guestUnit(d)); // a hit, not a kill
+  check('a hit that does not kill settles nothing',
+    guestUnit(d).alive === true &&
+    forfeits(d.netA).length === 0 && forfeits(d.netB).length === 0);
+}
+{
+  // main.js's loop guard, as a contract rather than a comment: the guest tells
+  // its UI the fight is DECIDED at the knockout, not at the exit endDelayMs
+  // later. The `duel-ended` provoked by the settle lands inside that gap, and
+  // main.js has to already know to ignore it — otherwise both screens tear down
+  // on the round trip, cutting the killing blow, and a fight won on the field
+  // is announced with the forfeit's wording.
+  const d = track(duel());
+  d.guest.endDelayMs = 50;
+  const seen = [];
+  d.ui.decided = (mine) => seen.push({ mine, exited: d.ui.exited });
+  faceOff(d);
+  guestUnit(d).stats.hp = 1;
+  d.host.syncPhase(true);
+  d.battle.resolveAttack(hostUnit(d), guestUnit(d));
+  check('the guest is told the duel is decided at the KO itself', seen.length === 1);
+  // `|| {}` so a regression here reports a FAIL rather than throwing a
+  // TypeError that takes the rest of the suite down with it.
+  const decided = seen[0] || {};
+  check('...with its own verdict, and BEFORE the exit',
+    decided.mine === false && !decided.exited);
+  await new Promise((r) => setTimeout(r, 80));
+  check('...and the exit still follows on its own timer', d.ui.exited === `${HOST} wins the duel.`);
+  check('being decided did not send a second settle', forfeits(d.netB).length === 1);
 }
 
 // ---- no AI, ever -----------------------------------------------------------

@@ -1584,6 +1584,8 @@ function showCoopEnd(reason, share) {
 // and sends commands for the unit it owns. See js/duelBattle.js.
 let duelHost = null;
 let duelGuest = null;
+// A knockout has been decided by the local battle engine; see onDuelEnded.
+let duelDecided = false;
 const battleDom = () => ({ banner: $('banner'), actions: $('actions'), roster: $('roster'), log: $('log'), hint: $('panelHint') });
 
 // The tile I am standing on right now. An in-place duel starts from the real
@@ -1777,11 +1779,16 @@ function startDuel(state) {
   if (hostsDuel(state)) {
     duelHost = new DuelHost(net, myName, state.opponent);
     duelHost.onBoot = () => duelScreen();
-    duelHost.onDuelEnd = (result, reason) =>
+    duelHost.onDuelEnd = (result, reason) => {
+      // A knockout: our own engine decided this one. DuelHost has already sent
+      // the loser's settle if that loser is us; all that is left here is to
+      // stop believing the server about a duel we watched end (see duelDecided).
+      if (result !== 'aborted') duelDecided = true;
       setTimeout(
         () => endDuel(reason || (result === 'won' ? 'You win the duel!' : `${state.opponent} wins the duel.`)),
         result === 'aborted' ? 0 : 1200
       );
+    };
     game.setController(battle);
     battle.onForfeit = () => forfeitDuel();
     duelHost.arm({ bc: battle, me, room: game.room, myTile: me.at });
@@ -1800,6 +1807,9 @@ function startDuel(state) {
       duelScreen();
       if (duelGuest && duelGuest.controller) duelGuest.controller.onForfeit = () => forfeitDuel();
     },
+    // The host's engine decided it and DuelGuest has sent our settle if we are
+    // the one who fell. Fires at the KNOCKOUT, not at the exit that follows it.
+    decided: () => { duelDecided = true; },
     exit: (reason) => endDuel(reason),
   }, me);
   startDuelSync();
@@ -1822,8 +1832,25 @@ async function forfeitDuel() {
 
 // The server settled a live fight (a forfeit, or an opponent who abandoned it).
 // `youWon` is stamped per recipient, so each screen states its own outcome.
+//
+// `duelDecided` is set the instant a knockout is decided by the local battle
+// engine and cleared by endDuel(). It exists to keep the KO settle from coming
+// back round: the loser sends duel-forfeit, the server answers BOTH mailboxes
+// with `duel-ended`, and that message would otherwise land here as if it were
+// news.
+//
+// Two things go wrong if it does. The screens tear down the moment the round
+// trip completes, cutting the killing blow and the 1200ms it is given to play;
+// and both players get the forfeit's wording ("You lost the duel.") for a fight
+// that was won on the field, which reads as though someone had quit. The local
+// engine is the authority on a KO's outcome AND its timing, so the echo is
+// dropped and the ending already in flight is left to finish.
+//
+// It also closes the loop for good: onDuelEnded cannot re-enter the settle,
+// because the only path to it now returns above.
 function onDuelEnded(msg) {
   if (!duelHost && !duelGuest) return;
+  if (duelDecided) return; // our own knockout, coming back off the server
   const why = msg && msg.reason ? ` (${msg.reason})` : '';
   endDuel(msg && msg.youWon ? `You win the duel!${why}` : `You lost the duel.${why}`);
 }
@@ -1833,6 +1860,7 @@ function onDuelEnded(msg) {
 // its taps back. Nobody travels anywhere, because nobody ever left.
 function endDuel(reason) {
   const opponent = (duelHost && duelHost.opponent) || (duelGuest && duelGuest.leaderName) || null;
+  duelDecided = false; // the next duel starts undecided
   clearInterval(duelSync);
   duelSync = null;
   clearInterval(duelClaim);

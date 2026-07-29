@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 25 unit suites below (1199 checks) - must pass
+npm test                 # all 25 unit suites below (1226 checks) - must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 11 e2e suites (10 real Chromium + the duel DB stack)
 ```
@@ -140,8 +140,8 @@ node tests/battle.test.js              # damage math, line of sight, targeting, 
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (82 checks)
 node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, stale rows, clock skew (113 checks)
-node tests/duelBattle.test.js           # duel battle: in-place, tactics, character, placement, spectating (246 checks)
-node tests/duelEndings.test.js          # duel endings: forfeit, disconnect, walked out, freed to duel again (43 checks)
+node tests/duelBattle.test.js           # duel battle: in-place, tactics, character, placement, spectating, the KO settle (257 checks)
+node tests/duelEndings.test.js          # duel endings: forfeit, disconnect, walked out, knocked out, freed to duel again (59 checks)
 node tests/partyRehydrate.test.js      # party roster read back on connect, so a stuck member can see Leave (42 checks)
 node tests/coopRoster.test.js          # co-op descend confirm: acks keyed by `from`, ready/declined roster (47 checks)
 node tests/coopFallen.test.js          # co-op member downed: fallen banner + watching state, never the waiting one (43 checks)
