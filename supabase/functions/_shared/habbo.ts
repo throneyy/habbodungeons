@@ -75,6 +75,36 @@ async function fetchBobba(name: string): Promise<HabboProfile> {
   }
   const md = json && json.mainDetails;
   if (!md || !md.figureString) return { ok: false, status };
+
+  // Number(x) || 0 can't tell "the field was never sent" from "the level is
+  // genuinely 0" -- both coerce to 0. That distinction matters here: the PAID
+  // tier (bobba.me/api, used whenever BOBBA_KEY is set) has been observed to
+  // omit fishingLevel from mainDetails while gardeningLevel comes through
+  // fine, silently reporting a real angler as a false zero. Check the raw key
+  // BEFORE coercing, and when the paid tier drops a field, cross-check the
+  // free tier for just that field rather than trusting the gap.
+  const missing: string[] = [];
+  if (md.fishingLevel === undefined) missing.push("fishingLevel");
+  if (md.gardeningLevel === undefined) missing.push("gardeningLevel");
+
+  let fishingLevel = Number(md.fishingLevel) || 0;
+  let gardeningLevel = Number(md.gardeningLevel) || 0;
+
+  if (BOBBA_KEY && missing.length) {
+    console.warn(
+      `[habbo] paid Bobba response for "${name}" is missing ${missing.join(" and ")}` +
+        ` -- falling back to the free tier for it. Raw mainDetails: ${JSON.stringify(md)}`,
+    );
+    const free = await getJson(`${BOBBA_FREE}/${q}`);
+    const freeMd = free.json && free.json.mainDetails;
+    if (freeMd) {
+      if (md.fishingLevel === undefined) fishingLevel = Number(freeMd.fishingLevel) || 0;
+      if (md.gardeningLevel === undefined) gardeningLevel = Number(freeMd.gardeningLevel) || 0;
+    } else {
+      console.warn(`[habbo] free-tier fallback for "${name}" also failed (status ${free.status})`);
+    }
+  }
+
   return {
     ok: true,
     source: "bobba",
@@ -83,8 +113,8 @@ async function fetchBobba(name: string): Promise<HabboProfile> {
     figureString: md.figureString,
     motto: String(md.motto ?? ""),
     online: md.online === true || md.online === "true",
-    fishingLevel: Number(md.fishingLevel) || 0,
-    gardeningLevel: Number(md.gardeningLevel) || 0,
+    fishingLevel,
+    gardeningLevel,
   };
 }
 
