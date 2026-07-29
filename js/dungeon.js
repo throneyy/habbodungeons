@@ -758,9 +758,14 @@ export const LOOK_KEYS = Object.keys(LOOKS);
 
 // ---- enemy factories -------------------------------------------------------
 
+// opts.bonuses is the encounter template's per-monster stat delta (POOLS `d` in
+// encounterGen.js). It rides the Unit constructor's equipment-bonus path, which
+// is why a Skeleton and a Gnoll Sentinel are different creatures instead of two
+// names for the same level-1 Fighter.
 function E(room, x, y, classId, name, level = 1, look = null, opts = {}) {
   const u = new Unit(room, null, x, y, {
-    team: 'enemy', classId, name, level, dir: 4, ghost: look && look.ghost, tag: opts.tag,
+    team: 'enemy', classId, name, level, dir: 4, ghost: look && look.ghost,
+    tag: opts.tag, bonuses: opts.bonuses,
   });
   if (look && look.pet) u.sprites = monsterSprites(look.pet, { tint: look.tint, recolor: look.recolor });
   else if (look && look.figure) u.sprites = figureSprites(look.figure);
@@ -819,7 +824,9 @@ function battleNode(name, roomKey, makeRoom, reward, opts = {}) {
         squadSize: ctx.squadSize ?? 4,
         spawns: SPAWNS[roomKey],
         objectiveTile,
-      }).map((p) => E(room, p.x, p.y, p.classId, p.name, p.level, LOOKS[p.look], { tag: p.tag })),
+      }).map((p) =>
+        E(room, p.x, p.y, p.classId, p.name, p.level, LOOKS[p.look], { tag: p.tag, bonuses: p.bonuses })
+      ),
   };
 }
 

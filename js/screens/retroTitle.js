@@ -175,9 +175,10 @@ function callingsCardHtml({ classes, classId }) {
 function dungeonsCardHtml({ dungeons }) {
   return `
     <section class="hd-card rl-dungeon-card" id="dungeonCards" aria-labelledby="h-dungeons">
-      <img class="rl-dungeon-art" src="assets/ui/hero/dungeon-hall.png" alt="" width="300" height="387" />
       <h2 class="hd-card-header" id="h-dungeons">Choose a Descent</h2>
       <div class="hd-card-body rl-body">
+        <img class="rl-dungeon-art" src="assets/ui/hero/dungeon-hall.png" alt="" width="300" height="387" />
+        <div class="rl-dungeon-content">
         ${dungeons
           .map(
             (d, i) => `
@@ -197,13 +198,11 @@ function dungeonsCardHtml({ dungeons }) {
               <span class="hd-badge hd-badge--yellow">${d.battles} battles</span>
               <span class="hd-badge hd-badge--yellow">${d.events} events</span>
             </p>
-            <div class="rl-actions">
-              <button type="button" class="hd-btn hd-btn--green" data-dungeon="${d.id}">Begin Descent</button>
-            </div>
           </div>`,
           )
           .join('')}
         <p class="rl-note">Yellow marks the boss room.</p>
+        </div>
       </div>
     </section>`;
 }
@@ -349,10 +348,6 @@ export function renderRetroTitle(deps) {
   };
   bind('#navDungeons', 'click', jump('#dungeonCards'));
   bind('#navCallings', 'click', jump('#callings'));
-
-  root.querySelectorAll('[data-dungeon]').forEach((b) =>
-    b.addEventListener('click', () => on.beginDescent && on.beginDescent(b.dataset.dungeon)),
-  );
 
   // calling picker: single-select, persisted by the caller
   const callings = q('.rl-callings');

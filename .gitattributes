@@ -10,5 +10,6 @@ js/dailyRewardDock.js text eol=lf
 # reports DRIFT on every line of a file nobody touched.
 js/furniDims.js text eol=lf
 # Shell scripts must stay LF: a CRLF checkout under core.autocrlf=true makes
-# bash fail on the shebang with $'\r': command not found.
-tools/reference/habbo-2006/*.sh text eol=lf
+# bash fail on the shebang with $'\r': command not found. Generic across
+# reference sets, matching the .gitignore rules for the same paths.
+tools/reference/**/*.sh text eol=lf

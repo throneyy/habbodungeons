@@ -149,6 +149,18 @@ export class Battle {
     });
   }
 
+  // XP for felling one foe. Tougher targets are worth more, so clearing a
+  // level-3 boss beats farming level-1 chaff.
+  //
+  // Deliberately ONE function rather than the same expression written at each
+  // kill site: skill kills used to pay a flat 10 while autoattack kills paid
+  // this, so casting a skill was punished twice over - it cost MP AND it cost
+  // XP. Two copies of a formula is what let them drift apart in the first
+  // place.
+  killXp(target) {
+    return 10 + target.level * 5;
+  }
+
   // Resolve attacker -> target. Returns a result summary for the UI.
   resolveAttack(attacker, target) {
     attacker.dir = rotationBetween(attacker.x, attacker.y, target.x, target.y) ?? attacker.dir;
@@ -161,7 +173,7 @@ export class Battle {
     const killed = !target.alive;
     this.onFx({ kind: 'attack', attacker, target, dmg, killed });
     let leveled = false;
-    if (killed) leveled = attacker.gainXp(10 + target.level * 5);
+    if (killed) leveled = attacker.gainXp(this.killXp(target));
     this.logMsg(
       `${attacker.name}${buffed ? ' (inspired)' : ''} hits ${target.name} for ${dmg}` +
         (killed ? ` - ${target.name} falls!` : ` (${target.stats.hp}/${target.stats.maxHp})`)
@@ -266,18 +278,29 @@ export class Battle {
       unit.dir = rotationBetween(unit.x, unit.y, cx, cy) ?? unit.dir;
       const foeTeam = unit.team === 'player' ? 'enemy' : 'player';
       let kills = 0;
+      let xp = 0;
       for (const f of area(foeTeam)) {
         if (!f || !f.alive) continue;
         const dmg = this.computeSkillDamage(unit, f, skill);
         f.takeDamage(dmg);
         if (skill.status && skill.status.rooted) f.rooted = Math.max(f.rooted, skill.status.rooted);
         const killed = !f.alive;
-        if (killed) kills++;
+        if (killed) {
+          kills++;
+          // Per TARGET, not per kill: an area skill that fells a boss and two
+          // rats is worth the boss plus the two rats, exactly what killing the
+          // three of them one at a time would have paid.
+          xp += this.killXp(f);
+        }
         this.onFx({ kind: 'skill', caster: unit, target: f, dmg, skill });
         this.logMsg(`${unit.name}'s ${skill.name} hits ${f.name} for ${dmg}${killed ? ` - ${f.name} falls!` : ''}`);
       }
       if (kills) {
-        const leveled = unit.gainXp(10 * kills);
+        // One gainXp call for the whole cast, matching the single call an
+        // autoattack kill makes - gainXp only levels once per call, so paying
+        // per kill in the loop would cap a triple kill at one level while the
+        // same XP earned in one call could carry further.
+        const leveled = unit.gainXp(xp);
         if (leveled) this.logMsg(`${unit.name} reaches level ${unit.level}!`);
       }
     }

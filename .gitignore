@@ -51,18 +51,27 @@ tools/swf/
 # NOTE: the 8 baked runtime icons in public/assets/ui/weapons/ stay TRACKED —
 # those are shipped product art, not raw rips.
 #
-# The SCRIPTS that do the re-pulling are tracked too, and so is the manifest of
-# what they should have pulled. "Fully regenerable" above was false while the
-# regenerating script was itself ignored: a fresh clone had no fetch-assets.sh
-# and therefore no way to rebuild anything. Our own tooling and plain-text
-# records are not Sulake's copyright; the art they download still is, and
-# assets/ plus the scraped index.html stay ignored below.
-tools/reference/*
-!tools/reference/habbo-2006/
-tools/reference/habbo-2006/*
-!tools/reference/habbo-2006/*.sh
-!tools/reference/habbo-2006/*.md
-!tools/reference/habbo-2006/assets-manifest.tsv
+# The SCRIPTS that do the re-pulling are tracked too, and so are the plain-text
+# records of what they should have pulled. "Fully regenerable" above was false
+# while the regenerating script was itself ignored: a fresh clone had no
+# fetch-assets.sh and therefore no way to rebuild anything. Our own tooling and
+# notes are not Sulake's copyright; the art they download still is.
+#
+# The rules below are GENERIC across reference sets — they were once hardcoded
+# to habbo-2006, so any new directory silently lost its README and scripts the
+# moment it was created, which is the same regenerability hole one level up.
+# Per set: scripts (*.sh, *.py), notes (*.md) and manifests (*.tsv) at its TOP
+# LEVEL are tracked; everything else, including every nested directory of art
+# and any scraped .html/.css, stays ignored. *.py is here for the same reason
+# as *.sh and was added the moment a survey tool happened to be written in
+# Python — the language a script is written in should not decide whether the
+# tree stays regenerable.
+tools/reference/**
+!tools/reference/*/
+!tools/reference/*/*.sh
+!tools/reference/*/*.py
+!tools/reference/*/*.md
+!tools/reference/*/*.tsv
 
 # Python bytecode from the tools/ scripts
 __pycache__/

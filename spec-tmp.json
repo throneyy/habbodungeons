@@ -1,0 +1,169 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Bobba API",
+    "description": "",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.bobba.me",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/get_habbo": {
+      "get": {
+        "summary": "Get Habbo details by username",
+        "description": "Returns details of a Habbo user.",
+        "operationId": "get_habboGET",
+        "parameters": [
+          {
+            "name": "username",
+            "in": "query",
+            "description": "The Habbo username to retrieve details for. (eg. 'icing')",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON object containing Habbo details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing Habbo Name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No record found for that Habbo Name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          }
+        },
+        "x-swagger-router-controller": "Default"
+      }
+    },
+    "/get_rare": {
+      "get": {
+        "summary": "Get rare item details by name",
+        "description": "Returns details of a rare item.",
+        "operationId": "get_rareGET",
+        "parameters": [
+          {
+            "name": "rare",
+            "in": "query",
+            "description": "The name of the rare item. (eg. 'club sofa')",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A JSON object containing details about the rare item.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_200_1"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing rare item name.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No record found for that rare item.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
+                }
+              }
+            }
+          }
+        },
+        "x-swagger-router-controller": "Default"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "inline_response_200": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The Habbo's username"
+          },
+          "motto": {
+            "type": "string",
+            "description": "The Habbo's motto"
+          }
+        },
+        "example": {
+          "name": "name",
+          "motto": "motto"
+        }
+      },
+      "inline_response_400": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          }
+        }
+      },
+      "inline_response_200_1": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The name of the rare item"
+          },
+          "value": {
+            "type": "number",
+            "description": "The estimated value of the rare item"
+          }
+        },
+        "example": {
+          "name": "name",
+          "value": 0.8008281904610115
+        }
+      }
+    }
+  }
+}

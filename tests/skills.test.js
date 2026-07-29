@@ -147,5 +147,75 @@ console.log('area support');
   check("Nature's Blessing buffs the cluster's ATK", h1.buffAtk === 5 && h2.buffAtk === 5);
 }
 
+// ---- kill XP is the same whichever way you killed it -----------------------
+// Skill kills used to pay a flat 10 while autoattack kills paid 10 + level*5,
+// so casting was punished twice: it cost MP AND it cost XP, and the gap widened
+// the tougher the target. Both paths price a kill through battle.killXp now.
+console.log('kill xp parity');
+{
+  // Same foe, same hero, one felled by a skill and one by a swing. A level-1
+  // foe pays 15, under the 20 a level-1 unit needs to level, so neither side
+  // levels and the raw xp is directly comparable.
+  const mk = () => {
+    const room = flat();
+    const hero = new Unit(room, null, 2, 2, { team: 'player', classId: 'mage', skills: treeSkillSpecs(['net']) });
+    const foe = new Unit(room, null, 2, 3, { team: 'enemy', classId: 'ranger' });
+    foe.stats.hp = 1; // dies to either path in one action
+    return { hero, foe, b: new Battle(room, [hero, foe], {}) };
+  };
+
+  const bySkill = mk();
+  bySkill.b.resolveSkill(bySkill.hero, bySkill.foe, spec('net'));
+  const byHit = mk();
+  byHit.b.resolveAttack(byHit.hero, byHit.foe);
+
+  check('the skill actually killed it', !bySkill.foe.alive);
+  check('the swing actually killed it', !byHit.foe.alive);
+  check('a skill kill pays a level-scaled 15, not a flat 10', bySkill.hero.xp === 15);
+  check('a skill kill pays exactly what the same swing pays', bySkill.hero.xp === byHit.hero.xp);
+  check('killXp scales with target level',
+    bySkill.b.killXp({ level: 1 }) === 15 && bySkill.b.killXp({ level: 3 }) === 25);
+}
+
+{
+  // An area skill that fells three foes at once pays for each of them. Foes are
+  // levels 1/2/3 (15 + 20 + 25 = 60), so a flat rate - or a rate keyed to only
+  // the first or last victim - cannot coincidentally match. The caster is level
+  // 5 (needing 100 xp) so nothing levels mid-count and the total stays readable.
+  const room = flat();
+  const caster = new Unit(room, null, 2, 2, { team: 'player', classId: 'barbarian', level: 5, skills: treeSkillSpecs(['thorns']) });
+  const f1 = new Unit(room, null, 2, 1, { team: 'enemy', classId: 'ranger', level: 1 });
+  const f2 = new Unit(room, null, 3, 3, { team: 'enemy', classId: 'ranger', level: 2 });
+  const f3 = new Unit(room, null, 1, 2, { team: 'enemy', classId: 'ranger', level: 3 });
+  const survivor = new Unit(room, null, 5, 5, { team: 'enemy', classId: 'ranger', level: 9 });
+  for (const f of [f1, f2, f3]) f.stats.hp = 1; // all three die to the burst
+  const b = new Battle(room, [caster, f1, f2, f3, survivor], {});
+  const expected = b.killXp(f1) + b.killXp(f2) + b.killXp(f3);
+  b.resolveSkill(caster, caster, spec('thorns'));
+
+  check('all three foes fell', !f1.alive && !f2.alive && !f3.alive);
+  check('the out-of-range foe lived', survivor.alive);
+  check('a triple kill sums each victim (15+20+25)', expected === 60 && caster.xp === 60);
+  check('a high-level survivor outside the blast pays nothing', caster.xp === expected);
+  check('the caster did not level on 60 of the 100 it needs', caster.level === 5);
+}
+
+{
+  // Parity has to hold across the whole cast, not just per victim: three
+  // separate swings and one three-target blast must land on the same total.
+  const room = flat();
+  const swinger = new Unit(room, null, 2, 2, { team: 'player', classId: 'barbarian', level: 5 });
+  const t1 = new Unit(room, null, 2, 1, { team: 'enemy', classId: 'ranger', level: 1 });
+  const t2 = new Unit(room, null, 3, 3, { team: 'enemy', classId: 'ranger', level: 2 });
+  const t3 = new Unit(room, null, 1, 2, { team: 'enemy', classId: 'ranger', level: 3 });
+  for (const t of [t1, t2, t3]) t.stats.hp = 1;
+  const b = new Battle(room, [swinger, t1, t2, t3], {});
+  for (const t of [t1, t2, t3]) {
+    swinger.acted = false; // three separate turns' worth of swings
+    b.resolveAttack(swinger, t);
+  }
+  check('three swings pay what one three-kill blast pays', swinger.xp === 60);
+}
+
 console.log(failed ? `\n${failed} test(s) FAILED` : '\nAll M3 skill tests passed');
 process.exit(failed ? 1 : 0);

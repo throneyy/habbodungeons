@@ -410,56 +410,82 @@
   image-rendering: pixelated;
 }
 
-/* ---- dungeon card: image + gradient overlay ---- 
-   Matches the hero section style: full-resolution pixel art positioned on the
-   right side with a gradient scrim, cropped by a fixed container height.
-   The 300x387 dungeon hall image is shown at 1:1 with no resize -- the card
-   constrains height and overflow: hidden crops the excess. */
-.rl-dungeon-card {
-  position: relative;
-  overflow: hidden;
-}
-.rl-dungeon-card .hd-card-header {
-  position: relative;
-  z-index: 2;
-}
+/* ---- dungeon card: image + gradient overlay ----
+   Same idea as the hero, retuned to this card's own colour -- crimson, the
+   same --hd-primary the header strip above it is already painted in, not
+   the hero's navy. A navy scrim under a crimson header read as two
+   unrelated bars stacked on each other; this makes the header bleed
+   straight into the body instead.
+
+   The art is anchored to the TOP of the card body (not centred on the
+   card's total height) because this card is not hero-shaped: it is one
+   fixed-height masthead in a card that keeps growing as dungeon entries
+   stack under it. Anchoring to the body's own top edge means the render
+   always starts exactly where the header hands off, however tall the card
+   ends up. Full resolution, 1:1, no resize -- only the top/bottom borders
+   get cropped, by the body's overflow: hidden, never the pixels themselves. */
 .rl-dungeon-card .hd-card-body {
   position: relative;
-  z-index: 2;
+  overflow: hidden;
+  /* base fill for everything the art doesn't reach: the second (and any
+     further) dungeon entry, once the card has grown past the 387px the
+     image covers. Same crimson family top-to-bottom so there is no seam
+     where the art's coverage ends. */
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--hd-primary) 58%, black) 0%,
+    color-mix(in srgb, var(--hd-primary) 30%, black) 100%
+  );
 }
 .rl-dungeon-art {
   position: absolute;
   z-index: 0;
-  top: 50%;
+  top: 0;
   /* FULL RESOLUTION, 1:1. The art is 300x387 and is displayed at exactly
      300x387 -- no downscale. Browser resampling of pixel art is destructive,
      so the card is sized around the image. width/height are stated in the
      markup to match, and image-rendering keeps it crisp if a HiDPI screen
      scales it up. */
-  right: -10px;
+  right: -12px;
   width: 300px;
   height: 387px;
   max-width: none;
   image-rendering: pixelated;
-  transform: translateY(-50%);
   pointer-events: none;
   user-select: none;
 }
-/* Colour wash behind the content, not a fade to transparent.
-   Same treatment as the hero: opaque ramp through the shell's own blues. */
-.rl-dungeon-card::before {
+/* Colour wash behind the copy: opaque crimson on the left fading to the art
+   on the right, matching the header's own --hd-primary rather than
+   introducing a second hue. */
+.rl-dungeon-card .hd-card-body::before {
   content: '';
   position: absolute;
   z-index: 1;
   inset: 0;
   background: linear-gradient(
     100deg,
-    var(--hd-navy) 0%,
-    color-mix(in srgb, var(--hd-navy) 55%, var(--rl-slab-dark)) 22%,
-    var(--rl-slab-dark) 40%,
+    color-mix(in srgb, var(--hd-primary) 58%, black) 0%,
+    color-mix(in srgb, var(--hd-primary) 85%, black) 22%,
+    var(--hd-primary) 40%,
     transparent 54%
   );
   pointer-events: none;
+}
+.rl-dungeon-content {
+  position: relative;
+  z-index: 2;
+}
+/* text on the crimson wash needs to read as light-on-dark -- the kit's
+   default ink (#330) and note tone (#665f49) were tuned for white card
+   bodies and go near-invisible here. */
+.rl-dungeon-card .rl-entry h3 {
+  color: var(--hd-white);
+}
+.rl-dungeon-card .rl-note {
+  color: rgba(255, 255, 255, 0.78);
+}
+.rl-dungeon-card .rl-rule {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 /* ---- panel rhythm --------------------------------------------------------

@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Native Habbo UI — V31 reference catalog</title>
+  <meta name="description" content="Addressable catalog of native Habbo V31 web UI, rendered from the original stylesheets." />
+  <link rel="icon" href="/favicon.png" type="image/png" />
+
+  <!--
+    NO REFERENCE STYLESHEET IS LOADED HERE, deliberately.
+
+    The V31 sheets style bare elements (body, p, h2, ul, li, a, input) and
+    style.css alone is 75 KB of it. Linking them into this document would
+    restyle the catalog's own chrome, and the chrome would leak back into the
+    specimens. Instead every specimen renders in its own iframe that loads the
+    reference sheets and nothing else — see js/nativesink/frame.js.
+
+    The reference tree is served READ-ONLY from tools/reference/. Nothing is
+    copied into hub/css and this page never writes to it.
+
+    This page also does NOT load habbo-ui.css / retro-landing.css / the crispify
+    filter. Those belong to kitchen-sink.html, which catalogues OUR kit. Mixing
+    the two would be the exact confusion this separate page exists to prevent.
+  -->
+
+  <style>
+    /* Catalog chrome only, prefixed .ks-* to match kitchen-sink.html. Plain
+       sans over dark panels so it can never be mistaken for a specimen — which
+       matters more here, because the specimens are somebody else's design. */
+    body {
+      --ks-ink: #eef2fb;
+      --ks-ink-dim: #b3c0dd;
+      --ks-surface: #0e1524;
+      --ks-surface-2: #17203a;
+      --ks-line: #2f3c58;
+      --ks-accent: #ffb648;      /* Habbo orange, to separate it from ks/ yellow */
+      --ks-code-ink: #ffe9a8;
+      --ks-bad: #ff6b6b;
+    }
+
+    html, body { height: auto; min-height: 100%; overflow: visible; }
+
+    body {
+      margin: 0;
+      background: #070b14;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      color: var(--ks-ink);
+      -webkit-font-smoothing: auto;
+    }
+
+    .ks-skip {
+      position: absolute; left: -9999px; top: 0; z-index: 20;
+      padding: 10px 16px; background: var(--ks-accent);
+      color: #2a1c06; font-weight: 700; border-radius: 0 0 8px 0;
+    }
+    .ks-skip:focus { left: 0; }
+
+    .ks-rail { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 24px; box-sizing: border-box; }
+    .ks-masthead { padding-top: 32px; padding-bottom: 20px; }
+    .ks-masthead h1 { margin: 0; font-size: 26px; line-height: 1.25; }
+    .ks-eyebrow {
+      margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--ks-accent);
+    }
+    .ks-lede { max-width: 70ch; margin: 10px 0 0; color: var(--ks-ink-dim); font-size: 14px; line-height: 1.6; }
+    .ks-lede a { color: var(--ks-accent); }
+
+    .ks-app { display: grid; grid-template-columns: 232px minmax(0, 1fr); align-items: start; gap: 32px; padding-bottom: 72px; }
+
+    .ks-nav {
+      position: sticky; top: 16px; align-self: start; max-height: calc(100vh - 32px); overflow: auto;
+      padding: 14px; background: var(--ks-surface); border: 1px solid var(--ks-line);
+      border-radius: 12px; box-sizing: border-box;
+    }
+    .ks-nav-head { margin: 0 0 10px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ks-ink-dim); }
+    .ks-nav-list { margin: 0; padding: 0; list-style: none; }
+    .ks-nav-link {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+      padding: 7px 9px; border-radius: 7px; color: var(--ks-ink); font-size: 13px; line-height: 1.35;
+      text-decoration: none; border-left: 3px solid transparent;
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    }
+    .ks-nav-link:hover { background: var(--ks-surface-2); color: #fff; }
+    .ks-nav-link.is-current { background: var(--ks-surface-2); border-left-color: var(--ks-accent); color: #fff; font-weight: 600; }
+    .ks-nav-count { flex: none; color: var(--ks-ink-dim); font-size: 11px; font-variant-numeric: tabular-nums; }
+    .ks-nav-link.is-current .ks-nav-count { color: var(--ks-accent); }
+
+    .ks-main { min-width: 0; }
+    .ks-section { margin: 0 0 40px; scroll-margin-top: 16px; }
+    .ks-section-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--ks-line); }
+    .ks-section-title { margin: 0; font-size: 20px; }
+    .ks-section-blurb { max-width: 80ch; margin: 10px 0 0; color: var(--ks-ink-dim); font-size: 13px; line-height: 1.6; }
+
+    .ks-spec {
+      margin: 18px 0 0; padding: 16px 18px 18px; background: var(--ks-surface);
+      border: 1px solid var(--ks-line); border-radius: 12px; scroll-margin-top: 16px;
+    }
+    .ks-spec:target { border-color: var(--ks-accent); box-shadow: 0 0 0 2px rgba(255, 182, 72, .35); }
+    .ks-spec-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .ks-spec-title { margin: 0; font-size: 15px; }
+    .ks-spec-id {
+      color: var(--ks-accent); font-family: Consolas, 'SF Mono', ui-monospace, monospace;
+      font-size: 14px; text-decoration: none; border-bottom: 1px dotted rgba(255, 182, 72, .5);
+    }
+    .ks-spec-id:hover { border-bottom-style: solid; }
+    .ks-tag { padding: 2px 8px; background: var(--ks-accent); color: #2a1c06; border-radius: 4px; font-size: 10px; font-weight: 700; letter-spacing: .09em; }
+    .ks-copy {
+      margin-left: auto; padding: 5px 11px; background: var(--ks-surface-2); color: var(--ks-ink);
+      border: 1px solid var(--ks-line); border-radius: 6px; font: inherit; font-size: 12px; cursor: pointer;
+      transition: background-color 120ms ease, border-color 120ms ease;
+    }
+    .ks-copy:hover { background: #202c4d; border-color: #46588a; }
+
+    .ks-spec-purpose { max-width: 82ch; margin: 8px 0 0; font-size: 13px; line-height: 1.55; }
+    .ks-spec-classline, .ks-spec-sources { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 8px 0 0; font-size: 12px; }
+    .ks-key { flex: none; min-width: 62px; color: var(--ks-ink-dim); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .ks-code {
+      padding: 2px 7px; background: #060b18; color: var(--ks-code-ink); border: 1px solid var(--ks-line);
+      border-radius: 5px; font-family: Consolas, 'SF Mono', ui-monospace, monospace; font-size: 12px; word-break: break-word;
+    }
+    .ks-code--sm { font-size: 11px; padding: 1px 6px; }
+    .ks-code--file { color: var(--ks-ink-dim); }
+    .ks-spec-nocaller { color: var(--ks-ink-dim); font-style: italic; }
+    .ks-spec-note {
+      max-width: 82ch; margin: 8px 0 0; padding-left: 10px; border-left: 2px solid var(--ks-line);
+      color: var(--ks-ink-dim); font-size: 12px; line-height: 1.55;
+    }
+
+    .ks-variants { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 14px; margin: 14px 0 0; }
+    .ks-variant { flex: 0 1 auto; min-width: 0; max-width: 100%; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+    .ks-stage { padding: 0; border: 1px solid var(--ks-line); border-radius: 9px; overflow: hidden; }
+
+    /* The native stage is just a mount for the sandbox iframe: no wallpaper, no
+       font, nothing that could be mistaken for part of the specimen. */
+    .ks-stage--frame { background: #fff; line-height: 0; }
+    .nat-frame { display: block; border: 0; width: 100%; background: #fff; }
+
+    .ks-variant-cap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+    .ks-variant-label { font-size: 12px; font-weight: 600; }
+    .ks-variant-note { flex-basis: 100%; color: var(--ks-ink-dim); font-size: 11px; line-height: 1.5; }
+    .ks-hi { outline: 2px dashed var(--ks-accent); outline-offset: 2px; }
+
+    .ks-pseudo-wrap { margin: 14px 0 0; padding: 10px 12px; background: var(--ks-surface-2); border-radius: 8px; }
+    .ks-pseudo-head { margin: 0 0 6px; font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--ks-ink-dim); }
+    .ks-pseudo { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; font-size: 12px; line-height: 1.5; }
+    .ks-pseudo dt, .ks-pseudo dd { margin: 0; }
+    .ks-pseudo dd { color: var(--ks-ink-dim); }
+
+    /* live art audit */
+    .nat-art {
+      margin: 18px 0 0; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid var(--ks-line); background: var(--ks-surface); font-size: 13px; line-height: 1.55;
+    }
+    .nat-art.is-ok { border-color: #2f6d3f; }
+    .nat-art.is-bad { border-color: var(--ks-bad); }
+    .nat-art h2 { margin: 0 0 6px; font-size: 14px; }
+    .nat-art ul { margin: 8px 0 0; padding-left: 20px; }
+    .nat-art li { margin-bottom: 3px; }
+    .nat-art code { font-family: Consolas, ui-monospace, monospace; font-size: 11px; color: var(--ks-code-ink); }
+
+    .nat-warn {
+      margin: 18px 0; padding: 14px 16px; border-radius: 10px;
+      border: 1px solid var(--ks-bad); background: #2a1116; font-size: 13px; line-height: 1.6;
+    }
+    .nat-warn h2 { margin: 0 0 6px; font-size: 15px; color: var(--ks-bad); }
+    .nat-warn code { font-family: Consolas, ui-monospace, monospace; font-size: 12px; }
+
+    .ks-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+    .ks-app a:focus-visible, .ks-app button:focus-visible,
+    .ks-masthead a:focus-visible, .ks-skip:focus-visible {
+      outline: 3px solid var(--ks-accent); outline-offset: 2px;
+    }
+
+    @media (max-width: 900px) {
+      .ks-app { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+      .ks-nav { position: sticky; top: 0; z-index: 10; max-height: none; margin: 0 -24px; padding: 10px 24px; border-radius: 0; border-left: 0; border-right: 0; }
+      .ks-nav-list { display: flex; gap: 6px; overflow-x: auto; }
+      .ks-nav-link { white-space: nowrap; border-left: 0; border-bottom: 3px solid transparent; }
+      .ks-nav-link.is-current { border-left-color: transparent; border-bottom-color: var(--ks-accent); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ks-nav-link, .ks-copy { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="ks-skip" href="#ks-main">Skip to the catalog</a>
+
+  <header class="ks-rail ks-masthead">
+    <p class="ks-eyebrow">Reference &middot; not our code</p>
+    <h1>Native Habbo UI &mdash; V31</h1>
+    <p class="ks-lede">
+      Sulake&rsquo;s own 2009 gallery components, rendered from the original stylesheets in
+      <code class="ks-code ks-code--sm">tools/reference/havana-v31/</code>, served read-only.
+      Nothing here is ours and nothing has been copied into <code class="ks-code ks-code--sm">hub/css</code>.
+      Our kit lives in <a href="kitchen-sink.html">kitchen-sink.html</a> under the
+      <code class="ks-code ks-code--sm">ks/</code> namespace; everything on this page is
+      <code class="ks-code ks-code--sm">nat/&lt;era&gt;/&lt;name&gt;</code>.
+    </p>
+    <p class="ks-lede">
+      Every specimen renders inside its own iframe loading only the reference sheets, so the 2009
+      cascade and this page&rsquo;s chrome cannot reach each other. Markup follows a captured V31 DOM
+      where one exists; where it does not, the specimen says the structure was derived from the
+      selectors.
+    </p>
+  </header>
+
+  <div class="ks-rail ks-app">
+    <nav class="ks-nav" aria-label="Catalog sections">
+      <p class="ks-nav-head">V31 sections</p>
+    </nav>
+    <main class="ks-main" id="ks-main"></main>
+  </div>
+
+  <p class="ks-sr" id="ksStatus" role="status" aria-live="polite"></p>
+
+  <script type="module">
+    import { renderCatalog, el } from './js/kitchensink/registry.js';
+    import { referenceAvailable } from './js/nativesink/frame.js';
+    import { v31Sections, artReport } from './js/nativesink/v31.js';
+
+    const main = document.getElementById('ks-main');
+    const nav = document.querySelector('.ks-nav');
+
+    // The reference tree is gitignored (Sulake's copyright), so a fresh clone
+    // will not have it. Say that plainly instead of rendering 17 unstyled boxes
+    // and letting them read as a CSS bug.
+    if (!(await referenceAvailable())) {
+      main.append(
+        el('div', { class: 'nat-warn' },
+          el('h2', {}, 'Reference tree not found'),
+          el('p', {},
+            'This page renders CSS from tools/reference/havana-v31/, which is gitignored and not part of a fresh clone. ',
+            'Extract the Havana static-web archive there, then reload. See ',
+            el('code', {}, 'tools/reference/havana-v31/INVENTORY.md'), '.'),
+        ),
+      );
+      document.documentElement.dataset.natReference = 'missing';
+    } else {
+      const { sections } = renderCatalog(
+        { nav, main, status: document.getElementById('ksStatus') },
+        v31Sections(),
+      );
+
+      if (location.hash) {
+        const target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+        if (target) target.scrollIntoView();
+      }
+
+      document.documentElement.dataset.natReference = 'ok';
+      document.documentElement.dataset.natSections = sections.length;
+      document.documentElement.dataset.natSpecimens = document.querySelectorAll('.ks-spec').length;
+
+      // ---- live art audit -------------------------------------------------
+      // 69 url() refs in the core sheets do not resolve, so a specimen can be
+      // structurally right and still be missing pixels. Each frame probes the
+      // art it actually uses and reports back; this prints the verdict once the
+      // frames have settled, rather than asserting everything rendered.
+      const frames = document.querySelectorAll('.nat-frame');
+      const settle = () => new Promise((r) => setTimeout(r, 1200));
+      await settle();
+
+      const box = el('div', { class: `nat-art ${artReport.length ? 'is-bad' : 'is-ok'}`, id: 'nat-art-report' });
+      if (!artReport.length) {
+        box.append(
+          el('h2', {}, 'Art audit: complete'),
+          el('p', {}, `Every background-image and <img> used by all ${frames.length} specimen frames loaded successfully.`),
+        );
+      } else {
+        box.append(el('h2', {}, `Art audit: ${artReport.length} specimen(s) with missing art`));
+        const list = el('ul', {});
+        for (const r of artReport) {
+          const why = r.deadSheets ? `${r.deadSheets} stylesheet(s) failed to load` : '';
+          list.append(
+            el('li', {},
+              el('code', {}, r.id), ' — ',
+              r.missing.map((u) => u.replace(location.origin, '')).join(', ') || why),
+          );
+        }
+        box.append(list);
+      }
+      main.append(box);
+      document.documentElement.dataset.natArtMissing = artReport.length;
+      document.documentElement.dataset.natFrames = frames.length;
+    }
+  </script>
+</body>
+</html>

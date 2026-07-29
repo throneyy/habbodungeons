@@ -406,6 +406,26 @@ Frostkeep battles + add one showcase map; keep the wired prop-line for now.
     **359 checks green across 8 suites.** Browser-verified: all four rooms
     screenshot-reviewed, dungeon picker → realms run boots battle 1 with
     objective banner + goal marker, reach win fires on arrival.
+- ✅ **Per-template enemy identity + encounter curve** (2026-07-29,
+  `js/encounterGen.js`, `js/dungeon.js`, `js/units.js`,
+  `tests/encounters.test.js`): pool templates carry a `d` stat delta threaded
+  to the Unit through the equipment-bonus path, so a Skeleton and a Gnoll
+  Sentinel are different creatures instead of two names for the same level-1
+  Fighter. Before this, `cost` bought nothing — the cost-5 elite Frost Wraith
+  was the joint-weakest body in its pool and the cost-2 Skeleton the strongest.
+  All 31 templates are now tuned to an explicit `templateThreat` score with
+  per-cost targets the suite asserts. `battleBudget` scales by a squad POWER
+  share (0.35/0.5/0.68/1) rather than headcount, and the boss node takes a
+  share of the budget for minions plus a `bossScale` bulk delta instead of a
+  flat subtraction that could go negative. Measured with
+  `node tests/balanceSim.js --seeds=400`: full-run clear rate went
+  **0 / 0 / 0 / 9.8% → 15.5 / 16.8 / 14.0 / 17.0%** across squad sizes 1–4, and
+  battle 4 (the boss) from **0 / 0 / 0 / 33.9% → 55.4 / 48.9 / 56.6 / 61.8%**.
+  Caveat that outranks all of it: composition still swings a size-4 run's clear
+  rate from **3.0%** (fighter + three clerics) to **31.0%** (fighter, barbarian,
+  ranger, mage) — far more than squad size does. Enemy skills with MP costs are
+  deliberately phase 2: `js/ai.js` cannot cast, and teaching it to would give
+  the sim's player side casting too, making both changes unmeasurable.
 - ⏳ Remaining: more dressing passes as rooms need them; class-triangle tuning
   + tier-2 promotions; skill-unlock threshold tuning (`js/skills.js`
   placeholders); **ice slides last** (the movement-model change). Escort is
@@ -423,6 +443,123 @@ Frostkeep battles + add one showcase map; keep the wired prop-line for now.
 ### M7 — Launch
 - Hosting + deploy; domain cutover from v1 when v2 clearly beats it
 - Post-launch: co-op battles (M3 architecture pays off), PvP skirmish
+
+## Current state — Origins skill trees & MP
+
+Read from the code (`js/skills.js`, `js/classes.js`, `js/run.js`, `js/battle.js`,
+`js/consumableEffects.js`), not from intent. Describes what runs today.
+
+### The skill trees today
+
+Two trees of five skills, each gated by a real Origins skill level, both
+unlocking at the same thresholds — **5 / 20 / 40 / 65 / 90**:
+
+| Tree | Gated by | Skills (gate, MP) |
+| --- | --- | --- |
+| **Water** | fishing | Net (5, 4) · Foam Barrier (20, 5) · Tidal Wave (40, 7) · Whirlpool (65, 8) · Deep Sea Beast (90, 12) |
+| **Nature** | gardening | Sapling Barrier (5, 4) · Life Wave (20, 6) · Nature's Blessing (40, 7) · Decaying Flowers (65, 7) · Thorns (90, 10) |
+
+`unlockedTreeSkills(fishing, gardening)` maps levels to ids, `treeSkillSpecs(ids)`
+resolves ids to specs (dropping unknown ids), `nextUnlocks()` reports the next
+locked skill per tree plus how many levels remain. Unlock thresholds are still
+the M3 placeholders.
+
+A spec is a superset of the class-skill shape in `classes.js`, so `battle.js`
+resolves both through one path: `kind` (`heal`/`buff`/`shield`/`damage`),
+`target` (`ally`/`enemy`/`self`), `range`, `radius` (0 = single tile, N =
+Chebyshev blast around the target tile), `power`, optional `cost`, optional
+`status` (only `{ rooted: 1 }` is used, by Net and Whirlpool) and optional
+`buff` (only `{ atk: 5 }`, by Nature's Blessing).
+
+**Who wields them.** In a dungeon run, only the leader: `instantiateSquad` passes
+`skills: m.leader ? leaderSkills : []`. Every other squad member carries only
+their class skill — and six of the eight classes have none, so only a Cleric or
+Bard member has anything to cast at all. In duels both duellists get tree skills,
+resolved from the receiving client's own tables rather than off the wire.
+
+**How a cast resolves.** `skillTargets` returns `[unit]` for self-skills; enemy
+skills need line-of-sight and range; ally skills need range, and single-target
+(radius 0) ones additionally refuse a full-HP heal target and refuse to buff
+yourself or an already-buffed ally. Damage is
+`max(1, power - floor(def / 2))` scaled by height only — skills deliberately
+pierce half of armour and, unlike autoattacks, ignore the class triangle. No RNG.
+Heals clamp to maxHp, shields add to a pool that soaks before HP, buffs set
+`buffAtk` to the higher of the existing and new value and are spent on the next
+swing. Both kill paths price a kill through `battle.killXp(target)` =
+`10 + level * 5`, so a skill kill pays exactly what a swing on the same target
+pays; an area skill sums that per victim and awards it in one `gainXp` call. Any
+resolved skill sets both `moved` and `acted`.
+
+### What MP does today
+
+Every class has a pool, not just the casters, because any class can be the run
+leader and the leader is the one granted tree skills:
+
+| | Fighter | Barbarian | Rogue | Ranger | Warlock | Mage | Bard | Cleric |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| maxMp (L1) | 10 | 10 | 10 | 12 | 16 | 18 | 18 | 20 |
+
+Only two class skills exist and both are priced: Cleric **Heal** (12 power, 6 MP)
+and Bard **Inspire** (+5 ATK, 4 MP).
+
+- **Affordability** is decided in exactly one place, `battle.canAfford(unit, skill)`:
+  no skill is false, a cost of 0 or an absent `cost` is always true, otherwise the
+  unit needs `stats.mp >= cost`. The button gate, `enterSkill`, the co-op and duel
+  host validators and `resolveSkill` itself all call it.
+- **An omitted `cost` means free.** Only explicitly-priced skills are limited.
+- **Refusal happens before any mutation.** `resolveSkill` returns `null` and
+  changes nothing — no HP, no shield, no log line, and the unit has not acted.
+- **Regeneration is +2 at the start of each of that unit's phases**, applied in
+  `resetTurn` off the living-unit lists, so downed units regain nothing.
+- **Scaling**: +2 maxMp per level and `maxMp` is honoured as an equipment-bonus
+  key wherever `maxHp` is. A mid-battle `levelUp` raises the ceiling by 2 but does
+  not refill the pool.
+- **Persistence**: members start full; the pool rides into battle, is written back
+  refilled to max by `writeBack`, is serialized as `mp`, and is backfilled to full
+  when a pre-MP save is deserialized (no save-version bump). `clampHp` clamps the
+  pool as well as HP after an equipment swap.
+
+### How the two connect
+
+Costs track the **unlock threshold**, not the power number, so Origins progress
+buys reach rather than free power. The level-90 capstones cost 10–12 — Deep Sea
+Beast at 12 is one cast from a Mage's full 18, and unaffordable at level 1 for
+any melee class.
+
+The melee pools are floored at 10 rather than lower specifically because Thorns
+(the level-90 Nature capstone) bursts around the *caster* and costs 10 — the
+classes that stand in a cluster of foes are its natural wielders, so a smaller
+pool would have made the melee-shaped capstone uncastable by melee. A full melee
+pool buys exactly one cast.
+
+Against the Cleric's 6-MP Heal, a 20 pool is three opening casts and then, at +2
+per turn, one sustained cast every three turns. HP carries wounds forward across
+battles; MP does not carry an empty pool forward.
+
+### Explicitly not built
+
+- **No enemy ever casts.** `js/ai.js` never calls `resolveSkill`, and no enemy is
+  granted a `skills` list. Enemy units still carry a pool (they run through the
+  same `Unit` and `CLASSES` tables) — it is inert.
+- **No consumable restores MP.** Effect kinds are `heal`, `healAll`, `revive`,
+  `buff` and `xp` only; there is no MP potion, so the +2 per-phase regen is the
+  only in-battle source. Camp `rest()` spends gold to heal HP and does not touch
+  MP (the pool is already refilled by `writeBack`).
+- **No item grants maxMp.** The bonus key is plumbed through `maxMpOf`,
+  `memberStats` and `Unit`, but zero items in `js/items.js` define it.
+- **No cooldowns.** MP and the one-action-per-turn rule are the only limiters; a
+  unit with a full pool can cast the same skill on consecutive turns.
+- **Basic attacks are free** — cost applies to skills only.
+- **`rooted` is the only status a skill can apply**, and `atk` the only stat a
+  skill buff can raise (`applyBuff` accepts atk/def/spd, but no skill uses def or
+  spd).
+- **Skill damage ignores the class triangle**, which autoattack damage applies.
+  (Kill XP no longer differs between the two paths; damage still does.)
+- **Non-leader squad members mostly have no use for their pool** — six of eight
+  classes have no class skill and tree skills go to the leader only.
+- **Unlock thresholds and costs are untuned by play.** The 5/20/40/65/90 gates are
+  M3 placeholders; the numbers above are internally consistent but no balance pass
+  has been run against them.
 
 ## v1 audit reference (2026-07-01)
 

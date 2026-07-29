@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 26 unit suites below (1287 checks) - must pass
+npm test                 # all 27 unit suites below (1343 checks) - must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 11 e2e suites (10 real Chromium + the duel DB stack)
 ```
@@ -135,10 +135,11 @@ actually prints:
 ```
 node tests/pathfinder.test.js          # movement rules: diagonals, drops, void corners (27 checks)
 node tests/run.test.js                 # items, roster, save/resume, events, leader skills (49 checks)
-node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root (37 checks)
+node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root, kill-xp parity across both kill paths (48 checks)
 node tests/mp.test.js                  # the MP pool: prices, canAfford, refusal at the boundary, regen, camp refill, legacy saves, co-op sync (61 checks)
 node tests/battle.test.js              # damage math, line of sight, targeting, turn phases (34 checks)
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)
+node tests/encounters.test.js          # encounter generation: cost buys threat, elites are elite, no size is a trap, boss scales to the squad (45 checks)
 node tests/roomBots.test.js            # bot roster, pathing, chatter scheduling, hand items (82 checks)
 node tests/duel.test.js                # duel handshake: decline, cancel, busy/offline, stale rows, clock skew (113 checks)
 node tests/duelBattle.test.js           # duel battle: in-place, tactics, character, placement, spectating, the KO settle (257 checks)
@@ -160,6 +161,25 @@ node tests/furniFootprint.test.js      # multi-tile footprints derived from dims
 node tests/identityMirror.test.js      # Identity.mirror() reports a refused cloud write instead of swallowing it (32 checks)
 node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
 ```
+
+`tests/balanceSim.js` is a measuring instrument rather than a suite, so it is
+deliberately not named `*.test.js` and `npm test` does not run it: balance
+shifting is not a regression, and a red build every time a fight gets harder
+would train everyone to ignore the runner.
+
+```bash
+node tests/balanceSim.js                       # baseline table, 60 runs per squad size
+node tests/balanceSim.js --seeds=400           # tighter numbers (~6s)
+node tests/balanceSim.js --sizes=4 --verbose   # per-battle detail for one size
+node tests/balanceSim.js --csv                 # machine-readable, for diffing two tunings
+```
+
+It plays the real engine (`battle.js` resolves, `ai.js` plans BOTH sides via a
+mirror view, `dungeon.js` supplies the rooms, `run.js` carries HP between
+battles and runs the camp Rest) and reports win rate, HP left, and leader level
+per battle number and squad size. **Read the caveat block at the top of the file
+before quoting a number from it** - the AI never casts a skill and never equips
+loot, so every rate it prints is a floor, not a prediction of human play.
 
 End-to-end suites are `tests/e2e/*.e2e.mjs`, eleven of them: presence churn,
 party invite delivery, cloud sync, critter combat sync, room bots, daily

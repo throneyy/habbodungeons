@@ -44,17 +44,27 @@ export class Unit extends Avatar {
     // — no enemy has skills yet, and unpriced skills cost 0, so it is inert
     // until enemy skills land.
     const maxMp = (base.maxMp || 0) + bump * 2 + (eq.maxMp || 0);
+    // Floors. `bonuses` is no longer only equipment: encounterGen.js pushes
+    // per-monster stat deltas through this same path, and a mistyped delta must
+    // degrade a monster, never break it. maxHp <= 0 would spawn a unit that is
+    // already dead (`alive` is hp > 0); move 0 makes computeMoveField return
+    // only the unit's own tile, i.e. a body that can never take a step.
+    const safeMaxHp = Math.max(1, maxHp);
     this.stats = {
-      maxHp,
-      hp: opts.hp != null ? Math.min(opts.hp, maxHp) : maxHp, // carry wounds across battles
+      maxHp: safeMaxHp,
+      hp: opts.hp != null ? Math.min(opts.hp, safeMaxHp) : safeMaxHp, // carry wounds across battles
       maxMp,
       mp: opts.mp != null ? Math.min(opts.mp, maxMp) : maxMp, // full unless a save says otherwise
       atk: base.atk + bump + (eq.atk || 0),
       def: base.def + Math.floor(bump / 2) + (eq.def || 0),
       spd: base.spd + (eq.spd || 0),
-      move: base.move + (eq.move || 0),
-      range: base.range,
-      min: base.min,
+      move: Math.max(1, base.move + (eq.move || 0)),
+      // range/min join the bonuses path so a monster template can be defined by
+      // its REACH, the most identity-shaping stat a body has (a wraith that
+      // out-ranges a spider). No item in items.js defines a `range` or `min`
+      // bonus, so this is a zero-behaviour change for every existing item.
+      range: base.range + (eq.range || 0),
+      min: base.min + (eq.min || 0),
       closeRange: base.closeRange
         ? { min: base.closeRange.min, max: base.closeRange.max, atk: base.closeRange.atk + bump + (eq.atk || 0) }
         : null,
