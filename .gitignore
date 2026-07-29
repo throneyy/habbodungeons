@@ -39,3 +39,19 @@ tests/e2e/screenshots/
 # Habbo furnidata cache (~9.6MB) pulled by the furni asset pipeline.
 # Regenerable from https://www.habbo.com/gamedata/furnidata_json/1 — never committed.
 tools/swf/
+
+# Ripped Habbo source art (~4.6MB, 2252 files) — NEVER COMMIT.
+# Contains hh_human_item.swf pulled from the live gordon build path, the 2191
+# hand-item sprites extracted from it, and archived habbo.com assets (2006
+# stylesheets, box-chrome GIFs, navi icons) scraped from the Wayback Machine.
+# All of it is Sulake's copyright, kept locally as reference only.
+# Fully regenerable: tools/extract-handitems.py re-downloads the SWF and
+# re-extracts every sprite; tools/reference/habbo-2006/fetch-assets.sh re-pulls
+# the archived web assets.
+# NOTE: the 8 baked runtime icons in public/assets/ui/weapons/ stay TRACKED —
+# those are shipped product art, not raw rips.
+tools/reference/
+
+# Python bytecode from the tools/ scripts
+__pycache__/
+*.pyc
