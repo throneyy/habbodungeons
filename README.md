@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 27 unit suites below (1343 checks) - must pass
+npm test                 # all 28 unit suites below (1363 checks) - must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 11 e2e suites (10 real Chromium + the duel DB stack)
 ```
@@ -159,6 +159,7 @@ node tests/buffInspire.test.js         # `buff` consumable kind and Inspire stac
 node tests/furniLogic.test.js          # furni zdim + canstandon/cansiton/canlayon data, generated furniDims (16 checks)
 node tests/furniFootprint.test.js      # multi-tile footprints derived from dims, verified against the drop-shadow art, plus zdim stacking and draw-order convergence (53 checks)
 node tests/identityMirror.test.js      # Identity.mirror() reports a refused cloud write instead of swallowing it (32 checks)
+node tests/habboSkills.test.js         # Bobba skills merge: a paid-tier field genuinely missing falls back to the free tier instead of defaulting to 0 (20 checks)
 node tests/readmeTests.test.js         # guards this block: every suite listed, every count measured
 ```
 
