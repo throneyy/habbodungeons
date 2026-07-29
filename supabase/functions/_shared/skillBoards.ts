@@ -43,6 +43,12 @@ export type BoardResult = {
   stats: Record<string, number | null>;
   rows: BoardRow[];
   problems: string[];
+  // Set ONLY when the request itself failed (timeout, DNS, refused, non-2xx).
+  // Absent when a page was fetched but did not parse. The caller retries on
+  // this and nothing else: a timeout is worth another go, but re-requesting a
+  // page whose markup moved just doubles our load on their server for the same
+  // wrong answer.
+  fetchError?: string;
 };
 
 export const BOARDS: Record<string, BoardSpec> = {
@@ -238,7 +244,11 @@ export async function fetchBoard(
   opts: { fetchImpl?: typeof fetch; timeoutMs?: number } = {},
 ): Promise<BoardResult> {
   const fetchImpl = opts.fetchImpl ?? fetch;
-  const timeoutMs = opts.timeoutMs ?? 8000;
+  // 20s, not the 8s this shipped with: habbofishing.com regularly takes well
+  // over eight seconds to render /fishing-stats under load, and that cap was
+  // aborting a request that would have succeeded. We are a background refresh
+  // behind a cache, so waiting is nearly free -- a timeout costs a whole board.
+  const timeoutMs = opts.timeoutMs ?? 20_000;
   const empty = (reason: string): BoardResult => ({
     skill: board.skill,
     label: board.label,
@@ -247,6 +257,7 @@ export async function fetchBoard(
     stats: {},
     rows: [],
     problems: [reason],
+    fetchError: reason,
   });
 
   try {

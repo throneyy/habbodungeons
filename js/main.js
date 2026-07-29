@@ -292,8 +292,10 @@ async function loadSkillBoard(key) {
     stats: board.stats || {},
     credit: board.credit,
     url: board.url,
-    fetchedAt: payload.fetchedAt,
-    stale: !!payload.stale,
+    // Per-board, not per-payload: each board caches independently now, so one
+    // may be minutes older than the other and must say so for itself.
+    fetchedAt: board.fetchedAt || payload.fetchedAt,
+    stale: !!board.stale,
   };
 }
 

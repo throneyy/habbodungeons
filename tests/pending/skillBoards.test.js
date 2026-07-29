@@ -1,6 +1,6 @@
 // Leaderboard scrape tests — run with:  node tests/pending/skillBoards.test.js
 //
-// PASSES (33/33). NOT WIRED INTO `npm test` yet, and not because it is unready.
+// PASSES (39/39). NOT WIRED INTO `npm test` yet, and not because it is unready.
 // tests/readmeTests.test.js asserts that the number of suites in tests/ matches
 // a count stated in README.md, so adding a suite REQUIRES editing README.md --
 // which was carrying another dev's uncommitted work, and off-limits, when this
@@ -10,8 +10,8 @@
 //
 // TO ENABLE (two minutes, once README.md is free):
 //   1. git mv tests/pending/skillBoards.test.js tests/
-//   2. add to README.md's suite table:  skillBoards.test.js  33
-//   3. bump the headline suite count 27 -> 28 and the check total 1343 -> 1376
+//   2. add to README.md's suite table:  skillBoards.test.js  39
+//   3. bump the headline suite count 27 -> 28 and the check total 1343 -> 1382
 //   4. npm test  (readmeTests verifies all three numbers agree)
 //
 // The parser reads two fan sites' HTML (habbofishing.com / habbogardening.com)
@@ -30,6 +30,7 @@
 // live pages use, including the two places they disagree with each other.
 import {
   BOARDS,
+  fetchBoard,
   parseBoard,
   parseHeaderStats,
   parseTodayRows,
@@ -179,6 +180,31 @@ console.log('\nrow-level edge cases');
   check('the broken row is dropped', mixed.rows.length === 2);
   check('surviving rows keep their source ranks', mixed.rows[0].rank === 1 && mixed.rows[1].rank === 3);
   check('and the drop is reported', mixed.problems.some((p) => p.includes('Broken')));
+}
+
+// fetchError is the edge function's retry signal. It must be set for transport
+// failures ONLY: retrying a timeout is worth a second request, but re-fetching
+// a page whose markup moved just doubles our load on their server for the same
+// wrong answer. Getting this backwards means hammering a site that is fine.
+console.log('\nfetchError marks transport failures, and only those');
+{
+  const reject = () => Promise.reject(new Error('ETIMEDOUT'));
+  const r1 = await fetchBoard(BOARDS.fishing, { fetchImpl: reject });
+  check('a network failure sets fetchError', r1.fetchError === 'fetch failed: ETIMEDOUT');
+  check('and returns no rows', r1.rows.length === 0);
+
+  const fail503 = () => Promise.resolve(new Response('nope', { status: 503 }));
+  const r2 = await fetchBoard(BOARDS.fishing, { fetchImpl: fail503 });
+  check('a non-2xx sets fetchError', r2.fetchError === 'HTTP 503');
+
+  const junk = () => Promise.resolve(new Response('<html>maintenance</html>', { status: 200 }));
+  const r3 = await fetchBoard(BOARDS.fishing, { fetchImpl: junk });
+  check('a page that loads but does not parse does NOT set fetchError', r3.fetchError === undefined);
+  check('though it still reports problems', r3.problems.length > 0);
+
+  const ok = () => Promise.resolve(new Response(fishingPage, { status: 200 }));
+  const r4 = await fetchBoard(BOARDS.fishing, { fetchImpl: ok });
+  check('a good fetch sets no fetchError', r4.fetchError === undefined && r4.rows.length === 2);
 }
 
 console.log(

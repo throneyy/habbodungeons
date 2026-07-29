@@ -7,18 +7,37 @@
 // ../_shared/skillBoards.ts, the one copy shared with the Node report tool and
 // the unit suite.
 //
-// BE A GOOD GUEST. These are one hobbyist's sites and we are uninvited. Two
-// rules follow: cache hard (15 minutes, below) and never retry a failure into a
-// hammer. A stale board is worth infinitely more than being blocked.
+// BE A GOOD GUEST. These are one hobbyist's sites and we are uninvited. Cache
+// hard, fetch both pages concurrently so neither waits on the other, and retry
+// at most ONCE on a transport failure. A stale board is worth infinitely more
+// than being blocked.
 import { corsHeaders, preflight } from "../_shared/cors.ts";
-import { BOARDS, fetchBoard, type BoardResult } from "../_shared/skillBoards.ts";
+import { BOARDS, type BoardSpec, fetchBoard, type BoardResult } from "../_shared/skillBoards.ts";
 
 const TTL_MS = 15 * 60 * 1000;
 const TTL_S = TTL_MS / 1000;
+// A board serving stale rows must expire quickly so the next caller retries
+// upstream, instead of freezing an old board in place for a further 15 minutes.
+const STALE_TTL_S = 60;
+const RETRY_BACKOFF_MS = 750;
 
-// Like _shared/cors.ts json(), plus the caching the shared helper deliberately
-// does not impose on the mutating functions that use it.
-function cached(body: unknown, maxAgeS: number): Response {
+type CachedBoard = { result: BoardResult; fetchedAt: string; cachedAt: number };
+type BoardPayload = BoardResult & { fetchedAt: string; stale: boolean };
+type Payload = { ok: boolean; boards: BoardPayload[]; fetchedAt: string; stale: boolean };
+
+// PER-BOARD cache, not one combined payload. The combined version had a nasty
+// failure mode: if fishing timed out while gardening succeeded, the merged
+// result still counted as "has rows", so an EMPTY Top Anglers panel was cached
+// for the full 15 minutes and every visitor saw a blank board that we already
+// knew good numbers for. Each board now keeps its own last-good rows and its
+// own clock, so one site's bad afternoon cannot blank the other's panel -- or
+// its own, for that matter.
+const cache = new Map<string, CachedBoard>();
+// Collapses the stampede per board: concurrent callers await the same in-flight
+// refresh rather than each starting their own fetch.
+const inFlight = new Map<string, Promise<BoardPayload>>();
+
+function cachedResponse(body: unknown, maxAgeS: number): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
     headers: {
@@ -29,80 +48,120 @@ function cached(body: unknown, maxAgeS: number): Response {
   });
 }
 
-type Payload = { ok: boolean; boards: BoardResult[]; fetchedAt: string; stale?: boolean };
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// Module-scope cache. Edge functions are not guaranteed a warm instance, so this
-// is a BEST-EFFORT damper, not a guarantee of one upstream hit per 15 minutes:
-// each live instance keeps its own copy and a cold start refetches. That is
-// still the difference between a handful of requests an hour and one per page
-// view, which is the whole point. The Cache-Control header below does the rest,
-// letting the CDN and the browser absorb repeat views without reaching us.
-let cache: Payload | null = null;
-let cachedAt = 0;
-// Collapses the stampede when several visitors land during one refresh: they
-// all await the same in-flight promise instead of each starting a fetch.
-let inFlight: Promise<Payload> | null = null;
+// Fetch one board, retrying ONCE on a transport failure. A page that came back
+// but did not parse is not retried: the markup moved, and asking again would
+// only double our load on their server for the same wrong answer.
+async function fetchWithRetry(spec: BoardSpec): Promise<BoardResult> {
+  const first = await fetchBoard(spec);
+  if (!first.fetchError) return first;
 
-async function refresh(): Promise<Payload> {
-  const boards = await Promise.all(Object.values(BOARDS).map((b) => fetchBoard(b)));
+  console.warn(`[skill-boards] ${spec.skill}: ${first.fetchError}; retrying once`);
+  await sleep(RETRY_BACKOFF_MS);
 
-  // A board with zero rows means the fetch failed or the markup moved. Serving
-  // the last good payload beats serving an empty one that would render as "no
-  // rankings" -- a wrong statement about the world, rather than an old one.
-  const anyRows = boards.some((b) => b.rows.length > 0);
-  if (!anyRows && cache) {
-    console.warn("[skill-boards] refresh produced no rows; serving last good payload", {
-      problems: boards.flatMap((b) => b.problems),
-    });
-    return { ...cache, stale: true };
+  const second = await fetchBoard(spec);
+  if (second.fetchError) {
+    console.warn(`[skill-boards] ${spec.skill}: retry also failed: ${second.fetchError}`);
+  }
+  return second;
+}
+
+// Refresh one board, falling back to its own last-good rows.
+async function refreshBoard(spec: BoardSpec): Promise<BoardPayload> {
+  const previous = cache.get(spec.skill);
+  let result: BoardResult;
+  try {
+    result = await fetchWithRetry(spec);
+  } catch (e) {
+    // fetchBoard swallows its own errors, so reaching here means something
+    // unforeseen. Treat it as a failed board, not a failed request.
+    const reason = `unexpected: ${(e as Error)?.message ?? e}`;
+    console.error(`[skill-boards] ${spec.skill}: ${reason}`);
+    result = {
+      skill: spec.skill, label: spec.label, url: spec.url, credit: spec.credit,
+      stats: {}, rows: [], problems: [reason], fetchError: reason,
+    };
   }
 
-  // Log a partial break loudly: rows still render, but somebody should look.
+  // ONLY a board that actually parsed rows is cached. Anything else leaves the
+  // previous good entry (and its clock) untouched.
+  if (result.rows.length > 0) {
+    if (result.problems.length) {
+      // Rows still render, but a partial break means somebody should look.
+      console.warn(`[skill-boards] ${spec.skill}: ${result.problems.join("; ")}`);
+    }
+    const fetchedAt = new Date().toISOString();
+    cache.set(spec.skill, { result, fetchedAt, cachedAt: Date.now() });
+    return { ...result, fetchedAt, stale: false };
+  }
+
+  if (previous) {
+    console.warn(
+      `[skill-boards] ${spec.skill}: no rows (${result.problems.join("; ")}); ` +
+        `serving last good rows from ${previous.fetchedAt}`,
+    );
+    // Last-good ROWS with the ORIGINAL timestamp, so the UI can say how old
+    // they are rather than implying these numbers are current. The live
+    // problems ride along so the failure is visible in the response, not only
+    // in the logs.
+    return {
+      ...previous.result,
+      problems: [...result.problems, `serving cached rows from ${previous.fetchedAt}`],
+      fetchedAt: previous.fetchedAt,
+      stale: true,
+    };
+  }
+
+  // Nothing cached and nothing fetched: an honest empty board, never a 500.
+  console.warn(`[skill-boards] ${spec.skill}: no rows and no cache: ${result.problems.join("; ")}`);
+  return { ...result, fetchedAt: new Date().toISOString(), stale: true };
+}
+
+function boardPayload(spec: BoardSpec): Promise<BoardPayload> {
+  const hit = cache.get(spec.skill);
+  if (hit && Date.now() - hit.cachedAt < TTL_MS) {
+    return Promise.resolve({ ...hit.result, fetchedAt: hit.fetchedAt, stale: false });
+  }
+  const running = inFlight.get(spec.skill);
+  if (running) return running;
+
+  const p = refreshBoard(spec).finally(() => inFlight.delete(spec.skill));
+  inFlight.set(spec.skill, p);
+  return p;
+}
+
+// How long this response stays valid: the shortest remaining window across the
+// boards, so a CDN entry never outlives the freshest thing that must change.
+function maxAgeFor(boards: BoardPayload[]): number {
+  let lowest = TTL_S;
   for (const b of boards) {
-    if (b.problems.length) console.warn(`[skill-boards] ${b.skill}: ${b.problems.join("; ")}`);
+    if (b.stale) {
+      lowest = Math.min(lowest, STALE_TTL_S);
+      continue;
+    }
+    const hit = cache.get(b.skill);
+    const remaining = hit
+      ? Math.round((TTL_MS - (Date.now() - hit.cachedAt)) / 1000)
+      : STALE_TTL_S;
+    lowest = Math.min(lowest, remaining);
   }
-
-  return { ok: true, boards, fetchedAt: new Date().toISOString() };
+  return Math.max(30, lowest);
 }
 
 Deno.serve(async (req: Request) => {
   const pre = preflight(req);
   if (pre) return pre;
 
-  const fresh = cache && Date.now() - cachedAt < TTL_MS;
-  if (!fresh) {
-    if (!inFlight) {
-      inFlight = refresh()
-        .then((p) => {
-          // Only a payload with real rows resets the clock. A stale fallback
-          // must expire promptly so the next caller retries upstream rather
-          // than freezing yesterday's board in place for 15 more minutes.
-          if (!p.stale) {
-            cache = p;
-            cachedAt = Date.now();
-          }
-          return p;
-        })
-        .catch((e) => {
-          console.error("[skill-boards] refresh threw", e);
-          // fetchBoard already swallows its own errors, so reaching here means
-          // something unforeseen. Last good payload if we have one, else an
-          // honest empty answer -- never a 500 into the title screen.
-          if (cache) return { ...cache, stale: true };
-          return { ok: false, boards: [], fetchedAt: new Date().toISOString(), stale: true };
-        })
-        .finally(() => {
-          inFlight = null;
-        });
-    }
-    const payload = await inFlight;
-    // A stale payload gets a short TTL so the CDN comes back soon and retries
-    // upstream; a good one gets the full 15 minutes.
-    return cached(payload, payload.stale ? 60 : TTL_S);
-  }
+  // Concurrent, so a slow site delays only the response, never the other board.
+  const boards = await Promise.all(Object.values(BOARDS).map(boardPayload));
 
-  // Serve the remainder of the current window, so a CDN entry never outlives
-  // the cache it was minted from.
-  const remainingS = Math.max(30, Math.round((TTL_MS - (Date.now() - cachedAt)) / 1000));
-  return cached(cache as Payload, remainingS);
+  const payload: Payload = {
+    // ok reflects whether anything is actually renderable.
+    ok: boards.some((b) => b.rows.length > 0),
+    boards,
+    fetchedAt: new Date().toISOString(),
+    stale: boards.some((b) => b.stale),
+  };
+  return cachedResponse(payload, maxAgeFor(boards));
 });

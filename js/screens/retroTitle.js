@@ -420,7 +420,11 @@ async function mountBoard(root, key, loadBoard) {
     const parts = [];
     if (today != null) parts.push(`${today.toLocaleString('en-US')} active today`);
     if (avg != null) parts.push(`${avg.toLocaleString('en-US')} XP average`);
-    if (res.fetchedAt) parts.push(`updated ${agoLabel(res.fetchedAt)}`);
+    // A stale board is showing its last good rows because the source is
+    // unreachable. Say so rather than let old numbers read as current ones.
+    if (res.fetchedAt) {
+      parts.push(`${res.stale ? 'source down, rows from' : 'updated'} ${agoLabel(res.fetchedAt)}`);
+    }
     stamp.textContent = parts.join(' \u00b7 ');
   }
 }
