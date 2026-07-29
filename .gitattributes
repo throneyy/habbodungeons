@@ -9,3 +9,6 @@ js/dailyRewardDock.js text eol=lf
 # disk with a raw `prev !== text`, so a CRLF checkout under core.autocrlf=true
 # reports DRIFT on every line of a file nobody touched.
 js/furniDims.js text eol=lf
+# Shell scripts must stay LF: a CRLF checkout under core.autocrlf=true makes
+# bash fail on the shebang with $'\r': command not found.
+tools/reference/habbo-2006/*.sh text eol=lf
