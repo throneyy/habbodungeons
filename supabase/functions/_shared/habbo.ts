@@ -25,9 +25,13 @@ export interface HabboProfile {
   reason?: string;
 }
 
-async function getJson(url: string, headers: Record<string, string> = {}) {
+async function getJson(
+  url: string,
+  headers: Record<string, string> = {},
+  fetchImpl: typeof fetch = fetch,
+) {
   try {
-    const res = await fetch(url, {
+    const res = await fetchImpl(url, {
       headers: { "User-Agent": UA, Accept: "application/json", ...headers },
       signal: AbortSignal.timeout(12000),
     });
@@ -43,9 +47,14 @@ async function getJson(url: string, headers: Record<string, string> = {}) {
   }
 }
 
-async function fetchOriginsDirect(name: string): Promise<HabboProfile> {
+async function fetchOriginsDirect(
+  name: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<HabboProfile> {
   const { status, json } = await getJson(
     `${ORIGINS}/users?name=${encodeURIComponent(name)}`,
+    {},
+    fetchImpl,
   );
   if (!json || !json.figureString) return { ok: false, status };
   return {
@@ -61,16 +70,25 @@ async function fetchOriginsDirect(name: string): Promise<HabboProfile> {
   };
 }
 
-async function fetchBobba(name: string): Promise<HabboProfile> {
+// bobbaKey/fetchImpl are injectable so the merge logic below — the actual bug
+// fixed here — can be unit tested without Deno.env or a live network call.
+// Production callers (fetchHabboProfile) never pass either, so they get the
+// real module-level key and the real fetch.
+export async function fetchBobba(
+  name: string,
+  opts: { bobbaKey?: string; fetchImpl?: typeof fetch } = {},
+): Promise<HabboProfile> {
+  const key = opts.bobbaKey ?? BOBBA_KEY;
+  const fetchImpl = opts.fetchImpl ?? fetch;
   const q = `get_habbo?username=${encodeURIComponent(name)}`;
-  const { status, json } = BOBBA_KEY
-    ? await getJson(`${BOBBA}/${q}`, { "X-API-Key": BOBBA_KEY })
-    : await getJson(`${BOBBA_FREE}/${q}`);
+  const { status, json } = key
+    ? await getJson(`${BOBBA}/${q}`, { "X-API-Key": key }, fetchImpl)
+    : await getJson(`${BOBBA_FREE}/${q}`, {}, fetchImpl);
   if (json && json.ok === false && /api key/i.test(String(json.error ?? ""))) {
     return {
       ok: false,
       status,
-      reason: `Bobba API key ${BOBBA_KEY ? "invalid" : "missing"}.`,
+      reason: `Bobba API key ${key ? "invalid" : "missing"}.`,
     };
   }
   const md = json && json.mainDetails;
@@ -78,11 +96,14 @@ async function fetchBobba(name: string): Promise<HabboProfile> {
 
   // Number(x) || 0 can't tell "the field was never sent" from "the level is
   // genuinely 0" -- both coerce to 0. That distinction matters here: the PAID
-  // tier (bobba.me/api, used whenever BOBBA_KEY is set) has been observed to
-  // omit fishingLevel from mainDetails while gardeningLevel comes through
-  // fine, silently reporting a real angler as a false zero. Check the raw key
-  // BEFORE coercing, and when the paid tier drops a field, cross-check the
-  // free tier for just that field rather than trusting the gap.
+  // tier (bobba.me/api, used whenever a key is set) has been observed to omit
+  // fishingLevel from mainDetails while gardeningLevel comes through fine,
+  // silently reporting a real angler as a false zero (confirmed live: throney
+  // is fishingLevel 74 on the free tier, api.bobba.me, but synced as 0 on
+  // habbodungeons.com, which only ever calls the paid tier once a key is
+  // set). Check the raw key BEFORE coercing, and when the paid tier drops a
+  // field, cross-check the free tier for just that field rather than
+  // trusting the gap.
   const missing: string[] = [];
   if (md.fishingLevel === undefined) missing.push("fishingLevel");
   if (md.gardeningLevel === undefined) missing.push("gardeningLevel");
@@ -90,12 +111,12 @@ async function fetchBobba(name: string): Promise<HabboProfile> {
   let fishingLevel = Number(md.fishingLevel) || 0;
   let gardeningLevel = Number(md.gardeningLevel) || 0;
 
-  if (BOBBA_KEY && missing.length) {
+  if (key && missing.length) {
     console.warn(
       `[habbo] paid Bobba response for "${name}" is missing ${missing.join(" and ")}` +
         ` -- falling back to the free tier for it. Raw mainDetails: ${JSON.stringify(md)}`,
     );
-    const free = await getJson(`${BOBBA_FREE}/${q}`);
+    const free = await getJson(`${BOBBA_FREE}/${q}`, {}, fetchImpl);
     const freeMd = free.json && free.json.mainDetails;
     if (freeMd) {
       if (md.fishingLevel === undefined) fishingLevel = Number(freeMd.fishingLevel) || 0;
@@ -123,11 +144,12 @@ async function fetchBobba(name: string): Promise<HabboProfile> {
 export async function fetchHabboProfile(
   name: string,
   withSkills = false,
+  opts: { bobbaKey?: string; fetchImpl?: typeof fetch } = {},
 ): Promise<HabboProfile> {
-  const live = await fetchOriginsDirect(name);
+  const live = await fetchOriginsDirect(name, opts.fetchImpl ?? fetch);
   if (live.ok) {
     if (!withSkills) return live;
-    const bobba = await fetchBobba(name);
+    const bobba = await fetchBobba(name, opts);
     return bobba.ok
       ? {
         ...live,
@@ -136,7 +158,7 @@ export async function fetchHabboProfile(
       }
       : live;
   }
-  const bobba = await fetchBobba(name);
+  const bobba = await fetchBobba(name, opts);
   if (bobba.ok) return bobba;
   if (bobba.reason) return { ok: false, status: bobba.status, reason: bobba.reason };
   const status = live.status || bobba.status;
