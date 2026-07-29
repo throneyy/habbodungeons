@@ -1,0 +1,84 @@
+name: Deploy edge functions
+
+# Pushing supabase/functions/ updates the files. It does NOT redeploy the
+# running runtime -- see AGENTS.md, "Git does not deploy the backend". Until
+# this workflow existed the only trigger was asking in Lovable chat, which
+# works but is manual, silent on failure, and ships whatever is in the Lovable
+# project at that moment rather than what you just pushed.
+#
+# The function list below is EXPLICIT and exhaustive on purpose. A bare
+# `supabase functions deploy` with no names discovers every directory under
+# supabase/functions/ and ships all of them -- including unfinished work
+# belonging to another worktree, and including the untracked node_modules/
+# that sits in that directory locally. This is not merely convention: the CLI
+# takes a variadic function-name argument and, when any name is given, uses
+# exactly that list and never runs its directory discovery.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/**'
+      - 'supabase/config.toml'   # per-function verify_jwt lives here
+      - '.github/workflows/deploy-functions.yml'
+  workflow_dispatch:             # a "deploy now" button, replacing the Lovable ask
+
+concurrency:
+  group: deploy-functions
+  cancel-in-progress: false      # never interrupt a part-finished deploy
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      # Not a secret: it is in supabase/config.toml and in every client URL.
+      PROJECT_REF: cswyarorrvzbunodiftf
+      FUNCTIONS: >-
+        duel-accept duel-cancel duel-challenge duel-claim duel-decline duel-forfeit
+        fetch-habbo-profile habbo-imaging
+        party-accept party-decline party-disband party-invite party-leave
+        presence-heartbeat presence-reap
+        save-room-layout stash-bank sync-habbo-skills
+        trade-accept trade-cancel trade-confirm trade-offer trade-open trade-retract
+        verify-habbo-link
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # An explicit list rots silently: add a function, forget this file, and it
+      # simply never deploys while every build stays green -- the same class of
+      # failure as the missing deploy itself, which is what this whole workflow
+      # exists to end. config.toml already declares all 25 one-for-one, so all
+      # three lists are checked against each other and any drift is a red build.
+      - name: The deploy list matches the repo
+        run: |
+          set -euo pipefail
+          printf '%s\n' $FUNCTIONS | sort -u > /tmp/listed
+          git ls-tree -d --name-only HEAD supabase/functions/ \
+            | sed 's|supabase/functions/||' | grep -v '^_shared$' | sort > /tmp/tracked
+          sed -n 's/^\[functions\.\(.*\)\]$/\1/p' supabase/config.toml | sort > /tmp/declared
+          fail=0
+          diff -u /tmp/tracked /tmp/listed \
+            || { echo "::error::deploy list != tracked function dirs"; fail=1; }
+          diff -u /tmp/tracked /tmp/declared \
+            || { echo "::error::config.toml != tracked function dirs"; fail=1; }
+          exit $fail
+
+      - uses: supabase/setup-cli@v3
+        with:
+          # Pinned deliberately. With no version, setup-cli v3 reads the root
+          # lockfile for a declared `supabase` package -- bun.lock declares
+          # none, so it would silently resolve to `latest` and the toolchain
+          # would change under this workflow without a commit.
+          version: 2.110.0
+
+      # No `supabase link` step: --project-ref covers it without link's
+      # database-password prompt, which functions deploy has no use for.
+      #
+      # NEVER add --prune. It DELETES functions that exist in the project but
+      # not locally -- the destructive mirror of the wildcard problem above.
+      - name: Deploy
+        run: supabase functions deploy $FUNCTIONS --project-ref "$PROJECT_REF"

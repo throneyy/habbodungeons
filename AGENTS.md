@@ -195,8 +195,14 @@ e2e pass across every worktree can therefore exceed the refill rate.
 
 **Pushing `supabase/functions/` updates the files in the Lovable project. It does
 NOT redeploy the running runtime.** Pushing `supabase/migrations/` never applies
-anything at all. Both need a manual trigger, and until you pull one the server
-keeps executing whatever it executed before, while git shows your fix as landed.
+anything at all. Until something triggers a deploy the server keeps executing
+whatever it executed before, while git shows your fix as landed.
+
+Functions now have that trigger — a GitHub Actions workflow, described below —
+so this section is history for them and current for migrations. Read it anyway:
+the workflow is a fix for the mechanism, not for the assumption, and “I pushed
+it, therefore it is running” is still wrong for the database, for the frontend,
+and for functions on any branch that is not `main`.
 
 This is not a suspicion. Both halves were established the hard way:
 
@@ -216,23 +222,56 @@ This is not a suspicion. Both halves were established the hard way:
 
 **To actually deploy:**
 
-- **Functions** — ask in Lovable chat, or `supabase functions deploy <name>`
-  (needs a personal access token; `.env` holds only the publishable anon key, so
-  the CLI cannot deploy with what is in the repo). Never run a bare
-  `supabase functions deploy` with no name: it deploys *every* function,
-  including unfinished ones belonging to other worktrees.
-
-  The Lovable-chat route is **confirmed working**: after a deploy was requested
-  there, `private:true` began delivering (`partyInviteError` went green on the
-  assertion it had never once reached) and `userByName`'s new throw appeared as
-  a live HTTP 500. So the gap is only the AUTOMATIC trigger — asking explicitly
-  does deploy. Push first, then ask, then verify: a deploy request ships what is
-  in the Lovable project at that moment, not what is in your worktree.
+- **Functions** — **automatic.** `.github/workflows/deploy-functions.yml`
+  deploys them on every push to `main` that touches `supabase/functions/**` or
+  `supabase/config.toml`. Push and watch the Actions tab; there is nothing to
+  ask for. See “The functions deploy workflow” below for what it will not do.
 - **Migrations** — paste the file into the Supabase SQL editor. Write them
   idempotently (`if not exists`, `exception when duplicate_object`) so a second
   application is a no-op, and never assume an earlier migration in the directory
   has run — read a questionable column through `to_jsonb(row)` rather than naming
   it, or a missing column aborts the whole file at parse time.
+
+### The functions deploy workflow
+
+`.github/workflows/deploy-functions.yml`, `supabase/setup-cli@v3` with the CLI
+pinned to `2.110.0`. It needs exactly one repository secret,
+**`SUPABASE_ACCESS_TOKEN`** (a `sbp_…` personal access token) — the project ref
+is not a secret and sits in the workflow as plaintext, because it is already in
+`supabase/config.toml` and in every client URL. `.env` still holds only the
+publishable anon key, so a local CLI deploy remains impossible without that
+token; the workflow is now the supported route.
+
+**It deploys an explicit list of all 25 functions, never a wildcard.** A bare
+`supabase functions deploy` ships *every* directory under `supabase/functions/`,
+including unfinished work from another worktree and the untracked
+`node_modules/` that sits there locally. The CLI takes a variadic name argument
+and skips its directory discovery entirely when names are given, so the list is
+a structural guarantee rather than a convention. **`--prune` must never be
+added**: it deletes functions present in the project but not locally.
+
+**Adding a function means editing three places** — the directory, its
+`[functions.<name>]` block in `config.toml`, and `FUNCTIONS:` in the workflow. A
+guard step diffs all three and fails the build naming the odd one out, because
+an explicit list that silently rots is the same failure as no deploy at all.
+
+What it does **not** cover:
+
+- **Migrations.** Still the SQL editor, by hand. The workflow never touches the
+  database, which is also why it needs no `SUPABASE_DB_PASSWORD`.
+- **The frontend.** Still a manual publish — see the next section, which is
+  unchanged.
+- **Proving the new code is live.** A green run means the CLI exited 0, which is
+  strictly more than the Lovable-chat route ever told you (it could not fail
+  visibly at all). It is still not evidence that the behaviour changed: for
+  that, use the version marker below.
+
+The **Lovable-chat route still works** and remains the fallback if the workflow
+is broken or the token is missing: after a deploy was requested there,
+`private:true` began delivering (`partyInviteError` went green on an assertion
+it had never once reached) and `userByName`'s new throw appeared as a live HTTP
+500. Push first, then ask — a chat deploy ships what is in the Lovable project
+at that moment, not what is in your worktree.
 
 ### …and it does not republish the frontend either
 
@@ -268,8 +307,10 @@ every client-side fix in it is untested. Different hash → the bundle is new.
 Do not read the `og:image` sha, the preview host, or a green push as evidence:
 all three moved for `de579d5` while the live bundle did not.
 
-**To actually publish:** ask in Lovable (the Publish button / chat), the same
-way functions are deployed. Push first, then ask, then re-check the hash.
+**To actually publish:** ask in Lovable (the Publish button / chat). Push first,
+then ask, then re-check the hash. Functions no longer work this way — they
+deploy themselves on push — so a green Actions run says nothing whatever about
+whether the frontend reached a player.
 ### Verifying a deploy landed: the version marker
 
 Do not infer a deploy from the absence of an error. Temporarily add a field to a
