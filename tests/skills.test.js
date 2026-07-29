@@ -2,7 +2,11 @@
 import { Room } from '../js/room.js';
 import { Battle } from '../js/battle.js';
 import { Unit } from '../js/units.js';
-import { SKILL_TREES, ALL_TREE_SKILLS, unlockedTreeSkills, treeSkillSpecs, nextUnlocks } from '../js/skills.js';
+import {
+  SKILL_TREES, ALL_TREE_SKILLS, unlockedTreeSkills, treeSkillSpecs, nextUnlocks,
+  describeSkill, skillTooltip,
+} from '../js/skills.js';
+import { CLASSES } from '../js/classes.js';
 
 let failed = 0;
 function check(name, cond) {
@@ -215,6 +219,62 @@ console.log('kill xp parity');
     b.resolveAttack(swinger, t);
   }
   check('three swings pay what one three-kill blast pays', swinger.xp === 60);
+}
+
+// ---- what a skill TELLS the player -----------------------------------------
+// Two things shipped wrong here and both were invisible to every test above,
+// because both are about presentation rather than resolution:
+//
+//   1. A skill's only description was its name and price. "Whirlpool (8 MP)"
+//      does not say it damages, roots, or hits an area, and the numbers that
+//      decide whether to spend the MP were readable nowhere in the game.
+//   2. Every skill painted its targets GREEN, including the ones that kill.
+//      Green is the ally colour everywhere else in this UI, so Tidal Wave
+//      highlighted the monsters it was about to hit in friendly green while
+//      the panel said "tap a green foe".
+//
+// The description is DERIVED from the spec, so these assertions are really
+// asking: does the copy still track the numbers the engine resolves?
+console.log('skill descriptions');
+{
+  const every = [...Object.values(ALL_TREE_SKILLS), CLASSES.cleric.skill, CLASSES.bard.skill];
+  check('every skill in the game describes itself', every.every((s) => {
+    const d = describeSkill(s);
+    return d && d.effect.length > 12 && d.facts.length >= 2;
+  }));
+  check('every description states the number the engine will use',
+    every.every((s) => describeSkill(s).effect.includes(String((s.buff && s.buff.atk) || s.power))));
+  check('every priced skill shows its price',
+    every.every((s) => !s.cost || describeSkill(s).facts.includes(`${s.cost} MP`)));
+  check('describeSkill refuses nothing gracefully', describeSkill(null) === null);
+
+  const net = describeSkill(spec('net'));
+  check('a single-target strike names one foe and its range',
+    net.effect.includes('one foe') && net.facts.includes('Range 3'));
+  check('a rooting strike warns about the root',
+    net.notes.some((n) => n.toLowerCase().includes('root')));
+  check('a damaging skill teaches the armor pierce it actually gets',
+    net.notes.some((n) => n.includes('half the target armor')));
+
+  const wave = describeSkill(spec('tidal_wave'));
+  check('an area skill states the area it covers',
+    wave.effect.includes('3x3') && wave.facts.includes('3x3 area'));
+
+  const thorns = describeSkill(spec('thorns'));
+  check('a self-centered skill says it is centered on you',
+    thorns.facts.includes('Centered on you') && thorns.effect.includes('around you'));
+
+  // The two exclusions that HIDE a button. A player who cannot see why the
+  // Cleric's Heal vanished is looking at a bug, not a rule.
+  check('single-target Heal warns it cannot be spent at full HP',
+    describeSkill(CLASSES.cleric.skill).notes.some((n) => n.includes('full HP')));
+  check('single-target Inspire warns it cannot target the caster',
+    describeSkill(CLASSES.bard.skill).notes.some((n) => n.includes('yourself')));
+
+  const tip = skillTooltip(spec('whirlpool'));
+  check('the tooltip carries name, facts, effect and notes',
+    tip.startsWith('Whirlpool') && tip.includes('8 MP') && tip.includes('\n'));
+  check('a tooltip of nothing is empty, not a crash', skillTooltip(null) === '');
 }
 
 console.log(failed ? `\n${failed} test(s) FAILED` : '\nAll M3 skill tests passed');

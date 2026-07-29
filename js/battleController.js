@@ -2,6 +2,7 @@ import { Battle } from './battle.js';
 import { findPath, rotationBetween } from './pathfinder.js';
 import { furniSprites } from './monsterSprites.js';
 import { propSprites } from './props.js';
+import { describeSkill, skillTooltip } from './skills.js';
 
 // Real projectile art per archetype (directional furni). Rangers loose the
 // authentic Firing Arrow; magic/skill keep their procedural energy glow.
@@ -44,12 +45,36 @@ export function rosterBars(u, isDuel) {
   return `<span class="rbars">${html}</span>`;
 }
 
+// ---- skill copy, shared by all three seats ----------------------------------
+// The dungeon controller, the co-op member and the duel guest each own their
+// own tap loop and panel, but a skill has to READ the same in all three or the
+// same spell teaches three different lessons. This is the single copy of that.
+
+// The description card: what this spell does, in the panel, while you aim it.
+// Appended into the action row (a full-width flex item) so no screen needed a
+// new DOM node - the co-op and duel panels are the same markup.
+export function appendSkillCard(container, skill) {
+  const d = describeSkill(skill);
+  if (!d || !container) return null;
+  const card = document.createElement('div');
+  card.className = `skill-card${skill.kind === 'damage' ? ' hostile' : ''}`;
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  card.innerHTML =
+    `<b>${esc(skill.name)}</b>` +
+    `<span class="skill-facts">${d.facts.map(esc).join(' \u00b7 ')}</span>` +
+    `<span class="skill-effect">${esc(d.effect)}</span>` +
+    d.notes.map((n) => `<span class="skill-note">${esc(n)}</span>`).join('');
+  container.appendChild(card);
+  return card;
+}
+
 // Turns taps into Vandal Hearts commands and keeps the tile overlays + side
 // panel in sync with the battle engine. Flow for one player unit:
 //   tap your unit -> move range (blue) + attackable foes (red)
 //   tap a blue tile -> walks there, then shows foes it can now hit
 //   tap a red foe    -> attacks; turn ends
-//   "Skill" (support classes) -> highlights allies (green); tap one to cast
+//   a skill button   -> highlights its targets (green) and shows what the spell
+//                       actually does; tap a highlighted tile to cast
 //   "Wait" ends in place. "End Turn" hands the phase to the enemy.
 // Battle outcome is reported via the onEnd passed to start(); the RunController
 // takes over the screen from there.
@@ -208,8 +233,14 @@ export class BattleController {
     const k = `${tile.x},${tile.y}`;
 
     if (this.mode === 'skill') {
-      if (here && this.game.overlays.skill.has(k) && this.battle.skillTargets(this.sel, this.activeSkill).includes(here)) {
-        b.resolveSkill(this.sel, here, this.activeSkill);
+      const sk = this.activeSkill;
+      // A self-centered skill has no target to pick: its own tile confirms it,
+      // and the caster is the target the engine wants.
+      const selfCast = sk.target === 'self' && this.game.overlays.skill.has(k);
+      const picked = selfCast ? this.sel
+        : (here && this.game.overlays.skill.has(k) && b.skillTargets(this.sel, sk).includes(here) ? here : null);
+      if (picked) {
+        b.resolveSkill(this.sel, picked, sk);
         this.endUnit();
       } else {
         this.mode = 'normal'; // tapping off cancels skill targeting
@@ -313,20 +344,25 @@ export class BattleController {
 
   enterSkill(skill) {
     if (!this.sel || this.sel.acted || !skill) return;
-    // Guarded here as well as on the button, because the self-target branch
-    // below casts immediately without ever passing through targeting.
     if (!this.battle.canAfford(this.sel, skill)) return;
-    // self / area-around-self skills have no tile to pick — cast immediately
-    if (skill.target === 'self') {
-      this.battle.resolveSkill(this.sel, this.sel, skill);
-      this.endUnit();
-      return;
-    }
-    if (!this.battle.skillTargets(this.sel, skill).length) return;
+    // Self / area-around-self skills used to fire the instant the button was
+    // pressed. That made the two most expensive spells in the game (Thorns at
+    // 10 MP) the only ones a player could never read before paying: there was
+    // no aiming step to show a description in. They now aim like everything
+    // else - the painted blast IS the preview - and cast on a confirm.
+    if (skill.target !== 'self' && !this.battle.skillTargets(this.sel, skill).length) return;
     this.activeSkill = skill;
     this.mode = 'skill';
     this.refreshOverlays();
     this.render();
+  }
+
+  // Confirm a self-centered cast (the button next to the painted blast).
+  castSelf() {
+    const sk = this.activeSkill;
+    if (!this.sel || !sk || sk.target !== 'self') return;
+    this.battle.resolveSkill(this.sel, this.sel, sk);
+    this.endUnit();
   }
 
   endUnit() {
@@ -399,8 +435,14 @@ export class BattleController {
     this.dom.actions.innerHTML = '';
     if (b.phase === 'player') {
       if (this.mode === 'skill') {
+        appendSkillCard(this.dom.actions, this.activeSkill);
         const noun = this.activeSkill.target === 'enemy' ? 'foe' : 'ally';
-        this.btn(`Tap a green ${noun} for ${this.activeSkill.name}`, null, true);
+        this.btn(this.activeSkill.target === 'self'
+          ? `Tap the green area to cast ${this.activeSkill.name}`
+          : `Tap a green ${noun} for ${this.activeSkill.name}`, null, true);
+        if (this.activeSkill.target === 'self') {
+          this.btn(`Cast ${this.activeSkill.name}`, () => this.castSelf());
+        }
         this.btn('Back', () => this.cancel());
       } else if (this.sel && !this.moving) {
         if (this.battle.attackTargets(this.sel).length) this.btn('Attack a red foe', null, true);
@@ -412,8 +454,11 @@ export class BattleController {
         for (const sk of this.sel.skills || []) {
           if (!this.skillCastable(this.sel, sk)) continue;
           const label = sk.cost ? `${sk.name} (${sk.cost} MP)` : sk.name;
-          if (this.battle.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk));
-          else this.btn(label, null, true);
+          // The full description also rides on the button itself, so a spell can
+          // be read before it is paid for (and so a DISABLED one still explains
+          // what the MP would have bought).
+          if (this.battle.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk), false, skillTooltip(sk));
+          else this.btn(label, null, true, skillTooltip(sk));
         }
         this.btn('Wait', () => this.wait());
         if (!this.sel.moved) this.btn('Cancel', () => this.cancel());
@@ -448,9 +493,10 @@ export class BattleController {
     }
   }
 
-  btn(label, fn, disabled = false) {
+  btn(label, fn, disabled = false, title = '') {
     const b = document.createElement('button');
     b.textContent = label;
+    if (title) b.title = title;
     if (disabled) b.disabled = true;
     else b.addEventListener('click', fn);
     this.dom.actions.appendChild(b);

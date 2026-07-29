@@ -124,7 +124,7 @@ node tests/pathfinder.test.js
 ## Tests
 
 ```
-npm test                 # all 28 unit suites below (1363 checks) - must pass
+npm test                 # all 28 unit suites below (1376 checks) - must pass
 npm run test:quarantine  # known-broken recovered suites, advisory: never blocks
 npm run test:e2e         # 11 e2e suites (10 real Chromium + the duel DB stack)
 ```
@@ -135,7 +135,7 @@ actually prints:
 ```
 node tests/pathfinder.test.js          # movement rules: diagonals, drops, void corners (27 checks)
 node tests/run.test.js                 # items, roster, save/resume, events, leader skills (49 checks)
-node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root, kill-xp parity across both kill paths (48 checks)
+node tests/skills.test.js              # Origins skill trees: unlocks, damage/AoE/shield/root, kill-xp parity, and the spec-derived description each skill shows (61 checks)
 node tests/mp.test.js                  # the MP pool: prices, canAfford, refusal at the boundary, regen, camp refill, legacy saves, co-op sync (61 checks)
 node tests/battle.test.js              # damage math, line of sight, targeting, turn phases (34 checks)
 node tests/objectives.test.js          # win/lose per objective type, party wipe, turn limit (31 checks)

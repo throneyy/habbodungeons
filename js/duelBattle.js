@@ -63,9 +63,9 @@ import { Battle } from './battle.js';
 import { Unit } from './units.js';
 import { CoopLeader, CoopMember, SpectateController } from './coopBattle.js';
 import { CLASSES } from './classes.js';
-import { treeSkillSpecs } from './skills.js';
+import { treeSkillSpecs, skillTooltip } from './skills.js';
 import { sumBonuses } from './items.js';
-import { rosterBars } from './battleController.js';
+import { rosterBars, appendSkillCard } from './battleController.js';
 import { figureSprites } from './monsterSprites.js';
 import { rotationBetween } from './pathfinder.js';
 
@@ -508,7 +508,14 @@ export class DuelGuestController extends SpectateController {
     dom.actions.innerHTML = '';
     if (this.commanding) {
       if (this.mode === 'skill') {
-        this.btn(`Tap a green target for ${this.activeSkill.name}`, null, true);
+        appendSkillCard(dom.actions, this.activeSkill);
+        const noun = this.activeSkill.target === 'enemy' ? 'foe' : 'ally';
+        this.btn(this.activeSkill.target === 'self'
+          ? `Tap the green area to cast ${this.activeSkill.name}`
+          : `Tap a green ${noun} for ${this.activeSkill.name}`, null, true);
+        if (this.activeSkill.target === 'self') {
+          this.btn(`Cast ${this.activeSkill.name}`, () => this.castSelf());
+        }
         this.btn('Back', () => this.cancel());
       } else if (this.sel) {
         if (shadow.attackTargets(this.sel).length) this.btn('Attack a red foe', null, true);
@@ -517,8 +524,8 @@ export class DuelGuestController extends SpectateController {
           const label = sk.cost ? `${sk.name} (${sk.cost} MP)` : sk.name;
           // Client-side hint only; the host re-checks and rejects with
           // 'not enough MP' (see CoopLeader.applyCommand).
-          if (shadow.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk, i));
-          else this.btn(label, null, true);
+          if (shadow.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk, i), false, skillTooltip(sk));
+          else this.btn(label, null, true, skillTooltip(sk));
         });
         this.btn('Wait', () => this.wait());
         this.btn('Cancel', () => this.deselect());

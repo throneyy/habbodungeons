@@ -86,6 +86,77 @@ export function treeSkillSpecs(ids = []) {
   return ids.map((id) => ALL_TREE_SKILLS[id]).filter(Boolean);
 }
 
+// ---- how a skill reads in the HUD ------------------------------------------
+
+// A spec -> the copy the battle panel shows when you pick that skill.
+//
+// DERIVED FROM THE SPEC, never hand-written per skill: the numbers a player
+// reads are the same fields battle.js resolves against, so a re-tune cannot
+// leave the description lying. Only the flavour line (`blurb`) is authored,
+// and it is optional — the class skills in classes.js have none.
+//
+// Works for both spec families (tree skills here, class skills in classes.js);
+// battle.js already resolves them uniformly, so the UI must too.
+//
+// Returns { effect, facts[], notes[] }:
+//   effect  one sentence: what pressing this does, with its real numbers
+//   facts   the short stat chips (range, area, price)
+//   notes   the rules that are invisible until they bite you (armor pierce,
+//           root, the targeting exclusions that hide a button)
+export function describeSkill(skill) {
+  if (!skill) return null;
+  const radius = skill.radius || 0;
+  const area = `${radius * 2 + 1}x${radius * 2 + 1}`;
+  const power = skill.power || 0;
+  const self = skill.target === 'self';
+
+  let effect = '';
+  const notes = [];
+  if (skill.kind === 'damage') {
+    if (self) effect = `Hits every foe in the ${area} around you for ${power}.`;
+    else if (radius) effect = `Hits the foe you pick, plus everything in the ${area} around them, for ${power}.`;
+    else effect = `Hits one foe for ${power}.`;
+    // computeSkillDamage: power - floor(def/2). A player who reads only "8
+    // damage" cannot tell why the skill beats an autoattack on an armored foe.
+    notes.push('Magic damage: ignores half the target armor.');
+    if (skill.status && skill.status.rooted) {
+      notes.push(`Roots them: no moving on their next ${skill.status.rooted > 1 ? `${skill.status.rooted} turns` : 'turn'}.`);
+    }
+  } else if (skill.kind === 'heal') {
+    effect = radius
+      ? `Heals every ally in the ${area} around the one you pick for ${power}.`
+      : `Heals one ally for ${power}.`;
+    // skillTargets drops full-HP allies from a SINGLE-target heal, so the
+    // button quietly refuses a target the player can plainly see.
+    if (!radius) notes.push('Cannot be spent on an ally already at full HP.');
+  } else if (skill.kind === 'shield') {
+    effect = radius
+      ? `Gives every ally in the ${area} a shield that soaks ${power} damage.`
+      : `Gives one ally a shield that soaks ${power} damage.`;
+    notes.push('Soaks damage before HP, and adds to a shield already up.');
+  } else if (skill.kind === 'buff') {
+    const amt = (skill.buff && skill.buff.atk) || power;
+    effect = radius
+      ? `Gives every ally in the ${area} +${amt} ATK on their next attack.`
+      : `Gives one ally +${amt} ATK on their next attack.`;
+    notes.push('Does not stack: the strongest buff on a hero wins.');
+    if (!radius) notes.push('Cannot target yourself, or an ally already buffed.');
+  }
+
+  const facts = [];
+  facts.push(self ? 'Centered on you' : `Range ${skill.range}`);
+  if (radius) facts.push(`${area} area`);
+  facts.push(skill.cost ? `${skill.cost} MP` : 'Free');
+  return { effect, facts, notes };
+}
+
+// The same description as one plain line, for a button tooltip.
+export function skillTooltip(skill) {
+  const d = describeSkill(skill);
+  if (!d) return '';
+  return [`${skill.name} · ${d.facts.join(' · ')}`, d.effect, ...d.notes].join('\n');
+}
+
 // The next locked skill in each tree for the given levels — for "X to go" UI.
 export function nextUnlocks(fishingLevel = 0, gardeningLevel = 0) {
   const levels = { fishing: fishingLevel || 0, gardening: gardeningLevel || 0 };

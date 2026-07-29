@@ -22,7 +22,10 @@
 import { Battle } from './battle.js';
 import { Unit } from './units.js';
 import { buildDungeon } from './dungeon.js';
-import { renderBattleFx, rosterBars } from './battleController.js';
+import {
+  renderBattleFx, rosterBars, appendSkillCard,
+} from './battleController.js';
+import { skillTooltip } from './skills.js';
 import { figureSprites } from './monsterSprites.js';
 
 export const TURN_TIMEOUT_MS = 60000; // idle member auto-act
@@ -607,12 +610,16 @@ export class SpectateController {
     const k = `${tile.x},${tile.y}`;
 
     if (this.mode === 'skill') {
-      if (here && this.game.overlays.skill.has(k)) {
+      // A self-centered skill paints its blast rather than a target, so any
+      // tile of it confirms the cast (the host resolves it on the caster and
+      // ignores `target` - see CoopLeader.applyCommand).
+      const selfCast = this.activeSkill.target === 'self' && this.game.overlays.skill.has(k);
+      if (selfCast || (here && this.game.overlays.skill.has(k))) {
         this.member.sendCommand({
           type: 'skill',
           cid: this.member.cidOf(this.sel),
           skill: this.activeSkillIndex,
-          target: this.member.cidOf(here),
+          target: selfCast ? this.member.cidOf(this.sel) : this.member.cidOf(here),
         });
         this.sel.acted = true; // optimistic; the phase snapshot is the truth
         this.deselect();
@@ -737,17 +744,27 @@ export class SpectateController {
   enterSkill(skill, index) {
     if (!this.sel || this.sel.acted) return;
     if (this.shadow && !this.shadow.canAfford(this.sel, skill)) return;
-    if (skill.target === 'self') {
-      this.member.sendCommand({ type: 'skill', cid: this.member.cidOf(this.sel), skill: index });
-      this.sel.acted = true;
-      this.deselect();
-      return;
-    }
+    // Self-centered skills aim like every other one (see the same change in
+    // BattleController.enterSkill): the aiming step is where the description
+    // lives, so casting straight off the button hid it.
     this.activeSkill = skill;
     this.activeSkillIndex = index;
     this.mode = 'skill';
     this.refreshOverlays();
     this.render();
+  }
+
+  // Confirm a self-centered cast (the button beside the painted blast). The
+  // host resolves a 'self' skill on the caster whatever `target` says.
+  castSelf() {
+    const sk = this.activeSkill;
+    if (!this.sel || !sk || sk.target !== 'self') return;
+    this.member.sendCommand({
+      type: 'skill', cid: this.member.cidOf(this.sel), skill: this.activeSkillIndex,
+      target: this.member.cidOf(this.sel),
+    });
+    this.sel.acted = true; // optimistic; the phase snapshot is the truth
+    this.deselect();
   }
 
   wait() {
@@ -817,7 +834,14 @@ export class SpectateController {
       this.btn('You are watching the rest of the fight', null, true);
     } else if (shadow.phase === 'player') {
       if (this.mode === 'skill') {
-        this.btn(`Tap a green target for ${this.activeSkill.name}`, null, true);
+        appendSkillCard(dom.actions, this.activeSkill);
+        const noun = this.activeSkill.target === 'enemy' ? 'foe' : 'ally';
+        this.btn(this.activeSkill.target === 'self'
+          ? `Tap the green area to cast ${this.activeSkill.name}`
+          : `Tap a green ${noun} for ${this.activeSkill.name}`, null, true);
+        if (this.activeSkill.target === 'self') {
+          this.btn(`Cast ${this.activeSkill.name}`, () => this.castSelf());
+        }
         this.btn('Back', () => this.cancel());
       } else if (this.sel) {
         if (shadow.attackTargets(this.sel).length) this.btn('Attack a red foe', null, true);
@@ -826,8 +850,8 @@ export class SpectateController {
           const label = sk.cost ? `${sk.name} (${sk.cost} MP)` : sk.name;
           // A hint from the replica's pool, not authority: the host re-checks
           // and answers 'not enough MP' if this seat is wrong.
-          if (shadow.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk, i));
-          else this.btn(label, null, true);
+          if (shadow.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk, i), false, skillTooltip(sk));
+          else this.btn(label, null, true, skillTooltip(sk));
         });
         this.btn('Wait', () => this.wait());
         this.btn('Cancel', () => this.deselect());
@@ -884,9 +908,10 @@ export class SpectateController {
     }
   }
 
-  btn(label, fn, disabled = false) {
+  btn(label, fn, disabled = false, title = '') {
     const b = document.createElement('button');
     b.textContent = label;
+    if (title) b.title = title;
     if (disabled) b.disabled = true;
     else b.addEventListener('click', fn);
     this.dom.actions.appendChild(b);

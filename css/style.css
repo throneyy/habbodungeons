@@ -210,6 +210,41 @@ button {
   min-width: 84px;
 }
 
+/* skill description card - shown in the action row while a spell is aimed, so
+   the numbers are on screen at the moment the target is chosen. Full-width
+   flex item: it shares the row with the prompt and Back buttons. Tinted by
+   intent, matching the tiles painted on the floor (red blast / green support),
+   because the card is the legend for those tiles. */
+.skill-card {
+  flex: 0 0 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #330;
+  background: #eaf6ea;
+  border: 1px solid #050a0e;
+  border-left: 3px solid #4f9d5a;
+  border-radius: 8px;
+}
+.skill-card.hostile {
+  background: #fbeceb;
+  border-left-color: #c0392b;
+}
+.skill-card b {
+  font-size: 12px;
+}
+.skill-facts {
+  color: #665f49;
+  font-size: 10px;
+}
+.skill-note {
+  color: #776;
+  font-size: 10px;
+}
+
 /* roster — light rows on the white card */
 #roster {
   display: flex;
