@@ -410,6 +410,58 @@
   image-rendering: pixelated;
 }
 
+/* ---- dungeon card: image + gradient overlay ---- 
+   Matches the hero section style: full-resolution pixel art positioned on the
+   right side with a gradient scrim, cropped by a fixed container height.
+   The 300x387 dungeon hall image is shown at 1:1 with no resize -- the card
+   constrains height and overflow: hidden crops the excess. */
+.rl-dungeon-card {
+  position: relative;
+  overflow: hidden;
+}
+.rl-dungeon-card .hd-card-header {
+  position: relative;
+  z-index: 2;
+}
+.rl-dungeon-card .hd-card-body {
+  position: relative;
+  z-index: 2;
+}
+.rl-dungeon-art {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  /* FULL RESOLUTION, 1:1. The art is 300x387 and is displayed at exactly
+     300x387 -- no downscale. Browser resampling of pixel art is destructive,
+     so the card is sized around the image. width/height are stated in the
+     markup to match, and image-rendering keeps it crisp if a HiDPI screen
+     scales it up. */
+  right: -10px;
+  width: 300px;
+  height: 387px;
+  max-width: none;
+  image-rendering: pixelated;
+  transform: translateY(-50%);
+  pointer-events: none;
+  user-select: none;
+}
+/* Colour wash behind the content, not a fade to transparent.
+   Same treatment as the hero: opaque ramp through the shell's own blues. */
+.rl-dungeon-card::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    var(--hd-navy) 0%,
+    color-mix(in srgb, var(--hd-navy) 55%, var(--rl-slab-dark)) 22%,
+    var(--rl-slab-dark) 40%,
+    transparent 54%
+  );
+  pointer-events: none;
+}
+
 /* ---- panel rhythm --------------------------------------------------------
    The v2box body was padding: 5px 9px at 11px type, far tighter than our
    18px card body. Panels here keep that density and every one closes on an

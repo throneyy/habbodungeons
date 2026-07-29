@@ -174,7 +174,8 @@ function callingsCardHtml({ classes, classId }) {
 // The dungeon registry, with each entry's real room list and node counts.
 function dungeonsCardHtml({ dungeons }) {
   return `
-    <section class="hd-card" id="dungeonCards" aria-labelledby="h-dungeons">
+    <section class="hd-card rl-dungeon-card" id="dungeonCards" aria-labelledby="h-dungeons">
+      <img class="rl-dungeon-art" src="assets/ui/hero/dungeon-hall.png" alt="" width="300" height="387" />
       <h2 class="hd-card-header" id="h-dungeons">Choose a Descent</h2>
       <div class="hd-card-body rl-body">
         ${dungeons
