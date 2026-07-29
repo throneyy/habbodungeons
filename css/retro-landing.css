@@ -198,7 +198,7 @@
   max-width: 34ch;
   margin: 0;
   color: var(--hd-white);
-  font-size: 11px;
+  font-size: 9px;
   line-height: 1.9;
 }
 .rl-masthead-actions {
@@ -258,7 +258,7 @@
   color: var(--hd-primary-ink);
   text-decoration: none;
   text-transform: uppercase;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: bold;
   border-radius: 7px 7px 0 0;
   box-sizing: border-box;
@@ -304,7 +304,10 @@
   margin: 0;
   color: var(--hd-white);
   text-transform: uppercase;
-  font-size: 16px; /* the original's #page-headline-text */
+  /* 18px, not the original's 16px: #page-headline-text was sized for a font we
+     are not using, and 16px lands off Volter's 9px grid. 18px is the nearest
+     multiple and renders the bar's stems at a clean 2px. */
+  font-size: 18px;
   font-weight: bold;
 }
 .rl-crumbs {
@@ -413,7 +416,7 @@
    action row, which is what made the original columns read as live boxes. */
 .rl-body {
   padding: 10px 12px;
-  font-size: 11px;
+  font-size: 9px; /* on-grid: Volter's native size */
   line-height: 1.5;
 }
 .rl-body > * {
@@ -423,7 +426,7 @@
   margin-bottom: 0;
 }
 .rl-lead {
-  font-size: 12px;
+  font-size: 9px;
   line-height: 1.5;
 }
 .rl-note {
@@ -439,7 +442,7 @@
 }
 .rl-actions .hd-btn {
   flex: 1 1 auto;
-  font-size: 12px;
+  font-size: 9px;
 }
 .rl-rule {
   height: 1px;
@@ -450,14 +453,14 @@
 .rl-body .hd-pill {
   gap: 8px;
   align-items: baseline;
-  font-size: 11px;
+  font-size: 9px;
 }
 .rl-body .hd-pill-value {
   flex: none;
 }
-.rl-body .hd-card-header {
-  font-size: 14px;
-}
+/* NO font-size override here. The kit already sets .hd-card-header to 18px
+   (css/habbo-ui.css:104), which is on-grid; the 14px that used to sit here was
+   why every panel bar rendered scrunched. Inheriting the kit value IS the fix. */
 
 /* ---- calling picker ------------------------------------------------------
    Eight fat .hd-class chips stacked one per row overflowed the 215px rail.
@@ -537,7 +540,7 @@
 /* dungeon entry: name, sub, then its real battle rooms */
 .rl-entry h3 {
   margin: 0 0 2px;
-  font-size: 14px;
+  font-size: 18px; /* 2x grid: a genuine section heading over chips + CTA */
 }
 .rl-rooms {
   display: flex;
@@ -567,12 +570,14 @@
   border-top: 1px dotted rgba(5, 10, 14, 0.3);
 }
 .rl-news h3 {
-  margin: 0 0 2px;
-  font-size: 12px;
+  margin: 0 0 3px;
+  font-size: 18px; /* 2x grid. Size is the only hierarchy left: the original
+                      split headline from body with bold at a shared 10px, and
+                      10px is off-grid for us. */
 }
 .rl-news p {
   margin: 0;
-  font-size: 11px;
+  font-size: 9px;
   line-height: 1.5;
 }
 /* Dateline: colour carries the emphasis, not weight. The original's
@@ -617,7 +622,7 @@
 }
 .rl-field .hd-input {
   width: 100%;
-  font-size: 12px;
+  font-size: 9px;
 }
 
 /* ---- focus + motion ------------------------------------------------------ */
@@ -653,7 +658,7 @@
 .rl-search .hd-btn {
   width: 100%;
   min-width: 0;
-  font-size: 11px;
+  font-size: 9px;
 }
 #searchResult {
   font-size: 9px;
@@ -664,7 +669,8 @@
 }
 
 /* ==========================================================================
-   TYPE WEIGHT — bold is for headers, subheaders and nav. Never for body copy.
+   TYPE WEIGHT — bold is for panel headers and nav only. Never for body copy,
+   headlines, data values or the page headline bar.
 
    Volter is a 9px bitmap face and its bold cut is a genuinely heavier set of
    glyphs, not a synthesised smear. At 9-11px in a 215px rail that extra stroke
@@ -682,15 +688,16 @@
    untouched, and only this screen's dense rails are relaxed.
    ========================================================================== */
 
-/* data rows: the label is prose, the value is the number worth spotting.
-   Splitting the weight also fixes the collision in a narrow rail -- the eye
-   finds the value without both halves shouting. */
-.rl-screen .hd-pill {
-  font-weight: normal;
-}
+/* data rows: uniform normal weight, label and value alike.
+   The value used to be bold so the eye could find the number, but in the
+   215px rail that put a heavier cut on exactly the shortest strings -- rank
+   digits and "+724K XP" -- where Volter's bold closes the counters worst.
+   Alignment already does the job the weight was doing: the value is pinned
+   right in its own column, so it is findable without shouting. */
+.rl-screen .hd-pill,
 .rl-screen .hd-pill .hd-pill-value,
 .rl-screen .hd-pill .rl-rank {
-  font-weight: bold;
+  font-weight: normal;
 }
 
 /* room names, node counts: labels, not headings */
@@ -712,10 +719,72 @@
   color: var(--hd-ink);
 }
 
-/* what stays bold, explicitly: chrome and headings.
-   (.hd-card-header, .rl-tab, .rl-headline h2 already declare their own weight;
-   these are the heading elements that rely on the browser default.) */
+/* News and entry headlines: NORMAL weight, like the body under them.
+   These were the last body-copy slot still carrying bold, and they showed it --
+   at 12px in the 429fr column Volter's bold cut closes the counters on a, e, o
+   and the headline reads as a dark smear rather than a line of words. Exactly
+   the failure described at the top of this block, which these two selectors
+   were quietly exempt from.
+
+   Size and colour already separate a headline from its paragraph: 12px against
+   11px body, over a 9px coloured dateline. Weight was a third signal doing
+   nothing the other two were not, at the cost of legibility.
+
+   Bold now survives on three selectors screen-wide: .hd-card-header (the 18px
+   panel bars, weight inherited from css/habbo-ui.css), .rl-tab (the 9px
+   uppercase nav strip) and .rl-headline h2 (the 18px HOME bar). Everything
+   else on this screen is normal. */
 .rl-screen .rl-news h3,
 .rl-screen .rl-entry h3 {
+  font-weight: normal;
+}
+
+/* CATCH-ALL: kill the UA default bold, not just our own declarations.
+
+   css/style.css registers TWO @font-face rules for 'Volter', the second binding
+   assets/fonts/volter-bold.otf to font-weight: bold. So the bold FILE loads for
+   anything that merely *computes* to bold -- and the user agent stylesheet makes
+   h1-h6, b, strong and th bold with no help from us. Auditing our own
+   `font-weight:` lines therefore proves nothing: an <h3> we never styled still
+   pulls volter-bold.
+
+   Proven by experiment, not assumed. Pointing that second @font-face at a
+   visually obvious substitute changed the news headlines, both leaderboard
+   panel titles, the sign-in intro's <b>, the calling blurb's <b> and the two
+   card headers -- everything below, plus the chrome we keep.
+
+   .hd-btn is in this list because the swap caught it: css/habbo-ui.css:175 makes
+   every button bold, and all 7 on this screen (both hero CTAs, the two Begin
+   Descent, Sign in, Search, Continue Run) were still pulling volter-bold. Its
+   siblings .hd-pill and .hd-badge were already relaxed further up this block.
+
+   Listed element-by-element rather than as a bare `.rl-screen *` so the two
+   deliberate exceptions stay legible and greppable:
+     .hd-card-header    18px panel bars  (bold, from css/habbo-ui.css)
+     .rl-tab             9px nav strip   (bold, line ~261 of this file)
+     .rl-headline h2    18px HOME bar    (bold, line ~303 of this file)
+   All three are chrome, and all three sit on the 9px grid where the bold cut
+   renders as real glyphs rather than a scrunched approximation.
+
+   Scoped to .rl-screen: h3/b/strong/.hd-btn elsewhere in the game are
+   untouched -- this is the shared kit, and only this screen opts out. */
+.rl-screen h1,
+.rl-screen h2,
+.rl-screen h3,
+.rl-screen h4,
+.rl-screen h5,
+.rl-screen h6,
+.rl-screen b,
+.rl-screen strong,
+.rl-screen th,
+.rl-screen .hd-btn {
+  font-weight: normal;
+}
+/* The exceptions, restated last so they win on source order. .rl-headline h2
+   MUST be here: it ties `.rl-screen h2` on specificity (0,1,1), so the
+   catch-all above would otherwise beat it purely by coming later in the file. */
+.rl-screen .hd-card-header,
+.rl-screen .rl-tab,
+.rl-screen .rl-headline h2 {
   font-weight: bold;
 }
