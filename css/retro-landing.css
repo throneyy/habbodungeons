@@ -1,0 +1,710 @@
+/* ==========================================================================
+   retro-landing.css - the 2006 Habbo portal title screen.
+
+   Extracted from the retro-landing.html draft (kept on disk as the reference)
+   so markup, behaviour and styling each live in one file. Loaded by
+   index.html alongside habbo-ui.css; the markup is built by
+   js/screens/retroTitle.js and mounted into #overlay by showTitle().
+
+   Layout citations below refer to docs/habbo-2006-layout.md.
+   ========================================================================== */
+
+/* ==========================================================================
+   retro-landing — PAGE-LOCAL STRUCTURE ONLY.
+   Nothing here restyles a primitive. Every panel is .hd-card /
+   .hd-card-header / .hd-card-body / .hd-card-well / .hd-pill / .hd-btn /
+   .hd-badge / .hd-class straight out of css/habbo-ui.css. This block only
+   supplies the page shell, the column grid and the tab strip.
+
+   Every "LAYOUT.md" citation below refers to docs/habbo-2006-layout.md,
+   which documents the real 2006 habbo.com markup and CSS this page is
+   rebuilt from. Section numbers match its headings.
+
+   THE SLAB IS THE POINT. The 2006 page was never floating boxes on
+   wallpaper: `#main-content` was an opaque 928px slab painted
+   `background-color: #47839d` (LAYOUT.md 2, style.css:360-366) and every
+   panel sat INSIDE it. Wallpaper showed only as side margins. That gives
+   three tiers of depth, which is what this page rebuilds:
+
+     tier 1  wallpaper   the starfield, side margins only
+     tier 2  slab        opaque mid-navy, holds every panel
+     tier 3  boxes       white .hd-card panels
+
+   Shell stack, top to bottom, matching LAYOUT.md 1:
+     toolbar strip   29px   (#toolbar, style.css:61-65) utility row
+     nav bar         39px   (#mainmenu, style.css:212-226) tabs sit ON it
+     headline bar    47px   (#page-headline, style.css:370-377)
+     content slab           (#main-content) all panels, even padding
+     footer band            (#footer-body / #footer-bottom)
+   The nav bar butts straight into the headline bar with no gap, exactly as
+   the original's tab strip sat on `navi_bar_slice_top.gif` above the slab.
+
+   Columns: the original's main table was 8 / 740 / 4 / 176 = 928, and the
+   740 split 215 / 215 / 310 (LAYOUT.md 2). Reordered rail / wide / rail as
+   215fr 429fr 215fr, where 429 is the original promo strip's width.
+
+   Corners are border-radius. The 4px / 6px / 7px / 11px corner GIFs are
+   gone (LAYOUT.md 8).
+   ========================================================================== */
+
+/* ---- shell --------------------------------------------------------------
+   960px, close to the original's 928px, so the columns read at the 2006
+   density rather than as a modern airy page. */
+/* Scoped to the screen root, not <body>: this renders into #overlay,
+   which main.js already sizes, scrolls and skins with .hd-page/.hd-ui
+   (skinOverlay). The draft's `body { margin:0; min-height:100vh }` would
+   have fought that, so the shell owns only its own box. */
+.rl-screen {
+  width: 100%;
+}
+.rl-page {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  /* the slab tone: the navy token lifted toward white, so it sits clearly
+     lighter than the wallpaper and clearly darker than the white cards.
+     No new hue — it is --hd-navy with white mixed in. The lift has to be
+     big enough to read as a surface: the 2006 slab was #47839D against an
+     #083940 page, a full tier apart (LAYOUT.md 6). */
+  --rl-slab: color-mix(in srgb, var(--hd-navy) 62%, var(--hd-white));
+  --rl-slab-dark: color-mix(in srgb, var(--hd-navy) 78%, var(--hd-white));
+  --rl-slab-ink: #e4eaf7;
+}
+.rl-band {
+  padding: 0 14px;
+}
+.rl-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10;
+}
+.rl-skip:focus {
+  left: 12px;
+  top: 12px;
+}
+
+/* ---- tier 1 -> 2: toolbar strip (29px) ---------------------------------- */
+.rl-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 29px;
+  margin-top: 8px; /* the original's #toolbar margin-top: 8px */
+  color: var(--rl-slab-ink);
+  background: var(--hd-border);
+  border-radius: 6px 6px 0 0;
+  font-size: 9px;
+}
+.rl-toolbar-set {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+.rl-toolbar b {
+  color: var(--hd-pill);
+}
+.rl-toolbar .rl-dot {
+  color: var(--hd-green-border);
+}
+
+/* ---- hero band: art + masthead, above the nav bar ------------------------
+   The 2006 page had exactly this slot: a per-hotel "hotel view" render
+   filling the top band at 928x154 before the tab strip
+   (style_custom_com.css, LAYOUT.md 1). This is the same idea with our own
+   room art -- an isometric Habbo jungle scene, placed middle-right so the
+   logo, tagline and entrances keep the left half to themselves.
+
+   The art is decorative ambience (alt=""): everything it says about the
+   game is already said by the tagline beside it. */
+.rl-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--rl-slab-dark);
+}
+.rl-hero-art {
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  /* FULL RESOLUTION, 1:1. The art is 688x473 and is displayed at exactly
+     688x473 -- no downscale, no aspect change. Browser resampling of pixel
+     art is destructive (it blends the hard 1px outlines into mush), so the
+     band is sized around the image instead of the image being squeezed
+     into the band. `width`/`height` are stated in the markup to match, and
+     image-rendering keeps it crisp if a HiDPI screen scales it up. */
+  right: -30px;
+  width: 688px;
+  height: 473px;
+  max-width: none;
+  image-rendering: pixelated;
+  transform: translateY(-50%);
+  pointer-events: none;
+  user-select: none;
+}
+/* Colour wash behind the copy, not a fade to transparent.
+   A plain slab-to-transparent ramp left a washed-out grey haze over the
+   art's midtones. This is an opaque ramp through the shell's own blues
+   instead -- deep --hd-navy into the --rl-slab-dark of the bands above and
+   below -- so the left third is a solid colour field the type sits on, it
+   matches the toolbar and headline rather than introducing a second hue,
+   and it hands off to the art in one short step rather than dissolving
+   across the whole band. */
+.rl-hero::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    var(--hd-navy) 0%,
+    color-mix(in srgb, var(--hd-navy) 55%, var(--rl-slab-dark)) 22%,
+    var(--rl-slab-dark) 40%,
+    transparent 54%
+  );
+  pointer-events: none;
+}
+.rl-masthead {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  /* tall enough to show most of the 473px art at 1:1 rather than cropping
+     it to a thin strip */
+  min-height: 380px;
+  padding-top: 26px;
+  padding-bottom: 26px;
+}
+.rl-masthead img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+}
+.rl-masthead-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  max-width: 430px;
+}
+.rl-tagline {
+  /* 34ch keeps the measure short enough to break at a phrase rather than
+     mid-thought, so the block reads as three even lines */
+  max-width: 34ch;
+  margin: 0;
+  color: var(--hd-white);
+  font-size: 11px;
+  line-height: 1.9;
+}
+.rl-masthead-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 2px;
+}
+
+/* narrow: the art pulls further right and gives up more of the band, and
+   the scrim widens so the stacked masthead never sits on busy pixels */
+@media (max-width: 760px) {
+  /* still 1:1 -- the art is CROPPED by the band's overflow, never resized,
+     so a phone gets the same untouched pixels as a desktop */
+  .rl-hero-art {
+    right: -300px;
+  }
+  .rl-hero::after {
+    background: linear-gradient(
+      100deg,
+      var(--hd-navy) 0%,
+      color-mix(in srgb, var(--hd-navy) 55%, var(--rl-slab-dark)) 34%,
+      var(--rl-slab-dark) 60%,
+      transparent 84%
+    );
+  }
+  .rl-masthead {
+    min-height: 300px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  .rl-masthead-copy {
+    max-width: 300px;
+    gap: 14px;
+  }
+}
+
+/* ---- nav bar (39px) — tabs sit ON it, it butts into the headline --------- */
+.rl-navbar {
+  background: var(--hd-primary);
+  border-top: 1px solid var(--hd-border);
+}
+.rl-navbar ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 0 0 0 12px; /* the original's #leftspacer */
+  margin: 0;
+  list-style: none;
+}
+.rl-tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 39px;
+  padding: 0 12px;
+  color: var(--hd-primary-ink);
+  text-decoration: none;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 7px 7px 0 0;
+  box-sizing: border-box;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+/* The 2006 strip's own navi_icons, ripped from the Wayback capture
+   (tools/reference/habbo-2006/assets/c_images/navi_icons). They are all
+   exactly 21x21, which is what this strip was drawn for -- the game's own
+   toolbar icons are tall rectangles (navigator.gif is 31x57), so pinning
+   them to height:21px squeezed them to 11px wide. Fixed square box, no
+   scaling. */
+.rl-tab img {
+  width: 21px;
+  height: 21px;
+  image-rendering: pixelated;
+  flex: none;
+}
+.rl-tab:hover {
+  background: var(--rl-slab-dark);
+}
+/* the active tab is lit and shares the headline bar's tone, so it reads as
+   part of the surface below it — the original's active cap trick */
+.rl-tab[aria-current='page'],
+.rl-tab[aria-current='page']:hover {
+  color: var(--hd-white);
+  background: var(--rl-slab-dark);
+}
+
+/* ---- headline bar (47px) ------------------------------------------------- */
+.rl-headline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 47px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: var(--rl-slab-dark);
+  border-bottom: 1px solid var(--hd-border);
+}
+.rl-headline h2 {
+  margin: 0;
+  color: var(--hd-white);
+  text-transform: uppercase;
+  font-size: 16px; /* the original's #page-headline-text */
+  font-weight: bold;
+}
+.rl-crumbs {
+  color: var(--rl-slab-ink);
+  font-size: 9px;
+}
+
+/* ---- tier 2: the content slab ------------------------------------------- */
+.rl-slab {
+  padding: 14px;
+  background: var(--rl-slab);
+}
+.rl-grid {
+  display: grid;
+  grid-template-columns: 215fr 429fr 215fr;
+  align-items: start;
+  gap: 14px;
+}
+.rl-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .rl-grid {
+    grid-template-columns: 1fr;
+  }
+  .rl-col--lead {
+    order: 1;
+  }
+  .rl-col--left {
+    order: 2;
+  }
+  .rl-col--right {
+    order: 3;
+  }
+}
+
+/* ---- footer band --------------------------------------------------------- */
+.rl-footer {
+  padding-top: 12px;
+  padding-bottom: 14px;
+  color: var(--rl-slab-ink);
+  background: var(--rl-slab-dark);
+  border-top: 1px solid var(--hd-border);
+  border-radius: 0 0 6px 6px;
+  font-size: 9px;
+  text-align: center;
+  line-height: 1.7;
+}
+.rl-footer p {
+  margin: 0;
+}
+
+/* ---- zoning tints --------------------------------------------------------
+   The 2006 page ranked panels by BODY tint, not header color: .v2box
+   default white, .darker #F3F3F3, .darkest #E4E4E4 (LAYOUT.md 4a). The
+   header strip stays crimson on every panel. */
+.rl-tint-darker .hd-card-body {
+  background: #f3f3f3;
+}
+.rl-tint-darkest .hd-card-body {
+  background: #e4e4e4;
+}
+
+/* ---- hero card art well --------------------------------------------------
+   Sized the way the 2006 promo strip was, not the way the image happens to
+   be shaped.
+
+   The original's art slot was a FIXED WINDOW THAT CROPS, never a box that
+   grew to fit its picture: `height: 178px; overflow: hidden` inside a 429px
+   column (LAYOUT.md 2, style.css:485-490). Its art was authored to match --
+   the capture's own promo GIF is 425x178, wide and short, filling the
+   column edge to edge.
+
+   Our dungeon hall render is 300x387 PORTRAIT, so shown whole it stands
+   taller than the entire news box beside it and shoves the primary action
+   below the fold. Same treatment as 2006 instead: a 178px letterbox that
+   crops to the room's richest band -- dais, red carpet, gold, braziers --
+   with the vaulting above and the empty flagstones below cropped away.
+
+   The pixels are still 1:1. Cropping costs nothing; only resampling would. */
+.rl-well {
+  position: relative;
+  display: block;
+  height: 178px;
+  padding: 0;
+  overflow: hidden;
+}
+.rl-well-art {
+  position: absolute;
+  left: 50%;
+  /* -90px lands the window on the dais and carpet; see the offset study in
+     the commit that introduced this */
+  top: -90px;
+  width: 300px;
+  height: 387px;
+  margin-left: -150px;
+  image-rendering: pixelated;
+}
+
+/* ---- panel rhythm --------------------------------------------------------
+   The v2box body was padding: 5px 9px at 11px type, far tighter than our
+   18px card body. Panels here keep that density and every one closes on an
+   action row, which is what made the original columns read as live boxes. */
+.rl-body {
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.rl-body > * {
+  margin: 0 0 7px;
+}
+.rl-body > :last-child {
+  margin-bottom: 0;
+}
+.rl-lead {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.rl-note {
+  font-size: 9px;
+  line-height: 1.6;
+  color: #665f49;
+}
+.rl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding-top: 3px;
+}
+.rl-actions .hd-btn {
+  flex: 1 1 auto;
+  font-size: 12px;
+}
+.rl-rule {
+  height: 1px;
+  margin: 9px 0;
+  background: rgba(5, 10, 14, 0.18);
+}
+/* pills carry long label + long value in a 215px rail without colliding */
+.rl-body .hd-pill {
+  gap: 8px;
+  align-items: baseline;
+  font-size: 11px;
+}
+.rl-body .hd-pill-value {
+  flex: none;
+}
+.rl-body .hd-card-header {
+  font-size: 14px;
+}
+
+/* ---- calling picker ------------------------------------------------------
+   Eight fat .hd-class chips stacked one per row overflowed the 215px rail.
+   This is the same control as a compact 4x2 grid of square tiles.
+
+   NO VISIBLE CAPTION. Volter is a 9px bitmap face that only renders
+   cleanly at 9px multiples, so there is no size between "too big for a
+   48px tile" and nothing -- 9px truncated "Barbarian" mid-word and an
+   ellipsis read worse than the wrap did. The weapon icon carries the
+   identity instead (each is the item that class actually swings per
+   js/classWeapons.js, baked from Habbo's own hh_human_item.swf by
+   tools/bake-weapon-icons.py), the name and role live on the button's
+   accessible name, and the line under the grid names the selection. */
+.rl-callings {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.rl-calling {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 4px;
+  background: var(--hd-white);
+  border: 1px solid var(--hd-border);
+  border-top: 3px solid var(--cc, var(--hd-primary));
+  border-radius: 8px;
+  box-shadow: 0 2px 0 1px var(--hd-btn-drop);
+  font: inherit;
+  cursor: pointer;
+  min-width: 0;
+  transition: transform 120ms ease, box-shadow 120ms ease,
+    background-color 120ms ease;
+}
+/* with the caption gone the icon takes the whole tile */
+.rl-calling img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  image-rendering: pixelated;
+}
+/* hover lifts like .hd-btn */
+.rl-calling:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 0 1px var(--hd-btn-drop-hover);
+}
+.rl-calling:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 1px var(--hd-btn-drop);
+}
+/* selected: the kit's yellow pill fill, same as .hd-class.on */
+.rl-calling[aria-pressed='true'] {
+  background: var(--hd-pill);
+  outline: 2px solid var(--hd-green-border);
+  outline-offset: -1px;
+}
+.rl-calling[aria-pressed='true'] b {
+  color: var(--hd-ink); /* pale class colors (Cleric) drown on the yellow */
+}
+/* the grid's own label: names the selected class, since the tiles cannot.
+   Regular weight: it is a sentence, not a heading (see the weight rules at
+   the end of this file). */
+.rl-selected {
+  font-size: 9px;
+  line-height: 1.7;
+  color: var(--hd-ink);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rl-calling:hover,
+  .rl-calling:active {
+    transform: none;
+  }
+}
+
+/* dungeon entry: name, sub, then its real battle rooms */
+.rl-entry h3 {
+  margin: 0 0 2px;
+  font-size: 14px;
+}
+.rl-rooms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 5px 0 7px;
+}
+.rl-rooms .hd-badge {
+  height: auto;
+  min-height: 20px;
+  padding: 2px 7px;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+/* ---- what's new list -----------------------------------------------------
+   The original's #newsbox: dated items separated by a dotted rule, date in
+   9px, headline 10px, body 10px (LAYOUT.md 2). Dates are [MM/DD/YY]. */
+.rl-news {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rl-news li + li {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dotted rgba(5, 10, 14, 0.3);
+}
+.rl-news h3 {
+  margin: 0 0 2px;
+  font-size: 12px;
+}
+.rl-news p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+/* Dateline: colour carries the emphasis, not weight. The original's
+   .articledate was 9px with no weight at all (style.css:595-597). */
+.rl-date {
+  color: var(--hd-primary);
+  font-size: 9px;
+}
+
+/* ---- leaderboards --------------------------------------------------------
+   Rank + name + level in one yellow pill per row. The name flexes and
+   ellipsizes; rank and level are fixed so the columns line up down the
+   list even when a Habbo name is long. */
+.rl-rank {
+  flex: none;
+  width: 14px;
+  color: var(--hd-badge-ink);
+  opacity: 0.75;
+}
+.rl-who {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rl-field label {
+  display: block;
+  margin-bottom: 4px;
+}
+.rl-field .hd-input {
+  width: 100%;
+  font-size: 12px;
+}
+
+/* ---- focus + motion ------------------------------------------------------ */
+.rl-page a:focus-visible,
+.rl-page button:focus-visible,
+.rl-page input:focus-visible {
+  outline: 3px solid var(--hd-pill);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rl-page *,
+  .rl-page *::before,
+  .rl-page *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+  .hd-btn:hover,
+  .hd-class:hover {
+    transform: none;
+  }
+}
+
+/* ---- adventurer search ------------------------------------------------------
+   Lives in the 215px rail, so the field and its button stack rather than
+   sharing a row: at rail width a side-by-side pair overflowed the card. */
+.rl-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+.rl-search .hd-input,
+.rl-search .hd-btn {
+  width: 100%;
+  min-width: 0;
+  font-size: 11px;
+}
+#searchResult {
+  font-size: 9px;
+}
+#searchResult img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ==========================================================================
+   TYPE WEIGHT — bold is for headers, subheaders and nav. Never for body copy.
+
+   Volter is a 9px bitmap face and its bold cut is a genuinely heavier set of
+   glyphs, not a synthesised smear. At 9-11px in a 215px rail that extra stroke
+   closes up the counters and the line reads as one dense block: bold Volter
+   has no room to breathe at body sizes.
+
+   The 2006 page it is rebuilt from used weight exactly this way. Everything
+   that carried `font-weight: bold` in the capture's stylesheet was chrome or a
+   heading -- #page-headline-text, #promoheader h2, #newsbox-header h2, every
+   .portlet-top-* header bar, #third-level-box li.active, and links -- while the
+   body slots (#newsbox-text, div.promotext p) declared no weight at all.
+
+   These overrides are SCOPED TO .rl-screen on purpose. .hd-pill and .hd-badge
+   are shared kit primitives used across the whole game; their global bold stays
+   untouched, and only this screen's dense rails are relaxed.
+   ========================================================================== */
+
+/* data rows: the label is prose, the value is the number worth spotting.
+   Splitting the weight also fixes the collision in a narrow rail -- the eye
+   finds the value without both halves shouting. */
+.rl-screen .hd-pill {
+  font-weight: normal;
+}
+.rl-screen .hd-pill .hd-pill-value,
+.rl-screen .hd-pill .rl-rank {
+  font-weight: bold;
+}
+
+/* room names, node counts: labels, not headings */
+.rl-screen .hd-badge {
+  font-weight: normal;
+}
+
+/* utility strip: 9px is the smallest type on the page and the least able to
+   carry a heavier cut. Colour already marks the values. */
+.rl-screen .rl-toolbar,
+.rl-screen .rl-toolbar b {
+  font-weight: normal;
+}
+
+/* inline <b> inside running copy is real emphasis, but at 9px the note text
+   cannot afford it -- keep it for the 11px+ slots only */
+.rl-screen .rl-note b {
+  font-weight: normal;
+  color: var(--hd-ink);
+}
+
+/* what stays bold, explicitly: chrome and headings.
+   (.hd-card-header, .rl-tab, .rl-headline h2 already declare their own weight;
+   these are the heading elements that rely on the browser default.) */
+.rl-screen .rl-news h3,
+.rl-screen .rl-entry h3 {
+  font-weight: bold;
+}

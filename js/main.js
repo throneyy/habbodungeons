@@ -44,6 +44,7 @@ import { showRoomDiscovery } from './roomBanner.js';
 import { openDailyReward } from './dailyRewardOverlay.js';
 import { applyReward } from './dailyReward.js';
 import { mountDailyDock } from './dailyRewardDock.js';
+import { renderRetroTitle } from './screens/retroTitle.js';
 
 
 const $ = (id) => document.getElementById(id);
@@ -175,130 +176,11 @@ function titleRecords() {
   };
 }
 
-// Landing feature grid: the game's real hooks, one card each (structure
-// adapted from habbodungeons.com's landing; skin stays hd-ui).
-const FEATURES = [
-  ['Tactics Battles', 'Turn-based fights on isometric Habbo rooms. High ground hits harder, furni is cover, and melee beats ranged beats magic.'],
-  ['Your Real Habbo', 'Sign in as your Habbo Origins character. No password: a one-time motto code proves the account is yours, verified against your live profile.'],
-  ['Origins Skills', 'Your live Fishing and Gardening levels unlock the Water and Nature skill trees your avatar wields in battle.'],
-  ['Legendary Loot', 'Weapons, armor and trinkets from Rusty Blade to Kingslayer. Equip at camp; armor even dresses your avatar.'],
-];
-
 function showTitle() {
   hideAll();
   overlay.classList.remove('hidden');
   skinOverlay();
   const unskin = unskinOverlay;
-  // "Battles today": honest local read — the current save's cleared battles,
-  // but only when it was last touched today.
-  const rec = titleRecords();
-  const savedToday = (() => {
-    const raw = localStorage.getItem(SAVE_KEY);
-    try {
-      const at = raw && JSON.parse(raw).savedAt;
-      return at && new Date(at).toDateString() === new Date().toDateString();
-    } catch {
-      return false;
-    }
-  })();
-  const battlesToday =
-    savedToday && rec.battles > 0
-      ? `🏆 <b>${rec.battles}</b> battle${rec.battles === 1 ? '' : 's'} cleared today in <b>${rec.descent}</b>`
-      : '🏆 No battles today yet!';
-  const projectCards = DUNGEONS.map((d) => {
-    // Real node counts from the dungeon registry, shown as badges on each card.
-    const nodes = buildDungeon(d.id, {})?.nodes || [];
-    const battles = nodes.filter((n) => n.type === 'battle').length;
-    const events = nodes.filter((n) => n.type === 'event').length;
-    const boss = nodes.some((n) => n.boss);
-    return `
-      <div class="hd-landing-col hd-card">
-        <div class="hd-card-well">
-          ${DUNGEON_RIBBONS[d.id]
-            ? `<img class="hd-logo-img" src="${DUNGEON_RIBBONS[d.id]}" alt="${d.name}" />`
-            : `<span class="hd-logo">${d.name}</span>`}
-        </div>
-        <div class="hd-card-body">
-          <p style="margin:0 0 10px">${d.sub || ''}</p>
-          <p style="margin:0 0 14px">
-            <span class="hd-badge hd-badge--yellow">${battles} battles</span>
-            <span class="hd-badge hd-badge--yellow">${events} events</span>
-            ${boss ? '<span class="hd-badge hd-badge--yellow">boss fight</span>' : ''}
-          </p>
-          <button class="hd-btn hd-btn--green" data-dungeon="${d.id}">Begin Descent ▸</button>
-        </div>
-      </div>`;
-  }).join('');
-  overlay.innerHTML = `
-    <div class="hd-landing">
-      <div class="hd-card">
-        <div class="hd-card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 18px">
-          <a id="navHome" title="Home" style="cursor:pointer"><img class="hd-logo-img" src="assets/ui/logos/habbo-dungeons-ribbon.gif" alt="HABBO DUNGEONS" /></a>
-          <nav style="display:flex;flex-wrap:wrap;gap:8px">
-            <button id="navMonsters" class="hd-btn">Monsters</button>
-            <button id="navDungeons" class="hd-btn">Dungeons</button>
-            <button id="navInventory" class="hd-btn">Inventory</button>
-            <button id="navDashboard" class="hd-btn ${Identity.isVerified() ? '' : 'hd-btn--green'}">${Identity.isVerified() ? 'Dashboard' : 'Login'}</button>
-          </nav>
-        </div>
-      </div>
-      <div class="hd-card">
-        <div class="hd-card-body">
-          <form id="searchForm" style="display:flex;flex-wrap:wrap;gap:8px;margin:0">
-            <input id="searchName" type="text" class="hd-input" placeholder="Search adventurers by Habbo username" aria-label="Search adventurers by Habbo username" autocomplete="off" spellcheck="false" style="flex:1 1 220px" />
-            <button type="submit" class="hd-btn hd-btn--green">Search</button>
-          </form>
-          <div id="searchResult"></div>
-        </div>
-      </div>
-      <div class="hd-card">
-        <div class="hd-card-body" style="text-align:center" id="battlesToday">${battlesToday}</div>
-      </div>
-      <div class="hd-card">
-        <div class="hd-card-body" style="text-align:center">
-          <img class="hd-logo-img hd-logo-img--center" src="assets/ui/logos/habbo-dungeons-club.gif" alt="HABBO DUNGEONS" />
-          <p style="margin:10px 0 0" class="dim">Turn-based tactics for your Habbo Origins avatar</p>
-          <!-- div, not <p>: .hd-ui p carries the #crispify filter, which snaps the
-               buttons' 30%-alpha drop shadows to 0 and renders them flat -->
-          <div style="margin:14px 0 0;display:flex;justify-content:center;flex-wrap:wrap;gap:10px">
-            <button id="btnPlay" class="hd-btn hd-btn--green" style="font-size:18px;padding:8px 26px">Start Your Adventure ▸</button>
-            <button id="btnBrowse" class="hd-btn hd-btn--white">Browse Dungeons</button>
-          </div>
-          <p style="margin:8px 0 0;font-size:9px" class="dim">Step into the tavern. The Gatekeeper in the square opens the way down.</p>
-        </div>
-      </div>
-      <div class="hd-landing-row">
-        ${FEATURES.map(
-          ([t, d]) => `
-        <div class="hd-card" style="flex:1 1 220px;min-width:0">
-          <div class="hd-card-header">${t}</div>
-          <div class="hd-card-body"><p style="margin:0">${d}</p></div>
-        </div>`
-        ).join('')}
-      </div>
-      <div class="hd-card">
-        <div class="hd-card-header">How to Play</div>
-        <div class="hd-card-body" style="display:flex;flex-wrap:wrap;gap:18px">
-          <div style="flex:1 1 220px;min-width:0">
-            <p style="margin:0 0 6px"><b>1 · Sign in with Habbo</b></p>
-            <p class="dim" style="margin:0">Put a one-time code in your Habbo Origins motto and the server verifies the account is yours. You fight as your real avatar.</p>
-          </div>
-          <div style="flex:1 1 220px;min-width:0">
-            <p style="margin:0 0 6px"><b>2 · Choose your calling</b></p>
-            <p class="dim" style="margin:0">Pick the class you lead as, then step through the Gatekeeper's arch in the town square.</p>
-          </div>
-          <div style="flex:1 1 220px;min-width:0">
-            <p style="margin:0 0 6px"><b>3 · Battle, loot, camp</b></p>
-            <p class="dim" style="margin:0">Clear tactics battles, pick your path at choice events, and equip loot at camp. A party wipe ends the run.</p>
-          </div>
-        </div>
-      </div>
-      <div class="hd-landing-row" id="dungeonCards">${projectCards}</div>
-      <div class="hd-footer">
-        <p style="margin:0 0 6px"><a id="btnExplore">Free Roam · wander the halls of the keep</a></p>
-        <p style="margin:0">Habbo Dungeons is a fan project and is not affiliated with, endorsed or sponsored by Habbo or Sulake Oy.</p>
-      </div>
-    </div>`;
 
   // No guest play: every way into the world requires a verified Habbo.
   // Signed-out attempts route to the Login gate (the dashboard's sign-in card).
@@ -307,30 +189,103 @@ function showTitle() {
     acct._msg = 'Sign in with your Habbo Origins character first.';
     showDashboard();
   };
-  overlay.querySelectorAll('[data-dungeon]').forEach((b) =>
-    b.addEventListener(
-      'click',
-      requireSignIn(() => {
-        dungeonPick = b.dataset.dungeon;
-        unskin();
-        showSquadBuilder();
-      })
-    )
-  );
   const goExplore = requireSignIn(() => {
     unskin();
     startExplore();
   });
-  $('btnPlay').addEventListener('click', goExplore);
-  $('btnExplore').addEventListener('click', goExplore);
-  $('navHome').addEventListener('click', showTitle);
-  $('navDashboard').addEventListener('click', showDashboard);
-  $('navInventory').addEventListener('click', showInventory);
-  $('navMonsters').addEventListener('click', showMonsters);
-  const scrollToDungeons = () => $('dungeonCards').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  $('navDungeons').addEventListener('click', scrollToDungeons);
-  $('btnBrowse').addEventListener('click', scrollToDungeons);
-  $('searchForm').addEventListener('submit', onSearchAdventurer);
+
+  const rec = titleRecords();
+  const id = Identity.get() || {};
+
+  // Real node counts and room names, straight from the dungeon registry.
+  const dungeons = DUNGEONS.map((d) => {
+    const nodes = buildDungeon(d.id, {})?.nodes || [];
+    return {
+      id: d.id,
+      name: d.name,
+      sub: d.sub || '',
+      battles: nodes.filter((n) => n.type === 'battle').length,
+      events: nodes.filter((n) => n.type === 'event').length,
+      rooms: nodes
+        .filter((n) => n.type === 'battle')
+        .map((n) => ({ name: n.room?.name || n.name || 'Battle', boss: !!n.boss })),
+    };
+  });
+
+  const classes = Object.entries(CLASSES).map(([cid, c]) => ({
+    id: cid,
+    name: c.name,
+    color: c.color,
+    archetype: c.archetype,
+    blurb: c.blurb,
+  }));
+
+  const screen = renderRetroTitle({
+    verified: Identity.isVerified(),
+    name: id.name || '',
+    classId: Identity.classId(),
+    records: { ...rec, hasSave: Run.hasSave() },
+    dungeons,
+    classes,
+    loadBoard: loadSkillBoard,
+    on: {
+      explore: goExplore,
+      continueRun: goExplore,
+      beginDescent: (dungeonId) =>
+        requireSignIn(() => {
+          dungeonPick = dungeonId;
+          unskin();
+          showSquadBuilder();
+        })(),
+      home: showTitle,
+      dashboard: showDashboard,
+      inventory: showInventory,
+      monsters: showMonsters,
+      pickClass: (cid) => Identity.setClass(cid),
+      search: onSearchAdventurer,
+    },
+  });
+
+  overlay.replaceChildren(screen);
+}
+
+// Top 5 profiles by a skill level, for the title screen's leaderboards.
+// The "Public can view profiles" RLS policy already grants anon SELECT, so this
+// needs no session. profiles stores only the CURRENT level plus
+// last_habbo_skill_sync -- there is no per-day history, so these are standing
+// rankings, never daily ones.
+const SKILL_BOARD_COLUMN = { fishing: 'fishing_level', gardening: 'gardening_level' };
+
+async function loadSkillBoard(key) {
+  const column = SKILL_BOARD_COLUMN[key];
+  if (!column) throw new Error(`unknown board ${key}`);
+
+  // getSupabase() imports its client from a CDN: on a blocked network that
+  // import HANGS rather than rejecting, so it is raced against a deadline.
+  const timeout = (ms) =>
+    new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout'), { offline: true })), ms));
+  const sb = await Promise.race([getSupabase().catch(() => null), timeout(8000)]);
+  if (!sb) throw Object.assign(new Error('offline'), { offline: true });
+
+  const { data, error } = await Promise.race([
+    sb
+      .from('profiles')
+      .select(`habbo_username, ${column}, last_habbo_skill_sync`)
+      .not('habbo_username', 'is', null)
+      .gt(column, 0)
+      .order(column, { ascending: false })
+      .limit(5),
+    timeout(8000),
+  ]);
+  if (error) throw error;
+
+  const rows = (data || []).map((r) => ({ name: r.habbo_username, level: r[column] }));
+  const syncedAt = (data || [])
+    .map((r) => r.last_habbo_skill_sync)
+    .filter(Boolean)
+    .sort()
+    .pop();
+  return { rows, syncedAt };
 }
 
 // Look up any adventurer's live Origins profile (read-only; not sign-in).

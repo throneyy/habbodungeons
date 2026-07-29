@@ -59,7 +59,13 @@ function literalsOf(line) {
   return out;
 }
 
-const files = readdirSync(JS).filter((f) => f.endsWith('.js')).sort();
+// Recursive: UI strings live in js/ AND in js/screens/ (the title screen), and
+// a non-recursive readdir silently skipped the latter -- an em dash shipped in
+// a class tooltip and a leaderboard error before this was widened.
+const files = readdirSync(JS, { recursive: true })
+  .map((f) => String(f).replace(/\\/g, '/'))
+  .filter((f) => f.endsWith('.js'))
+  .sort();
 
 // ---- the scan ---------------------------------------------------------------
 console.log('no unrenderable glyphs in UI strings');
