@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kitchen Sink — HabboWindow</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/habbo-ui.css" />
+  <style>
+    /* preview board only — nothing here belongs to the primitive */
+    body {
+      margin: 0;
+      padding: 28px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+    .ks-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 28px;
+    }
+    .ks-case {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ks-label {
+      color: #fff;
+      font-family: 'Volter', Tahoma, sans-serif;
+      font-size: 9px;
+      -webkit-font-smoothing: none;
+      filter: url(#crispify);
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+    }
+  </style>
+</head>
+<body class="hd-page">
+  <div class="ks-row">
+    <div class="ks-case">
+      <div class="ks-label">Backpack: tabs + socket grid + footer</div>
+      <div id="caseBackpack"></div>
+    </div>
+    <div class="ks-case">
+      <div class="ks-label">Plain window: no tabs</div>
+      <div id="casePlain"></div>
+    </div>
+  </div>
+
+  <!-- crispify: snaps glyph alpha to 0/1 so Volter never anti-aliases -->
+  <svg width="0" height="0" xmlns="http://www.w3.org/2000/svg" style="position:absolute">
+    <defs>
+      <filter id="crispify">
+        <feComponentTransfer>
+          <feFuncA type="discrete" tableValues="0 1" />
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+
+  <script type="module">
+    import { HabboWindow } from './js/ui/habboWindow.js';
+    import { itemIconCanvas } from './js/ui/itemIcon.js';
+    import { CONSUMABLES, ITEMS, RARITY, bonusText } from './js/items.js';
+
+    // ---- demo data: the REAL catalogues ------------------------------------
+    // Every socket paints its entry's extracted furni art through the shared
+    // painter (js/ui/itemIcon.js), so this page shows exactly the pixels the
+    // Hand shows in game. Only the quantities and the gold are invented — a run
+    // save would supply those.
+    const QTY = { health_potion: 50, witchs_brew: 3, revival_crystal: 2, iron_sword: 2 };
+    const GOLD = 128; // in game this is run.gold (see js/hand.js)
+    const MIN_SLOTS = 12; // pad short catalogues out to a full grid
+
+    const TABS = {
+      consumables: { label: 'Consumables', catalogue: CONSUMABLES },
+      gear: { label: 'Gear', catalogue: ITEMS },
+    };
+
+    function grid(tabId) {
+      const entries = Object.entries(TABS[tabId].catalogue);
+      const el = document.createElement('div');
+      el.className = 'hw-grid';
+      for (const [id, it] of entries) {
+        const socket = document.createElement('button');
+        socket.type = 'button';
+        socket.className = 'hw-socket is-filled';
+        socket.title = it.name;
+        socket.dataset.item = id; // what the footer detail looks up
+        socket.dataset.tab = tabId;
+        socket.appendChild(itemIconCanvas(it.icon, 40));
+        if (QTY[id] > 1) {
+          const stamp = document.createElement('span');
+          stamp.className = 'hw-qty';
+          stamp.textContent = QTY[id];
+          socket.appendChild(stamp);
+        }
+        el.appendChild(socket);
+      }
+      const empties = Math.max(0, MIN_SLOTS - entries.length);
+      el.insertAdjacentHTML('beforeend', '<div class="hw-socket"></div>'.repeat(empties));
+      return el;
+    }
+
+    const backpack = new HabboWindow({
+      title: 'Backpack',
+      tabs: Object.entries(TABS).map(([id, t]) => ({ id, label: t.label })),
+      bodyHeight: 168, // three rows visible — the rest scrolls
+      onTab: (tab) => {
+        backpack.setBody(grid(tab.id));
+        showDetail(null); // a tab switch drops the selection, so drop its copy
+      },
+    });
+
+    // ---- footer: item detail (left) + the run's gold (right) ----------------
+    const detail = document.createElement('div');
+    detail.className = 'hw-detail';
+    const gold = document.createElement('span');
+    gold.className = 'hw-gold';
+    gold.textContent = `${GOLD} gold`;
+    const footer = document.createDocumentFragment();
+    footer.append(detail, gold);
+
+    // Same copy shape as the Hand's item detail (js/hand.js:336-339): rarity-
+    // coloured name, then "rarity kind · effect", then the blurb. The wornBy
+    // hint line is dropped — this page has no squad to wear anything.
+    function showDetail(id, tabId) {
+      const it = id && TABS[tabId] && TABS[tabId].catalogue[id];
+      if (!it) {
+        detail.className = 'hw-detail is-empty';
+        detail.textContent = 'Select an item';
+        return;
+      }
+      const r = RARITY[it.rarity] || RARITY.common;
+      const consumable = tabId === 'consumables';
+      detail.className = 'hw-detail';
+      detail.innerHTML = `
+        <div class="hw-detail-name" style="color:${r.color}">${it.name}</div>
+        <div class="hw-detail-line">${r.name} ${consumable ? 'consumable' : it.slot} · ${it.effectText || bonusText(id)}</div>
+        <div class="hw-detail-blurb">${it.blurb || ''}</div>`;
+    }
+    showDetail(null);
+
+    backpack
+      .setBody(grid('consumables'))
+      .setFooter(footer)
+      .mount(document.getElementById('caseBackpack'));
+    backpack.el.querySelector('.hw-footer').classList.add('hw-footer--detail');
+
+    // Same chrome with the strip switched off: a plain notice window.
+    new HabboWindow({
+      title: 'Keep Notice',
+      width: 220,
+      bodyHeight: 120,
+    })
+      .setBody(`
+        <p style="margin:0 0 8px">The keep takes your run, not your stash.</p>
+        <p style="margin:0 0 8px">Anything banked before you fell is waiting in the vault below the Hand.</p>
+        <p style="margin:0">Scroll here to prove the body slot scrolls with the client's own bar.</p>`)
+      .setFooter('<button type="button" class="hw-btn" style="margin-left:auto">OK</button>')
+      .mount(document.getElementById('casePlain'));
+
+    // socket selection — marks the well and fills the footer's detail zone
+    document.addEventListener('click', (e) => {
+      const socket = e.target.closest('.hw-socket.is-filled');
+      if (!socket) return;
+      const grid = socket.parentNode;
+      grid.querySelectorAll('.is-selected').forEach((n) => n.classList.remove('is-selected'));
+      socket.classList.add('is-selected');
+      showDetail(socket.dataset.item, socket.dataset.tab);
+    });
+  </script>
+</body>
+</html>

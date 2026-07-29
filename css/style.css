@@ -2131,3 +2131,330 @@ button.primary:hover {
   -webkit-font-smoothing: none;
   filter: url(#crispify);
 }
+
+/* ---- habbo window primitive (js/ui/habboWindow.js) --------------------------
+   The v31 Shockwave client's standard window chrome, rebuilt in pure CSS from
+   a native Backpack screenshot (no image assets — every edge, dither and
+   bevel below is a border, gradient or pseudo-element):
+
+     frame      1px black outline over a teal body, 1px light inner highlight
+                top/left and a 1px dark inner shade right/bottom
+     title bar  28px tall, filled with the client's 1px checkerboard dither,
+                a solid teal plate behind the centred title so the pattern
+                never runs under the text, outlined ✕ pinned right
+     tabs       21px caps sitting ON the frame, black-outlined, bottom border
+                supplied by the panel's own top line — the ACTIVE tab paints
+                that 1px away so its face fuses into the body below
+     panel      #efefef face inset 9px into the frame; scrollable body slot
+                (client-style 15px scrollbar) + optional footer slot, which
+                the Backpack dresses as a fixed-height detail + gold bar
+
+   Same family as .hand-board / .infostand above: Volter 9px, crispify filter,
+   black 1px outlines, inset bevels. Kept generic on purpose — the Backpack is
+   just one dressing of it (see hub/kitchen-sink.html). */
+.hw {
+  --hw-teal: #6794a7;
+  --hw-teal-lit: #79aec4;
+  --hw-teal-dim: #345e6f;
+  --hw-face: #efefef; /* panel + active tab face */
+  --hw-socket: #cbcbcb; /* empty item well */
+  --hw-locked: #a0a0a4; /* inactive tab */
+  --hw-scroll: #dedede;
+
+  width: max-content;
+  color: #000;
+  background: var(--hw-teal);
+  border: 1px solid #000;
+  border-radius: 5px;
+  box-shadow:
+    inset 1px 1px 0 var(--hw-teal-lit),
+    inset -1px -1px 0 var(--hw-teal-dim),
+    0 4px 14px rgba(0, 0, 0, 0.45);
+  font-family: 'Volter', Tahoma, sans-serif;
+  font-size: 9px;
+  line-height: 1.4;
+  -webkit-font-smoothing: none;
+  user-select: none;
+}
+
+/* ---- title bar ---- */
+.hw-titlebar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 22px;
+  border-radius: 4px 4px 0 0;
+}
+/* the client's 1px checkerboard, banded so it stops short of both edges */
+.hw-titlebar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 4px;
+  height: 15px;
+  background-image: repeating-conic-gradient(var(--hw-face) 0% 25%, transparent 0% 50%);
+  background-size: 2px 2px;
+  pointer-events: none;
+}
+.hw-title {
+  position: relative; /* solid plate over the dither */
+  max-width: 100%;
+  padding: 0 7px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--hw-face);
+  background: var(--hw-teal);
+  font-weight: bold;
+  filter: url(#crispify);
+}
+.hw-close {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  width: 11px;
+  height: 11px;
+  margin-top: -6px;
+  padding: 0;
+  background: var(--hw-teal); /* solid plate: the dither never runs under it */
+  border: 1px solid var(--hw-face);
+  cursor: pointer;
+}
+.hw-close::before,
+.hw-close::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: -1px;
+  width: 11px;
+  height: 1px;
+  background: var(--hw-face);
+}
+.hw-close::before {
+  transform: rotate(45deg);
+}
+.hw-close::after {
+  transform: rotate(-45deg);
+}
+.hw-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ---- tab strip ---- */
+.hw-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 9px;
+}
+.hw-tab {
+  position: relative;
+  height: 21px;
+  min-width: 96px;
+  padding: 0 12px;
+  color: #000;
+  background: var(--hw-locked);
+  border: 1px solid #000;
+  border-bottom: 0; /* the panel's top line closes the tab */
+  border-radius: 4px 4px 0 0;
+  font-family: inherit;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.hw-tab:hover:not(.is-active) {
+  background: #b4b4b8;
+}
+.hw-tab.is-active {
+  background: var(--hw-face);
+  font-weight: bold;
+  cursor: default;
+}
+/* fuse the active tab into the body: paint over the panel's 1px top border */
+.hw-tab.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  background: var(--hw-face);
+}
+
+/* ---- panel (body + footer) ---- */
+.hw-panel {
+  position: relative;
+  margin: 0 9px 9px;
+  background: var(--hw-face);
+  border: 1px solid #000;
+  border-radius: 3px;
+}
+.hw--tabbed .hw-panel {
+  border-radius: 0 0 3px 3px;
+}
+.hw--tabbed .hw-titlebar {
+  padding-bottom: 2px; /* tabs ride tight under the bar, like the client */
+}
+.hw-body {
+  padding: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  filter: url(#crispify); /* body copy is Volter too — never let it subpixel */
+}
+/* Firefox only: Chrome 121+ drops the ::-webkit-scrollbar skin below the
+   moment `scrollbar-width` is set, so the standard props stay fenced off. */
+@supports not selector(::-webkit-scrollbar) {
+  .hw-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--hw-scroll) var(--hw-face);
+  }
+}
+/* client scrollbar: black-outlined light thumb with a 2px right shade, and
+   flat stepper plates top/bottom (the arrows are pure chrome, not art) */
+.hw-body::-webkit-scrollbar {
+  width: 15px;
+  background: var(--hw-face);
+}
+.hw-body::-webkit-scrollbar-track {
+  background: var(--hw-face);
+  border-radius: 2px;
+}
+.hw-body::-webkit-scrollbar-thumb {
+  background: var(--hw-scroll);
+  border: 1px solid #000;
+  border-radius: 2px;
+  box-shadow: inset -2px 0 0 #bdbdbd;
+}
+.hw-body::-webkit-scrollbar-thumb:hover {
+  background: #fff;
+}
+.hw-body::-webkit-scrollbar-button:vertical:decrement,
+.hw-body::-webkit-scrollbar-button:vertical:increment {
+  display: block;
+  height: 14px;
+  background: var(--hw-scroll);
+  border: 1px solid #000;
+  border-radius: 2px;
+}
+.hw-body::-webkit-scrollbar-button:vertical:hover {
+  background: #fff;
+}
+/* Footer: a FIXED-height bar, never a growing one. Two zones — the selected
+   item's detail on the left, the run's gold on the right. The height is fixed
+   (not min-height) and everything inside clips, so no item's copy can resize
+   the window or spill over the grid however long its blurb runs. */
+.hw-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-top: 1px solid #cdcdcd;
+  filter: url(#crispify);
+}
+.hw-footer--detail {
+  align-items: stretch;
+  height: 58px; /* 3 detail lines at 9px/1.4 + padding */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.hw-detail {
+  flex: 1;
+  min-width: 0; /* let the flex child shrink so the ellipsis can engage */
+  overflow: hidden;
+}
+.hw-detail-name {
+  font-weight: bold;
+}
+.hw-detail-line,
+.hw-detail-blurb {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.hw-detail-line {
+  color: #4a4a4a;
+}
+.hw-detail-blurb {
+  color: #6b6b6b;
+}
+.hw-detail.is-empty {
+  display: flex;
+  align-items: center;
+  color: #9a9a9a;
+}
+.hw-gold {
+  flex: none;
+  align-self: center;
+  color: #8a6a1a;
+  font-weight: bold;
+}
+
+/* ---- container grid (Backpack, and any future stash/chest window) ----------
+   Reusable socket well: 46px items, 5px gutters, qty stamped bottom-right in
+   the client's white-on-black-outline numerals. */
+.hw-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--hw-cols, 6), 46px);
+  gap: 5px;
+}
+.hw-socket {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--hw-socket);
+  border: 0;
+  border-radius: 4px;
+  cursor: default;
+}
+.hw-socket.is-filled {
+  cursor: pointer;
+}
+.hw-socket.is-filled:hover {
+  background: #ffe9b0;
+}
+.hw-socket.is-selected {
+  background: #ffe9b0;
+  box-shadow: inset 0 0 0 1px #6d3900;
+}
+.hw-socket img,
+.hw-socket canvas,
+.hw-socket svg {
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.hw-qty {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  color: #fff;
+  font-weight: bold;
+  text-shadow:
+    1px 0 0 #000,
+    -1px 0 0 #000,
+    0 1px 0 #000,
+    0 -1px 0 #000;
+  pointer-events: none;
+}
+/* plain footer button (the Keep Notice window's OK) */
+.hw-btn {
+  padding: 3px 10px 4px;
+  color: #000;
+  background: var(--hw-face);
+  border: 1px solid #000;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 9px;
+  -webkit-font-smoothing: none;
+  filter: url(#crispify);
+  cursor: pointer;
+}
+.hw-btn:hover {
+  background: #ffe9b0;
+}
