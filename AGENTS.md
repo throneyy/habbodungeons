@@ -1,68 +1,100 @@
-# Working in this repo (six parallel agents)
+# Working in this repo (parallel agents on git worktrees)
 
-Six GG Coder terminals share one git object store through **git worktrees**. One
-worktree per in-flight feature, one branch per worktree, **one agent per
+Several GG Coder terminals share one git object store through **git worktrees**.
+One worktree per in-flight feature, one branch per worktree, **one agent per
 worktree**. This exists because a single shared working tree produced duplicated
 commits (two agents authoring patch-identical work), diverged history, and
 analyses that were wrong by the time they were written because the tree moved
 underneath them.
 
+The layout below is the *current* one. It has changed before (the trees used to
+live at `C:\Users\codyj\hd-trees\`, and the hub used to be a
+`Desktop\Habbo Dungeons\` checkout of `integrate/harness-and-duel`) and this
+document went stale for long enough to make an agent refuse a legitimate edit.
+**Verify with `git worktree list` before trusting the table**, and fix it here if
+it disagrees.
+
 ## Layout
 
-| Worktree | Branch | Dev port | `HD_PORT_BASE` | e2e slug |
-| --- | --- | --- | --- | --- |
-| `C:\Users\codyj\Desktop\Habbo Dungeons\` (**hub**) | `integrate/harness-and-duel` | 5170 | 8600 | `hb` |
-| `C:\Users\codyj\hd-trees\duel\` | `feat/duel` | 5171 | 8700 | `dl` |
-| `C:\Users\codyj\hd-trees\party-invite\` | `fix/party-invite-delivery` | 5172 | 8800 | `pi` |
-| `C:\Users\codyj\hd-trees\profiles-unique\` | `fix/profiles-unique-username` | 5173 | 8900 | `pu` |
-| `C:\Users\codyj\hd-trees\test-infra\` | `chore/test-harness` | 5174 | 9000 | `ti` |
-| `C:\Users\codyj\hd-trees\combat\` | `feat/class-weapons` | 5175 | 9100 | `cb` |
+Everything lives under `C:\Users\codyj\Desktop\HabboDungeons\`:
 
-`hd-trees\` lives at `C:\Users\codyj\hd-trees\` — **outside the repo folder**,
-not inside it. It used to sit next to the repo on the Desktop; it was moved up to
-the user profile with `git worktree move` (never a filesystem move, which leaves
-every `.git` pointer dangling in both directions). The exact parent does not
-matter and neither does the sibling relationship — what matters is that it is not
-*under* `Habbo Dungeons\`, because a nested worktree would show up in
-`git status`, in Vite's watcher, and in the test runner's `readdirSync`
-discovery.
+| Worktree | Branch | `HD_PORT_BASE` | e2e slug |
+| --- | --- | --- | --- |
+| `HabboDungeons\hub\` (**hub**) | `main` (tracks `origin/main`) | 8600 | `hb` |
+| `HabboDungeons\trees\duel\` | `feat/duel` | 8700 | `dl` |
+| `HabboDungeons\trees\test-infra\` | `chore/test-harness` | 9000 | `ti` |
 
-**Never rename a leaf directory.** `duel`, `party-invite`, `profiles-unique`,
-`test-infra` and `combat` are load-bearing names: `tests/e2e/lib.mjs` derives the
-e2e slug from the worktree directory name (`WORKTREES[DIR]`, where `DIR` is the
-last path segment), and `PORT_BASES` keys off that slug in turn. A renamed leaf
-misses the lookup and falls through to the default `hb` — the HUB's slug — so the
-worktree silently seeds the hub's player names and binds the hub's ports instead
-of failing. Moving the tree elsewhere is free; renaming its last segment is not.
-Use `HD_SLUG` / `HD_PORT_BASE` if a directory name ever genuinely has to change.
+There is **no per-worktree dev port**. `vite.config.ts` hardcodes `port: 8080`
+for every tree, so two dev servers at once collide; only the `HD_PORT_BASE` e2e
+ports above are namespaced. (An earlier table listed dev ports 5170–5175; no such
+configuration ever existed.)
+
+The retired `party-invite` (`pi`/8800), `profiles-unique` (`pu`/8900) and
+`combat` (`cb`/9100) worktrees are **gone, not lost**: `fix/party-invite-delivery`,
+`fix/profiles-unique-username` and `feat/class-weapons` are all ancestors of
+`origin/main`. Their slugs are still mapped in `tests/e2e/lib.mjs`, which is
+harmless — reuse the same slug if one is ever re-created.
+
+`trees\` sits **beside the hub, never inside a worktree**. It is under the
+`HabboDungeons\` container folder, which is fine; what must not happen is a
+worktree nested *within* another worktree's checkout (e.g. under `hub\`), because
+it would then show up in `git status`, in Vite's watcher, and in the test
+runner's `readdirSync` discovery. Relocate only with `git worktree move`, never a
+filesystem move — that leaves every `.git` pointer dangling in both directions.
+
+**Never rename a leaf directory.** `duel` and `test-infra` are load-bearing
+names: `tests/e2e/lib.mjs` derives the e2e slug from the worktree directory name
+(`WORKTREES[DIR]`, where `DIR` is the last path segment), and `PORT_BASES` keys
+off that slug in turn. A renamed leaf misses the lookup and falls through to the
+default `hb` — the HUB's slug — so the worktree silently seeds the hub's player
+names and binds the hub's ports instead of failing. The hub's own directory,
+`hub`, is not in `WORKTREES` and reaches `hb` through exactly that fallback,
+which is correct for the hub and only the hub. Moving a tree elsewhere is free;
+renaming its last segment is not. Use `HD_SLUG` / `HD_PORT_BASE` if a directory
+name ever genuinely has to change.
 
 ## Rules
 
-1. **The hub is integration-only.** `fetch`, `merge --ff-only`, `push`, and
-   resolving divergence. No agent edits files there. This is the single rule that
-   prevents duplicate commits — two agents cannot author the same change if
-   neither holds the file the other is editing.
+1. **The hub is `main`, and is no longer integration-only — but it is
+   path-restricted.** It was integration-only when it held a throwaway
+   `integrate/*` branch; it now checks out `main` tracking `origin/main`, so it
+   is the natural home for work no side branch owns.
+
+   - **Allowed in the hub:** docs (`AGENTS.md`, `README.md`), and any path not
+     listed against a branch with a **live worktree** in *Who owns which shared
+     file* below.
+   - **Not allowed in the hub:** paths owned by `feat/duel` or
+     `chore/test-harness`. Those trees exist and hold uncommitted or unmerged
+     work; editing their files here is exactly the duplicate-authorship failure
+     this rule was written for. Ownership entries whose worktree is retired and
+     whose branch is merged into `main` no longer restrict anything.
+   - **A hub commit lands on `main` the moment you push**, which is the branch
+     `gpt-engineer-app[bot]` watches and the one Lovable ingests. Keep hub
+     commits small, self-contained and green; anything speculative belongs on a
+     branch.
 2. **Stay in your worktree.** Never `cd` into another agent's worktree to "just
    check something"; read it through git (`git show <branch>:<path>`) instead.
 3. **Never `git add -A`** unless you have personally verified every path it would
    stage. Untracked feature work from an unfinished branch has been swept into
    commits this way before.
-4. **Rebase onto `origin/main` from your own worktree**, never from the hub.
-   `origin/main`, not `lovable-main`, and not a local `main` — see “The rebase
-   target is `origin/main`” below for why those are three different commits.
+4. **Rebase onto `origin/main` from your own worktree.** The hub has nothing to
+   rebase — it *is* `main`, so it only ever fast-forwards (`git pull --ff-only`).
+   If the hub ever cannot fast-forward, someone pushed to `main` behind you:
+   stop and reconcile, do not force. `origin/main`, not `lovable-main` — see
+   “The rebase target is `origin/main`” below for why those differ.
 5. Branches conflict in `js/supabaseNet.js`, `js/main.js` and `README.md` when
    they merge back. Expected and cheap — far cheaper than shared-tree
    contamination.
 
 ### The rebase target is `origin/main`
 
-**`origin/main`, `origin/lovable-main` and any local `main` are three different
-commits and drift apart constantly** — measured on 2026-07-26, `origin/main` was
-37 commits ahead of `origin/lovable-main`, which held 1 commit of its own, and
-the hub's local `main` was a further 7 behind `origin/main`, having sat untouched
-since a `fetch` earlier that day. "Rebase onto main" is therefore an ambiguous
-instruction, and the doc used to give both answers: this rule said
-`lovable-main`, the file-ownership section said `origin/main`.
+**`origin/main` and `origin/lovable-main` are different commits and drift apart
+constantly** — measured on 2026-07-26, `origin/main` was 37 commits ahead of
+`origin/lovable-main`, which held 1 commit of its own. A local `main` is a third
+thing again whenever it is behind its remote; the hub's was once 7 behind,
+having sat untouched since a `fetch` earlier that day. "Rebase onto main" is
+therefore an ambiguous instruction, and the doc used to give both answers: this
+rule said `lovable-main`, the file-ownership section said `origin/main`.
 
 `origin/main` wins, and not by preference — it strictly contains the other. Every
 branch tip that is contained anywhere is contained in it, and the one commit
@@ -91,7 +123,7 @@ which is the reverse of how "does my branch descend from main" reads out loud.
 `bun` is the package manager (`packageManager` is pinned in `package.json`).
 `node_modules` is gitignored, so every worktree installs its own.
 
-- Do **not** run the first `bun install` in six terminals at once. Stagger them;
+- Do **not** run the first `bun install` in every terminal at once. Stagger them;
   after the first, the global cache at `%LOCALAPPDATA%\bun\install\cache` makes
   the rest fast.
 - `embedded-postgres` (108 MB of native Postgres binaries) is declared **only**
@@ -110,14 +142,14 @@ Unit suites are pure — run them freely, in parallel, any time.
 
 **The e2e suites are not.** They drive real browsers against the **live** shared
 Supabase project, so `tests/run-suites.mjs` takes a **machine-wide lock** for the
-whole e2e run. A second worktree's run waits and prints who holds it. A lock
+whole e2e run. Another worktree's run waits and prints who holds it. A lock
 whose owning pid is gone is reclaimed automatically — never delete a lock
 directory by hand, because an agent that has learned to delete locks will
 eventually delete a live one.
 
 Three things are namespaced per worktree, all derived from the worktree
 **directory name** (see `tests/e2e/lib.mjs`) so nothing has to be exported by
-hand:
+hand. The dev server port is **not** among them — it is 8080 everywhere:
 
 - **Player names** — `e2eName('InvA')` → `pi-InvA`. Mandatory, not tidiness:
   `profiles.habbo_username` now has a unique index on `lower(btrim(...))`, so two
@@ -138,13 +170,13 @@ hand:
 ### Anonymous sign-ins are a shared, exhaustible quota
 
 Supabase allows **30 anonymous sign-ins per hour per IP** — a token bucket
-refilling one token every two minutes — and all six worktrees share one IP and
-one project. Namespacing does **not** help here; only the lock and restraint do.
+refilling one token every two minutes — and every worktree shares one IP and one
+project. Namespacing does **not** help here; only the lock and restraint do.
 
 Only `partyInviteError` reuses its session. Every other Supabase-backed suite
 calls `browser.newContext()` and mints ~2 fresh anon users **per run**, and
 `js/supabaseNet.js` signs in anonymously on any page without a session. A full
-six-worktree e2e pass can therefore exceed the refill rate.
+e2e pass across every worktree can therefore exceed the refill rate.
 
 **Recognising exhaustion**, because it has two very different faces:
 
@@ -323,21 +355,31 @@ same path is a merge conflict with a capability loss hiding inside it.
 ### Who owns which shared file
 
 One branch owns each shared path. Send changes to the owner; do not fork it.
+**Ownership only binds while the owner has a live worktree** — once a branch is
+merged into `origin/main` and its tree is gone, its paths are ordinary files
+anyone (including the hub) may edit.
 
-| Path | Owner branch |
-| --- | --- |
-| `tests/run-suites.mjs` | **`chore/test-harness`** |
-| `tests/e2e/lib.mjs`, `tests/e2e/*.e2e.mjs` ports/slugs | `chore/test-harness` |
-| `tests/quarantine/**`, recovered `tests/*.test.js` | `chore/recover-test-suites` |
-| `js/consumableEffects.js`, `js/items.js`, `js/units.js` | `feat/buff-consumable` |
-| `js/duelWindow.js`, `js/duelCountdown.js`, `supabase/functions/duel-*`, `_shared/duel*.ts` | `feat/duel` |
-| `js/party.js`, `js/supabaseNet.js` send/error paths | `fix/party-invite-delivery` (merged) |
-| `*_profiles_unique_habbo_username.sql`, `_shared/party.ts` | `fix/profiles-unique-username` |
-| `js/classWeapons.js` | `feat/class-weapons` |
-| `AGENTS.md`, `README.md` | no single owner — **fetch and rebase before editing** |
+| Path | Owner branch | Live worktree? |
+| --- | --- | --- |
+| `js/duelWindow.js`, `js/duelCountdown.js`, `supabase/functions/duel-*`, `_shared/duel*.ts` | **`feat/duel`** | yes — `trees/duel` (1 ahead of main) |
+| `tests/run-suites.mjs` | **`chore/test-harness`** | yes — `trees/test-infra` |
+| `tests/e2e/lib.mjs`, `tests/e2e/*.e2e.mjs` ports/slugs | **`chore/test-harness`** | yes — `trees/test-infra` |
+| `tests/quarantine/**`, recovered `tests/*.test.js` | `chore/recover-test-suites` | no — merged |
+| `js/consumableEffects.js`, `js/items.js`, `js/units.js` | `feat/buff-consumable` | no — merged |
+| `js/party.js`, `js/supabaseNet.js` send/error paths | `fix/party-invite-delivery` | no — merged |
+| `*_profiles_unique_habbo_username.sql`, `_shared/party.ts` | `fix/profiles-unique-username` | no — merged |
+| `js/classWeapons.js` | `feat/class-weapons` | no — merged |
+| `AGENTS.md`, `README.md` | no single owner — **pull before editing** | — |
+
+Confirm "merged" rather than trusting the column; it is a snapshot:
+
+```bash
+git fetch origin && git merge-base --is-ancestor origin/<branch> origin/main
+```
 
 `AGENTS.md` and `README.md` are the two files every agent wants to touch, which
-is exactly why `410e469` happened. Rebase onto `origin/main` first, every time.
+is exactly why `410e469` happened. Sync with `origin/main` first, every time —
+rebase from a side worktree, fast-forward in the hub.
 
 Beware false clashes: `chore/recover-test-suites` is **stacked on**
 `feat/buff-consumable` (it has that commit as an ancestor), so a path like
