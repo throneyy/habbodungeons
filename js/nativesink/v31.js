@@ -384,7 +384,7 @@ const buttons = section({
         { label: 'red', classes: 'new-button red-button', render: () => frameFor('nat/v31/new-button/red', buttonRow(newButton('red-button', 'Delete')), BTN_W) },
         { label: 'green', classes: 'new-button green-button', render: () => frameFor('nat/v31/new-button/green', buttonRow(newButton('green-button', 'Save')), BTN_W) },
       ],
-      note: 'Frames narrowed to 260px for legibility — the button is float:right, so at the real 460px column width it sits alone against a wide empty well.',
+      note: 'Frames narrowed to 260px for legibility - the button is float:right, so at the real 460px column width it sits alone against a wide empty well.',
       pseudo: [
         { name: ':hover b', effect: 'Sprite drops 25px to the lit row of the same colour.' },
         { name: '.disabled-button:hover b', effect: 'Pinned back to the unlit row \u2014 disabled buttons do not light up.' },
@@ -691,7 +691,7 @@ const formInputs = section({
   id: 'nat/v31/form-inputs',
   title: 'Form inputs',
   blurb:
-    'Text fields, checkboxes, radios, and selects. V31 uses minimal styling — borders are 1px solid, backgrounds white or light grey, font is inherited.',
+    'Text fields, checkboxes, radios, and selects. V31 uses minimal styling - borders are 1px solid, backgrounds white or light grey, font is inherited.',
   specimens: [
     specimen({
       id: 'nat/v31/input-text',
