@@ -239,7 +239,11 @@ export class RunController {
         .join('');
       card.innerHTML =
         `<div class="card-head"><b>${m.name}</b> <span class="dim">${st ? '' : ''}${m.classId} L${m.level}</span></div>` +
-        `<div class="card-hp">${alive ? `${m.hp}/${st.maxHp} HP` : 'Downed'}</div>` +
+        // MP sits on the HP line, not the ATK/DEF line: it is a pool that
+        // drains and refills, not a flat stat. Refilled to full by writeBack on
+        // the way into camp, so this card always reads full - which is exactly
+        // the news a player wants here.
+        `<div class="card-hp">${alive ? `${m.hp}/${st.maxHp} HP${st.maxMp ? ` · ${m.mp}/${st.maxMp} MP` : ''}` : 'Downed'}</div>` +
         `<div class="card-stats dim">ATK ${st.atk} · DEF ${st.def} · SPD ${st.spd} · MOV ${st.move}</div>` +
         `<div class="slots">${slots}</div>`;
       card.addEventListener('click', (e) => {

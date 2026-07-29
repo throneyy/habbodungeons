@@ -19,6 +19,12 @@ export function makeMember(classId, name, opts = {}) {
     level: opts.level || 1,
     xp: opts.xp || 0,
     hp: opts.hp != null ? opts.hp : maxHpOf(classId, opts.level || 1, opts.equipment),
+    // MP starts full and is refilled at every camp (see writeBack). Carrying
+    // wounds forward is the roguelike stake; carrying an empty pool forward
+    // too would double the punishment and make the Cleric dead weight for the
+    // back half of a run. A legacy save simply has no `mp` and gets a full
+    // pool here — generous, never broken, and no save-version bump.
+    mp: opts.mp != null ? opts.mp : maxMpOf(classId, opts.level || 1, opts.equipment),
     equipment: { weapon: null, armor: null, trinket: null, ...(opts.equipment || {}) },
     leader: !!opts.leader,
   };
@@ -28,6 +34,14 @@ export function maxHpOf(classId, level, equipment) {
   const base = CLASSES[classId].maxHp + (level - 1) * 4;
   const eq = sumBonuses(equipmentIds(equipment));
   return base + (eq.maxHp || 0);
+}
+
+// Mirrors maxHpOf for the skill pool. `maxMp` is a valid equipment bonus key,
+// so a future "+MP trinket" needs no plumbing beyond the item itself.
+export function maxMpOf(classId, level, equipment) {
+  const base = (CLASSES[classId].maxMp || 0) + (level - 1) * 2;
+  const eq = sumBonuses(equipmentIds(equipment));
+  return base + (eq.maxMp || 0);
 }
 
 function equipmentIds(equipment = {}) {
@@ -41,6 +55,7 @@ export function memberStats(m) {
   const eq = sumBonuses(equipmentIds(m.equipment));
   return {
     maxHp: base.maxHp + bump * 4 + (eq.maxHp || 0),
+    maxMp: (base.maxMp || 0) + bump * 2 + (eq.maxMp || 0),
     atk: base.atk + bump + (eq.atk || 0),
     def: base.def + Math.floor(bump / 2) + (eq.def || 0),
     spd: base.spd + (eq.spd || 0),
@@ -133,6 +148,7 @@ export class Run {
         level: m.level,
         xp: m.xp,
         hp: m.hp,
+        mp: m.mp,
         bonuses: sumBonuses(equipmentIds(m.equipment)),
         useSprites: m.leader,
         skills: m.leader ? leaderSkills : [], // only your Habbo wields Origins skills
@@ -149,6 +165,9 @@ export class Run {
       m.hp = u.alive ? u.stats.hp : 0;
       m.xp = u.xp;
       m.level = u.level;
+      // MP refills between battles. Done HERE rather than in the camp UI so it
+      // holds for every path into camp, including a resumed save.
+      m.mp = maxMpOf(m.classId, m.level, m.equipment);
     }
   }
 
@@ -183,10 +202,12 @@ export class Run {
     return true;
   }
 
-  // Keep current hp within the (possibly changed) max after equipment swaps.
+  // Keep current hp/mp within the (possibly changed) max after equipment swaps
+  // — unequipping a +MP trinket must not leave the pool above its ceiling.
   clampHp(m) {
-    const max = memberStats(m).maxHp;
-    if (m.hp > max) m.hp = max;
+    const st = memberStats(m);
+    if (m.hp > st.maxHp) m.hp = st.maxHp;
+    if (m.mp > st.maxMp) m.mp = st.maxMp;
   }
 
   // Camp Rest: heal living members by a fraction of max, once per camp, for gold.
@@ -226,7 +247,7 @@ export class Run {
       savedAt: this.savedAt,
       squad: this.squad.map((m) => ({
         id: m.id, classId: m.classId, name: m.name, level: m.level,
-        xp: m.xp, hp: m.hp, equipment: m.equipment, leader: m.leader,
+        xp: m.xp, hp: m.hp, mp: m.mp, equipment: m.equipment, leader: m.leader,
       })),
     };
   }
@@ -262,8 +283,14 @@ export class Run {
     if (!d) return null;
     const dungeon = buildDungeon(d.dungeonId, d.eventPicks || {});
     if (!dungeon) return null;
+    // A save written before MP existed has no `mp` on its members, and this
+    // path does not go through makeMember. Fill it in rather than bumping the
+    // save version: an undefined pool would render as "undefined/20 MP" in
+    // camp and read as 0 to canAfford, silently locking every skill.
+    const squad = (d.squad || []).map((m) =>
+      (m.mp != null ? m : { ...m, mp: maxMpOf(m.classId, m.level || 1, m.equipment) }));
     const run = new Run({
-      squad: d.squad, dungeon, eventPicks: d.eventPicks || {},
+      squad, dungeon, eventPicks: d.eventPicks || {},
       unlockedSkills: d.unlockedSkills || [],
       seed: d.seed != null ? d.seed : 0, // legacy saves predate seeding
     });

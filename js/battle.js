@@ -203,6 +203,19 @@ export class Battle {
     });
   }
 
+  // Can this unit pay for this skill? The SINGLE source of truth for MP
+  // affordability — the button gate, enterSkill, the co-op/duel host
+  // validators and resolveSkill's own guard all call this, so a rule change
+  // lands in one place and clients cannot drift from the host.
+  // A spec with no `cost` is free (see the spec-shape comment in skills.js),
+  // and a unit with no stats (explore mode) can afford anything free.
+  canAfford(unit, skill = unit.skill) {
+    if (!skill) return false;
+    const cost = skill.cost || 0;
+    if (cost <= 0) return true;
+    return Boolean(unit.stats) && unit.stats.mp >= cost;
+  }
+
   // Skills read as "magic": pierce half the target's armor, then height matters.
   // Deterministic (no RNG), same as autoattacks.
   computeSkillDamage(attacker, target, skill) {
@@ -215,6 +228,11 @@ export class Battle {
   // primary skill (Heal/Inspire) so existing callers are unchanged.
   resolveSkill(unit, target, skill = unit.skill) {
     if (!skill) return null;
+    // Refuse at the boundary, never mid-resolution: everything below mutates
+    // HP, shields and the log, so a half-applied refusal would corrupt state
+    // and desync co-op. `null` is the existing "nothing happened" contract.
+    if (!this.canAfford(unit, skill)) return null;
+    if (skill.cost && unit.stats) unit.stats.mp -= skill.cost;
     const cx = skill.target === 'self' ? unit.x : target.x;
     const cy = skill.target === 'self' ? unit.y : target.y;
     const radius = skill.radius || 0;

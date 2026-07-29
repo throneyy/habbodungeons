@@ -38,9 +38,17 @@ export class Unit extends Avatar {
     const bump = this.level - 1; // +1 stat-ish per level (see levelUp)
     const eq = opts.bonuses || {}; // summed equipment bonuses (see items.js)
     const maxHp = base.maxHp + bump * 4 + (eq.maxHp || 0);
+    // MP lives in the same stats block as HP so it inherits level scaling and
+    // the equipment-bonus path for free (`maxMp` is a valid item bonus key;
+    // items.js sumBonuses already sums arbitrary keys). Enemies get a pool too
+    // — no enemy has skills yet, and unpriced skills cost 0, so it is inert
+    // until enemy skills land.
+    const maxMp = (base.maxMp || 0) + bump * 2 + (eq.maxMp || 0);
     this.stats = {
       maxHp,
       hp: opts.hp != null ? Math.min(opts.hp, maxHp) : maxHp, // carry wounds across battles
+      maxMp,
+      mp: opts.mp != null ? Math.min(opts.mp, maxMp) : maxMp, // full unless a save says otherwise
       atk: base.atk + bump + (eq.atk || 0),
       def: base.def + Math.floor(bump / 2) + (eq.def || 0),
       spd: base.spd + (eq.spd || 0),
@@ -97,6 +105,10 @@ export class Unit extends Avatar {
   resetTurn() {
     this.moved = false;
     this.acted = false;
+    // +2 MP at the start of each of this unit's phases. Called from exactly two
+    // places (battle.js player + enemy phases), both filtered through the
+    // living-unit lists, so downed units regenerate nothing.
+    if (this.stats) this.stats.mp = Math.min(this.stats.maxMp, this.stats.mp + 2);
     // A root applied last phase bites THIS phase, then wears off.
     this.rootedThisTurn = this.rooted > 0;
     if (this.rooted > 0) this.rooted--;
@@ -129,6 +141,7 @@ export class Unit extends Avatar {
     this.level++;
     this.stats.maxHp += 4;
     this.stats.hp = Math.min(this.stats.maxHp, this.stats.hp + 4);
+    this.stats.maxMp += 2;
     this.stats.atk += 1;
     if (this.level % 2 === 0) this.stats.def += 1;
   }

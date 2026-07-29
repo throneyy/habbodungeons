@@ -9,25 +9,37 @@
 //
 // move    = tiles per turn (Chebyshev/diagonal-aware, same as walking)
 // range   = max attack distance in tiles; min = closest (archers can't melee)
+// maxMp   = the level-1 skill pool. EVERY class has one, not just the casters:
+//           any class can be the run leader, and the leader is granted the
+//           unlocked Origins tree skills (run.js), so a zero pool would
+//           silently disable a hard-won tree skill for whoever picked "wrong".
+//           Melee pools are small instead — a real limit, not a lie about
+//           availability. Skill costs live on the specs (`cost`); a spec with
+//           no cost is free.
+//           The melee floor is 10, not lower: Thorns is a burst around the
+//           CASTER, so the classes standing in a cluster of foes are its
+//           natural wielders, and a pool that cannot pay its 10 would have made
+//           the melee-shaped capstone uncastable by melee. 10 buys exactly one
+//           cast from a full pool — a real ration, not a lockout.
 export const CLASSES = {
   fighter: {
     name: 'Fighter', archetype: 'melee', color: '#c94f4f',
-    move: 4, range: 1, min: 1, maxHp: 34, atk: 11, def: 7, spd: 5,
+    move: 4, range: 1, min: 1, maxHp: 34, maxMp: 10, atk: 11, def: 7, spd: 5,
     blurb: 'Frontline blade-and-shield. Endures where others fall.',
   },
   barbarian: {
     name: 'Barbarian', archetype: 'melee', color: '#a5642e',
-    move: 4, range: 1, min: 1, maxHp: 40, atk: 13, def: 4, spd: 4,
+    move: 4, range: 1, min: 1, maxHp: 40, maxMp: 10, atk: 13, def: 4, spd: 4,
     blurb: 'Raw fury over finesse. Huge damage, light on defense.',
   },
   rogue: {
     name: 'Rogue', archetype: 'melee', color: '#6f5aa8',
-    move: 5, range: 1, min: 1, maxHp: 26, atk: 10, def: 4, spd: 8,
+    move: 5, range: 1, min: 1, maxHp: 26, maxMp: 10, atk: 10, def: 4, spd: 8,
     blurb: 'Fast striker. Great reach across the map, fragile.',
   },
   ranger: {
     name: 'Ranger', archetype: 'ranged', color: '#4f9d5a',
-    move: 4, range: 3, min: 2, maxHp: 26, atk: 9, def: 4, spd: 6,
+    move: 4, range: 3, min: 2, maxHp: 26, maxMp: 12, atk: 9, def: 4, spd: 6,
     blurb: 'Bowfire from afar. Wants distance and high ground.',
     // A dagger for the one tile the bow can't draw on (min 2 means range 1 is
     // dead). Deliberately weak: 6 vs the bow's 9 (-3, about a third off) so the
@@ -40,25 +52,28 @@ export const CLASSES = {
   },
   mage: {
     name: 'Mage', archetype: 'magic', color: '#4f8fd0',
-    move: 3, range: 3, min: 1, maxHp: 22, atk: 13, def: 2, spd: 4,
+    move: 3, range: 3, min: 1, maxHp: 22, maxMp: 18, atk: 13, def: 2, spd: 4,
     blurb: 'Glass cannon. Ignores armor, dies to a stiff breeze.',
   },
   warlock: {
     name: 'Warlock', archetype: 'magic', color: '#8f4fb0',
-    move: 3, range: 3, min: 1, maxHp: 24, atk: 11, def: 3, spd: 4,
+    move: 3, range: 3, min: 1, maxHp: 24, maxMp: 16, atk: 11, def: 3, spd: 4,
     blurb: 'Cursed power. Steady magical damage at range.',
   },
   cleric: {
     name: 'Cleric', archetype: 'support', color: '#d8c25a',
-    move: 4, range: 2, min: 1, maxHp: 28, atk: 7, def: 5, spd: 5,
+    move: 4, range: 2, min: 1, maxHp: 28, maxMp: 20, atk: 7, def: 5, spd: 5,
     blurb: 'Holy support. Mends allies with Heal.',
-    skill: { id: 'heal', name: 'Heal', kind: 'heal', target: 'ally', range: 2, power: 12 },
+    // 20/6 = three casts before the pool runs dry, then +2 regen per turn means
+    // one sustained cast every three turns. That rationing IS the mechanic.
+    skill: { id: 'heal', name: 'Heal', kind: 'heal', target: 'ally', range: 2, power: 12, cost: 6 },
   },
   bard: {
     name: 'Bard', archetype: 'support', color: '#d07fb0',
-    move: 4, range: 2, min: 1, maxHp: 26, atk: 7, def: 4, spd: 6,
+    move: 4, range: 2, min: 1, maxHp: 26, maxMp: 18, atk: 7, def: 4, spd: 6,
     blurb: "Battlefield songs. Inspire buffs an ally's next hit.",
-    skill: { id: 'inspire', name: 'Inspire', kind: 'buff', target: 'ally', range: 2, power: 5 },
+    // Cheaper than Heal (18/4 = four casts): a buff should out-tempo a heal.
+    skill: { id: 'inspire', name: 'Inspire', kind: 'buff', target: 'ally', range: 2, power: 5, cost: 4 },
   },
 };
 

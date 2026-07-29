@@ -65,7 +65,7 @@ import { CoopLeader, CoopMember, SpectateController } from './coopBattle.js';
 import { CLASSES } from './classes.js';
 import { treeSkillSpecs } from './skills.js';
 import { sumBonuses } from './items.js';
-import { hpTint } from './battleController.js';
+import { rosterBars } from './battleController.js';
 import { figureSprites } from './monsterSprites.js';
 import { rotationBetween } from './pathfinder.js';
 
@@ -513,9 +513,12 @@ export class DuelGuestController extends SpectateController {
       } else if (this.sel) {
         if (shadow.attackTargets(this.sel).length) this.btn('Attack a red foe', null, true);
         (this.sel.skills || []).forEach((sk, i) => {
-          if (shadow.skillTargets(this.sel, sk).length || sk.target === 'self') {
-            this.btn(sk.name, () => this.enterSkill(sk, i));
-          }
+          if (!shadow.skillTargets(this.sel, sk).length && sk.target !== 'self') return;
+          const label = sk.cost ? `${sk.name} (${sk.cost} MP)` : sk.name;
+          // Client-side hint only; the host re-checks and rejects with
+          // 'not enough MP' (see CoopLeader.applyCommand).
+          if (shadow.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk, i));
+          else this.btn(label, null, true);
         });
         this.btn('Wait', () => this.wait());
         this.btn('Cancel', () => this.deselect());
@@ -536,13 +539,12 @@ export class DuelGuestController extends SpectateController {
       const row = document.createElement('div');
       const side = u.team === this.myTeam ? 'player' : 'enemy'; // my duellist reads as mine
       row.className = `roster-row ${side}${u.alive ? '' : ' dead'}${u === this.sel ? ' sel' : ''}${u.done && u.alive ? ' done' : ''}`;
-      const frac = u.stats ? Math.max(0, u.stats.hp / u.stats.maxHp) : 0;
       row.innerHTML =
         `<span class="rname">${u.name}</span>` +
         `<span class="rcls">${u.cls.name} L${u.level}</span>` +
         // same health-coloured bar as the host's roster: both duellists are
         // people, so neither side's bar may read red at full health
-        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%${hpTint(frac, true)}"></span></span>` +
+        rosterBars(u, true) +
         `<span class="rhpn">${u.alive ? u.stats.hp : '\u2715'}</span>`;
       dom.roster.appendChild(row);
     }

@@ -562,6 +562,7 @@ function inventoryPanelsHtml(r, leader, rec) {
         const pills = [
           ['Level', leader.level],
           ['HP', `${leader.hp} / ${s.maxHp}`],
+          ['MP', `${leader.mp} / ${s.maxMp}`],
           ['ATK', s.atk],
           ['DEF', s.def],
           ['SPD', s.spd],
@@ -652,11 +653,14 @@ function showDashboard() {
     const cls = CLASSES[(leader && leader.classId) || Identity.classId() || 'fighter'];
     const s = leader
       ? memberStats(leader)
-      : { maxHp: cls.maxHp, atk: cls.atk, def: cls.def, spd: cls.spd, move: cls.move, range: cls.range };
+      : { maxHp: cls.maxHp, maxMp: cls.maxMp || 0, atk: cls.atk, def: cls.def, spd: cls.spd, move: cls.move, range: cls.range };
     const level = leader ? leader.level : 1;
     const hp = leader ? leader.hp : s.maxHp;
     const pct = Math.max(0, Math.min(100, Math.round((hp / s.maxHp) * 100)));
     const blocks = [
+      // MP is part of choosing a calling now (a Barbarian's 6 cannot pay for a
+      // level-90 tree skill), so it belongs on the base-line readout too.
+      ['MP', s.maxMp, ' hd-statblock--blue'],
       ['ATK', s.atk, ''],
       ['DEF', s.def, ' hd-statblock--blue'],
       ['SPD', s.spd, ''],
@@ -1063,6 +1067,11 @@ function skillTreesHtml(id) {
   const unlocked = new Set(id.unlockedSkills || []);
   const synced = id.syncedAt;
   const next = nextUnlocks(id.fishingLevel || 0, id.gardeningLevel || 0);
+  // Every tree skill costs MP, and the pool is set by your calling - a
+  // Barbarian's 6 at level 1 cannot pay for a level-90 capstone. That has to be
+  // readable HERE, next to the grind that earns it, not discovered mid-battle
+  // when the button is already greyed out.
+  const calling = CLASSES[Identity.classId() || 'fighter'];
   const trees = Object.entries(SKILL_TREES)
     .map(([treeId, tree]) => {
       const lvl = treeId === 'water' ? id.fishingLevel : id.gardeningLevel;
@@ -1071,14 +1080,14 @@ function skillTreesHtml(id) {
           const on = unlocked.has(s.id);
           return `<div class="skill-item ${on ? 'on' : 'off'}">
               <span class="sk-name">${on ? '◆' : '◇'} ${s.name}</span>
-              <span class="sk-req">${on ? 'unlocked' : `${tree.gatedBy} ${s.req.level}`}</span>
+              <span class="sk-req">${on ? 'unlocked' : `${tree.gatedBy} ${s.req.level}`} · ${s.cost} MP</span>
             </div>`;
         })
         .join('');
       const goal = next[treeId] ? `<p class="info dim">Next: <b>${next[treeId].skill.name}</b> at ${tree.gatedBy} ${next[treeId].skill.req.level} (${next[treeId].need} to go)</p>` : '<p class="info dim">All unlocked - master angler/gardener!</p>';
       return `<div class="tree" style="border-color:${tree.color}">
           <div class="tree-head" style="color:${tree.color}">${tree.name} <span class="dim">· ${tree.gatedBy} ${synced ? lvl ?? 0 : '-'}</span></div>
-          ${rows}${synced ? goal : ''}
+          ${rows}<p class="info dim">Your calling, ${calling.name}, casts from ${calling.maxMp || 0} MP at level 1 (+2 per level, +2 regained per turn).</p>${synced ? goal : ''}
         </div>`;
     })
     .join('');

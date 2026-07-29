@@ -22,7 +22,7 @@
 import { Battle } from './battle.js';
 import { Unit } from './units.js';
 import { buildDungeon } from './dungeon.js';
-import { renderBattleFx } from './battleController.js';
+import { renderBattleFx, rosterBars } from './battleController.js';
 import { figureSprites } from './monsterSprites.js';
 
 export const TURN_TIMEOUT_MS = 60000; // idle member auto-act
@@ -225,6 +225,12 @@ export class CoopLeader {
       y: u.y,
       dir: u.dir,
       stats: { ...u.stats },
+      // Whether this unit has any skill at all. The skill LIST does not cross
+      // the wire (a replica rebuilds class skills from classId, and never sees
+      // the leader's Origins tree skills), so without this a leader whose class
+      // has no skill of its own would show an MP bar on the host and none on a
+      // guest. See rosterBars.
+      castsSkills: (u.skills || []).length > 0,
       shield: u.shield,
       tag: u.tag,
       owner: own.owner || null,
@@ -244,6 +250,11 @@ export class CoopLeader {
     if (e.spec) out.spec = { toggles: e.spec.toggles, gold: e.spec.gold, label: e.spec.label, kind: e.spec.kind };
     // authoritative stat echoes so replicas never drift
     if (e.attacker) out.aDir = e.attacker.dir;
+    // The caster's pool, echoed for the same reason HP is: MP is spent inside
+    // resolveSkill on the HOST's unit, so without this a guest's replica keeps
+    // a full pool until the next phase snapshot and its disabled-button state
+    // drifts from the host's.
+    if (e.caster && e.caster.stats) out.cMp = e.caster.stats.mp;
     if (e.target && e.target.stats) {
       out.tHp = e.target.stats.hp;
       out.tShield = e.target.shield;
@@ -267,6 +278,8 @@ export class CoopLeader {
         dir: u.dir,
         hp: u.stats ? u.stats.hp : 0,
         maxHp: u.stats ? u.stats.maxHp : 0,
+        mp: u.stats ? u.stats.mp : 0,
+        maxMp: u.stats ? u.stats.maxMp : 0,
         shield: u.shield,
         rooted: u.rooted || 0,
         rootedThisTurn: !!u.rootedThisTurn,
@@ -349,6 +362,10 @@ export class CoopLeader {
       if (!skill) return this.reject(from, 'no such skill');
       const target = skill.target === 'self' ? unit : this.byCid.get(cmd.target);
       if (!target || !b.skillTargets(unit, skill).includes(target)) return this.reject(from, 'illegal target');
+      // The guest's client is not trusted, so MP is re-checked here for the
+      // same reason the target is. resolveSkill's own guard is the backstop;
+      // this one produces the honest reason instead of a silent no-op.
+      if (!b.canAfford(unit, skill)) return this.reject(from, 'not enough MP');
       b.resolveSkill(unit, target, skill);
       this.afterCommand();
     } else if (cmd.type === 'wait' || cmd.type === 'endTurn') {
@@ -719,6 +736,7 @@ export class SpectateController {
 
   enterSkill(skill, index) {
     if (!this.sel || this.sel.acted) return;
+    if (this.shadow && !this.shadow.canAfford(this.sel, skill)) return;
     if (skill.target === 'self') {
       this.member.sendCommand({ type: 'skill', cid: this.member.cidOf(this.sel), skill: index });
       this.sel.acted = true;
@@ -804,9 +822,12 @@ export class SpectateController {
       } else if (this.sel) {
         if (shadow.attackTargets(this.sel).length) this.btn('Attack a red foe', null, true);
         (this.sel.skills || []).forEach((sk, i) => {
-          if (shadow.skillTargets(this.sel, sk).length || sk.target === 'self') {
-            this.btn(sk.name, () => this.enterSkill(sk, i));
-          }
+          if (!shadow.skillTargets(this.sel, sk).length && sk.target !== 'self') return;
+          const label = sk.cost ? `${sk.name} (${sk.cost} MP)` : sk.name;
+          // A hint from the replica's pool, not authority: the host re-checks
+          // and answers 'not enough MP' if this seat is wrong.
+          if (shadow.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk, i));
+          else this.btn(label, null, true);
         });
         this.btn('Wait', () => this.wait());
         this.btn('Cancel', () => this.deselect());
@@ -831,11 +852,10 @@ export class SpectateController {
     for (const u of shadow.units) {
       const row = document.createElement('div');
       row.className = `roster-row ${u.team}${u.alive ? '' : ' dead'}${u === this.sel ? ' sel' : ''}${u.done && u.alive ? ' done' : ''}`;
-      const frac = u.stats ? Math.max(0, u.stats.hp / u.stats.maxHp) : 0;
       row.innerHTML =
         `<span class="rname">${u.name}</span>` +
         `<span class="rcls">${u.cls.name}${u.team === 'player' ? ` L${u.level}` : ''}</span>` +
-        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%"></span></span>` +
+        rosterBars(u, false) +
         `<span class="rhpn">${u.alive ? u.stats.hp : '✕'}</span>`;
       dom.roster.appendChild(row);
     }
@@ -1046,6 +1066,7 @@ export class CoopMember {
         tag: spec.tag,
       });
       u.stats = { ...spec.stats };
+      u.castsSkills = !!spec.castsSkills;
       u.shield = spec.shield || 0;
       u.owner = spec.owner || null;
       if (spec.figure) u.sprites = figureSprites(spec.figure, zoom);
@@ -1093,6 +1114,7 @@ export class CoopMember {
     if (d.spec) e.spec = d.spec;
     // authoritative echoes
     if (e.attacker && d.aDir != null) e.attacker.dir = d.aDir;
+    if (e.caster && e.caster.stats && d.cMp != null) e.caster.stats.mp = d.cMp;
     if (e.target && e.target.stats && d.tHp != null) {
       e.target.stats.hp = d.tHp;
       e.target.shield = d.tShield || 0;
@@ -1131,6 +1153,11 @@ export class CoopMember {
       if (u.stats) {
         u.stats.hp = spec.hp;
         u.stats.maxHp = spec.maxHp;
+        // A legacy leader on an older build sends no mp; leaving the replica's
+        // own value alone beats snapping the pool to 0 and disabling every
+        // skill button the guest owns.
+        if (spec.mp != null) u.stats.mp = spec.mp;
+        if (spec.maxMp != null) u.stats.maxMp = spec.maxMp;
       }
       u.shield = spec.shield;
       // rootedThisTurn is what moveTiles actually reads, and it is resolved by

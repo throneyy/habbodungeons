@@ -7,31 +7,39 @@
 //
 // Skill spec shape — a SUPERSET of the class skills in classes.js, so battle.js
 // resolves both uniformly:
-//   { id, name, tree, kind, target, range, radius, power, status?, buff?, blurb, req }
+//   { id, name, tree, kind, target, range, radius, power, cost?, status?, buff?, blurb, req }
 //     kind   : 'heal' | 'buff' | 'shield' | 'damage'
 //     target : 'ally' | 'enemy' | 'self'
 //     radius : 0 = single tile; N = Chebyshev blast around the target tile
+//     cost   : MP spent to cast (battle.canAfford). OMITTED MEANS FREE — that
+//              default is load-bearing: legacy and duel-only specs, and any
+//              future skill, keep working unpriced, so only what is explicitly
+//              costed is ever limited.
 //     status : applied to enemies hit by a 'damage' skill, e.g. { rooted: 1 }
 //     buff   : granted by a 'buff' skill, e.g. { atk: 5 }
 //     req    : { skill: 'fishing' | 'gardening', level: N } — the unlock gate
 //
 // Unlock thresholds are spread across the 1–99 range so partial Origins progress
 // unlocks a partial tree. They're deliberately tunable (balance is M5).
+//
+// Costs track the UNLOCK THRESHOLD rather than the power number, so grinding
+// Origins buys reach rather than free power: the level-90 capstones cost 10–12,
+// which even a Mage (18 MP) can afford exactly once.
 
 export const SKILL_TREES = {
   water: {
     name: 'Water', gatedBy: 'fishing', color: '#3fa9d6',
     blurb: 'Fisherfolk magic: nets, tides, and the things below.',
     skills: [
-      { id: 'net', name: 'Net', kind: 'damage', target: 'enemy', range: 3, radius: 0, power: 8, status: { rooted: 1 },
+      { id: 'net', name: 'Net', kind: 'damage', target: 'enemy', range: 3, radius: 0, power: 8, cost: 4, status: { rooted: 1 },
         blurb: 'Fling a weighted net: damages and roots a single foe.', req: { skill: 'fishing', level: 5 } },
-      { id: 'foam_barrier', name: 'Foam Barrier', kind: 'shield', target: 'ally', range: 2, radius: 0, power: 12,
+      { id: 'foam_barrier', name: 'Foam Barrier', kind: 'shield', target: 'ally', range: 2, radius: 0, power: 12, cost: 5,
         blurb: 'A wall of foam shields an ally from the next blows.', req: { skill: 'fishing', level: 20 } },
-      { id: 'tidal_wave', name: 'Tidal Wave', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 9,
+      { id: 'tidal_wave', name: 'Tidal Wave', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 9, cost: 7,
         blurb: 'A crashing wave hits the target and everything around it.', req: { skill: 'fishing', level: 40 } },
-      { id: 'whirlpool', name: 'Whirlpool', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 7, status: { rooted: 1 },
+      { id: 'whirlpool', name: 'Whirlpool', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 7, cost: 8, status: { rooted: 1 },
         blurb: 'A sucking vortex damages and roots a cluster of foes.', req: { skill: 'fishing', level: 65 } },
-      { id: 'deep_sea_beast', name: 'Deep Sea Beast', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 14,
+      { id: 'deep_sea_beast', name: 'Deep Sea Beast', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 14, cost: 12,
         blurb: 'Summon the leviathan: devastating area ruin.', req: { skill: 'fishing', level: 90 } },
     ],
   },
@@ -39,15 +47,15 @@ export const SKILL_TREES = {
     name: 'Nature', gatedBy: 'gardening', color: '#5fbf6a',
     blurb: 'Gardener magic: growth, blessing, and creeping rot.',
     skills: [
-      { id: 'sapling_barrier', name: 'Sapling Barrier', kind: 'shield', target: 'ally', range: 2, radius: 1, power: 8,
+      { id: 'sapling_barrier', name: 'Sapling Barrier', kind: 'shield', target: 'ally', range: 2, radius: 1, power: 8, cost: 4,
         blurb: 'Saplings spring up, shielding you and nearby allies.', req: { skill: 'gardening', level: 5 } },
-      { id: 'life_wave', name: 'Life Wave', kind: 'heal', target: 'ally', range: 2, radius: 1, power: 10,
+      { id: 'life_wave', name: 'Life Wave', kind: 'heal', target: 'ally', range: 2, radius: 1, power: 10, cost: 6,
         blurb: 'A pulse of life heals allies around the target.', req: { skill: 'gardening', level: 20 } },
-      { id: 'natures_blessing', name: "Nature's Blessing", kind: 'buff', target: 'ally', range: 2, radius: 1, power: 5, buff: { atk: 5 },
+      { id: 'natures_blessing', name: "Nature's Blessing", kind: 'buff', target: 'ally', range: 2, radius: 1, power: 5, cost: 7, buff: { atk: 5 },
         blurb: 'Bless nearby allies: their next strikes hit harder.', req: { skill: 'gardening', level: 40 } },
-      { id: 'decaying_flowers', name: 'Decaying Flowers', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 8,
+      { id: 'decaying_flowers', name: 'Decaying Flowers', kind: 'damage', target: 'enemy', range: 3, radius: 1, power: 8, cost: 7,
         blurb: 'Rot blooms among foes, damaging a whole cluster.', req: { skill: 'gardening', level: 65 } },
-      { id: 'thorns', name: 'Thorns', kind: 'damage', target: 'self', range: 0, radius: 1, power: 10,
+      { id: 'thorns', name: 'Thorns', kind: 'damage', target: 'self', range: 0, radius: 1, power: 10, cost: 10,
         blurb: 'Erupting thorns gore every foe adjacent to you.', req: { skill: 'gardening', level: 90 } },
     ],
   },

@@ -21,6 +21,29 @@ export function hpTint(frac, isDuel) {
   return `;background:${c}`;
 }
 
+// The stacked HP-over-MP cell of a roster row. Shared by all three rosters
+// (dungeon, co-op spectate, duel guest) so a Cleric's pool cannot read one way
+// on the host's screen and another on a guest's.
+// The MP bar is rendered only for a unit that can actually SPEND it. Every
+// unit gets a pool (they all run through the same Unit and the same CLASSES
+// table, monsters included), but no monster has a skill today - drawing a full
+// blue bar on a goblin would promise magic that cannot be cast. `castsSkills`
+// is the co-op replica's stand-in for a skill list it was never sent, so a
+// leader's bar cannot show on the host and vanish on a guest.
+// Deliberately slimmer than the HP bar: MP costs you a cast, HP costs you the
+// unit.
+export function rosterBars(u, isDuel) {
+  const frac = u.stats ? Math.max(0, u.stats.hp / u.stats.maxHp) : 0;
+  const casts = u.castsSkills != null ? u.castsSkills : (u.skills || []).length > 0;
+  let html = `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%${hpTint(frac, isDuel)}"></span></span>`;
+  if (casts && u.stats && u.stats.maxMp > 0) {
+    const mf = Math.max(0, Math.min(1, u.stats.mp / u.stats.maxMp));
+    html += `<span class="rmp" title="${u.stats.mp}/${u.stats.maxMp} MP">` +
+      `<span class="rmp-fill" style="width:${mf * 100}%"></span></span>`;
+  }
+  return `<span class="rbars">${html}</span>`;
+}
+
 // Turns taps into Vandal Hearts commands and keeps the tile overlays + side
 // panel in sync with the battle engine. Flow for one player unit:
 //   tap your unit -> move range (blue) + attackable foes (red)
@@ -290,6 +313,9 @@ export class BattleController {
 
   enterSkill(skill) {
     if (!this.sel || this.sel.acted || !skill) return;
+    // Guarded here as well as on the button, because the self-target branch
+    // below casts immediately without ever passing through targeting.
+    if (!this.battle.canAfford(this.sel, skill)) return;
     // self / area-around-self skills have no tile to pick — cast immediately
     if (skill.target === 'self') {
       this.battle.resolveSkill(this.sel, this.sel, skill);
@@ -378,8 +404,16 @@ export class BattleController {
         this.btn('Back', () => this.cancel());
       } else if (this.sel && !this.moving) {
         if (this.battle.attackTargets(this.sel).length) this.btn('Attack a red foe', null, true);
+        // A skill you cannot pay for is shown DISABLED with its price, not
+        // hidden: `skillCastable` hides a skill with no legal target, and a
+        // button that vanishes because you are 1 MP short is indistinguishable
+        // from one that has nothing to hit. The label is where the decision
+        // gets made, so the cost is taught there.
         for (const sk of this.sel.skills || []) {
-          if (this.skillCastable(this.sel, sk)) this.btn(sk.name, () => this.enterSkill(sk));
+          if (!this.skillCastable(this.sel, sk)) continue;
+          const label = sk.cost ? `${sk.name} (${sk.cost} MP)` : sk.name;
+          if (this.battle.canAfford(this.sel, sk)) this.btn(label, () => this.enterSkill(sk));
+          else this.btn(label, null, true);
         }
         this.btn('Wait', () => this.wait());
         if (!this.sel.moved) this.btn('Cancel', () => this.cancel());
@@ -400,7 +434,6 @@ export class BattleController {
     for (const u of b.units) {
       const row = document.createElement('div');
       row.className = `roster-row ${u.team}${u.alive ? '' : ' dead'}${u === this.sel ? ' sel' : ''}${u.done && u.alive ? ' done' : ''}`;
-      const frac = Math.max(0, u.stats.hp / u.stats.maxHp);
       // Levels: shown for your own squad, hidden for monsters (a goblin has no
       // meaningful level to a player) — but a DUELLIST is a person, and hiding
       // it made the same fighter read "Fighter" on one screen and "Fighter L1"
@@ -409,7 +442,7 @@ export class BattleController {
       row.innerHTML =
         `<span class="rname">${u.name}</span>` +
         `<span class="rcls">${u.cls.name}${lvl}</span>` +
-        `<span class="rhp"><span class="rhp-fill" style="width:${frac * 100}%${hpTint(frac, !!this.duel)}"></span></span>` +
+        rosterBars(u, !!this.duel) +
         `<span class="rhpn">${u.alive ? u.stats.hp : '✕'}</span>`;
       this.dom.roster.appendChild(row);
     }
