@@ -12,6 +12,7 @@ import { buildDungeon, DUNGEONS, DUNGEON_ID } from './dungeon.js';
 import { pickEvents } from './events.js';
 import { Identity, Auth } from './identity.js';
 import { getSupabase } from './supabase.js';
+import { invokeFn } from './backend.js';
 import { RunStore } from './runStore.js';
 import { SKILL_TREES, nextUnlocks } from './skills.js';
 import { ChatOverlay } from './chat.js';
@@ -249,43 +250,51 @@ function showTitle() {
   overlay.replaceChildren(screen);
 }
 
-// Top 5 profiles by a skill level, for the title screen's leaderboards.
-// The "Public can view profiles" RLS policy already grants anon SELECT, so this
-// needs no session. profiles stores only the CURRENT level plus
-// last_habbo_skill_sync -- there is no per-day history, so these are standing
-// rankings, never daily ones.
-const SKILL_BOARD_COLUMN = { fishing: 'fishing_level', gardening: 'gardening_level' };
+// Today's top anglers and gardeners, for the title screen's leaderboards.
+//
+// The source is the skill-boards edge function, which scrapes and caches
+// habbofishing.com / habbogardening.com (see supabase/functions/skill-boards).
+// It replaced a query against our own `profiles` table: that only ever held the
+// CURRENT level of Habbos who had linked AND synced here, which on a new deploy
+// is nobody -- the two panels were permanently empty. These are real daily XP
+// gains across the whole hotel instead, and they need no session.
+//
+// Both boards arrive in ONE response, so the two panels share a single request
+// via this promise rather than firing the same call twice.
+let _skillBoards = null;
+
+function fetchSkillBoards() {
+  if (_skillBoards) return _skillBoards;
+  _skillBoards = (async () => {
+    const res = await invokeFn('skill-boards', null, { method: 'GET' });
+    // invokeFn answers { ok:false, reason } for an unconfigured or unreachable
+    // backend rather than throwing. Both mean "no board", and the offline flag
+    // is what mountBoard() turns into the friendlier of its two messages.
+    if (!res || res.ok === false || !Array.isArray(res.boards)) {
+      throw Object.assign(new Error(res?.reason || 'skill boards unavailable'), { offline: true });
+    }
+    return res;
+  })();
+  // A failed lookup must not be cached forever: clear it so a later render can
+  // retry instead of replaying the same rejection for the rest of the session.
+  _skillBoards.catch(() => {
+    _skillBoards = null;
+  });
+  return _skillBoards;
+}
 
 async function loadSkillBoard(key) {
-  const column = SKILL_BOARD_COLUMN[key];
-  if (!column) throw new Error(`unknown board ${key}`);
-
-  // getSupabase() imports its client from a CDN: on a blocked network that
-  // import HANGS rather than rejecting, so it is raced against a deadline.
-  const timeout = (ms) =>
-    new Promise((_, rej) => setTimeout(() => rej(Object.assign(new Error('timeout'), { offline: true })), ms));
-  const sb = await Promise.race([getSupabase().catch(() => null), timeout(8000)]);
-  if (!sb) throw Object.assign(new Error('offline'), { offline: true });
-
-  const { data, error } = await Promise.race([
-    sb
-      .from('profiles')
-      .select(`habbo_username, ${column}, last_habbo_skill_sync`)
-      .not('habbo_username', 'is', null)
-      .gt(column, 0)
-      .order(column, { ascending: false })
-      .limit(5),
-    timeout(8000),
-  ]);
-  if (error) throw error;
-
-  const rows = (data || []).map((r) => ({ name: r.habbo_username, level: r[column] }));
-  const syncedAt = (data || [])
-    .map((r) => r.last_habbo_skill_sync)
-    .filter(Boolean)
-    .sort()
-    .pop();
-  return { rows, syncedAt };
+  const payload = await fetchSkillBoards();
+  const board = payload.boards.find((b) => b.skill === key);
+  if (!board) throw new Error(`unknown board ${key}`);
+  return {
+    rows: board.rows || [],
+    stats: board.stats || {},
+    credit: board.credit,
+    url: board.url,
+    fetchedAt: payload.fetchedAt,
+    stale: !!payload.stale,
+  };
 }
 
 // Look up any adventurer's live Origins profile (read-only; not sign-in).

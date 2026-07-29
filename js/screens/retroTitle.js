@@ -6,8 +6,9 @@
 // arrives through `deps`. main.js owns the gating (sign-in, navigation); this
 // owns the markup. Styling lives in css/retro-landing.css.
 //
-// Structure and measurements come from docs/habbo-2006-layout.md; the standalone
-// draft it was lifted from is kept at retro-landing.html for reference.
+// Structure and measurements come from docs/habbo-2006-layout.md, which is now
+// the only reference: the standalone retro-landing.html draft this was lifted
+// from has been deleted, so there is no second copy of the layout to drift.
 //
 // IDS ARE CONTRACT. #btnPlay is the entrance 7 e2e suites use to reach Free Roam
 // (tests/e2e/lib.mjs enterFreeRoam), and the nav/search ids are wired by
@@ -239,7 +240,10 @@ function searchCardHtml() {
     </section>`;
 }
 
-function boardCardHtml(key, title, blurb) {
+// A leaderboard panel. `source` is credited in the panel itself, not just in
+// the footer: the numbers are somebody else's work and the reader deserves to
+// know whose, and where to go for the full board.
+function boardCardHtml(key, title, blurb, source) {
   return `
     <section class="hd-card rl-tint-darker" aria-labelledby="h-${key}">
       <h2 class="hd-card-header" id="h-${key}">${esc(title)}</h2>
@@ -249,6 +253,7 @@ function boardCardHtml(key, title, blurb) {
           <p class="rl-note" data-state="loading">Loading rankings&hellip;</p>
         </div>
         <p class="rl-note" data-synced="${key}"></p>
+        <p class="rl-note rl-credit">Data from <a href="https://${esc(source)}" target="_blank" rel="noopener noreferrer">${esc(source)}</a></p>
       </div>
     </section>`;
 }
@@ -301,10 +306,10 @@ export function renderRetroTitle(deps) {
             ${dungeonsCardHtml({ dungeons })}
             ${newsCardHtml()}
           </main>
-          <aside class="rl-col rl-col--right" id="skills" aria-label="Skill level leaderboards">
+          <aside class="rl-col rl-col--right" id="skills" aria-label="Daily skill leaderboards">
             ${searchCardHtml()}
-            ${boardCardHtml('fishing', 'Top Anglers', 'Highest Origins fishing levels among linked Habbos. Fishing unlocks the Water skill tree.')}
-            ${boardCardHtml('gardening', 'Top Gardeners', 'Highest Origins gardening levels among linked Habbos. Gardening unlocks the Nature skill tree.')}
+            ${boardCardHtml('fishing', "Today's Top Anglers", 'Most fishing XP gained across Habbo Origins today. Fishing unlocks the Water skill tree.', 'habbofishing.com')}
+            ${boardCardHtml('gardening', "Today's Top Gardeners", 'Most gardening XP gained across Habbo Origins today. Gardening unlocks the Nature skill tree.', 'habbogardening.com')}
           </aside>
         </div>
       </div>
@@ -395,22 +400,39 @@ async function mountBoard(root, key, loadBoard) {
 
   const rows = (res && res.rows) || [];
   if (!rows.length) {
-    note('No linked Habbos have synced this skill yet. Link your account and sync to be the first on the board.');
+    note('No one has gained XP in this skill yet today. Check back after the hotel wakes up.');
     return;
   }
+  // rank comes from the source board, NOT the array index: it is their ranking
+  // to state, and a dropped row must not silently renumber the ones below it.
   host.innerHTML = rows
     .map(
-      (r, i) =>
-        `<div class="hd-pill"><span class="rl-rank">${i + 1}</span>` +
-        `<span class="rl-who">${esc(r.name)}</span>` +
-        `<span class="hd-pill-value">${Number(r.level) || 0}</span></div>`,
+      (r) =>
+        `<div class="hd-pill"><span class="rl-rank">${Number(r.rank) || 0}</span>` +
+        `<span class="rl-who">${esc(r.username)}</span>` +
+        `<span class="hd-pill-value">+${xpLabel(r.xpGained)}</span></div>`,
     )
     .join('');
+
   if (stamp) {
-    stamp.textContent = res.syncedAt
-      ? `Current levels, not a daily total. Most recent sync ${agoLabel(res.syncedAt)}.`
-      : 'Current levels, not a daily total. No sync timestamp recorded.';
+    const today = res.stats && res.stats.today;
+    const avg = res.stats && res.stats.avgXp;
+    const parts = [];
+    if (today != null) parts.push(`${today.toLocaleString('en-US')} active today`);
+    if (avg != null) parts.push(`${avg.toLocaleString('en-US')} XP average`);
+    if (res.fetchedAt) parts.push(`updated ${agoLabel(res.fetchedAt)}`);
+    stamp.textContent = parts.join(' \u00b7 ');
   }
+}
+
+// 6,558,300 -> "6.56M". The daily gains run to eight digits and the pill is a
+// fixed-width column, so full numbers would wrap or clip the name beside them.
+export function xpLabel(n) {
+  const v = Number(n);
+  if (!Number.isFinite(v)) return '0 XP';
+  if (v >= 1e6) return `${(v / 1e6).toFixed(2).replace(/\.?0+$/, '')}M XP`;
+  if (v >= 1e3) return `${Math.round(v / 1e3)}K XP`;
+  return `${v} XP`;
 }
 
 export function agoLabel(iso) {

@@ -41,7 +41,7 @@ jobs:
         fetch-habbo-profile habbo-imaging
         party-accept party-decline party-disband party-invite party-leave
         presence-heartbeat presence-reap
-        save-room-layout stash-bank sync-habbo-skills
+        save-room-layout skill-boards stash-bank sync-habbo-skills
         trade-accept trade-cancel trade-confirm trade-offer trade-open trade-retract
         verify-habbo-link
 

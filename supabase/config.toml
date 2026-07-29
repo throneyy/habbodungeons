@@ -12,8 +12,8 @@ enable_confirmations = false
 
 # --- V2 Edge Functions -------------------------------------------------------
 # verify_jwt = false only for endpoints reachable by not-yet-signed-in clients
-# (verify-habbo-link, sync-habbo-skills, fetch-habbo-profile, habbo-imaging)
-# or invoked by cron with the service-role key (presence-reap).
+# (verify-habbo-link, sync-habbo-skills, fetch-habbo-profile, habbo-imaging,
+# skill-boards) or invoked by cron with the service-role key (presence-reap).
 [functions.verify-habbo-link]
 verify_jwt = false
 [functions.sync-habbo-skills]
@@ -21,6 +21,10 @@ verify_jwt = false
 [functions.fetch-habbo-profile]
 verify_jwt = false
 [functions.habbo-imaging]
+verify_jwt = false
+# Read-only scrape of two fan sites' daily leaderboards, shown on the title
+# screen to signed-out visitors -- so it cannot require a JWT.
+[functions.skill-boards]
 verify_jwt = false
 [functions.stash-bank]
 verify_jwt = true

@@ -10,7 +10,7 @@
 //
 // Override for testing Supabase locally: `?backend=supabase` (or
 // localStorage['hd-backend']='supabase'); force local with 'local'.
-import { getSupabase, SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase.js';
+import { getSupabase, SUPABASE_URL, SUPABASE_ANON_KEY, supabaseConfigError } from './supabase.js';
 
 function detectMode() {
   try {
@@ -35,15 +35,26 @@ export function isSupabase() {
   return backendMode() === 'supabase';
 }
 
-// The Edge Functions base URL, derived from the project URL.
+// The Edge Functions base URL, derived from the project URL. Null when the
+// project is not configured -- callers must not build `/functions/v1` off an
+// empty string, which would post the caller's JWT to the page's own origin.
 export function functionsBase() {
-  return `${SUPABASE_URL}/functions/v1`;
+  return SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : null;
 }
 
 // Invoke a Supabase Edge Function with the caller's JWT (when signed in).
 // Returns the parsed JSON body, or { ok:false, reason } on transport failure —
 // callers must never throw a dead backend into a game-over screen.
 export async function invokeFn(name, body = null, { method = 'POST', query = '' } = {}) {
+  // No project configured: report it in the same shape a dead backend reports,
+  // so the existing { ok:false, reason } handling covers it and nothing throws.
+  const configErr = supabaseConfigError();
+  if (configErr) {
+    // browser-only, same reasoning as getSupabase(): under Node there is no
+    // meta tag to find, so silence is correct there
+    if (typeof document !== 'undefined') console.error(`[habbo-dungeons] ${configErr}`);
+    return { ok: false, reason: 'Supabase is not configured' };
+  }
   const sb = await getSupabase();
   let token = null;
   try {

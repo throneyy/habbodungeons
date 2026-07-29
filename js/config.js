@@ -28,7 +28,14 @@ export const MAX_DROP = 4;
 // the canvas and breaks export. Local Node dev proxies via server.js
 // (/api/imaging); the static Supabase deploy proxies via the habbo-imaging edge
 // function. Resolved once at import from the backend mode (js/backend.js).
-export const IMAGING_URL = isSupabase() ? `${functionsBase()}/habbo-imaging` : '/api/imaging';
+//
+// functionsBase() is null when no Supabase project is configured, so guard it:
+// template-stringing a null would yield the literal URL "null/habbo-imaging"
+// and every avatar would 404 against our own origin. Falling back to the local
+// proxy path is the honest degradation -- it works under `node server.js` and
+// simply 404s on a static host, which is what an unconfigured deploy deserves.
+const FN_BASE = functionsBase();
+export const IMAGING_URL = isSupabase() && FN_BASE ? `${FN_BASE}/habbo-imaging` : '/api/imaging';
 
 // Proxied by server.js -> https://origins.habbo.com/api/public/ (local dev). In
 // Supabase mode the profile lookup goes through the fetch-habbo-profile edge

@@ -583,8 +583,8 @@
 }
 
 /* ---- leaderboards --------------------------------------------------------
-   Rank + name + level in one yellow pill per row. The name flexes and
-   ellipsizes; rank and level are fixed so the columns line up down the
+   Rank + name + XP in one yellow pill per row. The name flexes and
+   ellipsizes; rank and XP are fixed so the columns line up down the
    list even when a Habbo name is long. */
 .rl-rank {
   flex: none;
@@ -598,6 +598,17 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Attribution for the two scraped boards. Quiet, but never hidden: the data is
+   someone else's work. Sits under the panel, dimmer than the stat line. */
+.rl-credit {
+  margin-top: 6px;
+  opacity: 0.8;
+}
+.rl-credit a {
+  color: inherit;
+  text-decoration: underline;
 }
 
 .rl-field label {
