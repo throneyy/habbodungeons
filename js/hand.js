@@ -14,14 +14,13 @@
 import { ITEMS, RARITY, bonusText, anyItem, isConsumable } from './items.js';
 import { SAVE_KEY } from './run.js';
 import { propSprites } from './props.js';
+import { drawItemIcon } from './ui/itemIcon.js';
 
 // pAnimLocs from the Lingo source — per-frame [dx, dy] while opening
 const ANIM = [[-54, 27], [-42, 21], [-36, 18], [-28, 14], [-22, 11], [-18, 9], [-12, 6], [-10, 5], [-8, 4]];
 const TICK_MS = 40; // the client's update pulse (~25fps)
 const PAGE = 9;
 const SOCKET = 36; // socket canvas size (px)
-const POLL_MS = 250; // sprite-sheet readiness poll (matches furniCatalog)
-const POLL_MAX = 20;
 
 export class Hand {
   constructor() {
@@ -298,35 +297,14 @@ export class Hand {
       s.dataset.item = it ? entry.id : '';
       const cv = s.querySelector('canvas');
       cv.getContext('2d').clearRect(0, 0, SOCKET, SOCKET);
-      cv.dataset.icon = it && it.icon ? it.icon : '';
-      if (it && it.icon) this.drawIcon(cv, it.icon);
+      cv.dataset.icon = it && it.icon ? it.icon : ''; // stops any in-flight poll
+      if (it && it.icon) drawItemIcon(cv, it.icon);
     }
     const pages = Math.max(1, Math.ceil(items.length / PAGE));
     this.foot.textContent =
       (items.length ? `${items.length} item${items.length === 1 ? '' : 's'}` : this.trade ? 'Your stash is empty' : 'Your hand is empty') +
       (pages > 1 ? ` · ${this.page + 1}/${pages}` : '') +
       (gold != null ? ` · ${gold} gold` : '');
-  }
-
-  // Socket icon: the item's REAL furni art (ITEMS[id].icon -> assets/props),
-  // the same lazy sheet-poll as the :furni catalogue. Pixel-art rule: 1:1
-  // when it fits, else an exact integer divisor — never fractional scaling.
-  drawIcon(cv, iconId, tries = 0) {
-    if (!cv.isConnected || cv.dataset.icon !== iconId) return; // page flipped under us
-    const sp = propSprites(iconId);
-    if (!sp.ready) {
-      if (tries < POLL_MAX) setTimeout(() => this.drawIcon(cv, iconId, tries + 1), POLL_MS);
-      return;
-    }
-    const fr = sp.get(0) || sp.get(2) || sp.get(4);
-    if (!fr) return;
-    const ctx = cv.getContext('2d');
-    const div = Math.max(1, Math.ceil(Math.max(fr.w / SOCKET, fr.h / SOCKET)));
-    const w = Math.max(1, Math.floor(fr.w / div));
-    const h = Math.max(1, Math.floor(fr.h / div));
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, SOCKET, SOCKET);
-    ctx.drawImage(fr.img, fr.x, fr.y, fr.w, fr.h, Math.round((SOCKET - w) / 2), SOCKET - h, w, h);
   }
 
   // ---- item detail (our stand-in for "start placing") ---------------------
